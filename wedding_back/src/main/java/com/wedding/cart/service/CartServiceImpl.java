@@ -4,7 +4,7 @@ import java.util.*;
 
 import org.springframework.stereotype.Service;
 
-import com.wedding.cart.domain.Cart;
+import com.wedding.cart.domain.CartOrder;
 import com.wedding.cart.domain.CartItem;
 import com.wedding.member.domain.Member;
 import com.wedding.product.domain.Product;
@@ -54,7 +54,7 @@ public class CartServiceImpl implements CartService {
         //장바구니 아이템 번호 cino가 없는 경우
 
         //사용자의 카트
-        Cart cart = getCart(email);
+        CartOrder cart = getCart(email);
 
         CartItem cartItem = null;
 
@@ -77,11 +77,11 @@ public class CartServiceImpl implements CartService {
 
 
     //사용자의 장바구니가 없었다면 새로운 장바구니를 생성하고 반환
-    private Cart getCart(String email ){
+    private CartOrder getCart(String email ){
 
-        Cart cart = null;
+        CartOrder cart = null;
 
-        Optional<Cart> result = cartRepository.getCartOfMember(email);
+        Optional<CartOrder> result = cartRepository.getCartOfMember(email);
 
         if(result.isEmpty()) {
 
@@ -89,7 +89,7 @@ public class CartServiceImpl implements CartService {
 
             Member member = Member.builder().email(email).build();
 
-            Cart tempCart = Cart.builder().owner(member).build();
+            CartOrder tempCart = CartOrder.builder().owner(member).build();
 
             cart = cartRepository.save(tempCart);
 

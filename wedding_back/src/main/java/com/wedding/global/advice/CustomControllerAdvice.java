@@ -34,11 +34,19 @@ public class CustomControllerAdvice {
       return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(Map.of("msg", msg));
   }
 
-      @ExceptionHandler(CustomJWTException.class)
+  @ExceptionHandler(CustomJWTException.class)
   protected ResponseEntity<?> handleJWTException(CustomJWTException e) {
 
       String msg = e.getMessage();
 
       return ResponseEntity.ok().body(Map.of("error", msg));
+  }
+
+  @ExceptionHandler(NotEnoughStockException.class)
+    protected  ResponseEntity<?> handleNotEnoughStock(NotEnoughStockException e) {
+
+      String msg = e.getMessage();
+
+      return ResponseEntity.ok().body(Map.of("msg", msg));
   }
 } 

@@ -6,11 +6,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.wedding.cart.domain.Cart;
+import com.wedding.cart.domain.CartOrder;
 
-public interface CartRepository extends JpaRepository<Cart, Long>{
+public interface CartRepository extends JpaRepository<CartOrder, Long>{
 
     @Query("select cart from Cart cart where cart.owner.email = :email")
-    public Optional<Cart> getCartOfMember(@Param("email") String email); 
+    public Optional<CartOrder> getCartOfMember(@Param("email") String email);
     
 }

@@ -15,14 +15,14 @@ import com.wedding.member.domain.Member;
   name = "tbl_cart", 
   indexes = { @Index(name="idx_cart_email", columnList = "member_owner") }
 )
-public class Cart {
+public class CartOrder {
   
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long cno;
 
   @OneToOne
-  @JoinColumn(name="member_owner")
-  private Member owner;
+  @JoinColumn(name="member_email")
+  private Member member;
 
 }

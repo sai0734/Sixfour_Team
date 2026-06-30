@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Commit;
 
-import com.wedding.cart.domain.Cart;
+import com.wedding.cart.domain.CartOrder;
 import com.wedding.cart.domain.CartItem;
 import com.wedding.cart.dto.CartItemListDTO;
 import com.wedding.cart.repository.CartItemRepository;
@@ -55,9 +55,9 @@ public class CartRepositoryTests {
     //장바구니 아이템이 없었다면 장바구니부터 확인 필요
 
     //사용자가 장바구니를 만든적이 있는지 확인
-    Optional<Cart> result = cartRepository.getCartOfMember(email);
+    Optional<CartOrder> result = cartRepository.getCartOfMember(email);
 
-    Cart cart = null;
+    CartOrder cart = null;
 
     //사용자의 장바구니가 존재하지 않으면 장바구니 생성
     if(result.isEmpty()) {
@@ -66,7 +66,7 @@ public class CartRepositoryTests {
 
       Member member = Member.builder().email(email).build();
 
-      Cart tempCart = Cart.builder().owner(member).build();
+      CartOrder tempCart = CartOrder.builder().owner(member).build();
 
       cart = cartRepository.save(tempCart);
 
