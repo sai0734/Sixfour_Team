@@ -34,16 +34,13 @@ public class CustomControllerAdvice {
       return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(Map.of("msg", msg));
   }
 
-      @ExceptionHandler(CustomJWTException.class)
+  @ExceptionHandler(CustomJWTException.class)
   protected ResponseEntity<?> handleJWTException(CustomJWTException e) {
 
       String msg = e.getMessage();
 
       return ResponseEntity.ok().body(Map.of("error", msg));
   }
-<<<<<<< Updated upstream
-} 
-=======
 
   @ExceptionHandler(NotEnoughStockException.class)
     protected  ResponseEntity<?> handleNotEnoughStock(NotEnoughStockException e) {
@@ -61,4 +58,3 @@ public class CustomControllerAdvice {
       return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("msg", msg));
   }
 }
->>>>>>> Stashed changes
