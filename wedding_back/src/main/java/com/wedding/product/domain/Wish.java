@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "tbl_wish")
+@Table(name = "tbl_wish", uniqueConstraints = @UniqueConstraint(columnNames = {"member_email", "product_pno"}))
 @Getter
 @Builder
 @ToString(exclude = {"member", "product"})

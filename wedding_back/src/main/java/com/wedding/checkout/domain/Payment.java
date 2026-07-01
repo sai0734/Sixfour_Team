@@ -19,14 +19,14 @@ public class Payment {
     private Long pmno;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "orders_ono")
+    @JoinColumn(name = "orders_ono", nullable = false)
     private Orders orders;
 
     @Column(nullable = false)
     private String pgProvider;
 
     @Column(nullable = true)
-    private String pgTig;
+    private String pgTid;
 
     @Column(nullable = false)
     private int amount;

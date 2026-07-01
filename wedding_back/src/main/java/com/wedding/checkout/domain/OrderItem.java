@@ -20,7 +20,7 @@ public class OrderItem {
     private Long oino;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_ono", nullable = false)
+    @JoinColumn(name = "orders_ono", nullable = false)
     private Orders orders;
 
     @ManyToOne
@@ -28,7 +28,7 @@ public class OrderItem {
     private Product product;
 
     @ManyToOne
-    @JoinColumn(name = "product_option_pono", nullable = false)
+    @JoinColumn(name = "product_option_pono", nullable = true)
     private ProductOption productOption;
 
     @Column(nullable = false)

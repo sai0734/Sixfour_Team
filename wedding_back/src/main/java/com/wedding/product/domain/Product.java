@@ -45,6 +45,7 @@ public class Product extends BaseTimeEntity {
   private int reviewCount;
 
   @ElementCollection
+  @CollectionTable(name = "tbl_product_image", joinColumns = @JoinColumn(name = "product_pno"))
   @Builder.Default
   private List<ProductImage> imageList = new ArrayList<>();
 

@@ -45,6 +45,7 @@ public class Review extends BaseTimeEntity {
     private String content;
 
     @ElementCollection
+    @CollectionTable(name = "tbl_review_image", joinColumns = @JoinColumn(name = "review_rno"))
     @Builder.Default
     private List<ReviewImage> imageList = new ArrayList<>();
 
