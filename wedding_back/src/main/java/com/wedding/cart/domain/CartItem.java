@@ -11,7 +11,7 @@ import com.wedding.product.domain.Product;
 @NoArgsConstructor
 @Getter
 @Builder
-@ToString(exclude={"cartOrder", "product", "optionId"})
+@ToString(exclude={"cartOrder", "product", "productOption"})
 @Table(name = "tbl_cart_item", indexes = {
     @Index(columnList = "cart_cno", name = "idx_cartitem_cart"),
     @Index(columnList = "product_pno, cart_cno", name="idx_cartitem_pno_cart")
@@ -31,8 +31,8 @@ public class CartItem {
   private Product product;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "option_id", nullable = true)
-  private ProductOption optionId;
+  @JoinColumn(name = "product_option_pono", nullable = true)
+  private ProductOption productOption;
 
   @Column(columnDefinition = "int default 1", nullable = false)
   private int qty;
