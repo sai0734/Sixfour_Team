@@ -1,0 +1,11 @@
+cmno,includesHairService,includesMakeupService,includesNailService,hairPrice,makeupPrice,nailPrice
+31,true,true,false,150000,200000,
+32,true,true,true,180000,250000,100000
+33,false,true,false,,180000,
+34,true,true,false,130000,170000,
+35,true,false,false,120000,,
+36,true,true,true,140000,190000,90000
+37,true,true,true,200000,300000,120000
+38,false,true,true,,230000,110000
+39,true,true,true,160000,210000,95000
+40,true,true,false,170000,220000,

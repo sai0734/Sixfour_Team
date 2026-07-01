@@ -1,0 +1,23 @@
+hallItemId,cmno,itemName,price,capacity,imageUrl,ord,mealType
+1,11,그랜드볼룸 A홀,12000000,500,hall_11_item_1.jpg,0,KOREAN
+2,11,그랜드볼룸 B홀,9000000,300,hall_11_item_2.jpg,1,BUFFET
+3,11,채플홀,6000000,150,hall_11_item_3.jpg,2,WESTERN
+4,12,스카이31 메인홀,15000000,400,hall_12_item_1.jpg,0,WESTERN
+5,12,스카이31 스몰홀,8000000,150,hall_12_item_2.jpg,1,BUFFET
+6,13,다이너스티 그랜드,18000000,600,hall_13_item_1.jpg,0,KOREAN
+7,13,다이너스티 중홀,10000000,250,hall_13_item_2.jpg,1,BUFFET
+8,13,다이너스티 소홀,6000000,100,hall_13_item_3.jpg,2,WESTERN
+9,14,파크하얏트 볼룸,20000000,350,hall_14_item_1.jpg,0,WESTERN
+10,14,파크하얏트 소연회장,9000000,120,hall_14_item_2.jpg,1,BUFFET
+11,15,다이아몬드홀 A,17000000,500,hall_15_item_1.jpg,0,KOREAN
+12,15,다이아몬드홀 B,11000000,200,hall_15_item_2.jpg,1,BUFFET
+13,16,크리스탈볼룸 메인,16000000,450,hall_16_item_1.jpg,0,WESTERN
+14,16,크리스탈볼룸 소,7000000,100,hall_16_item_2.jpg,1,BUFFET
+15,17,드래곤볼룸 A,11000000,400,hall_17_item_1.jpg,0,KOREAN
+16,17,드래곤볼룸 B,8000000,250,hall_17_item_2.jpg,1,BUFFET
+17,18,로즈가든 메인홀,9000000,300,hall_18_item_1.jpg,0,BUFFET
+18,18,로즈가든 야외정원,7000000,200,hall_18_item_2.jpg,1,WESTERN
+19,19,포레스트홀 메인,8000000,250,hall_19_item_1.jpg,0,KOREAN
+20,19,포레스트홀 스몰,5000000,100,hall_19_item_2.jpg,1,BUFFET
+21,20,오션뷰 메인홀,10000000,300,hall_20_item_1.jpg,0,WESTERN
+22,20,오션뷰 야외테라스,7500000,150,hall_20_item_2.jpg,1,BUFFET
