@@ -1,5 +1,7 @@
 package com.wedding.product.domain;
 
+import com.wedding.global.advice.NotEnoughStockException;
+import com.wedding.global.domain.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -13,29 +15,49 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Product {
+public class Product extends BaseTimeEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long pno;
 
+  @Column(nullable = false)
   private String pname;
 
+  @Column(nullable = false)
   private int price;
 
   private String pdesc;
 
+  @Column(columnDefinition = "boolean default false")
   private boolean delFlag;
 
+  @Column(nullable = false)
+  private String category;
 
-  public void changeDel(boolean delFlag) {
-    this.delFlag = delFlag;
-  }
+  @Column(columnDefinition = "int default 0")
+  private int stockQty;
 
+  @Column(columnDefinition = "double default 0.0")
+  private double ratingAvg;
+
+  @Column(columnDefinition = "int default 0")
+  private int reviewCount;
 
   @ElementCollection
   @Builder.Default
   private List<ProductImage> imageList = new ArrayList<>();
+
+  @Column(columnDefinition = "bigint default 0")
+  private Long viewCount;
+
+  @Column(columnDefinition = "int default 0")
+  private int salesCount;
+
+
+  public void changeName(String name){
+    this.pname = name;
+  }
 
   public void changePrice(int price) {
     this.price = price;
@@ -45,14 +67,15 @@ public class Product {
       this.pdesc = desc;
   }
 
-  public void changeName(String name){
-      this.pname = name;
+  public void changeDel(boolean delFlag) {
+    this.delFlag = delFlag;
   }
 
   public void addImage(ProductImage image) {
 
       image.setOrd(this.imageList.size());
       imageList.add(image);
+
   }
 
   public void addImageString(String fileName){
@@ -65,6 +88,17 @@ public class Product {
   }
 
   public void clearList() {
-      this.imageList.clear();
+    this.imageList.clear();
   }
+
+  public void reduceStock(int qty) {
+
+    if(this.stockQty < qty) {
+      throw new NotEnoughStockException("재고가 부족합니다.");
+    }
+
+    this.stockQty -= qty;
+
+  }
+
 }
