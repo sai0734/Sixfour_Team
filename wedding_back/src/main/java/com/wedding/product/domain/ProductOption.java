@@ -14,7 +14,7 @@ public class ProductOption {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long optionId;
+    private Long pono;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pno", nullable = false)

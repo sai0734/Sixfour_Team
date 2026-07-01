@@ -63,7 +63,7 @@ public class CartServiceImpl implements CartService {
 
         if(cartItem == null){
             Product product = Product.builder().pno(pno).build();
-            cartItem = CartItem.builder().product(product).cart(cart).qty(qty).build();
+            cartItem = CartItem.builder().product(product).cartOrder(cart).qty(qty).build();
 
         }else {
             cartItem.changeQty(qty);
@@ -89,7 +89,7 @@ public class CartServiceImpl implements CartService {
 
             Member member = Member.builder().email(email).build();
 
-            CartOrder tempCart = CartOrder.builder().owner(member).build();
+            CartOrder tempCart = CartOrder.builder().member(member).build();
 
             cart = cartRepository.save(tempCart);
 

@@ -10,10 +10,10 @@ import com.wedding.member.domain.Member;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-@ToString(exclude = "owner")
+@ToString(exclude = "member")
 @Table(
-  name = "tbl_cart", 
-  indexes = { @Index(name="idx_cart_email", columnList = "member_owner") }
+  name = "tbl_cart_order",
+  indexes = { @Index(name="idx_cart_email", columnList = "member_email") }
 )
 public class CartOrder {
   
@@ -21,8 +21,8 @@ public class CartOrder {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long cno;
 
-  @OneToOne
-  @JoinColumn(name="member_email")
+  @OneToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name="member_email", unique = true)
   private Member member;
 
 }

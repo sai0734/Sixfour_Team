@@ -55,16 +55,16 @@ public class Product extends BaseTimeEntity {
   private int salesCount;
 
 
+  public void changeName(String name){
+    this.pname = name;
+  }
+
   public void changePrice(int price) {
     this.price = price;
   }
 
   public void changeDesc(String desc){
       this.pdesc = desc;
-  }
-
-  public void changeName(String name){
-      this.pname = name;
   }
 
   public void changeDel(boolean delFlag) {
@@ -87,6 +87,10 @@ public class Product extends BaseTimeEntity {
 
   }
 
+  public void clearList() {
+    this.imageList.clear();
+  }
+
   public void reduceStock(int qty) {
 
     if(this.stockQty < qty) {
@@ -95,10 +99,6 @@ public class Product extends BaseTimeEntity {
 
     this.stockQty -= qty;
 
-  }
-
-  public void clearList() {
-      this.imageList.clear();
   }
 
 }
