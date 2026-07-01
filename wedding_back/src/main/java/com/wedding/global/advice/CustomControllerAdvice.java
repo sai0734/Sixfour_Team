@@ -41,4 +41,24 @@ public class CustomControllerAdvice {
 
       return ResponseEntity.ok().body(Map.of("error", msg));
   }
+<<<<<<< Updated upstream
 } 
+=======
+
+  @ExceptionHandler(NotEnoughStockException.class)
+    protected  ResponseEntity<?> handleNotEnoughStock(NotEnoughStockException e) {
+
+      String msg = e.getMessage();
+
+      return ResponseEntity.ok().body(Map.of("msg", msg));
+  }
+
+  @ExceptionHandler(DuplicateEmailException.class)
+    protected  ResponseEntity<?> handleDuplicateEmail(DuplicateEmailException e) {
+
+      String msg = e.getMessage();
+
+      return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("msg", msg));
+  }
+}
+>>>>>>> Stashed changes

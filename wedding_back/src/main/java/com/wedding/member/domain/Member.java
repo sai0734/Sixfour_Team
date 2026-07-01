@@ -5,13 +5,15 @@ import lombok.*;
 
 import java.util.*;
 
+import com.wedding.global.domain.BaseTimeEntity;
+
 @Entity
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @ToString (exclude = "memberRoleList")
-public class Member {
+public class Member extends BaseTimeEntity {
 
   @Id
   private String email;
@@ -21,6 +23,14 @@ public class Member {
   private String nickname;
 
   private boolean social;
+
+  @Builder.Default
+  @Column(columnDefinition = "varchar(20) default 'ACTIVE'")
+  private String status = "ACTIVE";
+
+  @Builder.Default
+  @Column(columnDefinition = "tinyint default 0")
+  private boolean emailVerified = false;
 
   @ElementCollection(fetch = FetchType.LAZY)
   @Builder.Default
@@ -45,6 +55,14 @@ public class Member {
 
   public void changeSocial(boolean social) {
     this.social = social;
+  }
+
+  public void changeStatus(String status) {
+    this.status = status;
+  }
+
+  public void verifyEmail() {
+    this.emailVerified = true;
   }
 
 }

@@ -25,21 +25,23 @@ public class MemberRepositoryTests {
   @Test
   public void testInsertMember(){
 
+    // aaa@aaa.com ~ iii@iii.com (9개) : 일반 회원
+    // jjj@jjj.com (1개) : 최고 관리자
     for (int i = 0; i < 10 ; i++) {
 
+      char c = (char) ('a' + i);
+      String triple = "" + c + c + c;
+      String email = triple + "@" + triple + ".com";
+
       Member member = Member.builder()
-              .email("user"+i+"@aaa.com")
+              .email(email)
               .pw(passwordEncoder.encode("1111"))
-              .nickname("USER"+i)
+              .nickname("USER_" + triple)
               .build();
 
       member.addRole(MemberRole.USER);
 
-      if(i >= 5){
-          member.addRole(MemberRole.MANAGER);
-      }
-
-      if(i >=8){
+      if(i == 9){
           member.addRole(MemberRole.ADMIN);
       }
       memberRepository.save(member);
@@ -49,7 +51,7 @@ public class MemberRepositoryTests {
   @Test
   public void testRead() {
 
-    String email = "user9@aaa.com";
+    String email = "jjj@jjj.com";
 
     Member member = memberRepository.getWithRoles(email);
 

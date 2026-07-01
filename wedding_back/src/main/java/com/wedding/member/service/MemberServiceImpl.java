@@ -13,11 +13,17 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.wedding.global.advice.DuplicateEmailException;
 import com.wedding.member.domain.Member;
+import com.wedding.member.domain.MemberDetail;
 import com.wedding.member.domain.MemberRole;
+import com.wedding.member.domain.TermsAgree;
+import com.wedding.member.dto.JoinDTO;
 import com.wedding.member.dto.MemberDTO;
 import com.wedding.member.dto.MemberModifyDTO;
+import com.wedding.member.repository.MemberDetailRepository;
 import com.wedding.member.repository.MemberRepository;
+import com.wedding.member.repository.TermsAgreeRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -28,6 +34,8 @@ import lombok.extern.log4j.Log4j2;
 public class MemberServiceImpl implements MemberService {
 
   private final MemberRepository memberRepository;
+  private final MemberDetailRepository memberDetailRepository;
+  private final TermsAgreeRepository termsAgreeRepository;
     private final PasswordEncoder passwordEncoder;
 
   @Override
@@ -141,5 +149,47 @@ Optional<Member> result = memberRepository.findById(email);
 
     memberRepository.save(member);
 
+  }
+
+  @Override
+  public void join(JoinDTO joinDTO) {
+
+    // 이메일 중복 체크
+    if (memberRepository.findById(joinDTO.getEmail()).isPresent()) {
+      throw new DuplicateEmailException("이미 가입된 이메일입니다.");
+    }
+
+    // 1. Member 저장
+    Member member = Member.builder()
+            .email(joinDTO.getEmail())
+            .pw(passwordEncoder.encode(joinDTO.getPw()))
+            .nickname(joinDTO.getNickname())
+            .social(false)
+            .build();
+
+    member.addRole(MemberRole.USER);
+
+    memberRepository.save(member);
+
+    // 2. MemberDetail 저장
+    MemberDetail memberDetail = MemberDetail.builder()
+            .member(member)
+            .name(joinDTO.getName())
+            .phone(joinDTO.getPhone())
+            .build();
+
+    memberDetailRepository.save(memberDetail);
+
+    // 3. TermsAgree 저장
+    TermsAgree termsAgree = TermsAgree.builder()
+            .member(member)
+            .termsAgree(joinDTO.isTermsAgree())
+            .privacyAgree(joinDTO.isPrivacyAgree())
+            .marketing(joinDTO.isMarketing())
+            .build();
+
+    termsAgreeRepository.save(termsAgree);
+
+    log.info("join success: " + joinDTO.getEmail());
   }
 }
