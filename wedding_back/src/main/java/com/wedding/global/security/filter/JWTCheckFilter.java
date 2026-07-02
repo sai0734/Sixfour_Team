@@ -44,6 +44,14 @@ public class JWTCheckFilter extends OncePerRequestFilter{
             return true;
         }
 
+        if(path.startsWith("/api/companies/images/view/")){
+            return true;
+        }
+
+        if(request.getMethod().equals("GET") && path.startsWith("/api/companies/")){
+            return true; // 회사 목록/상세/더미 조회가 JWT 필터에 막혀 프론트 공개 조회가 실패하던 문제 수정
+        }
+
         return false;
     }
 

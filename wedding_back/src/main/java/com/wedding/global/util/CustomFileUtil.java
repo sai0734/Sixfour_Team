@@ -17,9 +17,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 
 import jakarta.annotation.PostConstruct;
@@ -37,7 +37,7 @@ public class CustomFileUtil {
     File tempFolder = new File(uploadPath);
 
     if(tempFolder.exists() == false) {
-      tempFolder.mkdir();
+      tempFolder.mkdirs();
     }
 
     uploadPath = tempFolder.getAbsolutePath();
@@ -83,8 +83,16 @@ public class CustomFileUtil {
     public ResponseEntity<Resource> getFile(String fileName){
     Resource resource = new FileSystemResource(uploadPath + File.separator + fileName);
 
+    if (!resource.isReadable() && fileName.startsWith("s_")) {
+      resource = new FileSystemResource(uploadPath + File.separator + fileName.substring(2));
+    }
+
     if( !resource.isReadable()){
       resource = new FileSystemResource(uploadPath + File.separator + "winter.jpg"); 
+    }
+
+    if (!resource.isReadable()) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
     HttpHeaders headers = new HttpHeaders();
