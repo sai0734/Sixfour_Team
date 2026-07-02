@@ -32,7 +32,7 @@ public class Product extends BaseTimeEntity {
   @Column(columnDefinition = "boolean default false")
   private boolean delFlag;
 
-  @Column(nullable = false)
+  @Column(nullable = true)
   private String category;
 
   @Column(columnDefinition = "int default 0")
