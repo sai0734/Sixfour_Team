@@ -1,12 +1,13 @@
 package com.wedding.company.domain;
 
-import jakarta.persistence.Entity;
 import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -25,40 +26,38 @@ import lombok.ToString;
 public class HallDetail {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long hdno;
+  private Long cmno;
 
+  @MapsId
   @OneToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "company_cno", nullable = false)
+  @JoinColumn(name = "cmno")
   private Company company;
 
-  private String hallType;
-
+  private String hallName;
+  private String address;
+  private Double latitude;
+  private Double longitude;
+  private String phone;
   private String representative;
 
-  private Integer capacity;
+  @Enumerated(EnumType.STRING)
+  private HallType hallType;
 
-  private String mealType;
-
-  private Boolean parkingAvailable;
-
-  private String weddingTime;
-
-  @Column(length = 1000)
-  private String hallDescription;
+  @Column(length = 2000)
+  private String description;
 
   private String imageUrl;
 
-  public void changeDetail(String hallType, String representative, Integer capacity, String mealType,
-                           Boolean parkingAvailable, String weddingTime,
-                           String hallDescription, String imageUrl) {
-    this.hallType = hallType;
+  public void change(String hallName, String address, Double latitude, Double longitude, String phone,
+      String representative, HallType hallType, String description, String imageUrl) {
+    this.hallName = hallName;
+    this.address = address;
+    this.latitude = latitude;
+    this.longitude = longitude;
+    this.phone = phone;
     this.representative = representative;
-    this.capacity = capacity;
-    this.mealType = mealType;
-    this.parkingAvailable = parkingAvailable;
-    this.weddingTime = weddingTime;
-    this.hallDescription = hallDescription;
+    this.hallType = hallType;
+    this.description = description;
     this.imageUrl = imageUrl;
   }
 }

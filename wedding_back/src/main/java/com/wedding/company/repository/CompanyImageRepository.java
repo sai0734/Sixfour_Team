@@ -1,5 +1,4 @@
 package com.wedding.company.repository;
 
-public class CompanyImageRepository {
-    
+public interface CompanyImageRepository {
 }

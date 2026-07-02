@@ -12,38 +12,38 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Entity
 @Table(name = "tbl_company")
 @Getter
-@ToString(exclude = "imageList")
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString(exclude = "imageList")
 public class Company extends BaseTimeEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long cno;
+  private Long cmno;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "category", nullable = false)
+  private CompanyCategory category;
 
   @Column(nullable = false)
   private String name;
 
   private String ceoName;
 
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
-  private CompanyType type;
-
-  private String region;
+  private String phone;
 
   private String address;
 
@@ -51,62 +51,41 @@ public class Company extends BaseTimeEntity {
 
   private Double longitude;
 
-  private String phone;
-
-  private Integer price;
-
   @Column(length = 2000)
   private String description;
 
-  @Column(columnDefinition = "double default 0.0")
-  private double ratingAvg;
-
-  @Column(columnDefinition = "int default 0")
-  private int reviewCount;
-
-  @Column(columnDefinition = "bigint default 0")
-  private Long viewCount;
+  private BigDecimal priceAvg;
 
   @Column(columnDefinition = "boolean default false")
   private boolean delFlag;
 
   @ElementCollection
-  @CollectionTable(name = "tbl_company_image", joinColumns = @JoinColumn(name = "company_cno"))
+  @CollectionTable(name = "tbl_company_image", joinColumns = @JoinColumn(name = "company_cmno"))
   @Builder.Default
   private List<CompanyImage> imageList = new ArrayList<>();
 
-  public void changeBasic(String name, String ceoName, CompanyType type, String region, String address,
-                          Double latitude, Double longitude, String phone,
-                          Integer price, String description) {
+  public void change(String name, String ceoName, CompanyCategory category, String phone, String address,
+      Double latitude, Double longitude, String description, BigDecimal priceAvg) {
     this.name = name;
     this.ceoName = ceoName;
-    this.type = type;
-    this.region = region;
+    this.category = category;
+    this.phone = phone;
     this.address = address;
     this.latitude = latitude;
     this.longitude = longitude;
-    this.phone = phone;
-    this.price = price;
     this.description = description;
+    this.priceAvg = priceAvg;
   }
 
-  public void changeDel(boolean delFlag) {
+  public void changeDelFlag(boolean delFlag) {
     this.delFlag = delFlag;
   }
 
-  public void addImage(CompanyImage image) {
-    image.setOrd(this.imageList.size());
-    imageList.add(image);
-  }
-
-  public void addImageString(String fileName) {
-    CompanyImage companyImage = CompanyImage.builder()
-        .fileName(fileName)
-        .build();
-    addImage(companyImage);
+  public void addImage(String fileName) {
+    imageList.add(CompanyImage.builder().fileName(fileName).ord(imageList.size()).build());
   }
 
   public void clearImages() {
-    this.imageList.clear();
+    imageList.clear();
   }
 }

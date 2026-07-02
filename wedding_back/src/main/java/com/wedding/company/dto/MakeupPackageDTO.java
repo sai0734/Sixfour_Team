@@ -1,7 +1,7 @@
 package com.wedding.company.dto;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.wedding.company.domain.MakeupPackageType;
+import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,11 +11,10 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class DressDetailDTO {
+public class MakeupPackageDTO {
 
+  private Long packageId;
   private Long cmno;
-  private String sizeRange;
-
-  @Builder.Default
-  private List<DressItemDTO> items = new ArrayList<>();
+  private MakeupPackageType packageType;
+  private BigDecimal discountRate;
 }

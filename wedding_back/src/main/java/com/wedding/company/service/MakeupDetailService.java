@@ -1,5 +1,7 @@
 package com.wedding.company.service;
 
-public class MakeupDetailService {
-    
+import com.wedding.company.dto.MakeupDetailDTO;
+
+public interface MakeupDetailService {
+  MakeupDetailDTO get(Long cmno);
 }

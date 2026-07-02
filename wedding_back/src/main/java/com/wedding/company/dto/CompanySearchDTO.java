@@ -1,7 +1,8 @@
 package com.wedding.company.dto;
 
-import com.wedding.company.domain.CompanyType;
+import com.wedding.company.domain.CompanyCategory;
 import com.wedding.global.dto.PageRequestDTO;
+import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -15,15 +16,9 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 public class CompanySearchDTO extends PageRequestDTO {
 
-  private CompanyType type;
-
-  private String region;
-
+  private CompanyCategory category;
   private String keyword;
-
-  private Integer minPrice;
-
-  private Integer maxPrice;
-
+  private BigDecimal minPrice;
+  private BigDecimal maxPrice;
   private String sort;
 }

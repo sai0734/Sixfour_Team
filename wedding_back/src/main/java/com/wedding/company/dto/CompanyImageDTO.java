@@ -12,6 +12,5 @@ import lombok.NoArgsConstructor;
 public class CompanyImageDTO {
 
   private String fileName;
-
   private int ord;
 }
