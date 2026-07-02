@@ -68,6 +68,14 @@ public class Product extends BaseTimeEntity {
       this.pdesc = desc;
   }
 
+  public void changeCategory(String category){
+    this.category = category;
+  }
+
+  public void changeStockQty(int stockQty){
+    this.stockQty = stockQty;
+  }
+
   public void changeDel(boolean delFlag) {
     this.delFlag = delFlag;
   }
