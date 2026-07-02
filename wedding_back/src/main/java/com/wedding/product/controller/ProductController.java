@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,7 +31,7 @@ public class ProductController {
     @GetMapping("/list")
     public PageResponseDTO<ProductDTO> list(PageRequestDTO pageRequestDTO) {
 
-        log.info("Product_Controller_list 실행~~~~~~~~");
+        log.info("ProductController_list 실행~~~~~~~~");
 
         PageResponseDTO<ProductDTO> pageResponseDTO = productService.getProductList(pageRequestDTO);
 
@@ -41,7 +42,7 @@ public class ProductController {
     @GetMapping("/{pno}")
     public ProductDTO read(@PathVariable(name="pno") Long pno) {
 
-        log.info("Product_Controller_read 실행~~~~~~~~");
+        log.info("ProductController_read 실행~~~~~~~~");
 
         ProductDTO productDTO = productService.getProductOne(pno);
 
@@ -49,10 +50,11 @@ public class ProductController {
     }
 
     // 상품 등록
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PostMapping("/")
     public Map<String, Long> register(ProductDTO productDTO) {
 
-        log.info("Product_Controller_register 실행~~~~~~~~");
+        log.info("ProductController_register 실행~~~~~~~~");
 
         List<MultipartFile> files = productDTO.getFiles();
         List<String> uploadFileNames = customFileUtil.saveFiles(files);
@@ -66,10 +68,11 @@ public class ProductController {
     }
 
     // 상품 수정
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/{pno}")
     public Map<String, String> modify(@PathVariable(name="pno") Long pno, ProductDTO productDTO) {
 
-        log.info("Product_Controller_modify 실행~~~~~~~~");
+        log.info("ProductController_modify 실행~~~~~~~~");
 
         productDTO.setPno(pno);
 
@@ -111,10 +114,11 @@ public class ProductController {
     }
 
     // 상품 삭제(소프트 삭제)
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @DeleteMapping("/{pno}")
     public Map<String, String> remove(@PathVariable(name = "pno") Long pno) {
 
-        log.info("Product_Controller_remove 실행~~~~~~~~");
+        log.info("ProductController_remove 실행~~~~~~~~");
 
         List<String> oldFileNames = productService.getProductOne(pno).getUploadFileNames();
 
@@ -128,6 +132,9 @@ public class ProductController {
     // 이미지 조회
     @GetMapping("/view/{fileName}")
     public ResponseEntity<Resource> viewFile(@PathVariable String fileName) {
+
+        log.info("ProductController_viewFile 실행~~~~~~~~");
+
         return customFileUtil.getFile(fileName);
     }
 
