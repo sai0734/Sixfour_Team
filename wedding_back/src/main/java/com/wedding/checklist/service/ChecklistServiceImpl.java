@@ -58,6 +58,7 @@ public class ChecklistServiceImpl implements ChecklistService {
         checklist.changeIsDone(checklistDTO.isDone());
         checklist.changeDueDate(checklistDTO.getDueDate());
         checklist.changeSortOrder(checklistDTO.getSortOrder());
+        checklist.changeStage(checklistDTO.getStage());
 
         checklistRepository.save(checklist);
     }
@@ -71,7 +72,7 @@ public class ChecklistServiceImpl implements ChecklistService {
     @Override
     public List<ChecklistDTO> listByMember(String memberEmail) {
 
-        List<Checklist> result = checklistRepository.findByMemberEmailOrderBySortOrderAsc(memberEmail);
+        List<Checklist> result = checklistRepository.findByMemberEmailOrderByStageAscSortOrderAsc(memberEmail);
 
         return result.stream()
                 .map(checklist -> modelMapper.map(checklist, ChecklistDTO.class))

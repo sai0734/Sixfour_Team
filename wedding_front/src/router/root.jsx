@@ -1,5 +1,5 @@
 import { Suspense, lazy } from "react";
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import reservationRouter from "./reservationRouter";
 import productRouter from "./productRouter";
 import authRouter from "./authRouter";
@@ -10,6 +10,9 @@ const About = lazy(() => import("../pages/AboutPage"));
 const ReservationIndex = lazy(() => import("../pages/reservation/IndexPage"));
 const ReservationList = lazy(() => import("../pages/reservation/ListPage"));
 const ProductRouter = lazy(() => import("../pages/product/IndexPage"));
+const ChecklistListPage = lazy(() => import("../pages/checklist/ListPage"));
+const BudgetListPage = lazy(() => import("../pages/budget/ListPage"));
+const MyPageHub = lazy(() => import("../pages/mypage/HubPage"));
 
 const root = createBrowserRouter([
   {
@@ -49,6 +52,46 @@ const root = createBrowserRouter([
   {
     path: "auth",
     children: authRouter(),
+  },
+  {
+    path: "/checklist",
+    element: <Navigate replace to="/checklist/list" />,
+  },
+  {
+    path: "/checklist/list",
+    element: (
+      <Suspense fallback={Loading}>
+        <ChecklistListPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/budget",
+    element: <Navigate replace to="/budget/list" />,
+  },
+  {
+    path: "/budget/list",
+    element: (
+      <Suspense fallback={Loading}>
+        <BudgetListPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/mypage",
+    element: (
+      <Suspense fallback={Loading}>
+        <MyPageHub />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/companywish",
+    element: <Navigate replace to="/mypage" />,
+  },
+  {
+    path: "/weddingplan",
+    element: <Navigate replace to="/mypage" />,
   },
 ]);
 
