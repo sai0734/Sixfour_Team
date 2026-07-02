@@ -22,4 +22,6 @@ public class BudgetDTO {
     private Long actualAmount;
 
     private String memo;
+
+    private int sortOrder;
 }

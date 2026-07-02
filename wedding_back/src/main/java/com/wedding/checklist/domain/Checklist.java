@@ -30,6 +30,9 @@ public class Checklist {
 
     private int sortOrder;
 
+    // 준비 단계 (1: 기본 계획, 2: 업체 계약, 3: 청첩장·답례품 등, 이름은 프론트에서 고정 매핑)
+    private int stage;
+
     public void changeTitle(String title) {
         this.title = title;
     }
@@ -44,6 +47,10 @@ public class Checklist {
 
     public void changeSortOrder(int sortOrder) {
         this.sortOrder = sortOrder;
+    }
+
+    public void changeStage(int stage) {
+        this.stage = stage;
     }
 
 }
