@@ -12,16 +12,21 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.google.gson.Gson;
 import com.wedding.member.dto.MemberDTO;
 import com.wedding.global.util.JWTUtil;
+import com.wedding.global.util.RedisTokenService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
 @Log4j2
+@RequiredArgsConstructor
 public class JWTCheckFilter extends OncePerRequestFilter{
-    
+
+    private final RedisTokenService redisTokenService;
+
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException{
              // Preflight요청은 체크하지 않음
@@ -58,6 +63,12 @@ public class JWTCheckFilter extends OncePerRequestFilter{
     try {
       //Bearer accestoken...
       String accessToken = authHeaderStr.substring(7);
+
+      // 로그아웃 등으로 블랙리스트에 등록된 토큰이면 거부
+      if (redisTokenService.isBlacklisted(accessToken)) {
+        throw new RuntimeException("Blacklisted token");
+      }
+
       Map<String, Object> claims = JWTUtil.validateToken(accessToken);
 
       log.info("JWT claims: " + claims);

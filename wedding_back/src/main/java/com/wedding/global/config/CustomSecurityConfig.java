@@ -19,6 +19,10 @@ import com.wedding.global.security.filter.JWTCheckFilter;
 import com.wedding.global.security.handler.APILoginFailHandler;
 import com.wedding.global.security.handler.APILoginSuccessHandler;
 import com.wedding.global.security.handler.CustomAccessDeniedHandler;
+import com.wedding.global.util.RedisTokenService;
+import com.wedding.member.repository.EmailVerifyRepository;
+import com.wedding.member.repository.LoginFailRepository;
+import com.wedding.member.repository.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -36,7 +40,7 @@ public class CustomSecurityConfig {
 
 
 @Bean
-  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+  public SecurityFilterChain filterChain(HttpSecurity http, MemberRepository memberRepository, LoginFailRepository loginFailRepository, RedisTokenService redisTokenService, EmailVerifyRepository emailVerifyRepository) throws Exception {
     
     log.info("---------------------security config---------------------------");
 
@@ -50,11 +54,11 @@ public class CustomSecurityConfig {
 
         http.formLogin(config ->{
       config.loginPage("/api/auth/login");
-      config.successHandler(new APILoginSuccessHandler());
-       config.failureHandler(new APILoginFailHandler());
+      config.successHandler(new APILoginSuccessHandler(loginFailRepository, redisTokenService));
+       config.failureHandler(new APILoginFailHandler(memberRepository, loginFailRepository, emailVerifyRepository));
     });
 
-      http.addFilterBefore(new JWTCheckFilter(), UsernamePasswordAuthenticationFilter.class); //JWT 체크
+      http.addFilterBefore(new JWTCheckFilter(redisTokenService), UsernamePasswordAuthenticationFilter.class); //JWT 체크
 
         http.exceptionHandling(config -> {config.accessDeniedHandler(new CustomAccessDeniedHandler());
     });

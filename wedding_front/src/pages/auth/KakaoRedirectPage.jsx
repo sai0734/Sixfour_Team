@@ -24,11 +24,10 @@ const KakaoRedirectPage = () => {
 
         dispatch(login(authInfo));
 
-        // 소셜 회원이 아니라면
-        if (authInfo && !authInfo.social) {
-          moveToPath("/");
+        if (authInfo && authInfo.social && !authInfo.profileComplete) {
+          moveToPath("/auth/social-complete");
         } else {
-          moveToPath("/auth/modify");
+          moveToPath("/");
         }
       });
     });
