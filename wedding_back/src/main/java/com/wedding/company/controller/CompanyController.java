@@ -5,6 +5,7 @@ import com.wedding.company.dto.CompanyListDTO;
 import com.wedding.company.dto.CompanySearchDTO;
 import com.wedding.company.service.CompanyService;
 import com.wedding.global.dto.PageResponseDTO;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -16,8 +17,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
-
 @RestController
 @RequiredArgsConstructor
 @Log4j2
@@ -28,31 +27,31 @@ public class CompanyController {
 
   @GetMapping("/list")
   public PageResponseDTO<CompanyListDTO> list(CompanySearchDTO searchDTO) {
-    log.info("company list: " + searchDTO);
+    log.info(searchDTO);
     return companyService.getList(searchDTO);
   }
 
-  @GetMapping("/{cno}")
-  public CompanyDTO read(@PathVariable Long cno) {
-    return companyService.get(cno);
+  @GetMapping("/{cmno}")
+  public CompanyDTO get(@PathVariable Long cmno) {
+    return companyService.get(cmno);
   }
 
   @PostMapping("/")
   public Map<String, Long> register(@RequestBody CompanyDTO companyDTO) {
-    Long cno = companyService.register(companyDTO);
-    return Map.of("result", cno);
+    Long cmno = companyService.register(companyDTO);
+    return Map.of("cmno", cmno);
   }
 
-  @PutMapping("/{cno}")
-  public Map<String, String> modify(@PathVariable Long cno, @RequestBody CompanyDTO companyDTO) {
-    companyDTO.setCno(cno);
+  @PutMapping("/{cmno}")
+  public Map<String, String> modify(@PathVariable Long cmno, @RequestBody CompanyDTO companyDTO) {
+    companyDTO.setCmno(cmno);
     companyService.modify(companyDTO);
     return Map.of("RESULT", "SUCCESS");
   }
 
-  @DeleteMapping("/{cno}")
-  public Map<String, String> remove(@PathVariable Long cno) {
-    companyService.remove(cno);
+  @DeleteMapping("/{cmno}")
+  public Map<String, String> remove(@PathVariable Long cmno) {
+    companyService.remove(cmno);
     return Map.of("RESULT", "SUCCESS");
   }
 }

@@ -1,5 +1,8 @@
 package com.wedding.company.dto;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,23 +14,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class MakeupDetailDTO {
 
-  private Long mdno;
+  private Long cmno;
+  private Boolean includesHairService;
+  private Boolean includesMakeupService;
+  private Boolean includesNailService;
+  private BigDecimal hairPrice;
+  private BigDecimal makeupPrice;
+  private BigDecimal nailPrice;
 
-  private Boolean hairIncluded;
-
-  private Boolean makeupIncluded;
-
-  private Boolean nailIncluded;
-
-  private Boolean visitAvailable;
-
-  private String makeupStyle;
-
-  private String staffInfo;
-
-  private Integer hairPrice;
-
-  private Integer makeupPrice;
-
-  private Integer nailPrice;
+  @Builder.Default
+  private List<MakeupPackageDTO> packages = new ArrayList<>();
 }

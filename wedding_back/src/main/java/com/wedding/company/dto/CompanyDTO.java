@@ -1,13 +1,13 @@
 package com.wedding.company.dto;
 
-import com.wedding.company.domain.CompanyType;
+import com.wedding.company.domain.CompanyCategory;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Data
 @Builder
@@ -15,44 +15,23 @@ import java.util.List;
 @NoArgsConstructor
 public class CompanyDTO {
 
-  private Long cno;
-
+  private Long cmno;
+  private CompanyCategory category;
   private String name;
-
   private String ceoName;
-
-  private CompanyType type;
-
-  private String region;
-
-  private String address;
-
-  private Double latitude;
-
-  private Double longitude;
-
   private String phone;
-
-  private Integer price;
-
+  private String address;
+  private Double latitude;
+  private Double longitude;
   private String description;
-
-  private double ratingAvg;
-
-  private int reviewCount;
-
-  private Long viewCount;
-
+  private BigDecimal priceAvg;
   private boolean delFlag;
 
   @Builder.Default
   private List<String> uploadFileNames = new ArrayList<>();
 
   private HallDetailDTO hallDetail;
-
   private DressDetailDTO dressDetail;
-
   private MakeupDetailDTO makeupDetail;
-
   private StudioDetailDTO studioDetail;
 }

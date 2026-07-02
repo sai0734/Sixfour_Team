@@ -1,11 +1,11 @@
 package com.wedding.company.domain;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -24,29 +24,17 @@ import lombok.ToString;
 public class StudioDetail {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long sdno;
+  private Long cmno;
 
+  @MapsId
   @OneToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "company_cno", nullable = false)
+  @JoinColumn(name = "cmno")
   private Company company;
 
-  private String concept;
-
+  @Column(length = 1000)
   private String themeTags;
 
-  private Integer shootingHours;
-
-  private Boolean originalProvided;
-
-  private Boolean retouchIncluded;
-
-  public void changeDetail(String concept, String themeTags, Integer shootingHours,
-                           Boolean originalProvided, Boolean retouchIncluded) {
-    this.concept = concept;
+  public void change(String themeTags) {
     this.themeTags = themeTags;
-    this.shootingHours = shootingHours;
-    this.originalProvided = originalProvided;
-    this.retouchIncluded = retouchIncluded;
   }
 }
