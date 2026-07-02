@@ -2,10 +2,9 @@ package com.wedding.company.domain;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -24,30 +23,16 @@ import lombok.ToString;
 public class DressDetail {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long ddno;
+  private Long cmno;
 
+  @MapsId
   @OneToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "company_cno", nullable = false)
+  @JoinColumn(name = "cmno")
   private Company company;
-
-  private String dressStyle;
-
-  private Integer fittingPrice;
-
-  private Boolean premiumLineAvailable;
-
-  private String rentalPeriod;
 
   private String sizeRange;
 
-  public void changeDetail(String dressStyle, Integer fittingPrice,
-                           Boolean premiumLineAvailable, String rentalPeriod,
-                           String sizeRange) {
-    this.dressStyle = dressStyle;
-    this.fittingPrice = fittingPrice;
-    this.premiumLineAvailable = premiumLineAvailable;
-    this.rentalPeriod = rentalPeriod;
+  public void change(String sizeRange) {
     this.sizeRange = sizeRange;
   }
 }

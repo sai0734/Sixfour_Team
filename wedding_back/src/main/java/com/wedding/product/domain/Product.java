@@ -32,7 +32,7 @@ public class Product extends BaseTimeEntity {
   @Column(columnDefinition = "boolean default false")
   private boolean delFlag;
 
-  @Column(nullable = false)
+  @Column(nullable = true)
   private String category;
 
   @Column(columnDefinition = "int default 0")
@@ -66,6 +66,14 @@ public class Product extends BaseTimeEntity {
 
   public void changeDesc(String desc){
       this.pdesc = desc;
+  }
+
+  public void changeCategory(String category){
+    this.category = category;
+  }
+
+  public void changeStockQty(int stockQty){
+    this.stockQty = stockQty;
   }
 
   public void changeDel(boolean delFlag) {

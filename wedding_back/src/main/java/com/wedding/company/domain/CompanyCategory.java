@@ -1,8 +1,8 @@
 package com.wedding.company.domain;
 
-public enum CompanyType {
+public enum CompanyCategory {
   HALL,
   DRESS,
-  MAKEUP,
-  STUDIO
+  STUDIO,
+  MAKEUP
 }

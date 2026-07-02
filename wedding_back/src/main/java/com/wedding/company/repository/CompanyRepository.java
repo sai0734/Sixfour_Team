@@ -1,7 +1,9 @@
 package com.wedding.company.repository;
 
 import com.wedding.company.domain.Company;
-import com.wedding.company.domain.CompanyType;
+import com.wedding.company.domain.CompanyCategory;
+import java.math.BigDecimal;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -10,34 +12,28 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.Optional;
-
 public interface CompanyRepository extends JpaRepository<Company, Long> {
 
   @EntityGraph(attributePaths = "imageList")
-  @Query("select c from Company c where c.cno = :cno")
-  Optional<Company> selectOne(@Param("cno") Long cno);
+  @Query("""
+      select c from Company c
+      where c.delFlag = false
+        and (:category is null or c.category = :category)
+        and (:keyword is null or c.name like concat('%', :keyword, '%') or c.address like concat('%', :keyword, '%'))
+        and (:minPrice is null or c.priceAvg >= :minPrice)
+        and (:maxPrice is null or c.priceAvg <= :maxPrice)
+      """)
+  Page<Company> searchList(@Param("category") CompanyCategory category,
+      @Param("keyword") String keyword,
+      @Param("minPrice") BigDecimal minPrice,
+      @Param("maxPrice") BigDecimal maxPrice,
+      Pageable pageable);
 
   @EntityGraph(attributePaths = "imageList")
-  @Query("""
-      select c
-      from Company c
-      where c.delFlag = false
-        and (:type is null or c.type = :type)
-        and (:region is null or c.region like concat('%', :region, '%'))
-        and (:keyword is null or c.name like concat('%', :keyword, '%')
-          or c.description like concat('%', :keyword, '%'))
-        and (:minPrice is null or c.price >= :minPrice)
-        and (:maxPrice is null or c.price <= :maxPrice)
-      """)
-  Page<Company> searchList(@Param("type") CompanyType type,
-                           @Param("region") String region,
-                           @Param("keyword") String keyword,
-                           @Param("minPrice") Integer minPrice,
-                           @Param("maxPrice") Integer maxPrice,
-                           Pageable pageable);
+  @Query("select c from Company c where c.cmno = :cmno")
+  Optional<Company> selectOne(@Param("cmno") Long cmno);
 
   @Modifying
-  @Query("update Company c set c.delFlag = :flag where c.cno = :cno")
-  void updateToDelete(@Param("cno") Long cno, @Param("flag") boolean flag);
+  @Query("update Company c set c.delFlag = :delFlag where c.cmno = :cmno")
+  void updateDelFlag(@Param("cmno") Long cmno, @Param("delFlag") boolean delFlag);
 }

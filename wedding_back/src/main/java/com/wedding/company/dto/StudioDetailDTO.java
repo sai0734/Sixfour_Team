@@ -11,15 +11,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class StudioDetailDTO {
 
-  private Long sdno;
-
-  private String concept;
-
+  private Long cmno;
   private String themeTags;
-
-  private Integer shootingHours;
-
-  private Boolean originalProvided;
-
-  private Boolean retouchIncluded;
 }

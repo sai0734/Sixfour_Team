@@ -56,6 +56,7 @@ public class BudgetServiceImpl implements BudgetService {
         budget.changeBudgetAmount(budgetDTO.getBudgetAmount());
         budget.changeActualAmount(budgetDTO.getActualAmount());
         budget.changeMemo(budgetDTO.getMemo());
+        budget.changeSortOrder(budgetDTO.getSortOrder());
 
         budgetRepository.save(budget);
     }
@@ -69,7 +70,7 @@ public class BudgetServiceImpl implements BudgetService {
     @Override
     public List<BudgetDTO> listByMember(String memberEmail) {
 
-        List<Budget> result = budgetRepository.findByMemberEmail(memberEmail);
+        List<Budget> result = budgetRepository.findByMemberEmailOrderBySortOrderAsc(memberEmail);
 
         return result.stream()
                 .map(budget -> modelMapper.map(budget, BudgetDTO.class))
