@@ -6,6 +6,7 @@ import com.wedding.member.dto.MemberDTO;
 import com.wedding.member.dto.MemberModifyDTO;
 import com.wedding.member.service.MemberService;
 import com.wedding.global.util.JWTUtil;
+import com.wedding.global.util.RedisTokenService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class KakaoAuthController {
     
     private final MemberService memberService;
+    private final RedisTokenService redisTokenService;
 
     @GetMapping("/api/auth/kakao")
     public Map<String, Object> getMemberFromKakao(String accessToken) {
@@ -37,8 +39,11 @@ public class KakaoAuthController {
         String jwtAccessToken = JWTUtil.generateToken(claims, 10);
         String jwtRefreshToken = JWTUtil.generateToken(claims, 60*1);
 
+        redisTokenService.saveRefreshToken(memberDTO.getEmail(), jwtRefreshToken, false);
+
         claims.put("accessToken", jwtAccessToken);
         claims.put("refreshToken", jwtRefreshToken);
+        claims.put("profileComplete", memberService.hasProfile(memberDTO.getEmail()));
 
         return claims;
     }
