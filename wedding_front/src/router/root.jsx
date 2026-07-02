@@ -13,6 +13,9 @@ const ProductRouter = lazy(() => import("../pages/product/IndexPage"));
 const ChecklistListPage = lazy(() => import("../pages/checklist/ListPage"));
 const BudgetListPage = lazy(() => import("../pages/budget/ListPage"));
 const MyPageHub = lazy(() => import("../pages/mypage/HubPage"));
+const BoardHubPage = lazy(() => import("../pages/board/HubPage"));
+const FreeBoardPage = lazy(() => import("../pages/board/FreeBoardPage"));
+const ReviewBoardPage = lazy(() => import("../pages/board/ReviewBoardPage"));
 
 const root = createBrowserRouter([
   {
@@ -92,6 +95,34 @@ const root = createBrowserRouter([
   {
     path: "/weddingplan",
     element: <Navigate replace to="/mypage" />,
+  },
+  {
+    path: "/board",
+    element: <Navigate replace to="/board/list" />,
+  },
+  {
+    path: "/board/list",
+    element: (
+      <Suspense fallback={Loading}>
+        <BoardHubPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/board/free",
+    element: (
+      <Suspense fallback={Loading}>
+        <FreeBoardPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/board/review",
+    element: (
+      <Suspense fallback={Loading}>
+        <ReviewBoardPage />
+      </Suspense>
+    ),
   },
 ]);
 
