@@ -2,10 +2,11 @@ import { useState } from "react";
 import PrepLayout from "../../layouts/PrepLayout";
 import PlanComponent from "../../components/weddingplan/PlanComponent";
 import WishTab from "../../components/companywish/WishTab";
+import ReservationTab from "../../components/reservation/ReservationTab";
 
 const TABS = [
   { key: "plan", label: "플랜", enabled: true },
-  { key: "reservation", label: "예약 현황", enabled: false },
+  { key: "reservation", label: "예약 현황", enabled: true },
   { key: "payment", label: "결제 내역", enabled: false },
   { key: "wish", label: "찜 목록", enabled: true },
 ];
@@ -50,6 +51,7 @@ const HubPage = () => {
       </nav>
 
       {activeTab === "plan" && <PlanComponent />}
+      {activeTab === "reservation" && <ReservationTab />}
       {activeTab === "wish" && <WishTab />}
     </PrepLayout>
   );

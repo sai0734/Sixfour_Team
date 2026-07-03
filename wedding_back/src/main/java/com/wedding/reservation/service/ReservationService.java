@@ -1,11 +1,11 @@
 package com.wedding.reservation.service;
 
-import com.wedding.global.dto.PageRequestDTO;
-import com.wedding.global.dto.PageResponseDTO;
+import java.util.List;
+
 import com.wedding.reservation.dto.ReservationDTO;
 
 public interface ReservationService {
-    
+
     Long register(ReservationDTO reservationDTO);
 
     ReservationDTO get(Long reservationId);
@@ -14,5 +14,6 @@ public interface ReservationService {
 
     void remove(Long reservationId);
 
-     PageResponseDTO<ReservationDTO> list(PageRequestDTO pageRequestDTO);
+    List<ReservationDTO> listByMember(String memberEmail);
+
 }
