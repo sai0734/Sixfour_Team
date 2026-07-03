@@ -1,12 +1,12 @@
 package com.wedding.reservation.dto;
 
+import java.time.LocalDate;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDate;
 
 @Data
 @Builder
@@ -16,12 +16,14 @@ public class ReservationDTO {
 
   private Long reservationId;
 
-  private String title;
+  private String memberEmail;
 
-  private String writer;
-
-  private boolean complete;
+  private Long cmno;
 
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-  private LocalDate dueDate;
+  private LocalDate weddingDate;
+
+  private String status;
+
+  private String memo;
 }
