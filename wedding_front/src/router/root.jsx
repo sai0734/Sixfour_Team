@@ -1,15 +1,17 @@
-import { Suspense, lazy } from "react";
+﻿import { Suspense, lazy } from "react";
 import { createBrowserRouter } from "react-router-dom";
 import reservationRouter from "./reservationRouter";
-import productRouter from "./productRouter";
+import dressItemRouter from "./dressItemRouter";
 import authRouter from "./authRouter";
+import companyRouter from "./companyRouter";
+import AdminOnly from "../components/common/AdminOnly";
 
 const Loading = <div>Loading....</div>;
 const Main = lazy(() => import("../pages/MainPage"));
 const About = lazy(() => import("../pages/AboutPage"));
-const ReservationIndex = lazy(() => import("../pages/reservation/IndexPage"));
-const ReservationList = lazy(() => import("../pages/reservation/ListPage"));
-const ProductRouter = lazy(() => import("../pages/product/IndexPage"));
+const ReservationIndex = lazy(() => import("../pages/reservation/ReservationIndexPage"));
+const DressItemRouter = lazy(() => import("../pages/dressItem/DressItemIndexPage"));
+const AdminDashboard = lazy(() => import("../pages/admin/AdminDashboardPage"));
 
 const root = createBrowserRouter([
   {
@@ -38,17 +40,31 @@ const root = createBrowserRouter([
     children: reservationRouter(),
   },
   {
-    path: "product",
+    path: "dress-items",
     element: (
       <Suspense fallback={Loading}>
-        <ProductRouter />
+        <DressItemRouter />
       </Suspense>
     ),
-    children: productRouter(),
+    children: dressItemRouter(),
   },
   {
     path: "auth",
     children: authRouter(),
+  },
+  {
+    path: "companies",
+    children: companyRouter(),
+  },
+  {
+    path: "admin",
+    element: (
+      <AdminOnly>
+        <Suspense fallback={Loading}>
+          <AdminDashboard />
+        </Suspense>
+      </AdminOnly>
+    ),
   },
 ]);
 
