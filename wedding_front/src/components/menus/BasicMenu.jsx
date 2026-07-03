@@ -72,9 +72,7 @@ const BasicMenu = () => {
             >
               커뮤니티
             </Link>
-            <Link to="/prep/hub" className={isActive("/prep") ? "active" : ""}>
-              준비관리
-            </Link>
+            <a href="#">준비관리</a>
           </nav>
           <div className="header-right">
             {!loginState.email ? (
