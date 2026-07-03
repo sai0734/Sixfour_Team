@@ -29,4 +29,12 @@ public class ProductOption {
     @Column(columnDefinition = "int default 0")
     private int extraPrice;
 
+    public void changeOptionName(String optionName) {
+        this.optionName = optionName;
+    }
+
+    public void changeOptionValue(String optionValue) {
+        this.optionValue = optionValue;
+    }
+
 }

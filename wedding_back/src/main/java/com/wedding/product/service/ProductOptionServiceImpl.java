@@ -20,22 +20,31 @@
 //
 //    private final ProductOptionRepository productOptionRepository;
 //
+//    // 상품 옵션 리스트 조회
 //    @Override
 //    public List<ProductOptionDTO> listOption(Long pno) {
 //
 //        List<ProductOption> productOptions = productOptionRepository.listOption(pno);
 //
-//        List<ProductOptionDTO> productOptionDTOS = productOptions.stream().map(option -> ProductOptionDTO.builder()
-//                .pono(productOptions.getLast().getPono())
+//        List<ProductOptionDTO> productOptionsDTO = productOptions.stream().map(option -> ProductOptionDTO.builder()
+//                .pono(option.getPono())
 //                .pno(pno)
 //                .optionName(option.getOptionName())
 //                .optionValue(option.getOptionValue())
 //                .extraPrice(option.getExtraPrice())
 //                .build()).collect(Collectors.toList());
 //
+//        return productOptionsDTO;
+//    }
+//
+//    // 상품 옵션 수정
+//    @Override
+//    public Long register(ProductOptionDTO productOptionDTO) {
+//
 //
 //
 //    }
+//
 //
 //
 //
