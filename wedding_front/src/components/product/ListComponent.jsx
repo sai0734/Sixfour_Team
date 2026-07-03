@@ -26,7 +26,7 @@ const ListComponent = () => {
   const { exceptionHandle } = useCustomLogin();
   const { page, size, refresh, moveToList, moveToRead } = useCustomMove();
 
-  //serverData는 나중에 사용
+  //serverData는 나중에 사용해
   const [serverData, setServerData] = useState(initState);
 
   //for FetchingModal
