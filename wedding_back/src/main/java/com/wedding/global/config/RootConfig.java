@@ -5,12 +5,10 @@ import org.springframework.context.annotation.Configuration;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.context.annotation.Bean;
-import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 // 전역 설정(@Enable___ 계열 어노테이션)은 이 클래스에 모아서 관리합니다.
 // WeddingApplication.java(메인 클래스)에는 추가하지 마세요 - 중복 등록되면 부팅 실패합니다.
 @Configuration
-@EnableJpaAuditing
 public class RootConfig {
 
   @Bean
