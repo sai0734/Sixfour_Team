@@ -11,6 +11,7 @@
 //
 //import java.util.List;
 //import java.util.Optional;
+//import java.util.stream.Collectors;
 //
 //@Service
 //@Log4j
@@ -24,7 +25,13 @@
 //
 //        List<ProductOption> productOptions = productOptionRepository.listOption(pno);
 //
-//        List
+//        List<ProductOptionDTO> productOptionDTOS = productOptions.stream().map(option -> ProductOptionDTO.builder()
+//                .pono(productOptions.getLast().getPono())
+//                .pno(pno)
+//                .optionName(option.getOptionName())
+//                .optionValue(option.getOptionValue())
+//                .extraPrice(option.getExtraPrice())
+//                .build()).collect(Collectors.toList());
 //
 //
 //

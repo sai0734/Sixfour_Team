@@ -1,34 +1,27 @@
-<<<<<<< HEAD
-﻿import { Suspense, lazy } from "react";
-import { createBrowserRouter } from "react-router-dom";
-=======
 import { Suspense, lazy } from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
->>>>>>> 70c73be166854e72c3573de7861da3374a964347
-import reservationRouter from "./reservationRouter";
-import dressItemRouter from "./dressItemRouter";
+import productRouter from "./productRouter";
 import authRouter from "./authRouter";
+import dressItemRouter from "./dressItemRouter";
 import companyRouter from "./companyRouter";
 import AdminOnly from "../components/common/AdminOnly";
 
 const Loading = <div>Loading....</div>;
 const Main = lazy(() => import("../pages/MainPage"));
 const About = lazy(() => import("../pages/AboutPage"));
-<<<<<<< HEAD
-const ReservationIndex = lazy(() => import("../pages/reservation/ReservationIndexPage"));
-const DressItemRouter = lazy(() => import("../pages/dressItem/DressItemIndexPage"));
-const AdminDashboard = lazy(() => import("../pages/admin/AdminDashboardPage"));
-=======
-const ReservationIndex = lazy(() => import("../pages/reservation/IndexPage"));
-const ReservationList = lazy(() => import("../pages/reservation/ListPage"));
 const ProductRouter = lazy(() => import("../pages/product/IndexPage"));
+const DressItemRouter = lazy(
+  () => import("../pages/dressItem/DressItemIndexPage"),
+);
+const AdminDashboard = lazy(() => import("../pages/admin/AdminDashboardPage"));
 const ChecklistListPage = lazy(() => import("../pages/checklist/ListPage"));
+const PrepHubPage = lazy(() => import("../pages/prep/HubPage"));
 const BudgetListPage = lazy(() => import("../pages/budget/ListPage"));
 const MyPageHub = lazy(() => import("../pages/mypage/HubPage"));
 const BoardHubPage = lazy(() => import("../pages/board/HubPage"));
 const FreeBoardPage = lazy(() => import("../pages/board/FreeBoardPage"));
 const ReviewBoardPage = lazy(() => import("../pages/board/ReviewBoardPage"));
->>>>>>> 70c73be166854e72c3573de7861da3374a964347
+const SeniorMatchPage = lazy(() => import("../pages/board/SeniorMatchPage"));
 
 const root = createBrowserRouter([
   {
@@ -48,13 +41,18 @@ const root = createBrowserRouter([
     ),
   },
   {
+    // 예약 관리 기능은 마이페이지 허브 "예약 현황" 탭으로 통합됨
     path: "/reservation",
+    element: <Navigate replace to="/mypage" />,
+  },
+  {
+    path: "product",
     element: (
       <Suspense fallback={Loading}>
-        <ReservationIndex />
+        <ProductRouter />
       </Suspense>
     ),
-    children: reservationRouter(),
+    children: productRouter(),
   },
   {
     path: "dress-items",
@@ -70,7 +68,6 @@ const root = createBrowserRouter([
     children: authRouter(),
   },
   {
-<<<<<<< HEAD
     path: "companies",
     children: companyRouter(),
   },
@@ -82,7 +79,9 @@ const root = createBrowserRouter([
           <AdminDashboard />
         </Suspense>
       </AdminOnly>
-=======
+    ),
+  },
+  {
     path: "/checklist",
     element: <Navigate replace to="/checklist/list" />,
   },
@@ -148,7 +147,22 @@ const root = createBrowserRouter([
       <Suspense fallback={Loading}>
         <ReviewBoardPage />
       </Suspense>
->>>>>>> 70c73be166854e72c3573de7861da3374a964347
+    ),
+  },
+  {
+    path: "/board/senior",
+    element: (
+      <Suspense fallback={Loading}>
+        <SeniorMatchPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/prep/hub",
+    element: (
+      <Suspense fallback={Loading}>
+        <PrepHubPage />
+      </Suspense>
     ),
   },
 ]);
