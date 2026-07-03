@@ -1,6 +1,6 @@
 package com.wedding.product.service;
 
-import com.wedding.product.domain.ProductOption;
+import com.wedding.product.dto.ProductOptionDTO;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -8,13 +8,18 @@ import java.util.List;
 @Transactional
 public interface ProductOptionService {
 
-    List<ProductOption> listOptions();
+    // 상품 옵션 리스트 조회하기
+    List<ProductOptionDTO> listOptions(Long pno);
 
-    Long register(ProductOption productOption);
+    // 상품 옵션 등록
+    Long register(ProductOptionDTO productOptionDTO);
 
-    Long modify(ProductOption productOption);
+    // 상품 옵션 수정
+    Long modify(ProductOptionDTO productOptionDTO);
 
+    // 상품 옵션 삭제
     Long remove(Long pono);
 
+    // 옵션 선택 및 수량으로 값 매기긱
     int calculatePrice(Long pno, Long pono, int qty);
 }
