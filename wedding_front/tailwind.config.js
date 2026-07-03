@@ -3,10 +3,10 @@ export default {
   content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
-<<<<<<< HEAD
       fontFamily: {
         display: ["Fraunces", "serif"],
         body: ["Plus Jakarta Sans", "sans-serif"],
+        serif: ["Georgia", "Noto Serif KR", "serif"],
       },
       colors: {
         blush: {
@@ -23,12 +23,6 @@ export default {
           900: "#2D1B24",
           500: "#8B6B78",
         },
-      },
-      backgroundImage: {
-        "rose-gradient":
-          "linear-gradient(135deg, #FF7EB3 0%, #FF5B9E 45%, #C44569 100%)",
-=======
-      colors: {
         brand: {
           DEFAULT: "#D4537E",
           dark: "#B8436A",
@@ -49,9 +43,9 @@ export default {
         cream: "#F7F6F3",
         surface: "#F1EFE8",
       },
-      fontFamily: {
-        serif: ["Georgia", "Noto Serif KR", "serif"],
->>>>>>> b31d1317b6b2b5c4edacd5d745c7004c149c569b
+      backgroundImage: {
+        "rose-gradient":
+          "linear-gradient(135deg, #FF7EB3 0%, #FF5B9E 45%, #C44569 100%)",
       },
     },
   },
