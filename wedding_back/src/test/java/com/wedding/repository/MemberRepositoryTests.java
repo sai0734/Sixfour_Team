@@ -37,6 +37,9 @@ public class MemberRepositoryTests {
               .email(email)
               .pw(passwordEncoder.encode("1111"))
               .nickname("USER_" + triple)
+              .social(false)
+              .status("Active")
+              .emailVerified(true)
               .build();
 
       member.addRole(MemberRole.USER);

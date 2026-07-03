@@ -2,10 +2,10 @@ import { Suspense, lazy } from "react";
 import { Navigate } from "react-router-dom";
 
 const Loading = <div>Loading....</div>;
-const ReservationList = lazy(() => import("../pages/reservation/ListPage"));
-const ReservationRead = lazy(() => import("../pages/reservation/ReadPage"));
-const ReservationAdd = lazy(() => import("../pages/reservation/AddPage"));
-const ReservationModify = lazy(() => import("../pages/reservation/ModifyPage"));
+const ReservationList = lazy(() => import("../pages/reservation/ReservationListPage"));
+const ReservationRead = lazy(() => import("../pages/reservation/ReservationReadPage"));
+const ReservationAdd = lazy(() => import("../pages/reservation/ReservationAddPage"));
+const ReservationModify = lazy(() => import("../pages/reservation/ReservationModifyPage"));
 
 const reservationRouter = () => {
   return [
