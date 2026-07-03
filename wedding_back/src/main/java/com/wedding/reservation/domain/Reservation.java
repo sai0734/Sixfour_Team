@@ -13,29 +13,34 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Reservation {
-  
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long reservationId;
-  
-  private String title;
 
-  private String writer;
+  private String memberEmail;
 
-  private boolean complete;
+  // Company(D파트) 아직 없음 - 값만 저장, JPA 관계 없음 (CompanyWish와 동일 패턴)
+  private Long cmno;
 
-  private LocalDate dueDate;
+  private LocalDate weddingDate;
 
-    public void changeTitle(String title){
-    this.title = title;
+  // 대기 / 확정 / 취소
+  @Builder.Default
+  private String status = "대기";
+
+  private String memo;
+
+  public void changeWeddingDate(LocalDate weddingDate) {
+    this.weddingDate = weddingDate;
   }
 
-  public void changeComplete(boolean complete){
-    this.complete = complete;
+  public void changeStatus(String status) {
+    this.status = status;
   }
 
-  public void changeDueDate(LocalDate dueDate){
-    this.dueDate = dueDate;
+  public void changeMemo(String memo) {
+    this.memo = memo;
   }
 
 }
