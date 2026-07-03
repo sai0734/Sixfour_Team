@@ -5,7 +5,7 @@ const MENU_GROUPS = [
   {
     label: "준비 관리",
     items: [
-      { name: "준비 관리 허브", path: "/prep/hub", enabled: true },
+      { name: "허브 홈", path: "/prep/hub", enabled: false },
       { name: "체크리스트", path: "/checklist/list", enabled: true },
       { name: "예산 관리", path: "/budget/list", enabled: true },
       { name: "D-day 관리", path: "/prep/dday", enabled: false },
