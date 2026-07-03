@@ -15,6 +15,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,6 +26,7 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
 
+    // 상품 전체 리스트 조회하기 (대표이미지 1개, 삭제안된 상품)
     @Override
     public PageResponseDTO<ProductDTO> getProductList(PageRequestDTO pageRequestDTO) {
 
@@ -35,6 +38,7 @@ public class ProductServiceImpl implements ProductService {
         Page<Object[]> result = productRepository.selectProductList(pageable);
 
         List<ProductDTO> dtoList = result.get().map(arr -> {
+
             Product product = (Product) arr[0];
             ProductImage productImage = (ProductImage) arr[1];
 
@@ -52,37 +56,116 @@ public class ProductServiceImpl implements ProductService {
                     .salesCount(product.getSalesCount())
                     .build();
 
-            String imageStr = productImage.getFileName();
-            productDTO.setUploadFileNames(List.of(imageStr));
+            if(productImage != null) {
+                productDTO.setUploadFileNames(List.of(productImage.getFileName()));
+            }
 
             return productDTO;
+
         }).collect(Collectors.toList());
 
+        long totalCount = result.getTotalElements();
 
+        PageResponseDTO<ProductDTO> pageResponseDTO = PageResponseDTO.<ProductDTO>withAll()
+                .dtoList(dtoList)
+                .pageRequestDTO(pageRequestDTO)
+                .totalCount(totalCount)
+                .build();
 
+        return pageResponseDTO;
 
-
-        return null;
     }
 
+    // 상품 1개 조회하기
     @Override
-    public ProductDTO getProduct(Long pno) {
-        return null;
+    public ProductDTO getProductOne(Long pno) {
+
+        Optional<Product> result = productRepository.selectProductOne(pno);
+
+        Product product = result.orElseThrow(() -> new NoSuchElementException("존재하지 않는 상품입니다. pno=" + pno));
+
+        List<String> fileNames = product.getImageList().stream()
+                .map(ProductImage::getFileName).collect(Collectors.toList());
+
+        ProductDTO productDTO = ProductDTO.builder()
+                .pno(product.getPno())
+                .pname(product.getPname())
+                .price(product.getPrice())
+                .pdesc(product.getPdesc())
+                .delFlag(product.isDelFlag())
+                .category(product.getCategory())
+                .stockQty(product.getStockQty())
+                .ratingAvg(product.getRatingAvg())
+                .reviewCount(product.getReviewCount())
+                .viewCount(product.getViewCount())
+                .salesCount(product.getSalesCount())
+                .uploadFileNames(fileNames)
+                .build();
+
+        return productDTO;
+
     }
 
+    // 상품 등록
     @Override
     public Long productRegister(ProductDTO productDTO) {
-        return null;
+
+        Product product = Product.builder()
+                .pname(productDTO.getPname())
+                .price(productDTO.getPrice())
+                .pdesc(productDTO.getPdesc())
+                .category(productDTO.getCategory())
+                .stockQty(productDTO.getStockQty())
+                .build();
+
+        List<String> uploadFileNames = productDTO.getUploadFileNames();
+
+        if(uploadFileNames != null) {
+            uploadFileNames.forEach(fileName -> product.addImageString(fileName));
+        }
+
+        Product productResult = productRepository.save(product);
+
+        return productResult.getPno();
+
     }
 
+    // 상품 수정
     @Override
     public Long productModify(ProductDTO productDTO) {
-        return null;
+
+        Long pno = productDTO.getPno();
+
+        Optional<Product> result = productRepository.selectProductOne(pno);
+
+        Product product = result.orElseThrow(() -> new NoSuchElementException("존재하지 않는 상품입니다. pno=" + pno));
+
+        List<String> uploadFileNames = productDTO.getUploadFileNames();
+        if(uploadFileNames != null) {
+            product.clearList();
+            uploadFileNames.forEach(fileName -> product.addImageString(fileName));
+        }
+
+        product.changeName(productDTO.getPname());
+        product.changePrice(productDTO.getPrice());
+        product.changeDesc(productDTO.getPdesc());
+        product.changeCategory(productDTO.getCategory());
+        product.changeStockQty(productDTO.getStockQty());
+
+        Product productResult = productRepository.save(product);
+
+        return productResult.getPno();
+
     }
 
+    // 상품 삭제
     @Override
     public Long productRemove(Long pno) {
-        return null;
+
+        productRepository.softDelete(pno, true);
+
+        return pno;
+
     }
 
 }

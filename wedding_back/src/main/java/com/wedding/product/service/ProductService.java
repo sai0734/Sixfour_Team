@@ -9,14 +9,19 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public interface ProductService {
 
+    // 상품 전체 리스트 조회하기 (대표이미지 1개, 삭제안된 상품)
     PageResponseDTO<ProductDTO> getProductList(PageRequestDTO pageRequestDTO);
 
-    ProductDTO getProduct(Long pno);
+    // 상품 1개 조회하기
+    ProductDTO getProductOne(Long pno);
 
+    // 상품 등록
     Long productRegister(ProductDTO productDTO);
 
+    // 상품 수정
     Long productModify(ProductDTO productDTO);
 
+    // 상품 삭제
     Long productRemove(Long pno);
 
 }

@@ -1,7 +1,7 @@
 import { API_SERVER_HOST } from "./reservationApi";
 import jwtAxios from "../util/jwtUtil";
 
-const host = `${API_SERVER_HOST}/api/products`;
+const host = `${API_SERVER_HOST}/api/product`;
 
 export const postAdd = async (dressItem) => {
   const header = { headers: { "Content-Type": "multipart/form-data" } };

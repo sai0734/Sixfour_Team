@@ -26,4 +26,7 @@ public class ChecklistDTO {
     private LocalDate dueDate;
 
     private int sortOrder;
+
+    // 준비 단계 (1/2/3 - 이름표는 프론트 고정 매핑)
+    private int stage;
 }

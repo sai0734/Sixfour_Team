@@ -1,13 +1,17 @@
 package com.wedding.member.service;
 
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import com.wedding.member.domain.LoginFail;
 import com.wedding.member.domain.Member;
 import com.wedding.member.dto.MemberDTO;
+import com.wedding.member.repository.LoginFailRepository;
 import com.wedding.member.repository.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -19,6 +23,7 @@ import lombok.extern.log4j.Log4j2;
 public class CustomUserDetailsService implements UserDetailsService{
 
   private final MemberRepository memberRepository;
+  private final LoginFailRepository loginFailRepository;
 
   @Override
   public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -29,6 +34,13 @@ Member member = memberRepository.getWithRoles(username);
 
     if(member == null){
       throw new UsernameNotFoundException("Not Found");
+    }
+
+    // 로그인 실패 잠금 여부 확인
+    Optional<LoginFail> loginFail = loginFailRepository.getByMemberEmail(username);
+
+    if (loginFail.isPresent() && loginFail.get().isLocked()) {
+      throw new LockedException("로그인 5회 실패로 계정이 잠겼습니다. 잠시 후 다시 시도하거나 관리자에게 문의하세요.");
     }
 
     MemberDTO memberDTO = new MemberDTO(

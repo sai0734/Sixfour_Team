@@ -31,6 +31,9 @@ public class Budget {
 
     private String memo;
 
+    // 단계 내(카테고리 내) 노출 순서
+    private int sortOrder;
+
     public void changeCategory(String category) {
         this.category = category;
     }
@@ -45,6 +48,10 @@ public class Budget {
 
     public void changeMemo(String memo) {
         this.memo = memo;
+    }
+
+    public void changeSortOrder(int sortOrder) {
+        this.sortOrder = sortOrder;
     }
 
 }
