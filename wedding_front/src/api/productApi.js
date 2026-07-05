@@ -13,17 +13,47 @@ export const postAdd = async (product) => {
 };
 
 export const getList = async (pageParam) => {
-  const { page, size } = pageParam;
+  const {
+    page,
+    size,
+    categories,
+    keyword,
+    minPrice,
+    maxPrice,
+    minRating,
+    sortType,
+  } = pageParam;
 
   const res = await jwtAxios.get(`${host}/list`, {
-    params: { page: page, size: size },
+    params: {
+      page,
+      size,
+      categories,
+      keyword,
+      minPrice,
+      maxPrice,
+      minRating,
+      sortType,
+    },
   });
 
   return res.data;
 };
 
-export const getOne = async (reservationId) => {
-  const res = await jwtAxios.get(`${host}/${reservationId}`);
+export const getCategories = async () => {
+  const res = await jwtAxios.get(`${host}/categories`);
+
+  return res.data;
+};
+
+export const getOne = async (pno) => {
+  const res = await jwtAxios.get(`${host}/${pno}`);
+
+  return res.data;
+};
+
+export const getOptions = async (pno) => {
+  const res = await jwtAxios.get(`${host}/${pno}/options`);
 
   return res.data;
 };

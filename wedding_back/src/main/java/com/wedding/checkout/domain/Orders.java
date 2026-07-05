@@ -40,8 +40,12 @@ public class Orders extends BaseTimeEntity {
     @Column(nullable = false)
     private String receiverPhone;
 
+    private String zipcode;
+
     @Column(nullable = false)
     private String address;
+
+    private String addressDetail;
 
     private String trackingNo;
 
@@ -59,6 +63,18 @@ public class Orders extends BaseTimeEntity {
     public void addOrderItem(OrderItem orderItem) {
         this.orderItems.add(orderItem);
         orderItem.setOrders(this);
+    }
+
+    public void changeStatus(String orderStatus) {
+        this.orderStatus = orderStatus;
+    }
+
+    public void changeTotalPrice(int totalPrice) {
+        this.totalPrice = totalPrice;
+    }
+
+    public void changeShippingFee(int shippingFee) {
+        this.shippingFee = shippingFee;
     }
 
 }

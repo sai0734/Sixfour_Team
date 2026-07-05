@@ -1,0 +1,385 @@
+[
+  {
+    "pname": "송월 수건 & 주방타올 답례품 세트",
+    "price": 19000,
+    "pdesc": "국내 수건 브랜드 송월의 수건과 주방타올을 함께 구성한 실용적인 답례품 세트입니다.",
+    "delFlag": false,
+    "category": "타월",
+    "stockQty": 40,
+    "ratingAvg": 0,
+    "reviewCount": 0,
+    "uploadFileNames": [
+      "imgi_23_1948_temp_17803108564441view.jpg",
+      "imgi_24_1948_2026060119123882.jpg",
+      "imgi_25_1948_20260601191238153.jpg",
+      "imgi_26_1948_20260601191238227.jpg",
+      "imgi_27_1948_20260601191238298.jpg",
+      "imgi_28_1948_20260601191238362.jpg",
+      "imgi_29_1948_20260601191238439.jpg"
+    ],
+    "options": [
+      {
+        "optionName": "포장",
+        "optionValue": "기본 포장",
+        "extraPrice": 0
+      },
+      {
+        "optionName": "포장",
+        "optionValue": "고급 리본 포장",
+        "extraPrice": 2000
+      }
+    ]
+  },
+  {
+    "pname": "스테이 온 글라스 듀오 세트",
+    "price": 22000,
+    "pdesc": "심플한 디자인의 유리잔 2개로 구성된 듀오 세트로, 부부 답례품으로도 잘 어울립니다.",
+    "delFlag": false,
+    "category": "식기/머그",
+    "stockQty": 35,
+    "ratingAvg": 0,
+    "reviewCount": 0,
+    "uploadFileNames": [
+      "imgi_19_1918_2026042418472516.jpg",
+      "imgi_20_1918_2026042418472589.jpg",
+      "imgi_21_1918_20260424184725158.jpg",
+      "imgi_22_1918_20260424184725224.jpg"
+    ],
+    "options": [
+      {
+        "optionName": "포장",
+        "optionValue": "기본 포장",
+        "extraPrice": 0
+      },
+      {
+        "optionName": "포장",
+        "optionValue": "벨벳 박스 포장",
+        "extraPrice": 3000
+      }
+    ]
+  },
+  {
+    "pname": "과일허그티캔 6종 (택1_티백 6입+과일칩 6입)",
+    "price": 16000,
+    "pdesc": "티백과 과일칩을 함께 즐길 수 있는 티캔 세트로, 다양한 맛 중 하나를 선택할 수 있습니다.",
+    "delFlag": false,
+    "category": "차세트",
+    "stockQty": 55,
+    "ratingAvg": 0,
+    "reviewCount": 0,
+    "uploadFileNames": [
+      "imgi_18_81_temp_17296449923784view.jpg",
+      "imgi_19_81_temp_17296449984618view.jpg",
+      "imgi_20_81_temp_17296450127019view.jpg",
+      "imgi_21_81_temp_17296450135261view.jpg"
+    ],
+    "options": [
+      {
+        "optionName": "구성",
+        "optionValue": "티백 6입",
+        "extraPrice": 0
+      },
+      {
+        "optionName": "구성",
+        "optionValue": "과일칩 6입",
+        "extraPrice": 0
+      }
+    ]
+  },
+  {
+    "pname": "교동복",
+    "price": 9000,
+    "pdesc": "전통 방식으로 만든 교동복 한과로, 은은한 단맛이 특징인 답례품입니다.",
+    "delFlag": false,
+    "category": "전통과자",
+    "stockQty": 70,
+    "ratingAvg": 0,
+    "reviewCount": 0,
+    "uploadFileNames": [
+      "imgi_19_1515_temp_17575007110174view.png",
+      "imgi_20__temp_17575004125100view.png"
+    ],
+    "options": []
+  },
+  {
+    "pname": "그린티 웨하스",
+    "price": 8500,
+    "pdesc": "은은한 녹차향이 배어있는 바삭한 웨하스 과자로, 부담 없는 답례품으로 인기가 많습니다.",
+    "delFlag": false,
+    "category": "과자",
+    "stockQty": 90,
+    "ratingAvg": 0,
+    "reviewCount": 0,
+    "uploadFileNames": [
+      "imgi_17_1437_temp_17585959841528view.jpg",
+      "imgi_18_1437_temp_17585959842532view.jpg",
+      "imgi_19_1437_temp_17585959857793view.jpg",
+      "imgi_20_1437_temp_17585959854962view.jpg",
+      "imgi_21_1437_temp_17585959860517view.jpg",
+      "imgi_22_1437_temp_17585959874008view.jpg",
+      "imgi_23_1437_temp_17479032471293view.jpg"
+    ],
+    "options": []
+  },
+  {
+    "pname": "꿀설기 2구1호 (꿀설기+꿀떡)",
+    "price": 12000,
+    "pdesc": "꿀설기와 꿀떡이 함께 구성된 전통 떡 답례품으로, 하객들에게 정성을 전할 수 있습니다.",
+    "delFlag": false,
+    "category": "떡",
+    "stockQty": 50,
+    "ratingAvg": 0,
+    "reviewCount": 0,
+    "uploadFileNames": [
+      "imgi_20_1845_temp_17748490934236view.jpg"
+    ],
+    "options": [
+      {
+        "optionName": "포장",
+        "optionValue": "기본 포장",
+        "extraPrice": 0
+      },
+      {
+        "optionName": "포장",
+        "optionValue": "개별 포장",
+        "extraPrice": 1500
+      }
+    ]
+  },
+  {
+    "pname": "노아 유기 디저트 커트러리 4P 세트(디저트 스푼2, 디저트 포크2)",
+    "price": 32000,
+    "pdesc": "유기로 제작된 디저트 스푼과 포크 세트로, 고급스러운 느낌의 답례품을 찾는 분들에게 어울립니다.",
+    "delFlag": false,
+    "category": "식기/머그",
+    "stockQty": 20,
+    "ratingAvg": 0,
+    "reviewCount": 0,
+    "uploadFileNames": [
+      "imgi_19__temp_17571485521996view.jpg"
+    ],
+    "options": [
+      {
+        "optionName": "각인",
+        "optionValue": "각인 없음",
+        "extraPrice": 0
+      },
+      {
+        "optionName": "각인",
+        "optionValue": "이니셜 각인",
+        "extraPrice": 3000
+      }
+    ]
+  },
+  {
+    "pname": "도자기 호작도 금술잔 2컬러 4p",
+    "price": 45000,
+    "pdesc": "호작도 문양이 새겨진 도자기 금술잔 4개 세트로, 전통 혼례 느낌을 살린 답례품입니다.",
+    "delFlag": false,
+    "category": "식기/머그",
+    "stockQty": 15,
+    "ratingAvg": 0,
+    "reviewCount": 0,
+    "uploadFileNames": [
+      "imgi_19_1656_temp_17630938105721view.png",
+      "imgi_20_1656_temp_17630938070784view.jpg",
+      "imgi_21_1656_temp_17630938098960view.jpg",
+      "imgi_22_1656_temp_17630938085400view.jpg",
+      "imgi_23_1656_temp_17630938100771view.jpg"
+    ],
+    "options": [
+      {
+        "optionName": "색상",
+        "optionValue": "청색",
+        "extraPrice": 0
+      },
+      {
+        "optionName": "색상",
+        "optionValue": "홍색",
+        "extraPrice": 0
+      }
+    ]
+  },
+  {
+    "pname": "드립백 커피 선물세트",
+    "price": 18000,
+    "pdesc": "간편하게 즐길 수 있는 드립백 커피로 구성된 선물세트로, 실용적인 답례품을 찾는 분들에게 적합합니다.",
+    "delFlag": false,
+    "category": "차세트",
+    "stockQty": 60,
+    "ratingAvg": 0,
+    "reviewCount": 0,
+    "uploadFileNames": [
+      "imgi_20_129_temp_17816012714735view.png",
+      "imgi_21_129_temp_17816012933536view.png",
+      "imgi_22_129_temp_17056416504057view.png"
+    ],
+    "options": [
+      {
+        "optionName": "포장",
+        "optionValue": "기본 포장",
+        "extraPrice": 0
+      },
+      {
+        "optionName": "포장",
+        "optionValue": "고급 박스 포장",
+        "extraPrice": 2000
+      }
+    ]
+  },
+  {
+    "pname": "르버브 와일드 블라썸 디퓨저 200ml",
+    "price": 29000,
+    "pdesc": "와일드 블라썸 향이 특징인 200ml 대용량 디퓨저로, 오래 은은한 향을 즐길 수 있습니다.",
+    "delFlag": false,
+    "category": "디퓨저",
+    "stockQty": 22,
+    "ratingAvg": 0,
+    "reviewCount": 0,
+    "uploadFileNames": [
+      "imgi_19_1710_temp_17664885745263view.jpg",
+      "imgi_20_1710_temp_17664885755550view.jpg"
+    ],
+    "options": []
+  },
+  {
+    "pname": "메이플 호두정과 (80g)",
+    "price": 9500,
+    "pdesc": "메이플 시럽으로 달콤하게 조려낸 호두정과로, 남녀노소 부담 없이 즐길 수 있는 답례품입니다.",
+    "delFlag": false,
+    "category": "전통과자",
+    "stockQty": 75,
+    "ratingAvg": 0,
+    "reviewCount": 0,
+    "uploadFileNames": [
+      "imgi_16_1477_temp_17816886133619view.jpg",
+      "imgi_17_1477_temp_17770216876328view.jpg",
+      "imgi_18_1477_temp_17770216884706view.jpg",
+      "imgi_19_1477_temp_17770216885047view.jpg",
+      "imgi_20_1477_temp_17770216897788view.jpg",
+      "imgi_21_1477_temp_17770216902326view.jpg",
+      "imgi_22_1477_temp_17770216906872view.jpg"
+    ],
+    "options": [
+      {
+        "optionName": "포장",
+        "optionValue": "기본 포장",
+        "extraPrice": 0
+      },
+      {
+        "optionName": "포장",
+        "optionValue": "리본 포장",
+        "extraPrice": 1000
+      }
+    ]
+  },
+  {
+    "pname": "비타민 답례품",
+    "price": 15000,
+    "pdesc": "건강을 챙길 수 있는 비타민으로 구성된 답례품으로, 실용적인 선물을 찾는 분들에게 인기가 많습니다.",
+    "delFlag": false,
+    "category": "비타민/건강",
+    "stockQty": 65,
+    "ratingAvg": 0,
+    "reviewCount": 0,
+    "uploadFileNames": [
+      "imgi_16_1532_temp_17587816445326view.jpg",
+      "imgi_17_1532_temp_17617303134333view.jpg",
+      "imgi_18_1532_temp_17587816447437view.jpg",
+      "imgi_19_1532_temp_17617303075615view.jpg",
+      "imgi_20_1532_temp_17587816474522view.jpg"
+    ],
+    "options": []
+  },
+  {
+    "pname": "양갱 4구 선물세트",
+    "price": 13000,
+    "pdesc": "부드러운 식감의 양갱 4개로 구성된 선물세트로, 남녀노소 무난하게 선호하는 답례품입니다.",
+    "delFlag": false,
+    "category": "전통과자",
+    "stockQty": 58,
+    "ratingAvg": 0,
+    "reviewCount": 0,
+    "uploadFileNames": [
+      "imgi_19_1548_temp_17591983902071view.jpg",
+      "imgi_20_1548_temp_17591983952737view.jpg",
+      "imgi_21_1548_temp_17591983979876view.jpg"
+    ],
+    "options": [
+      {
+        "optionName": "포장",
+        "optionValue": "기본 포장",
+        "extraPrice": 0
+      },
+      {
+        "optionName": "포장",
+        "optionValue": "고급 포장",
+        "extraPrice": 1500
+      }
+    ]
+  },
+  {
+    "pname": "핸드워시&리필 기프트 세트",
+    "price": 21000,
+    "pdesc": "핸드워시 본품과 리필로 구성된 기프트 세트로, 위생과 실용성을 함께 챙길 수 있는 답례품입니다.",
+    "delFlag": false,
+    "category": "비누",
+    "stockQty": 48,
+    "ratingAvg": 0,
+    "reviewCount": 0,
+    "uploadFileNames": [
+      "imgi_19_1659_temp_17635501469530view.jpg",
+      "imgi_20_1659_temp_17635501472632view.jpg",
+      "imgi_21_1659_temp_17635501480012view.jpg",
+      "imgi_22_1659_temp_17635501481394view.jpg",
+      "imgi_23_1659_temp_17635501498512view.jpg",
+      "imgi_24_1659_temp_17635501495560view.jpg"
+    ],
+    "options": []
+  },
+  {
+    "pname": "호도과자 9알",
+    "price": 7000,
+    "pdesc": "고소한 호두가 통째로 들어간 호도과자 9알 구성으로, 부담 없는 가격의 답례품입니다.",
+    "delFlag": false,
+    "category": "전통과자",
+    "stockQty": 100,
+    "ratingAvg": 0,
+    "reviewCount": 0,
+    "uploadFileNames": [
+      "imgi_20_552_temp_17320805572488view.jpg",
+      "imgi_21_552_temp_17158467569356view.jpg"
+    ],
+    "options": []
+  },
+  {
+    "pname": "히말라야 핑크솔트 + 소금 그라인더",
+    "price": 24000,
+    "pdesc": "히말라야 핑크솔트와 소금 그라인더를 함께 구성한 답례품으로, 주방용품을 선호하는 하객에게 좋습니다.",
+    "delFlag": false,
+    "category": "주방",
+    "stockQty": 30,
+    "ratingAvg": 0,
+    "reviewCount": 0,
+    "uploadFileNames": [
+      "imgi_17__temp_17643217050349view.jpg",
+      "imgi_18__temp_17643217056637view.jpg",
+      "imgi_19__temp_17643217076243view.jpg",
+      "imgi_20__temp_17643217075095view.jpg",
+      "imgi_21__temp_17643217081746view.jpg",
+      "imgi_22__temp_17643217069628view.jpg"
+    ],
+    "options": [
+      {
+        "optionName": "포장",
+        "optionValue": "기본 포장",
+        "extraPrice": 0
+      },
+      {
+        "optionName": "포장",
+        "optionValue": "고급 박스 포장",
+        "extraPrice": 2500
+      }
+    ]
+  }
+]
