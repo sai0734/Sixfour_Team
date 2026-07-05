@@ -1,42 +1,48 @@
 import { useDispatch, useSelector } from "react-redux";
 import { createSearchParams, Navigate, useNavigate } from "react-router-dom";
 import { loginPostAsync, logout } from "../slices/loginSlice";
+import { mergeGuestCartAsync } from "../slices/cartSlice";
 
 const useCustomLogin = () => {
   const navigate = useNavigate();
 
   const dispatch = useDispatch();
 
-  const loginState = useSelector((state) => state.loginSlice); //-------로그인 상태
+  const loginState = useSelector((state) => state.loginSlice);
+  const cartItems = useSelector((state) => state.cartSlice);
 
-  const isLogin = loginState.email ? true : false; //----------로그인 여부
+  const isLogin = loginState.email ? true : false;
 
   const doLogin = async (loginParam) => {
-    //----------로그인 함수
-
     const action = await dispatch(loginPostAsync(loginParam));
 
-    return action.payload;
+    const result = action.payload;
+
+    // 병합이 완전히 끝날 때까지 기다린 후 doLogin이 종료되도록 await 추가
+    // (이전엔 await 없이 그냥 dispatch만 해서, 병합 도중에 화면이 어중간한 상태를 보여주는 문제가 있었음)
+    if (result && result.email) {
+      const hasGuestItems = cartItems.some((item) => item.isGuest);
+      if (hasGuestItems) {
+        await dispatch(mergeGuestCartAsync(result.email));
+      }
+    }
+
+    return result;
   };
 
   const doLogout = () => {
-    //---------------로그아웃 함수
-
     dispatch(logout());
   };
 
   const moveToPath = (path) => {
-    //----------------페이지 이동
     navigate({ pathname: path }, { replace: true });
   };
 
   const moveToLogin = () => {
-    //----------------------로그인 페이지로 이동
     navigate({ pathname: "/auth/login" }, { replace: true });
   };
 
   const moveToLoginReturn = () => {
-    //----------------------로그인 페이지로 이동 컴포넌트
     return <Navigate replace to="/auth/login" />;
   };
 

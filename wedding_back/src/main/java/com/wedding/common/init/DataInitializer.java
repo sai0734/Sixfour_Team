@@ -35,6 +35,15 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import com.wedding.product.domain.Product;
+import com.wedding.product.repository.ProductRepository;
+import com.wedding.product.domain.ProductOption;
+import com.wedding.product.repository.ProductOptionRepository;
+import com.wedding.checkout.domain.Orders;
+import com.wedding.checkout.domain.OrderItem;
+import com.wedding.checkout.repository.OrderRepository;
+import com.wedding.member.domain.Member;
+import com.wedding.member.repository.MemberRepository;
 
 @Component
 @RequiredArgsConstructor
@@ -50,22 +59,124 @@ public class DataInitializer implements ApplicationRunner {
   private final MakeupDetailRepository makeupDetailRepository;
   private final MakeupPackageRepository makeupPackageRepository;
   private final ObjectMapper objectMapper;
+  private final ProductRepository productRepository;
+  private final ProductOptionRepository productOptionRepository;
+  private final OrderRepository orderRepository;
+  private final MemberRepository memberRepository;
 
   @Override
   @Transactional
   public void run(ApplicationArguments args) throws Exception {
+
+    // Product 더미데이터는 company 데이터 유무와 무관하게 독립적으로 체크
+    if (productRepository.count() == 0) {
+      log.info("===== Product JSON dummy data initialization start =====");
+      insertProducts();
+      log.info("===== Product JSON dummy data initialization complete =====");
+    }
+
+    if (orderRepository.count() == 0) {
+      log.info("===== Dummy Orders seeding start =====");
+      insertDummyOrders();
+      log.info("===== Dummy Orders seeding complete =====");
+    }
+
     if (companyRepository.count() > 0) {
       log.info("Dummy data already exists. Skip JSON initialization.");
       return;
     }
 
-    log.info("===== JSON dummy data initialization start =====");
-    insertCompanies();
-    insertHalls();
-    insertDresses();
-    insertStudios();
-    insertMakeups();
-    log.info("===== JSON dummy data initialization complete =====");
+//    log.info("===== JSON dummy data initialization start =====");
+//    insertCompanies();
+//    insertHalls();
+//    insertDresses();
+//    insertStudios();
+//    insertMakeups();
+//    log.info("===== JSON dummy data initialization complete =====");
+
+
+  }
+
+  // 상품 더미데이터 삽입 (옵션 포함)
+  private void insertProducts() throws Exception {
+    List<Map<String, Object>> list = readJson("data/product.json");
+
+    for (Map<String, Object> m : list) {
+      Product product = Product.builder()
+              .pname((String) m.get("pname"))
+              .price(toInt(m.get("price")))
+              .pdesc((String) m.get("pdesc"))
+              .category((String) m.get("category"))
+              .stockQty(toInt(m.get("stockQty")))
+              .build();
+
+      List<String> uploadFileNames = castList(m.get("uploadFileNames"));
+      if (uploadFileNames != null) {
+        uploadFileNames.forEach(product::addImageString);
+      }
+
+      Product savedProduct = productRepository.save(product);
+
+      List<Map<String, Object>> options = castList(m.get("options"));
+      if (options != null) {
+        for (Map<String, Object> opt : options) {
+          ProductOption productOption = ProductOption.builder()
+                  .product(savedProduct)
+                  .optionName((String) opt.get("optionName"))
+                  .optionValue((String) opt.get("optionValue"))
+                  .extraPrice(toInt(opt.get("extraPrice")))
+                  .build();
+
+          productOptionRepository.save(productOption);
+        }
+      }
+    }
+
+    log.info("Inserted {} products from JSON.", productRepository.count());
+  }
+
+  // 리뷰 테스트를 위해, 실제 존재하는 회원들에게 상품 몇 개를 "구매한 것"으로 만들어줌
+  private void insertDummyOrders() {
+
+    List<Member> members = memberRepository.findAll();
+    List<Product> products = productRepository.findAll();
+
+    if (members.isEmpty() || products.isEmpty()) {
+      log.info("회원 또는 상품이 없어 더미 주문 생성을 건너뜁니다.");
+      return;
+    }
+
+    int productCount = Math.min(3, products.size());
+
+    for (Member member : members) {
+      for (int i = 0; i < productCount; i++) {
+        Product product = products.get(i);
+
+        Orders orders = Orders.builder()
+                .orderNumber("DUMMY-" + member.getEmail() + "-" + product.getPno())
+                .member(member)
+                .totalPrice(product.getPrice())
+                .shippingFee(0)
+                .receiverName(member.getNickname())
+                .receiverPhone("010-0000-0000")
+                .address("테스트 주소")
+                .orderStatus("DELIVERED")
+                .build();
+
+        OrderItem orderItem = OrderItem.builder()
+                .product(product)
+                .pnameSnapshot(product.getPname())
+                .priceSnapshot(product.getPrice())
+                .qty(1)
+                .build();
+
+        orders.addOrderItem(orderItem);
+
+        orderRepository.save(orders);
+      }
+    }
+
+    log.info("Inserted dummy orders for {} members x {} products.", members.size(), productCount);
   }
 
   private void insertCompanies() throws Exception {

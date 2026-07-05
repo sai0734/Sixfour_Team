@@ -77,6 +77,24 @@ const BasicMenu = () => {
             </Link>
           </nav>
           <div className="header-right">
+            {/* 신규 추가: 장바구니 아이콘 (로그인 여부와 무관하게 항상 노출 - 비회원도 게스트 장바구니가 있을 수 있으므로) */}
+            <Link to="/cart" className="cart-icon" aria-label="장바구니">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="9" cy="21" r="1" />
+                <circle cx="20" cy="21" r="1" />
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+              </svg>
+            </Link>
+
             {!loginState.email ? (
               <Link to="/auth/login" className="login">
                 로그인
@@ -172,6 +190,16 @@ const BasicMenu = () => {
   .header-right a.login:hover { color: #fff; }
   header.scrolled .header-right a.login { color: #5F5E5A; }
   header.scrolled .header-right a.login:hover { color: #3D3D3A; }
+  /* 신규 추가: 장바구니 아이콘 스타일 */
+  .cart-icon {
+    color: rgba(255,255,255,0.9);
+    transition: color 0.25s ease;
+    display: flex;
+    align-items: center;
+  }
+  .cart-icon:hover { color: #fff; }
+  header.scrolled .cart-icon { color: #5F5E5A; }
+  header.scrolled .cart-icon:hover { color: #D4537E; }
   .btn-header {
     height: 36px;
     padding: 0 20px;

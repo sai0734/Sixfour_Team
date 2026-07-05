@@ -110,4 +110,11 @@ public class Product extends BaseTimeEntity {
 
   }
 
+  public void changeRatingStats(double ratingAvg, int reviewCount) {
+
+    this.ratingAvg = ratingAvg;
+    this.reviewCount = reviewCount;
+
+  }
+
 }

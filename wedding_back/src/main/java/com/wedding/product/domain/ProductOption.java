@@ -37,4 +37,8 @@ public class ProductOption {
         this.optionValue = optionValue;
     }
 
+    public void changeOptionExtraPrice(int optionExtraPrice) {
+        this.extraPrice = optionExtraPrice;
+    }
+
 }

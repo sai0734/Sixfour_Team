@@ -49,4 +49,25 @@ public class Review extends BaseTimeEntity {
     @Builder.Default
     private List<ReviewImage> imageList = new ArrayList<>();
 
+    public void addImageString(String fileName) {
+
+        ReviewImage image = ReviewImage.builder()
+                .fileName(fileName).ord(this.imageList.size()).build();
+
+        this.imageList.add(image);
+
+    }
+
+    public void changeRating(Integer rating) {
+        this.rating = rating;
+    }
+
+    public void changeContent(String content) {
+        this.content = content;
+    }
+
+    public void clearImageList() {
+        this.imageList.clear();
+    }
+
 }

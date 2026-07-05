@@ -5,6 +5,7 @@ import com.wedding.global.dto.PageResponseDTO;
 import com.wedding.product.domain.Product;
 import com.wedding.product.domain.ProductImage;
 import com.wedding.product.dto.ProductDTO;
+import com.wedding.product.dto.ProductSearchDTO;
 import com.wedding.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -26,16 +27,42 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
 
-    // 상품 전체 리스트 조회하기 (대표이미지 1개, 삭제안된 상품)
+    // 상품 전체 리스트 조회하기 (대표이미지 1개, 삭제안된 상품) - 검색조건 없이 새 메서드로 위임
     @Override
     public PageResponseDTO<ProductDTO> getProductList(PageRequestDTO pageRequestDTO) {
 
-        Pageable pageable = PageRequest.of(
-                pageRequestDTO.getPage()-1,
-                pageRequestDTO.getSize(),
-                Sort.by("pno").descending());
+        ProductSearchDTO searchDTO = ProductSearchDTO.builder()
+                .page(pageRequestDTO.getPage())
+                .size(pageRequestDTO.getSize())
+                .build();
 
-        Page<Object[]> result = productRepository.selectProductList(pageable);
+        return getProductList(searchDTO);
+    }
+
+    // 상품 전체 리스트 조회하기 (카테고리/가격/평점/검색어/정렬 지원)
+    @Override
+    public PageResponseDTO<ProductDTO> getProductList(ProductSearchDTO productSearchDTO) {
+
+        Sort sort = resolveSort(productSearchDTO.getSortType());
+
+        Pageable pageable = PageRequest.of(
+                productSearchDTO.getPage()-1,
+                productSearchDTO.getSize(),
+                sort);
+
+        // 빈 리스트는 SQL의 "IN ()" 오류를 막기 위해 null로 취급
+        List<String> categories = productSearchDTO.getCategories();
+        if (categories != null && categories.isEmpty()) {
+            categories = null;
+        }
+
+        Page<Object[]> result = productRepository.searchProductList(
+                categories,
+                productSearchDTO.getKeyword(),
+                productSearchDTO.getMinPrice(),
+                productSearchDTO.getMaxPrice(),
+                productSearchDTO.getMinRating(),
+                pageable);
 
         List<ProductDTO> dtoList = result.get().map(arr -> {
 
@@ -66,14 +93,40 @@ public class ProductServiceImpl implements ProductService {
 
         long totalCount = result.getTotalElements();
 
-        PageResponseDTO<ProductDTO> pageResponseDTO = PageResponseDTO.<ProductDTO>withAll()
+        return PageResponseDTO.<ProductDTO>withAll()
                 .dtoList(dtoList)
-                .pageRequestDTO(pageRequestDTO)
+                .pageRequestDTO(productSearchDTO)
                 .totalCount(totalCount)
                 .build();
 
-        return pageResponseDTO;
+    }
 
+    // 정렬 옵션 문자열을 실제 Sort 객체로 변환
+    private Sort resolveSort(String sortType) {
+
+        if (sortType == null) {
+            return Sort.by("pno").descending(); // 기본값: 최신순
+        }
+
+        switch (sortType) {
+            case "popular":
+                return Sort.by("salesCount").descending();
+            case "priceAsc":
+                return Sort.by("price").ascending();
+            case "priceDesc":
+                return Sort.by("price").descending();
+            case "reviews":
+                return Sort.by("reviewCount").descending();
+            case "latest":
+            default:
+                return Sort.by("pno").descending();
+        }
+    }
+
+    // 카테고리 목록 조회하기
+    @Override
+    public List<String> getCategoryList() {
+        return productRepository.findDistinctCategories();
     }
 
     // 상품 1개 조회하기
@@ -85,7 +138,7 @@ public class ProductServiceImpl implements ProductService {
         Product product = result.orElseThrow(() -> new NoSuchElementException("존재하지 않는 상품입니다. pno=" + pno));
 
         List<String> fileNames = product.getImageList().stream()
-                .map(ProductImage::getFileName).collect(Collectors.toList());
+                .map(img -> img.getFileName()).collect(Collectors.toList());
 
         ProductDTO productDTO = ProductDTO.builder()
                 .pno(product.getPno())

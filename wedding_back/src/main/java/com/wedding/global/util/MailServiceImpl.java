@@ -87,4 +87,22 @@ public class MailServiceImpl implements MailService {
     }
   }
 
+  // 주문 완료 확인 메일 (HYH 추가)
+  @Override
+  public void sendOrderConfirmationEmail(String toEmail, String orderNumber, int amount) {
+
+    String subject = "[Wedding] 주문이 완료되었습니다 (주문번호 " + orderNumber + ")";
+
+    String content =
+            "<div style='font-family:sans-serif; line-height:1.6;'>"
+                    + "<h2>주문 완료 안내</h2>"
+                    + "<p>주문이 정상적으로 완료되었습니다.</p>"
+                    + "<p><b>주문번호:</b> " + orderNumber + "</p>"
+                    + "<p><b>결제금액:</b> " + String.format("%,d", amount) + "원</p>"
+                    + "<p style='margin-top:16px; color:#888;'>주문해 주셔서 감사합니다.</p>"
+                    + "</div>";
+
+    sendHtmlMail(toEmail, subject, content);
+  }
+
 }
