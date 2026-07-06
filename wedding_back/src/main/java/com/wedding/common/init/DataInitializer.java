@@ -33,6 +33,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import com.wedding.product.domain.Product;
@@ -63,6 +64,7 @@ public class DataInitializer implements ApplicationRunner {
   private final ProductOptionRepository productOptionRepository;
   private final OrderRepository orderRepository;
   private final MemberRepository memberRepository;
+  private final JdbcTemplate jdbcTemplate;
 
   @Override
   @Transactional
@@ -81,20 +83,83 @@ public class DataInitializer implements ApplicationRunner {
       log.info("===== Dummy Orders seeding complete =====");
     }
 
-    if (companyRepository.count() > 0) {
-      log.info("Dummy data already exists. Skip JSON initialization.");
+    if (companyRepository.count() == 0) {
+      log.info("No company data exists. Skip company detail initialization.");
       return;
     }
 
-//    log.info("===== JSON dummy data initialization start =====");
-//    insertCompanies();
-//    insertHalls();
-//    insertDresses();
-//    insertStudios();
-//    insertMakeups();
-//    log.info("===== JSON dummy data initialization complete =====");
+    relaxLegacyDetailColumns();
+    refreshMakeupDiscounts();
 
+  }
 
+  private void relaxLegacyDetailColumns() {
+    relaxColumn("tbl_hall_detail", "company_cno");
+    relaxColumn("tbl_hall_detail", "capacity");
+    relaxColumn("tbl_hall_detail", "meal_type");
+    relaxColumn("tbl_hall_detail", "parking_available");
+    relaxColumn("tbl_hall_detail", "wedding_time");
+    relaxColumn("tbl_dress_detail", "company_cno");
+    relaxColumn("tbl_makeup_detail", "company_cno");
+    relaxColumn("tbl_studio_detail", "company_cno");
+  }
+
+  private void relaxColumn(String tableName, String columnName) {
+    List<Map<String, Object>> columns = jdbcTemplate.queryForList("""
+        select COLUMN_TYPE, IS_NULLABLE
+        from INFORMATION_SCHEMA.COLUMNS
+        where TABLE_SCHEMA = DATABASE()
+          and TABLE_NAME = ?
+          and COLUMN_NAME = ?
+        """, tableName, columnName);
+
+    if (columns.isEmpty() || "YES".equals(columns.get(0).get("IS_NULLABLE"))) {
+      return;
+    }
+
+    String columnType = columns.get(0).get("COLUMN_TYPE").toString();
+    jdbcTemplate.execute("alter table `" + tableName + "` modify column `" + columnName + "` " + columnType + " null");
+    log.info("Relaxed legacy column {}.{} to nullable.", tableName, columnName);
+  }
+
+  private void refreshMakeupDiscounts() throws Exception {
+    log.info("===== Makeup discount JSON synchronization start =====");
+
+    makeupPackageRepository.deleteAll();
+
+    insertMakeupDiscountPackages();
+
+    log.info("===== Makeup discount JSON synchronization complete =====");
+  }
+
+  private void insertMakeupDiscountPackages() throws Exception {
+    List<Map<String, Object>> list = readJson("data/makeup.json");
+
+    for (Map<String, Object> m : list) {
+      Company company = findCompany(m.get("cmno"));
+      if (company == null) {
+        continue;
+      }
+
+      List<Map<String, Object>> packages = castList(m.get("packages"));
+      if (packages == null) {
+        continue;
+      }
+
+      for (Map<String, Object> pkg : packages) {
+        if (pkg == null) {
+          continue;
+        }
+        MakeupPackage makeupPackage = MakeupPackage.builder()
+            .company(company)
+            .packageType(normalizeMakeupPackageType(pkg.get("packageType")))
+            .discountRate(toBigDecimal(pkg.get("discountRate")))
+            .build();
+        makeupPackageRepository.save(makeupPackage);
+      }
+    }
+
+    log.info("Inserted makeup discount packages from JSON.");
   }
 
   // 상품 더미데이터 삽입 (옵션 포함)
@@ -216,7 +281,10 @@ public class DataInitializer implements ApplicationRunner {
     List<Map<String, Object>> list = readJson("data/hall.json");
 
     for (Map<String, Object> m : list) {
-      Company company = getCompany(m.get("cmno"));
+      Company company = findCompany(m.get("cmno"));
+      if (company == null) {
+        continue;
+      }
 
       HallDetail detail = HallDetail.builder()
           .company(company)
@@ -256,7 +324,10 @@ public class DataInitializer implements ApplicationRunner {
     List<Map<String, Object>> list = readJson("data/dress.json");
 
     for (Map<String, Object> m : list) {
-      Company company = getCompany(m.get("cmno"));
+      Company company = findCompany(m.get("cmno"));
+      if (company == null) {
+        continue;
+      }
 
       DressDetail detail = DressDetail.builder()
           .company(company)
@@ -289,12 +360,16 @@ public class DataInitializer implements ApplicationRunner {
     List<Map<String, Object>> list = readJson("data/studio.json");
 
     for (Map<String, Object> m : list) {
-      Company company = getCompany(m.get("cmno"));
+      Company company = findCompany(m.get("cmno"));
+      if (company == null) {
+        continue;
+      }
       List<String> tags = castList(m.get("themeTags"));
+      String themeTags = tags != null ? String.join(",", tags) : (String) m.getOrDefault("theme", "");
 
       StudioDetail detail = StudioDetail.builder()
           .company(company)
-          .themeTags(tags != null ? String.join(",", tags) : "")
+          .themeTags(themeTags)
           .build();
       studioDetailRepository.save(detail);
     }
@@ -306,7 +381,10 @@ public class DataInitializer implements ApplicationRunner {
     List<Map<String, Object>> list = readJson("data/makeup.json");
 
     for (Map<String, Object> m : list) {
-      Company company = getCompany(m.get("cmno"));
+      Company company = findCompany(m.get("cmno"));
+      if (company == null) {
+        continue;
+      }
 
       MakeupDetail detail = MakeupDetail.builder()
           .company(company)
@@ -322,6 +400,9 @@ public class DataInitializer implements ApplicationRunner {
       List<Map<String, Object>> packages = castList(m.get("packages"));
       if (packages != null) {
         for (Map<String, Object> pkg : packages) {
+          if (pkg == null) {
+            continue;
+          }
           MakeupPackage makeupPackage = MakeupPackage.builder()
               .company(company)
               .packageType(normalizeMakeupPackageType(pkg.get("packageType")))
@@ -335,9 +416,13 @@ public class DataInitializer implements ApplicationRunner {
     log.info("Inserted makeup details from JSON.");
   }
 
-  private Company getCompany(Object cmno) {
-    return companyRepository.findById(toLongObject(cmno))
-        .orElseThrow(() -> new IllegalStateException("Company not found for cmno=" + cmno));
+  private Company findCompany(Object cmno) {
+    Long companyId = toLongObject(cmno);
+    return companyRepository.findById(companyId)
+        .orElseGet(() -> {
+          log.warn("Skip detail data. Company not found for cmno={}", companyId);
+          return null;
+        });
   }
 
   private List<Map<String, Object>> readJson(String path) throws Exception {
@@ -385,6 +470,12 @@ public class DataInitializer implements ApplicationRunner {
     }
     if ("MAKEUP_ONLY".equals(name)) {
       return MakeupPackageType.MAKEUP;
+    }
+    if ("TWO".equals(name)) {
+      return MakeupPackageType.HAIR_MAKEUP;
+    }
+    if ("THREE".equals(name)) {
+      return MakeupPackageType.FULL;
     }
     if ("NAIL_MAKEUP".equals(name)) {
       return MakeupPackageType.FULL;

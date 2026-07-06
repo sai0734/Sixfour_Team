@@ -5,5 +5,7 @@ public enum HallType {
   HOTEL,
   HOUSE,
   CONVENTION,
-  CHAPEL
+  CHAPEL,
+  GARDEN,
+  BANQUET
 }

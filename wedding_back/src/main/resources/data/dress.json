@@ -1,1555 +1,1555 @@
 ﻿[
     {
         "cmno":  1,
-        "sizeRange":  "S-XL",
+        "sizeRange":  "44~66",
         "dressItems":  [
                            {
-                               "itemName":  "Dress 1-1",
-                               "price":  780000,
-                               "imageUrl":  "dress_1_item_1.jpg",
+                               "itemName":  "하이넥 드레스",
+                               "price":  75000,
+                               "imageUrl":  "드레스_01_라벤더드레스_01_01.jpg",
                                "ord":  0,
-                               "itemType":  "ALINE",
-                               "styleTags":  "classic,elegant",
-                               "sizeRange":  "S-XL"
+                               "itemType":  "MINI",
+                               "styleTags":  "셀프웨딩,미니드레스",
+                               "sizeRange":  "50~66"
                            },
                            {
-                               "itemName":  "Dress 1-2",
-                               "price":  810000,
-                               "imageUrl":  "dress_1_item_2.jpg",
+                               "itemName":  "오프숄더 드레스",
+                               "price":  102000,
+                               "imageUrl":  "드레스_01_라벤더드레스_01_02.jpg",
                                "ord":  1,
-                               "itemType":  "BELL",
-                               "styleTags":  "romantic,luxury",
-                               "sizeRange":  "S-XL"
+                               "itemType":  "MINI",
+                               "styleTags":  "셀프웨딩,미니드레스",
+                               "sizeRange":  "44~66"
                            },
                            {
-                               "itemName":  "Dress 1-3",
-                               "price":  840000,
-                               "imageUrl":  "dress_1_item_3.jpg",
+                               "itemName":  "프릴 디테일 드레스",
+                               "price":  144000,
+                               "imageUrl":  "드레스_01_라벤더드레스_01_03.jpg",
                                "ord":  2,
-                               "itemType":  "MERMAID",
-                               "styleTags":  "modern,clean",
-                               "sizeRange":  "S-XL"
+                               "itemType":  "ALINE",
+                               "styleTags":  "셀프웨딩,스몰웨딩",
+                               "sizeRange":  "60~66"
                            },
                            {
-                               "itemName":  "Dress 1-4",
-                               "price":  870000,
-                               "imageUrl":  "dress_1_item_4.jpg",
+                               "itemName":  "심플 A라인 드레스",
+                               "price":  146000,
+                               "imageUrl":  "드레스_01_라벤더드레스_01_04.jpg",
                                "ord":  3,
                                "itemType":  "MINI",
-                               "styleTags":  "lace,soft",
-                               "sizeRange":  "S-XL"
+                               "styleTags":  "화동,미니드레스",
+                               "sizeRange":  "44~66"
                            },
                            {
-                               "itemName":  "Dress 1-5",
-                               "price":  900000,
-                               "imageUrl":  "dress_1_item_5.jpg",
+                               "itemName":  "심플 슬립 드레스",
+                               "price":  76000,
+                               "imageUrl":  "드레스_01_라벤더드레스_01_05.jpg",
                                "ord":  4,
                                "itemType":  "SLIM",
-                               "styleTags":  "premium,slim",
-                               "sizeRange":  "S-XL"
+                               "styleTags":  "화동,스몰웨딩",
+                               "sizeRange":  "50~55"
                            },
                            {
-                               "itemName":  "Dress 1-6",
-                               "price":  930000,
-                               "imageUrl":  "dress_1_item_6.jpg",
+                               "itemName":  "벨슬리브 드레스",
+                               "price":  89000,
+                               "imageUrl":  "드레스_01_라벤더드레스_01_06.jpg",
                                "ord":  5,
-                               "itemType":  "ALINE",
-                               "styleTags":  "simple,chic",
-                               "sizeRange":  "S-XL"
+                               "itemType":  "BELL",
+                               "styleTags":  "화동,셀프웨딩",
+                               "sizeRange":  "60~66"
                            },
                            {
-                               "itemName":  "Dress 1-7",
-                               "price":  960000,
-                               "imageUrl":  "dress_1_item_7.jpg",
+                               "itemName":  "브이넥 드레스",
+                               "price":  143000,
+                               "imageUrl":  "드레스_01_라벤더드레스_01_07.jpg",
                                "ord":  6,
-                               "itemType":  "BELL",
-                               "styleTags":  "flower,lovely",
-                               "sizeRange":  "S-XL"
+                               "itemType":  "ALINE",
+                               "styleTags":  "스몰웨딩,셀프웨딩",
+                               "sizeRange":  "60~66"
                            },
                            {
-                               "itemName":  "Dress 1-8",
-                               "price":  990000,
-                               "imageUrl":  "dress_1_item_8.jpg",
+                               "itemName":  "미니 레이스 드레스",
+                               "price":  154000,
+                               "imageUrl":  "드레스_01_라벤더드레스_01_08.jpg",
                                "ord":  7,
-                               "itemType":  "MERMAID",
-                               "styleTags":  "silk,glossy",
-                               "sizeRange":  "S-XL"
+                               "itemType":  "MINI",
+                               "styleTags":  "스몰웨딩,A라인",
+                               "sizeRange":  "44~50"
                            },
                            {
-                               "itemName":  "Dress 1-9",
-                               "price":  1020000,
-                               "imageUrl":  "dress_1_item_9.jpg",
+                               "itemName":  "롱 트레인 드레스",
+                               "price":  163000,
+                               "imageUrl":  "드레스_01_라벤더드레스_01_09.jpg",
                                "ord":  8,
-                               "itemType":  "MINI",
-                               "styleTags":  "classic,elegant",
-                               "sizeRange":  "S-XL"
+                               "itemType":  "ALINE",
+                               "styleTags":  "셀프웨딩,화동",
+                               "sizeRange":  "60~66"
                            },
                            {
-                               "itemName":  "Dress 1-10",
-                               "price":  1050000,
-                               "imageUrl":  "dress_1_item_10.jpg",
+                               "itemName":  "레이스 디테일 드레스",
+                               "price":  135000,
+                               "imageUrl":  "드레스_01_라벤더드레스_01_10.jpg",
                                "ord":  9,
-                               "itemType":  "SLIM",
-                               "styleTags":  "romantic,luxury",
-                               "sizeRange":  "S-XL"
+                               "itemType":  "MINI",
+                               "styleTags":  "화동,미니드레스",
+                               "sizeRange":  "50~60"
                            },
                            {
-                               "itemName":  "Dress 1-11",
-                               "price":  1080000,
-                               "imageUrl":  "dress_1_item_11.jpg",
+                               "itemName":  "백리스 드레스",
+                               "price":  147000,
+                               "imageUrl":  "드레스_01_라벤더드레스_01_11.jpg",
                                "ord":  10,
-                               "itemType":  "ALINE",
-                               "styleTags":  "modern,clean",
-                               "sizeRange":  "S-XL"
+                               "itemType":  "MINI",
+                               "styleTags":  "미니드레스,A라인",
+                               "sizeRange":  "50~55"
                            },
                            {
-                               "itemName":  "Dress 1-12",
-                               "price":  1110000,
-                               "imageUrl":  "dress_1_item_12.jpg",
+                               "itemName":  "리본 포인트 드레스",
+                               "price":  174000,
+                               "imageUrl":  "드레스_01_라벤더드레스_01_12.jpg",
                                "ord":  11,
-                               "itemType":  "BELL",
-                               "styleTags":  "lace,soft",
-                               "sizeRange":  "S-XL"
-                           },
-                           {
-                               "itemName":  "Dress 1-13",
-                               "price":  1140000,
-                               "imageUrl":  "dress_1_item_13.jpg",
-                               "ord":  12,
-                               "itemType":  "MERMAID",
-                               "styleTags":  "premium,slim",
-                               "sizeRange":  "S-XL"
-                           },
-                           {
-                               "itemName":  "Dress 1-14",
-                               "price":  1170000,
-                               "imageUrl":  "dress_1_item_14.jpg",
-                               "ord":  13,
-                               "itemType":  "MINI",
-                               "styleTags":  "simple,chic",
-                               "sizeRange":  "S-XL"
-                           },
-                           {
-                               "itemName":  "Dress 1-15",
-                               "price":  1200000,
-                               "imageUrl":  "dress_1_item_15.jpg",
-                               "ord":  14,
-                               "itemType":  "SLIM",
-                               "styleTags":  "flower,lovely",
-                               "sizeRange":  "S-XL"
-                           },
-                           {
-                               "itemName":  "Dress 1-16",
-                               "price":  1230000,
-                               "imageUrl":  "dress_1_item_16.jpg",
-                               "ord":  15,
                                "itemType":  "ALINE",
-                               "styleTags":  "silk,glossy",
-                               "sizeRange":  "S-XL"
+                               "styleTags":  "스몰웨딩,화동",
+                               "sizeRange":  "44~50"
                            },
                            {
-                               "itemName":  "Dress 1-17",
-                               "price":  1260000,
-                               "imageUrl":  "dress_1_item_17.jpg",
-                               "ord":  16,
-                               "itemType":  "BELL",
-                               "styleTags":  "classic,elegant",
-                               "sizeRange":  "S-XL"
-                           },
-                           {
-                               "itemName":  "Dress 1-18",
-                               "price":  1290000,
-                               "imageUrl":  "dress_1_item_18.jpg",
-                               "ord":  17,
-                               "itemType":  "MERMAID",
-                               "styleTags":  "romantic,luxury",
-                               "sizeRange":  "S-XL"
-                           },
-                           {
-                               "itemName":  "Dress 1-19",
-                               "price":  1320000,
-                               "imageUrl":  "dress_1_item_19.jpg",
-                               "ord":  18,
+                               "itemName":  "시폰 드레스",
+                               "price":  109000,
+                               "imageUrl":  "드레스_01_라벤더드레스_01_13.jpg",
+                               "ord":  12,
                                "itemType":  "MINI",
-                               "styleTags":  "modern,clean",
-                               "sizeRange":  "S-XL"
+                               "styleTags":  "화동,미니드레스",
+                               "sizeRange":  "50~60"
                            },
                            {
-                               "itemName":  "Dress 1-20",
-                               "price":  1350000,
-                               "imageUrl":  "dress_1_item_20.jpg",
-                               "ord":  19,
+                               "itemName":  "투피스 슈트",
+                               "price":  54000,
+                               "imageUrl":  "드레스_01_라벤더드레스_01_14.jpg",
+                               "ord":  13,
+                               "itemType":  "ALINE",
+                               "styleTags":  "맞춤제작",
+                               "sizeRange":  "60~66"
+                           },
+                           {
+                               "itemName":  "베이직 슈트",
+                               "price":  43000,
+                               "imageUrl":  "드레스_01_라벤더드레스_01_15.jpg",
+                               "ord":  14,
+                               "itemType":  "ALINE",
+                               "styleTags":  "맞춤제작",
+                               "sizeRange":  "55~66"
+                           },
+                           {
+                               "itemName":  "슬림핏 슈트",
+                               "price":  46000,
+                               "imageUrl":  "드레스_01_라벤더드레스_01_16.jpg",
+                               "ord":  15,
                                "itemType":  "SLIM",
-                               "styleTags":  "lace,soft",
-                               "sizeRange":  "S-XL"
+                               "styleTags":  "맞춤제작",
+                               "sizeRange":  "50~60"
+                           },
+                           {
+                               "itemName":  "더블브레스트 슈트",
+                               "price":  96000,
+                               "imageUrl":  "드레스_01_라벤더드레스_01_17.jpg",
+                               "ord":  16,
+                               "itemType":  "ALINE",
+                               "styleTags":  "맞춤제작",
+                               "sizeRange":  "55~60"
+                           },
+                           {
+                               "itemName":  "정장 세트",
+                               "price":  38000,
+                               "imageUrl":  "드레스_01_라벤더드레스_01_18.png",
+                               "ord":  17,
+                               "itemType":  "ALINE",
+                               "styleTags":  "맞춤제작",
+                               "sizeRange":  "44~50"
+                           },
+                           {
+                               "itemName":  "턱시도",
+                               "price":  73000,
+                               "imageUrl":  "드레스_01_라벤더드레스_01_19.png",
+                               "ord":  18,
+                               "itemType":  "ALINE",
+                               "styleTags":  "맞춤제작",
+                               "sizeRange":  "50~60"
+                           },
+                           {
+                               "itemName":  "스탠다드 슈트",
+                               "price":  81000,
+                               "imageUrl":  "드레스_01_라벤더드레스_01_20.png",
+                               "ord":  19,
+                               "itemType":  "ALINE",
+                               "styleTags":  "맞춤제작",
+                               "sizeRange":  "50~60"
                            }
                        ]
     },
     {
         "cmno":  2,
-        "sizeRange":  "XS-L",
+        "sizeRange":  "44~70",
         "dressItems":  [
                            {
-                               "itemName":  "Dress 2-1",
-                               "price":  830000,
-                               "imageUrl":  "dress_2_item_1.jpg",
+                               "itemName":  "버튜 라인 드레스",
+                               "price":  136000,
+                               "imageUrl":  "드레스_02_릴리스 드레스룸_02_01.jpg",
                                "ord":  0,
                                "itemType":  "ALINE",
-                               "styleTags":  "classic,elegant",
-                               "sizeRange":  "XS-L"
+                               "styleTags":  "만삭,셀프웨딩",
+                               "sizeRange":  "60~70"
                            },
                            {
-                               "itemName":  "Dress 2-2",
-                               "price":  860000,
-                               "imageUrl":  "dress_2_item_2.jpg",
+                               "itemName":  "오프숄더 드레스",
+                               "price":  95000,
+                               "imageUrl":  "드레스_02_릴리스 드레스룸_02_02.jpg",
                                "ord":  1,
-                               "itemType":  "BELL",
-                               "styleTags":  "romantic,luxury",
-                               "sizeRange":  "XS-L"
-                           },
-                           {
-                               "itemName":  "Dress 2-3",
-                               "price":  890000,
-                               "imageUrl":  "dress_2_item_3.jpg",
-                               "ord":  2,
-                               "itemType":  "MERMAID",
-                               "styleTags":  "modern,clean",
-                               "sizeRange":  "XS-L"
-                           },
-                           {
-                               "itemName":  "Dress 2-4",
-                               "price":  920000,
-                               "imageUrl":  "dress_2_item_4.jpg",
-                               "ord":  3,
-                               "itemType":  "MINI",
-                               "styleTags":  "lace,soft",
-                               "sizeRange":  "XS-L"
-                           },
-                           {
-                               "itemName":  "Dress 2-5",
-                               "price":  950000,
-                               "imageUrl":  "dress_2_item_5.jpg",
-                               "ord":  4,
-                               "itemType":  "SLIM",
-                               "styleTags":  "premium,slim",
-                               "sizeRange":  "XS-L"
-                           },
-                           {
-                               "itemName":  "Dress 2-6",
-                               "price":  980000,
-                               "imageUrl":  "dress_2_item_6.jpg",
-                               "ord":  5,
                                "itemType":  "ALINE",
-                               "styleTags":  "simple,chic",
-                               "sizeRange":  "XS-L"
+                               "styleTags":  "만삭,셀프웨딩",
+                               "sizeRange":  "44~70"
                            },
                            {
-                               "itemName":  "Dress 2-7",
-                               "price":  1010000,
-                               "imageUrl":  "dress_2_item_7.jpg",
-                               "ord":  6,
+                               "itemName":  "미니 레이스 드레스",
+                               "price":  101000,
+                               "imageUrl":  "드레스_02_릴리스 드레스룸_02_03.jpg",
+                               "ord":  2,
+                               "itemType":  "MINI",
+                               "styleTags":  "미니드레스,만삭",
+                               "sizeRange":  "44~66"
+                           },
+                           {
+                               "itemName":  "롱 트레인 드레스",
+                               "price":  111000,
+                               "imageUrl":  "드레스_02_릴리스 드레스룸_02_04.jpg",
+                               "ord":  3,
                                "itemType":  "BELL",
-                               "styleTags":  "flower,lovely",
-                               "sizeRange":  "XS-L"
+                               "styleTags":  "벨라인,셀프웨딩",
+                               "sizeRange":  "50~66"
                            },
                            {
-                               "itemName":  "Dress 2-8",
-                               "price":  1040000,
-                               "imageUrl":  "dress_2_item_8.jpg",
+                               "itemName":  "브이넥 드레스",
+                               "price":  82000,
+                               "imageUrl":  "드레스_02_릴리스 드레스룸_02_05.jpg",
+                               "ord":  4,
+                               "itemType":  "MINI",
+                               "styleTags":  "미니드레스,셀프웨딩",
+                               "sizeRange":  "50~66"
+                           },
+                           {
+                               "itemName":  "심플 A라인 드레스",
+                               "price":  89000,
+                               "imageUrl":  "드레스_02_릴리스 드레스룸_02_06.jpg",
+                               "ord":  5,
+                               "itemType":  "BELL",
+                               "styleTags":  "벨라인,파티",
+                               "sizeRange":  "55~70"
+                           },
+                           {
+                               "itemName":  "심플 슬립 드레스",
+                               "price":  112000,
+                               "imageUrl":  "드레스_02_릴리스 드레스룸_02_07.jpg",
+                               "ord":  6,
+                               "itemType":  "MINI",
+                               "styleTags":  "만삭,미니드레스",
+                               "sizeRange":  "44~50"
+                           },
+                           {
+                               "itemName":  "튤 스커트 드레스",
+                               "price":  119000,
+                               "imageUrl":  "드레스_02_릴리스 드레스룸_02_08.jpg",
                                "ord":  7,
-                               "itemType":  "MERMAID",
-                               "styleTags":  "silk,glossy",
-                               "sizeRange":  "XS-L"
+                               "itemType":  "BELL",
+                               "styleTags":  "만삭,벨라인",
+                               "sizeRange":  "66~70"
                            },
                            {
-                               "itemName":  "Dress 2-9",
-                               "price":  1070000,
-                               "imageUrl":  "dress_2_item_9.jpg",
+                               "itemName":  "롱 슬리브 드레스",
+                               "price":  116000,
+                               "imageUrl":  "드레스_02_릴리스 드레스룸_02_09.jpg",
                                "ord":  8,
                                "itemType":  "MINI",
-                               "styleTags":  "classic,elegant",
-                               "sizeRange":  "XS-L"
+                               "styleTags":  "미니드레스,벨라인",
+                               "sizeRange":  "55~70"
                            },
                            {
-                               "itemName":  "Dress 2-10",
-                               "price":  1100000,
-                               "imageUrl":  "dress_2_item_10.jpg",
+                               "itemName":  "베이직 벨라인 드레스",
+                               "price":  107000,
+                               "imageUrl":  "드레스_02_릴리스 드레스룸_02_10.jpg",
                                "ord":  9,
-                               "itemType":  "SLIM",
-                               "styleTags":  "romantic,luxury",
-                               "sizeRange":  "XS-L"
-                           },
-                           {
-                               "itemName":  "Dress 2-11",
-                               "price":  1130000,
-                               "imageUrl":  "dress_2_item_11.jpg",
-                               "ord":  10,
-                               "itemType":  "ALINE",
-                               "styleTags":  "modern,clean",
-                               "sizeRange":  "XS-L"
-                           },
-                           {
-                               "itemName":  "Dress 2-12",
-                               "price":  1160000,
-                               "imageUrl":  "dress_2_item_12.jpg",
-                               "ord":  11,
                                "itemType":  "BELL",
-                               "styleTags":  "lace,soft",
-                               "sizeRange":  "XS-L"
+                               "styleTags":  "만삭,파티",
+                               "sizeRange":  "44~55"
+                           },
+                           {
+                               "itemName":  "벨라인 드레스",
+                               "price":  83000,
+                               "imageUrl":  "드레스_02_릴리스 드레스룸_02_11.jpg",
+                               "ord":  10,
+                               "itemType":  "MINI",
+                               "styleTags":  "파티,미니드레스",
+                               "sizeRange":  "55~66"
+                           },
+                           {
+                               "itemName":  "플라워 레이스 드레스",
+                               "price":  62000,
+                               "imageUrl":  "드레스_02_릴리스 드레스룸_02_12.jpg",
+                               "ord":  11,
+                               "itemType":  "ALINE",
+                               "styleTags":  "만삭,파티",
+                               "sizeRange":  "44~66"
                            }
                        ]
     },
     {
         "cmno":  3,
-        "sizeRange":  "S-L",
+        "sizeRange":  "44~62",
         "dressItems":  [
                            {
-                               "itemName":  "Dress 3-1",
-                               "price":  880000,
-                               "imageUrl":  "dress_3_item_1.jpg",
+                               "itemName":  "비즈 장식 드레스",
+                               "price":  252000,
+                               "imageUrl":  "드레스_03_오엘르 브라이덜_03_01.jpg",
                                "ord":  0,
-                               "itemType":  "ALINE",
-                               "styleTags":  "classic,elegant",
-                               "sizeRange":  "S-L"
+                               "itemType":  "MERMAID",
+                               "styleTags":  "머메이드,A라인",
+                               "sizeRange":  "50~60"
                            },
                            {
-                               "itemName":  "Dress 3-2",
-                               "price":  910000,
-                               "imageUrl":  "dress_3_item_2.jpg",
+                               "itemName":  "리본 포인트 드레스",
+                               "price":  417000,
+                               "imageUrl":  "드레스_03_오엘르 브라이덜_03_02.jpg",
                                "ord":  1,
-                               "itemType":  "BELL",
-                               "styleTags":  "romantic,luxury",
-                               "sizeRange":  "S-L"
+                               "itemType":  "MERMAID",
+                               "styleTags":  "머메이드,벨라인",
+                               "sizeRange":  "50~60"
                            },
                            {
-                               "itemName":  "Dress 3-3",
-                               "price":  940000,
-                               "imageUrl":  "dress_3_item_3.jpg",
+                               "itemName":  "백리스 드레스",
+                               "price":  278000,
+                               "imageUrl":  "드레스_03_오엘르 브라이덜_03_03.jpg",
                                "ord":  2,
-                               "itemType":  "MERMAID",
-                               "styleTags":  "modern,clean",
-                               "sizeRange":  "S-L"
+                               "itemType":  "BELL",
+                               "styleTags":  "A라인,벨라인",
+                               "sizeRange":  "50~60"
                            },
                            {
-                               "itemName":  "Dress 3-4",
-                               "price":  970000,
-                               "imageUrl":  "dress_3_item_4.jpg",
+                               "itemName":  "하이넥 드레스",
+                               "price":  459000,
+                               "imageUrl":  "드레스_03_오엘르 브라이덜_03_04.jpg",
                                "ord":  3,
-                               "itemType":  "MINI",
-                               "styleTags":  "lace,soft",
-                               "sizeRange":  "S-L"
+                               "itemType":  "MERMAID",
+                               "styleTags":  "A라인,머메이드",
+                               "sizeRange":  "44~60"
                            },
                            {
-                               "itemName":  "Dress 3-5",
-                               "price":  1000000,
-                               "imageUrl":  "dress_3_item_5.jpg",
+                               "itemName":  "벨슬리브 드레스",
+                               "price":  460000,
+                               "imageUrl":  "드레스_03_오엘르 브라이덜_03_05.jpg",
                                "ord":  4,
-                               "itemType":  "SLIM",
-                               "styleTags":  "premium,slim",
-                               "sizeRange":  "S-L"
+                               "itemType":  "BELL",
+                               "styleTags":  "본식,A라인",
+                               "sizeRange":  "44~60"
                            },
                            {
-                               "itemName":  "Dress 3-6",
-                               "price":  1030000,
-                               "imageUrl":  "dress_3_item_6.jpg",
+                               "itemName":  "롱 슬리브 드레스",
+                               "price":  481000,
+                               "imageUrl":  "드레스_03_오엘르 브라이덜_03_06.jpg",
                                "ord":  5,
-                               "itemType":  "ALINE",
-                               "styleTags":  "simple,chic",
-                               "sizeRange":  "S-L"
+                               "itemType":  "MERMAID",
+                               "styleTags":  "머메이드,본식",
+                               "sizeRange":  "44~55"
                            },
                            {
-                               "itemName":  "Dress 3-7",
-                               "price":  1060000,
-                               "imageUrl":  "dress_3_item_7.jpg",
+                               "itemName":  "튤 레이어드 드레스",
+                               "price":  278000,
+                               "imageUrl":  "드레스_03_오엘르 브라이덜_03_07.jpg",
                                "ord":  6,
-                               "itemType":  "BELL",
-                               "styleTags":  "flower,lovely",
-                               "sizeRange":  "S-L"
+                               "itemType":  "ALINE",
+                               "styleTags":  "본식,A라인",
+                               "sizeRange":  "50~60"
                            },
                            {
-                               "itemName":  "Dress 3-8",
-                               "price":  1090000,
-                               "imageUrl":  "dress_3_item_8.jpg",
+                               "itemName":  "벨라인 드레스",
+                               "price":  303000,
+                               "imageUrl":  "드레스_03_오엘르 브라이덜_03_08.jpg",
                                "ord":  7,
-                               "itemType":  "MERMAID",
-                               "styleTags":  "silk,glossy",
-                               "sizeRange":  "S-L"
-                           },
-                           {
-                               "itemName":  "Dress 3-9",
-                               "price":  1120000,
-                               "imageUrl":  "dress_3_item_9.jpg",
-                               "ord":  8,
-                               "itemType":  "MINI",
-                               "styleTags":  "classic,elegant",
-                               "sizeRange":  "S-L"
-                           },
-                           {
-                               "itemName":  "Dress 3-10",
-                               "price":  1150000,
-                               "imageUrl":  "dress_3_item_10.jpg",
-                               "ord":  9,
-                               "itemType":  "SLIM",
-                               "styleTags":  "romantic,luxury",
-                               "sizeRange":  "S-L"
-                           },
-                           {
-                               "itemName":  "Dress 3-11",
-                               "price":  1180000,
-                               "imageUrl":  "dress_3_item_11.jpg",
-                               "ord":  10,
-                               "itemType":  "ALINE",
-                               "styleTags":  "modern,clean",
-                               "sizeRange":  "S-L"
-                           },
-                           {
-                               "itemName":  "Dress 3-12",
-                               "price":  1210000,
-                               "imageUrl":  "dress_3_item_12.jpg",
-                               "ord":  11,
                                "itemType":  "BELL",
-                               "styleTags":  "lace,soft",
-                               "sizeRange":  "S-L"
+                               "styleTags":  "벨라인,A라인",
+                               "sizeRange":  "44~60"
                            },
                            {
-                               "itemName":  "Dress 3-13",
-                               "price":  1240000,
-                               "imageUrl":  "dress_3_item_13.jpg",
-                               "ord":  12,
-                               "itemType":  "MERMAID",
-                               "styleTags":  "premium,slim",
-                               "sizeRange":  "S-L"
-                           },
-                           {
-                               "itemName":  "Dress 3-14",
-                               "price":  1270000,
-                               "imageUrl":  "dress_3_item_14.jpg",
-                               "ord":  13,
-                               "itemType":  "MINI",
-                               "styleTags":  "simple,chic",
-                               "sizeRange":  "S-L"
-                           },
-                           {
-                               "itemName":  "Dress 3-15",
-                               "price":  1300000,
-                               "imageUrl":  "dress_3_item_15.jpg",
-                               "ord":  14,
-                               "itemType":  "SLIM",
-                               "styleTags":  "flower,lovely",
-                               "sizeRange":  "S-L"
-                           },
-                           {
-                               "itemName":  "Dress 3-16",
-                               "price":  1330000,
-                               "imageUrl":  "dress_3_item_16.jpg",
-                               "ord":  15,
+                               "itemName":  "오프숄더 드레스",
+                               "price":  359000,
+                               "imageUrl":  "드레스_03_오엘르 브라이덜_03_09.jpg",
+                               "ord":  8,
                                "itemType":  "ALINE",
-                               "styleTags":  "silk,glossy",
-                               "sizeRange":  "S-L"
+                               "styleTags":  "A라인,본식",
+                               "sizeRange":  "55~60"
+                           },
+                           {
+                               "itemName":  "브이넥 드레스",
+                               "price":  432000,
+                               "imageUrl":  "드레스_03_오엘르 브라이덜_03_10.jpg",
+                               "ord":  9,
+                               "itemType":  "MERMAID",
+                               "styleTags":  "벨라인,머메이드",
+                               "sizeRange":  "44~60"
+                           },
+                           {
+                               "itemName":  "미니 원피스 드레스",
+                               "price":  506000,
+                               "imageUrl":  "드레스_03_오엘르 브라이덜_03_11.jpg",
+                               "ord":  10,
+                               "itemType":  "MINI",
+                               "styleTags":  "A라인,머메이드",
+                               "sizeRange":  "50~55"
+                           },
+                           {
+                               "itemName":  "케이프 디테일 드레스",
+                               "price":  295000,
+                               "imageUrl":  "드레스_03_오엘르 브라이덜_03_12.jpg",
+                               "ord":  11,
+                               "itemType":  "MERMAID",
+                               "styleTags":  "머메이드,본식",
+                               "sizeRange":  "55~60"
+                           },
+                           {
+                               "itemName":  "라운드넥 드레스",
+                               "price":  389000,
+                               "imageUrl":  "드레스_03_오엘르 브라이덜_03_13.jpg",
+                               "ord":  12,
+                               "itemType":  "BELL",
+                               "styleTags":  "A라인,벨라인",
+                               "sizeRange":  "44~50"
+                           },
+                           {
+                               "itemName":  "코르셋 라인 드레스",
+                               "price":  262000,
+                               "imageUrl":  "드레스_03_오엘르 브라이덜_03_14.jpg",
+                               "ord":  13,
+                               "itemType":  "MERMAID",
+                               "styleTags":  "머메이드,벨라인",
+                               "sizeRange":  "44~55"
+                           },
+                           {
+                               "itemName":  "레이스 디테일 드레스",
+                               "price":  264000,
+                               "imageUrl":  "드레스_03_오엘르 브라이덜_03_15.jpg",
+                               "ord":  14,
+                               "itemType":  "BELL",
+                               "styleTags":  "벨라인,A라인",
+                               "sizeRange":  "44~60"
+                           },
+                           {
+                               "itemName":  "베이직 벨라인 드레스",
+                               "price":  442000,
+                               "imageUrl":  "드레스_03_오엘르 브라이덜_03_16.jpg",
+                               "ord":  15,
+                               "itemType":  "MERMAID",
+                               "styleTags":  "머메이드,A라인",
+                               "sizeRange":  "44~50"
                            }
                        ]
     },
     {
         "cmno":  4,
-        "sizeRange":  "S-2XL",
+        "sizeRange":  "44~68",
         "dressItems":  [
                            {
-                               "itemName":  "Dress 4-1",
-                               "price":  930000,
-                               "imageUrl":  "dress_4_item_1.jpg",
+                               "itemName":  "백리스 드레스",
+                               "price":  84000,
+                               "imageUrl":  "드레스_04_베일로즈_04_01.jpg",
                                "ord":  0,
-                               "itemType":  "ALINE",
-                               "styleTags":  "classic,elegant",
-                               "sizeRange":  "S-2XL"
+                               "itemType":  "MINI",
+                               "styleTags":  "미니멀,셀프웨딩",
+                               "sizeRange":  "50~66"
                            },
                            {
-                               "itemName":  "Dress 4-2",
-                               "price":  960000,
-                               "imageUrl":  "dress_4_item_2.jpg",
+                               "itemName":  "미니 레이스 드레스",
+                               "price":  85000,
+                               "imageUrl":  "드레스_04_베일로즈_04_02.jpg",
                                "ord":  1,
-                               "itemType":  "BELL",
-                               "styleTags":  "romantic,luxury",
-                               "sizeRange":  "S-2XL"
+                               "itemType":  "MINI",
+                               "styleTags":  "미니멀,A라인",
+                               "sizeRange":  "55~60"
                            },
                            {
-                               "itemName":  "Dress 4-3",
-                               "price":  990000,
-                               "imageUrl":  "dress_4_item_3.jpg",
+                               "itemName":  "리본 포인트 드레스",
+                               "price":  59000,
+                               "imageUrl":  "드레스_04_베일로즈_04_03.jpg",
                                "ord":  2,
-                               "itemType":  "MERMAID",
-                               "styleTags":  "modern,clean",
-                               "sizeRange":  "S-2XL"
+                               "itemType":  "MINI",
+                               "styleTags":  "셀프웨딩,미니멀",
+                               "sizeRange":  "55~60"
                            },
                            {
-                               "itemName":  "Dress 4-4",
-                               "price":  1020000,
-                               "imageUrl":  "dress_4_item_4.jpg",
+                               "itemName":  "레이스 디테일 드레스",
+                               "price":  80000,
+                               "imageUrl":  "드레스_04_베일로즈_04_04.jpg",
                                "ord":  3,
                                "itemType":  "MINI",
-                               "styleTags":  "lace,soft",
-                               "sizeRange":  "S-2XL"
+                               "styleTags":  "A라인,미니멀",
+                               "sizeRange":  "50~60"
                            },
                            {
-                               "itemName":  "Dress 4-5",
-                               "price":  1050000,
-                               "imageUrl":  "dress_4_item_5.jpg",
+                               "itemName":  "하이넥 드레스",
+                               "price":  66000,
+                               "imageUrl":  "드레스_04_베일로즈_04_05.jpg",
                                "ord":  4,
-                               "itemType":  "SLIM",
-                               "styleTags":  "premium,slim",
-                               "sizeRange":  "S-2XL"
+                               "itemType":  "MINI",
+                               "styleTags":  "미니멀,셀프웨딩",
+                               "sizeRange":  "44~60"
                            },
                            {
-                               "itemName":  "Dress 4-6",
-                               "price":  1080000,
-                               "imageUrl":  "dress_4_item_6.jpg",
+                               "itemName":  "비즈 장식 드레스",
+                               "price":  81000,
+                               "imageUrl":  "드레스_04_베일로즈_04_06.jpg",
                                "ord":  5,
                                "itemType":  "ALINE",
-                               "styleTags":  "simple,chic",
-                               "sizeRange":  "S-2XL"
+                               "styleTags":  "A라인,셀프웨딩",
+                               "sizeRange":  "55~60"
                            },
                            {
-                               "itemName":  "Dress 4-7",
-                               "price":  1110000,
-                               "imageUrl":  "dress_4_item_7.jpg",
+                               "itemName":  "튤 레이어드 드레스",
+                               "price":  55000,
+                               "imageUrl":  "드레스_04_베일로즈_04_07.jpg",
                                "ord":  6,
-                               "itemType":  "BELL",
-                               "styleTags":  "flower,lovely",
-                               "sizeRange":  "S-2XL"
+                               "itemType":  "MINI",
+                               "styleTags":  "미니드레스,A라인",
+                               "sizeRange":  "50~60"
                            },
                            {
-                               "itemName":  "Dress 4-8",
-                               "price":  1140000,
-                               "imageUrl":  "dress_4_item_8.jpg",
+                               "itemName":  "스트랩 드레스",
+                               "price":  66000,
+                               "imageUrl":  "드레스_04_베일로즈_04_08.jpg",
                                "ord":  7,
-                               "itemType":  "MERMAID",
-                               "styleTags":  "silk,glossy",
-                               "sizeRange":  "S-2XL"
+                               "itemType":  "MINI",
+                               "styleTags":  "셀프웨딩,미니멀",
+                               "sizeRange":  "44~60"
                            },
                            {
-                               "itemName":  "Dress 4-9",
-                               "price":  1170000,
-                               "imageUrl":  "dress_4_item_9.jpg",
+                               "itemName":  "베이직 벨라인 드레스",
+                               "price":  78000,
+                               "imageUrl":  "드레스_04_베일로즈_04_09.jpg",
                                "ord":  8,
                                "itemType":  "MINI",
-                               "styleTags":  "classic,elegant",
-                               "sizeRange":  "S-2XL"
+                               "styleTags":  "미니드레스,A라인",
+                               "sizeRange":  "50~60"
                            },
                            {
-                               "itemName":  "Dress 4-10",
-                               "price":  1200000,
-                               "imageUrl":  "dress_4_item_10.jpg",
+                               "itemName":  "오프숄더 드레스",
+                               "price":  107000,
+                               "imageUrl":  "드레스_04_베일로즈_04_10.jpg",
                                "ord":  9,
-                               "itemType":  "SLIM",
-                               "styleTags":  "romantic,luxury",
-                               "sizeRange":  "S-2XL"
+                               "itemType":  "MINI",
+                               "styleTags":  "미니드레스,미니멀",
+                               "sizeRange":  "44~50"
                            },
                            {
-                               "itemName":  "Dress 4-11",
-                               "price":  1230000,
-                               "imageUrl":  "dress_4_item_11.jpg",
+                               "itemName":  "롱 슬리브 드레스",
+                               "price":  77000,
+                               "imageUrl":  "드레스_04_베일로즈_04_11.jpg",
                                "ord":  10,
-                               "itemType":  "ALINE",
-                               "styleTags":  "modern,clean",
-                               "sizeRange":  "S-2XL"
+                               "itemType":  "MINI",
+                               "styleTags":  "미니멀,셀프웨딩",
+                               "sizeRange":  "44~55"
                            },
                            {
-                               "itemName":  "Dress 4-12",
-                               "price":  1260000,
-                               "imageUrl":  "dress_4_item_12.jpg",
+                               "itemName":  "코르셋 라인 드레스",
+                               "price":  116000,
+                               "imageUrl":  "드레스_04_베일로즈_04_12.jpg",
                                "ord":  11,
-                               "itemType":  "BELL",
-                               "styleTags":  "lace,soft",
-                               "sizeRange":  "S-2XL"
+                               "itemType":  "MINI",
+                               "styleTags":  "미니멀,A라인",
+                               "sizeRange":  "60~66"
                            },
                            {
-                               "itemName":  "Dress 4-13",
-                               "price":  1290000,
-                               "imageUrl":  "dress_4_item_13.jpg",
+                               "itemName":  "롱 트레인 드레스",
+                               "price":  101000,
+                               "imageUrl":  "드레스_04_베일로즈_04_13.jpg",
                                "ord":  12,
-                               "itemType":  "MERMAID",
-                               "styleTags":  "premium,slim",
-                               "sizeRange":  "S-2XL"
+                               "itemType":  "MINI",
+                               "styleTags":  "미니멀,A라인",
+                               "sizeRange":  "55~66"
                            },
                            {
-                               "itemName":  "Dress 4-14",
-                               "price":  1320000,
-                               "imageUrl":  "dress_4_item_14.jpg",
+                               "itemName":  "미니 원피스 드레스",
+                               "price":  58000,
+                               "imageUrl":  "드레스_04_베일로즈_04_14.jpg",
                                "ord":  13,
                                "itemType":  "MINI",
-                               "styleTags":  "simple,chic",
-                               "sizeRange":  "S-2XL"
+                               "styleTags":  "셀프웨딩,A라인",
+                               "sizeRange":  "44~50"
                            },
                            {
-                               "itemName":  "Dress 4-15",
-                               "price":  1350000,
-                               "imageUrl":  "dress_4_item_15.jpg",
+                               "itemName":  "시폰 드레스",
+                               "price":  73000,
+                               "imageUrl":  "드레스_04_베일로즈_04_15.jpg",
                                "ord":  14,
-                               "itemType":  "SLIM",
-                               "styleTags":  "flower,lovely",
-                               "sizeRange":  "S-2XL"
+                               "itemType":  "MINI",
+                               "styleTags":  "미니드레스,셀프웨딩",
+                               "sizeRange":  "44~60"
                            },
                            {
-                               "itemName":  "Dress 4-16",
-                               "price":  1380000,
-                               "imageUrl":  "dress_4_item_16.jpg",
+                               "itemName":  "베이직 슈트",
+                               "price":  44000,
+                               "imageUrl":  "드레스_04_베일로즈_04_16.jpg",
                                "ord":  15,
                                "itemType":  "ALINE",
-                               "styleTags":  "silk,glossy",
-                               "sizeRange":  "S-2XL"
+                               "styleTags":  "맞춤제작",
+                               "sizeRange":  "44~60"
                            },
                            {
-                               "itemName":  "Dress 4-17",
-                               "price":  1410000,
-                               "imageUrl":  "dress_4_item_17.jpg",
+                               "itemName":  "스탠다드 슈트",
+                               "price":  60000,
+                               "imageUrl":  "드레스_04_베일로즈_04_17.jpg",
                                "ord":  16,
-                               "itemType":  "BELL",
-                               "styleTags":  "classic,elegant",
-                               "sizeRange":  "S-2XL"
+                               "itemType":  "ALINE",
+                               "styleTags":  "맞춤제작",
+                               "sizeRange":  "44~60"
                            },
                            {
-                               "itemName":  "Dress 4-18",
-                               "price":  1440000,
-                               "imageUrl":  "dress_4_item_18.jpg",
+                               "itemName":  "정장 세트",
+                               "price":  49000,
+                               "imageUrl":  "드레스_04_베일로즈_04_18.jpg",
                                "ord":  17,
-                               "itemType":  "MERMAID",
-                               "styleTags":  "romantic,luxury",
-                               "sizeRange":  "S-2XL"
+                               "itemType":  "ALINE",
+                               "styleTags":  "맞춤제작",
+                               "sizeRange":  "50~55"
                            },
                            {
-                               "itemName":  "Dress 4-19",
-                               "price":  1470000,
-                               "imageUrl":  "dress_4_item_19.jpg",
+                               "itemName":  "투피스 슈트",
+                               "price":  55000,
+                               "imageUrl":  "드레스_04_베일로즈_04_19.jpg",
                                "ord":  18,
-                               "itemType":  "MINI",
-                               "styleTags":  "modern,clean",
-                               "sizeRange":  "S-2XL"
+                               "itemType":  "ALINE",
+                               "styleTags":  "맞춤제작",
+                               "sizeRange":  "44~55"
                            },
                            {
-                               "itemName":  "Dress 4-20",
-                               "price":  1500000,
-                               "imageUrl":  "dress_4_item_20.jpg",
+                               "itemName":  "클래식 슈트",
+                               "price":  51000,
+                               "imageUrl":  "드레스_04_베일로즈_04_20.jpg",
                                "ord":  19,
-                               "itemType":  "SLIM",
-                               "styleTags":  "lace,soft",
-                               "sizeRange":  "S-2XL"
+                               "itemType":  "ALINE",
+                               "styleTags":  "맞춤제작",
+                               "sizeRange":  "55~60"
                            }
                        ]
     },
     {
         "cmno":  5,
-        "sizeRange":  "XS-XL",
+        "sizeRange":  "44~64",
         "dressItems":  [
                            {
-                               "itemName":  "Dress 5-1",
-                               "price":  980000,
-                               "imageUrl":  "dress_5_item_1.jpg",
+                               "itemName":  "심플 라인 드레스",
+                               "price":  367000,
+                               "imageUrl":  "드레스_05_마리에 브라이드_05_01.jpg",
                                "ord":  0,
-                               "itemType":  "ALINE",
-                               "styleTags":  "classic,elegant",
-                               "sizeRange":  "XS-XL"
+                               "itemType":  "MINI",
+                               "styleTags":  "셀프웨딩,미니드레스",
+                               "sizeRange":  "44~50"
                            },
                            {
-                               "itemName":  "Dress 5-2",
-                               "price":  1010000,
-                               "imageUrl":  "dress_5_item_2.jpg",
+                               "itemName":  "케이프 디테일 드레스",
+                               "price":  284000,
+                               "imageUrl":  "드레스_05_마리에 브라이드_05_02.jpg",
                                "ord":  1,
-                               "itemType":  "BELL",
-                               "styleTags":  "romantic,luxury",
-                               "sizeRange":  "XS-XL"
+                               "itemType":  "ALINE",
+                               "styleTags":  "본식,셀프웨딩",
+                               "sizeRange":  "44~50"
                            },
                            {
-                               "itemName":  "Dress 5-3",
-                               "price":  1040000,
-                               "imageUrl":  "dress_5_item_3.jpg",
+                               "itemName":  "라운드넥 드레스",
+                               "price":  151000,
+                               "imageUrl":  "드레스_05_마리에 브라이드_05_03.jpg",
                                "ord":  2,
-                               "itemType":  "MERMAID",
-                               "styleTags":  "modern,clean",
-                               "sizeRange":  "XS-XL"
+                               "itemType":  "ALINE",
+                               "styleTags":  "셀프웨딩,본식",
+                               "sizeRange":  "44~50"
                            },
                            {
-                               "itemName":  "Dress 5-4",
-                               "price":  1070000,
-                               "imageUrl":  "dress_5_item_4.jpg",
+                               "itemName":  "심플 머메이드 드레스",
+                               "price":  312000,
+                               "imageUrl":  "드레스_05_마리에 브라이드_05_04.jpg",
                                "ord":  3,
                                "itemType":  "MINI",
-                               "styleTags":  "lace,soft",
-                               "sizeRange":  "XS-XL"
+                               "styleTags":  "본식,미니드레스",
+                               "sizeRange":  "44~60"
                            },
                            {
-                               "itemName":  "Dress 5-5",
-                               "price":  1100000,
-                               "imageUrl":  "dress_5_item_5.jpg",
+                               "itemName":  "셔링 드레스",
+                               "price":  329000,
+                               "imageUrl":  "드레스_05_마리에 브라이드_05_05.jpg",
                                "ord":  4,
-                               "itemType":  "SLIM",
-                               "styleTags":  "premium,slim",
-                               "sizeRange":  "XS-XL"
+                               "itemType":  "ALINE",
+                               "styleTags":  "앵클라인,본식",
+                               "sizeRange":  "50~60"
                            },
                            {
-                               "itemName":  "Dress 5-6",
-                               "price":  1130000,
-                               "imageUrl":  "dress_5_item_6.jpg",
+                               "itemName":  "심플 A라인 드레스",
+                               "price":  215000,
+                               "imageUrl":  "드레스_05_마리에 브라이드_05_06.jpg",
                                "ord":  5,
                                "itemType":  "ALINE",
-                               "styleTags":  "simple,chic",
-                               "sizeRange":  "XS-XL"
+                               "styleTags":  "셀프웨딩,앵클라인",
+                               "sizeRange":  "44~60"
                            },
                            {
-                               "itemName":  "Dress 5-7",
-                               "price":  1160000,
-                               "imageUrl":  "dress_5_item_7.jpg",
+                               "itemName":  "시폰 드레스",
+                               "price":  176000,
+                               "imageUrl":  "드레스_05_마리에 브라이드_05_07.jpg",
                                "ord":  6,
-                               "itemType":  "BELL",
-                               "styleTags":  "flower,lovely",
-                               "sizeRange":  "XS-XL"
+                               "itemType":  "MINI",
+                               "styleTags":  "앵클라인,미니드레스",
+                               "sizeRange":  "44~60"
                            },
                            {
-                               "itemName":  "Dress 5-8",
-                               "price":  1190000,
-                               "imageUrl":  "dress_5_item_8.jpg",
+                               "itemName":  "버튜 라인 드레스",
+                               "price":  167000,
+                               "imageUrl":  "드레스_05_마리에 브라이드_05_08.jpg",
                                "ord":  7,
-                               "itemType":  "MERMAID",
-                               "styleTags":  "silk,glossy",
-                               "sizeRange":  "XS-XL"
+                               "itemType":  "ALINE",
+                               "styleTags":  "앵클라인,셀프웨딩",
+                               "sizeRange":  "50~60"
                            },
                            {
-                               "itemName":  "Dress 5-9",
-                               "price":  1220000,
-                               "imageUrl":  "dress_5_item_9.jpg",
+                               "itemName":  "백리스 드레스",
+                               "price":  309000,
+                               "imageUrl":  "드레스_05_마리에 브라이드_05_09.jpg",
                                "ord":  8,
                                "itemType":  "MINI",
-                               "styleTags":  "classic,elegant",
-                               "sizeRange":  "XS-XL"
+                               "styleTags":  "셀프웨딩,미니드레스",
+                               "sizeRange":  "44~55"
                            },
                            {
-                               "itemName":  "Dress 5-10",
-                               "price":  1250000,
-                               "imageUrl":  "dress_5_item_10.jpg",
+                               "itemName":  "비즈 장식 드레스",
+                               "price":  283000,
+                               "imageUrl":  "드레스_05_마리에 브라이드_05_10.jpg",
                                "ord":  9,
-                               "itemType":  "SLIM",
-                               "styleTags":  "romantic,luxury",
-                               "sizeRange":  "XS-XL"
+                               "itemType":  "MINI",
+                               "styleTags":  "앵클라인,미니드레스",
+                               "sizeRange":  "44~50"
                            },
                            {
-                               "itemName":  "Dress 5-11",
-                               "price":  1280000,
-                               "imageUrl":  "dress_5_item_11.jpg",
+                               "itemName":  "롱 트레인 드레스",
+                               "price":  380000,
+                               "imageUrl":  "드레스_05_마리에 브라이드_05_11.jpg",
                                "ord":  10,
-                               "itemType":  "ALINE",
-                               "styleTags":  "modern,clean",
-                               "sizeRange":  "XS-XL"
+                               "itemType":  "MINI",
+                               "styleTags":  "미니드레스,앵클라인",
+                               "sizeRange":  "44~50"
                            }
                        ]
     },
     {
         "cmno":  6,
-        "sizeRange":  "S-XL",
+        "sizeRange":  "44~66",
         "dressItems":  [
                            {
-                               "itemName":  "Dress 6-1",
-                               "price":  1030000,
-                               "imageUrl":  "dress_6_item_1.jpg",
+                               "itemName":  "프릴 디테일 드레스",
+                               "price":  216000,
+                               "imageUrl":  "드레스_06_벨퐁 아틀리에_06_01.jpg",
                                "ord":  0,
                                "itemType":  "ALINE",
-                               "styleTags":  "classic,elegant",
-                               "sizeRange":  "S-XL"
+                               "styleTags":  "2부,셀프웨딩",
+                               "sizeRange":  "50~66"
                            },
                            {
-                               "itemName":  "Dress 6-2",
-                               "price":  1060000,
-                               "imageUrl":  "dress_6_item_2.jpg",
+                               "itemName":  "플라워 레이스 드레스",
+                               "price":  263000,
+                               "imageUrl":  "드레스_06_벨퐁 아틀리에_06_02.jpg",
                                "ord":  1,
-                               "itemType":  "BELL",
-                               "styleTags":  "romantic,luxury",
-                               "sizeRange":  "S-XL"
+                               "itemType":  "ALINE",
+                               "styleTags":  "셀프웨딩,파티",
+                               "sizeRange":  "50~66"
                            },
                            {
-                               "itemName":  "Dress 6-3",
-                               "price":  1090000,
-                               "imageUrl":  "dress_6_item_3.jpg",
+                               "itemName":  "오프숄더 드레스",
+                               "price":  236000,
+                               "imageUrl":  "드레스_06_벨퐁 아틀리에_06_03.jpg",
                                "ord":  2,
-                               "itemType":  "MERMAID",
-                               "styleTags":  "modern,clean",
-                               "sizeRange":  "S-XL"
+                               "itemType":  "ALINE",
+                               "styleTags":  "맞춤제작,셀프웨딩",
+                               "sizeRange":  "44~55"
                            },
                            {
-                               "itemName":  "Dress 6-4",
-                               "price":  1120000,
-                               "imageUrl":  "dress_6_item_4.jpg",
+                               "itemName":  "미니 레이스 드레스",
+                               "price":  349000,
+                               "imageUrl":  "드레스_06_벨퐁 아틀리에_06_04.jpg",
                                "ord":  3,
                                "itemType":  "MINI",
-                               "styleTags":  "lace,soft",
-                               "sizeRange":  "S-XL"
+                               "styleTags":  "맞춤제작,파티",
+                               "sizeRange":  "50~55"
                            },
                            {
-                               "itemName":  "Dress 6-5",
-                               "price":  1150000,
-                               "imageUrl":  "dress_6_item_5.jpg",
+                               "itemName":  "미니 원피스 드레스",
+                               "price":  303000,
+                               "imageUrl":  "드레스_06_벨퐁 아틀리에_06_05.jpg",
                                "ord":  4,
-                               "itemType":  "SLIM",
-                               "styleTags":  "premium,slim",
-                               "sizeRange":  "S-XL"
+                               "itemType":  "MINI",
+                               "styleTags":  "파티,셀프웨딩",
+                               "sizeRange":  "50~66"
                            },
                            {
-                               "itemName":  "Dress 6-6",
-                               "price":  1180000,
-                               "imageUrl":  "dress_6_item_6.jpg",
+                               "itemName":  "비즈 장식 드레스",
+                               "price":  223000,
+                               "imageUrl":  "드레스_06_벨퐁 아틀리에_06_06.jpg",
                                "ord":  5,
                                "itemType":  "ALINE",
-                               "styleTags":  "simple,chic",
-                               "sizeRange":  "S-XL"
+                               "styleTags":  "파티,화동",
+                               "sizeRange":  "50~66"
                            },
                            {
-                               "itemName":  "Dress 6-7",
-                               "price":  1210000,
-                               "imageUrl":  "dress_6_item_7.jpg",
+                               "itemName":  "라운드넥 드레스",
+                               "price":  286000,
+                               "imageUrl":  "드레스_06_벨퐁 아틀리에_06_07.jpg",
                                "ord":  6,
-                               "itemType":  "BELL",
-                               "styleTags":  "flower,lovely",
-                               "sizeRange":  "S-XL"
-                           },
-                           {
-                               "itemName":  "Dress 6-8",
-                               "price":  1240000,
-                               "imageUrl":  "dress_6_item_8.jpg",
-                               "ord":  7,
-                               "itemType":  "MERMAID",
-                               "styleTags":  "silk,glossy",
-                               "sizeRange":  "S-XL"
-                           },
-                           {
-                               "itemName":  "Dress 6-9",
-                               "price":  1270000,
-                               "imageUrl":  "dress_6_item_9.jpg",
-                               "ord":  8,
-                               "itemType":  "MINI",
-                               "styleTags":  "classic,elegant",
-                               "sizeRange":  "S-XL"
-                           },
-                           {
-                               "itemName":  "Dress 6-10",
-                               "price":  1300000,
-                               "imageUrl":  "dress_6_item_10.jpg",
-                               "ord":  9,
-                               "itemType":  "SLIM",
-                               "styleTags":  "romantic,luxury",
-                               "sizeRange":  "S-XL"
-                           },
-                           {
-                               "itemName":  "Dress 6-11",
-                               "price":  1330000,
-                               "imageUrl":  "dress_6_item_11.jpg",
-                               "ord":  10,
                                "itemType":  "ALINE",
-                               "styleTags":  "modern,clean",
-                               "sizeRange":  "S-XL"
+                               "styleTags":  "맞춤제작,2부",
+                               "sizeRange":  "44~60"
                            },
                            {
-                               "itemName":  "Dress 6-12",
-                               "price":  1360000,
-                               "imageUrl":  "dress_6_item_12.jpg",
-                               "ord":  11,
+                               "itemName":  "하이넥 드레스",
+                               "price":  263000,
+                               "imageUrl":  "드레스_06_벨퐁 아틀리에_06_08.jpg",
+                               "ord":  7,
+                               "itemType":  "ALINE",
+                               "styleTags":  "셀프웨딩,맞춤제작",
+                               "sizeRange":  "44~66"
+                           },
+                           {
+                               "itemName":  "브이넥 드레스",
+                               "price":  325000,
+                               "imageUrl":  "드레스_06_벨퐁 아틀리에_06_09.jpg",
+                               "ord":  8,
+                               "itemType":  "ALINE",
+                               "styleTags":  "2부,화동",
+                               "sizeRange":  "44~66"
+                           },
+                           {
+                               "itemName":  "벨슬리브 드레스",
+                               "price":  267000,
+                               "imageUrl":  "드레스_06_벨퐁 아틀리에_06_10.jpg",
+                               "ord":  9,
                                "itemType":  "BELL",
-                               "styleTags":  "lace,soft",
-                               "sizeRange":  "S-XL"
+                               "styleTags":  "화동,맞춤제작",
+                               "sizeRange":  "55~66"
                            },
                            {
-                               "itemName":  "Dress 6-13",
-                               "price":  1390000,
-                               "imageUrl":  "dress_6_item_13.jpg",
-                               "ord":  12,
+                               "itemName":  "머메이드 라인 드레스",
+                               "price":  210000,
+                               "imageUrl":  "드레스_06_벨퐁 아틀리에_06_11.jpg",
+                               "ord":  10,
                                "itemType":  "MERMAID",
-                               "styleTags":  "premium,slim",
-                               "sizeRange":  "S-XL"
+                               "styleTags":  "파티,셀프웨딩",
+                               "sizeRange":  "44~50"
                            },
                            {
-                               "itemName":  "Dress 6-14",
-                               "price":  1420000,
-                               "imageUrl":  "dress_6_item_14.jpg",
+                               "itemName":  "리본 포인트 드레스",
+                               "price":  251000,
+                               "imageUrl":  "드레스_06_벨퐁 아틀리에_06_12.jpg",
+                               "ord":  11,
+                               "itemType":  "ALINE",
+                               "styleTags":  "셀프웨딩,파티",
+                               "sizeRange":  "50~55"
+                           },
+                           {
+                               "itemName":  "튤 스커트 드레스",
+                               "price":  395000,
+                               "imageUrl":  "드레스_06_벨퐁 아틀리에_06_13.jpg",
+                               "ord":  12,
+                               "itemType":  "ALINE",
+                               "styleTags":  "2부,맞춤제작",
+                               "sizeRange":  "50~66"
+                           },
+                           {
+                               "itemName":  "레이스 디테일 드레스",
+                               "price":  321000,
+                               "imageUrl":  "드레스_06_벨퐁 아틀리에_06_14.jpg",
                                "ord":  13,
-                               "itemType":  "MINI",
-                               "styleTags":  "simple,chic",
-                               "sizeRange":  "S-XL"
+                               "itemType":  "ALINE",
+                               "styleTags":  "화동,2부",
+                               "sizeRange":  "50~60"
                            },
                            {
-                               "itemName":  "Dress 6-15",
-                               "price":  1450000,
-                               "imageUrl":  "dress_6_item_15.jpg",
+                               "itemName":  "벨라인 드레스",
+                               "price":  253000,
+                               "imageUrl":  "드레스_06_벨퐁 아틀리에_06_15.jpg",
                                "ord":  14,
-                               "itemType":  "SLIM",
-                               "styleTags":  "flower,lovely",
-                               "sizeRange":  "S-XL"
+                               "itemType":  "BELL",
+                               "styleTags":  "셀프웨딩,파티",
+                               "sizeRange":  "50~66"
                            },
                            {
-                               "itemName":  "Dress 6-16",
-                               "price":  1480000,
-                               "imageUrl":  "dress_6_item_16.jpg",
+                               "itemName":  "클래식 슈트",
+                               "price":  160000,
+                               "imageUrl":  "드레스_06_벨퐁 아틀리에_06_16.jpg",
                                "ord":  15,
                                "itemType":  "ALINE",
-                               "styleTags":  "silk,glossy",
-                               "sizeRange":  "S-XL"
+                               "styleTags":  "맞춤제작",
+                               "sizeRange":  "44~66"
                            },
                            {
-                               "itemName":  "Dress 6-17",
-                               "price":  1510000,
-                               "imageUrl":  "dress_6_item_17.jpg",
+                               "itemName":  "정장 세트",
+                               "price":  113000,
+                               "imageUrl":  "드레스_06_벨퐁 아틀리에_06_17.jpg",
                                "ord":  16,
-                               "itemType":  "BELL",
-                               "styleTags":  "classic,elegant",
-                               "sizeRange":  "S-XL"
+                               "itemType":  "ALINE",
+                               "styleTags":  "맞춤제작",
+                               "sizeRange":  "50~55"
                            },
                            {
-                               "itemName":  "Dress 6-18",
-                               "price":  1540000,
-                               "imageUrl":  "dress_6_item_18.jpg",
+                               "itemName":  "베이직 슈트",
+                               "price":  148000,
+                               "imageUrl":  "드레스_06_벨퐁 아틀리에_06_18.jpg",
                                "ord":  17,
-                               "itemType":  "MERMAID",
-                               "styleTags":  "romantic,luxury",
-                               "sizeRange":  "S-XL"
+                               "itemType":  "ALINE",
+                               "styleTags":  "맞춤제작",
+                               "sizeRange":  "44~50"
                            },
                            {
-                               "itemName":  "Dress 6-19",
-                               "price":  1570000,
-                               "imageUrl":  "dress_6_item_19.jpg",
+                               "itemName":  "슬림핏 슈트",
+                               "price":  122000,
+                               "imageUrl":  "드레스_06_벨퐁 아틀리에_06_19.jpg",
                                "ord":  18,
-                               "itemType":  "MINI",
-                               "styleTags":  "modern,clean",
-                               "sizeRange":  "S-XL"
+                               "itemType":  "SLIM",
+                               "styleTags":  "맞춤제작",
+                               "sizeRange":  "55~60"
                            },
                            {
-                               "itemName":  "Dress 6-20",
-                               "price":  1600000,
-                               "imageUrl":  "dress_6_item_20.jpg",
+                               "itemName":  "더블브레스트 슈트",
+                               "price":  179000,
+                               "imageUrl":  "드레스_06_벨퐁 아틀리에_06_20.jpg",
                                "ord":  19,
-                               "itemType":  "SLIM",
-                               "styleTags":  "lace,soft",
-                               "sizeRange":  "S-XL"
+                               "itemType":  "ALINE",
+                               "styleTags":  "맞춤제작",
+                               "sizeRange":  "55~66"
                            }
                        ]
     },
     {
         "cmno":  7,
-        "sizeRange":  "XS-L",
+        "sizeRange":  "44~68",
         "dressItems":  [
                            {
-                               "itemName":  "Dress 7-1",
-                               "price":  1080000,
-                               "imageUrl":  "dress_7_item_1.jpg",
+                               "itemName":  "심플 라인 드레스",
+                               "price":  150000,
+                               "imageUrl":  "드레스_07_끄레마 드레스_07_01.jpg",
                                "ord":  0,
                                "itemType":  "ALINE",
-                               "styleTags":  "classic,elegant",
-                               "sizeRange":  "XS-L"
+                               "styleTags":  "맞춤제작,파티",
+                               "sizeRange":  "44~66"
                            },
                            {
-                               "itemName":  "Dress 7-2",
-                               "price":  1110000,
-                               "imageUrl":  "dress_7_item_2.jpg",
+                               "itemName":  "케이프 디테일 드레스",
+                               "price":  143000,
+                               "imageUrl":  "드레스_07_끄레마 드레스_07_02.jpg",
                                "ord":  1,
-                               "itemType":  "BELL",
-                               "styleTags":  "romantic,luxury",
-                               "sizeRange":  "XS-L"
-                           },
-                           {
-                               "itemName":  "Dress 7-3",
-                               "price":  1140000,
-                               "imageUrl":  "dress_7_item_3.jpg",
-                               "ord":  2,
-                               "itemType":  "MERMAID",
-                               "styleTags":  "modern,clean",
-                               "sizeRange":  "XS-L"
-                           },
-                           {
-                               "itemName":  "Dress 7-4",
-                               "price":  1170000,
-                               "imageUrl":  "dress_7_item_4.jpg",
-                               "ord":  3,
-                               "itemType":  "MINI",
-                               "styleTags":  "lace,soft",
-                               "sizeRange":  "XS-L"
-                           },
-                           {
-                               "itemName":  "Dress 7-5",
-                               "price":  1200000,
-                               "imageUrl":  "dress_7_item_5.jpg",
-                               "ord":  4,
-                               "itemType":  "SLIM",
-                               "styleTags":  "premium,slim",
-                               "sizeRange":  "XS-L"
-                           },
-                           {
-                               "itemName":  "Dress 7-6",
-                               "price":  1230000,
-                               "imageUrl":  "dress_7_item_6.jpg",
-                               "ord":  5,
                                "itemType":  "ALINE",
-                               "styleTags":  "simple,chic",
-                               "sizeRange":  "XS-L"
+                               "styleTags":  "파티,맞춤제작",
+                               "sizeRange":  "50~55"
                            },
                            {
-                               "itemName":  "Dress 7-7",
-                               "price":  1260000,
-                               "imageUrl":  "dress_7_item_7.jpg",
-                               "ord":  6,
-                               "itemType":  "BELL",
-                               "styleTags":  "flower,lovely",
-                               "sizeRange":  "XS-L"
+                               "itemName":  "심플 A라인 드레스",
+                               "price":  127000,
+                               "imageUrl":  "드레스_07_끄레마 드레스_07_03.jpg",
+                               "ord":  2,
+                               "itemType":  "ALINE",
+                               "styleTags":  "파티,콩쿨복",
+                               "sizeRange":  "50~55"
                            },
                            {
-                               "itemName":  "Dress 7-8",
-                               "price":  1290000,
-                               "imageUrl":  "dress_7_item_8.jpg",
-                               "ord":  7,
-                               "itemType":  "MERMAID",
-                               "styleTags":  "silk,glossy",
-                               "sizeRange":  "XS-L"
+                               "itemName":  "비즈 장식 드레스",
+                               "price":  134000,
+                               "imageUrl":  "드레스_07_끄레마 드레스_07_04.jpg",
+                               "ord":  3,
+                               "itemType":  "ALINE",
+                               "styleTags":  "콩쿨복,맞춤제작",
+                               "sizeRange":  "55~66"
                            },
                            {
-                               "itemName":  "Dress 7-9",
-                               "price":  1320000,
-                               "imageUrl":  "dress_7_item_9.jpg",
-                               "ord":  8,
+                               "itemName":  "미니 레이스 드레스",
+                               "price":  127000,
+                               "imageUrl":  "드레스_07_끄레마 드레스_07_05.jpg",
+                               "ord":  4,
                                "itemType":  "MINI",
-                               "styleTags":  "classic,elegant",
-                               "sizeRange":  "XS-L"
+                               "styleTags":  "콩쿨복,맞춤제작",
+                               "sizeRange":  "44~66"
                            },
                            {
-                               "itemName":  "Dress 7-10",
-                               "price":  1350000,
-                               "imageUrl":  "dress_7_item_10.jpg",
-                               "ord":  9,
+                               "itemName":  "심플 슬립 드레스",
+                               "price":  90000,
+                               "imageUrl":  "드레스_07_끄레마 드레스_07_06.jpg",
+                               "ord":  5,
                                "itemType":  "SLIM",
-                               "styleTags":  "romantic,luxury",
-                               "sizeRange":  "XS-L"
+                               "styleTags":  "파티,맞춤제작",
+                               "sizeRange":  "55~66"
                            },
                            {
-                               "itemName":  "Dress 7-11",
-                               "price":  1380000,
-                               "imageUrl":  "dress_7_item_11.jpg",
+                               "itemName":  "백리스 드레스",
+                               "price":  130000,
+                               "imageUrl":  "드레스_07_끄레마 드레스_07_07.jpg",
+                               "ord":  6,
+                               "itemType":  "ALINE",
+                               "styleTags":  "맞춤제작,콩쿨복",
+                               "sizeRange":  "44~60"
+                           },
+                           {
+                               "itemName":  "벨슬리브 드레스",
+                               "price":  108000,
+                               "imageUrl":  "드레스_07_끄레마 드레스_07_08.jpg",
+                               "ord":  7,
+                               "itemType":  "BELL",
+                               "styleTags":  "맞춤제작,콩쿨복",
+                               "sizeRange":  "55~60"
+                           },
+                           {
+                               "itemName":  "롱 트레인 드레스",
+                               "price":  183000,
+                               "imageUrl":  "드레스_07_끄레마 드레스_07_09.jpg",
+                               "ord":  8,
+                               "itemType":  "ALINE",
+                               "styleTags":  "맞춤제작,콩쿨복",
+                               "sizeRange":  "44~60"
+                           },
+                           {
+                               "itemName":  "레이스 디테일 드레스",
+                               "price":  170000,
+                               "imageUrl":  "드레스_07_끄레마 드레스_07_10.jpg",
+                               "ord":  9,
+                               "itemType":  "ALINE",
+                               "styleTags":  "파티,맞춤제작",
+                               "sizeRange":  "50~66"
+                           },
+                           {
+                               "itemName":  "플라워 레이스 드레스",
+                               "price":  94000,
+                               "imageUrl":  "드레스_07_끄레마 드레스_07_11.jpg",
                                "ord":  10,
                                "itemType":  "ALINE",
-                               "styleTags":  "modern,clean",
-                               "sizeRange":  "XS-L"
+                               "styleTags":  "파티,맞춤제작",
+                               "sizeRange":  "44~50"
                            },
                            {
-                               "itemName":  "Dress 7-12",
-                               "price":  1410000,
-                               "imageUrl":  "dress_7_item_12.jpg",
+                               "itemName":  "버튜 라인 드레스",
+                               "price":  147000,
+                               "imageUrl":  "드레스_07_끄레마 드레스_07_12.jpg",
                                "ord":  11,
-                               "itemType":  "BELL",
-                               "styleTags":  "lace,soft",
-                               "sizeRange":  "XS-L"
+                               "itemType":  "ALINE",
+                               "styleTags":  "콩쿨복,파티",
+                               "sizeRange":  "44~66"
                            },
                            {
-                               "itemName":  "Dress 7-13",
-                               "price":  1440000,
-                               "imageUrl":  "dress_7_item_13.jpg",
+                               "itemName":  "클래식 슈트",
+                               "price":  90000,
+                               "imageUrl":  "드레스_07_끄레마 드레스_07_13.jpg",
                                "ord":  12,
-                               "itemType":  "MERMAID",
-                               "styleTags":  "premium,slim",
-                               "sizeRange":  "XS-L"
+                               "itemType":  "ALINE",
+                               "styleTags":  "맞춤제작",
+                               "sizeRange":  "55~66"
                            },
                            {
-                               "itemName":  "Dress 7-14",
-                               "price":  1470000,
-                               "imageUrl":  "dress_7_item_14.jpg",
+                               "itemName":  "정장 세트",
+                               "price":  77000,
+                               "imageUrl":  "드레스_07_끄레마 드레스_07_14.jpg",
                                "ord":  13,
-                               "itemType":  "MINI",
-                               "styleTags":  "simple,chic",
-                               "sizeRange":  "XS-L"
+                               "itemType":  "ALINE",
+                               "styleTags":  "맞춤제작",
+                               "sizeRange":  "60~66"
                            },
                            {
-                               "itemName":  "Dress 7-15",
-                               "price":  1500000,
-                               "imageUrl":  "dress_7_item_15.jpg",
+                               "itemName":  "더블브레스트 슈트",
+                               "price":  78000,
+                               "imageUrl":  "드레스_07_끄레마 드레스_07_15.jpg",
                                "ord":  14,
-                               "itemType":  "SLIM",
-                               "styleTags":  "flower,lovely",
-                               "sizeRange":  "XS-L"
+                               "itemType":  "ALINE",
+                               "styleTags":  "맞춤제작",
+                               "sizeRange":  "44~66"
                            },
                            {
-                               "itemName":  "Dress 7-16",
-                               "price":  1530000,
-                               "imageUrl":  "dress_7_item_16.jpg",
+                               "itemName":  "턱시도",
+                               "price":  64000,
+                               "imageUrl":  "드레스_07_끄레마 드레스_07_16.jpg",
                                "ord":  15,
                                "itemType":  "ALINE",
-                               "styleTags":  "silk,glossy",
-                               "sizeRange":  "XS-L"
+                               "styleTags":  "맞춤제작",
+                               "sizeRange":  "44~55"
                            },
                            {
-                               "itemName":  "Dress 7-17",
-                               "price":  1560000,
-                               "imageUrl":  "dress_7_item_17.jpg",
+                               "itemName":  "슬림핏 슈트",
+                               "price":  98000,
+                               "imageUrl":  "드레스_07_끄레마 드레스_07_17.jpg",
                                "ord":  16,
-                               "itemType":  "BELL",
-                               "styleTags":  "classic,elegant",
-                               "sizeRange":  "XS-L"
-                           },
-                           {
-                               "itemName":  "Dress 7-18",
-                               "price":  1590000,
-                               "imageUrl":  "dress_7_item_18.jpg",
-                               "ord":  17,
-                               "itemType":  "MERMAID",
-                               "styleTags":  "romantic,luxury",
-                               "sizeRange":  "XS-L"
-                           },
-                           {
-                               "itemName":  "Dress 7-19",
-                               "price":  1620000,
-                               "imageUrl":  "dress_7_item_19.jpg",
-                               "ord":  18,
-                               "itemType":  "MINI",
-                               "styleTags":  "modern,clean",
-                               "sizeRange":  "XS-L"
-                           },
-                           {
-                               "itemName":  "Dress 7-20",
-                               "price":  1650000,
-                               "imageUrl":  "dress_7_item_20.jpg",
-                               "ord":  19,
                                "itemType":  "SLIM",
-                               "styleTags":  "lace,soft",
-                               "sizeRange":  "XS-L"
+                               "styleTags":  "맞춤제작",
+                               "sizeRange":  "44~66"
+                           },
+                           {
+                               "itemName":  "스탠다드 슈트",
+                               "price":  88000,
+                               "imageUrl":  "드레스_07_끄레마 드레스_07_18.jpg",
+                               "ord":  17,
+                               "itemType":  "ALINE",
+                               "styleTags":  "맞춤제작",
+                               "sizeRange":  "50~60"
+                           },
+                           {
+                               "itemName":  "투피스 슈트",
+                               "price":  72000,
+                               "imageUrl":  "드레스_07_끄레마 드레스_07_19.jpg",
+                               "ord":  18,
+                               "itemType":  "ALINE",
+                               "styleTags":  "맞춤제작",
+                               "sizeRange":  "44~66"
+                           },
+                           {
+                               "itemName":  "베이직 슈트",
+                               "price":  69000,
+                               "imageUrl":  "드레스_07_끄레마 드레스_07_20.jpg",
+                               "ord":  19,
+                               "itemType":  "ALINE",
+                               "styleTags":  "맞춤제작",
+                               "sizeRange":  "50~60"
                            }
                        ]
     },
     {
         "cmno":  8,
-        "sizeRange":  "S-L",
+        "sizeRange":  "44~60",
         "dressItems":  [
                            {
-                               "itemName":  "Dress 8-1",
-                               "price":  1130000,
-                               "imageUrl":  "dress_8_item_1.jpg",
+                               "itemName":  "리본 포인트 드레스",
+                               "price":  281000,
+                               "imageUrl":  "드레스_08_위시브라이드_08_01.jpg",
                                "ord":  0,
                                "itemType":  "ALINE",
-                               "styleTags":  "classic,elegant",
-                               "sizeRange":  "S-L"
+                               "styleTags":  "실크,비즈",
+                               "sizeRange":  "44~60"
                            },
                            {
-                               "itemName":  "Dress 8-2",
-                               "price":  1160000,
-                               "imageUrl":  "dress_8_item_2.jpg",
+                               "itemName":  "케이프 디테일 드레스",
+                               "price":  426000,
+                               "imageUrl":  "드레스_08_위시브라이드_08_02.jpg",
                                "ord":  1,
-                               "itemType":  "BELL",
-                               "styleTags":  "romantic,luxury",
-                               "sizeRange":  "S-L"
-                           },
-                           {
-                               "itemName":  "Dress 8-3",
-                               "price":  1190000,
-                               "imageUrl":  "dress_8_item_3.jpg",
-                               "ord":  2,
-                               "itemType":  "MERMAID",
-                               "styleTags":  "modern,clean",
-                               "sizeRange":  "S-L"
-                           },
-                           {
-                               "itemName":  "Dress 8-4",
-                               "price":  1220000,
-                               "imageUrl":  "dress_8_item_4.jpg",
-                               "ord":  3,
-                               "itemType":  "MINI",
-                               "styleTags":  "lace,soft",
-                               "sizeRange":  "S-L"
-                           },
-                           {
-                               "itemName":  "Dress 8-5",
-                               "price":  1250000,
-                               "imageUrl":  "dress_8_item_5.jpg",
-                               "ord":  4,
-                               "itemType":  "SLIM",
-                               "styleTags":  "premium,slim",
-                               "sizeRange":  "S-L"
-                           },
-                           {
-                               "itemName":  "Dress 8-6",
-                               "price":  1280000,
-                               "imageUrl":  "dress_8_item_6.jpg",
-                               "ord":  5,
                                "itemType":  "ALINE",
-                               "styleTags":  "simple,chic",
-                               "sizeRange":  "S-L"
+                               "styleTags":  "비즈,본식",
+                               "sizeRange":  "50~60"
                            },
                            {
-                               "itemName":  "Dress 8-7",
-                               "price":  1310000,
-                               "imageUrl":  "dress_8_item_7.jpg",
-                               "ord":  6,
+                               "itemName":  "심플 라인 드레스",
+                               "price":  283000,
+                               "imageUrl":  "드레스_08_위시브라이드_08_03.jpg",
+                               "ord":  2,
+                               "itemType":  "ALINE",
+                               "styleTags":  "본식,비즈",
+                               "sizeRange":  "44~60"
+                           },
+                           {
+                               "itemName":  "벨라인 드레스",
+                               "price":  489000,
+                               "imageUrl":  "드레스_08_위시브라이드_08_04.jpg",
+                               "ord":  3,
                                "itemType":  "BELL",
-                               "styleTags":  "flower,lovely",
-                               "sizeRange":  "S-L"
+                               "styleTags":  "본식,비즈",
+                               "sizeRange":  "44~60"
                            },
                            {
-                               "itemName":  "Dress 8-8",
-                               "price":  1340000,
-                               "imageUrl":  "dress_8_item_8.jpg",
-                               "ord":  7,
+                               "itemName":  "셔링 드레스",
+                               "price":  440000,
+                               "imageUrl":  "드레스_08_위시브라이드_08_05.jpg",
+                               "ord":  4,
+                               "itemType":  "ALINE",
+                               "styleTags":  "비즈,본식",
+                               "sizeRange":  "50~60"
+                           },
+                           {
+                               "itemName":  "라운드넥 드레스",
+                               "price":  361000,
+                               "imageUrl":  "드레스_08_위시브라이드_08_06.jpg",
+                               "ord":  5,
                                "itemType":  "MERMAID",
-                               "styleTags":  "silk,glossy",
-                               "sizeRange":  "S-L"
+                               "styleTags":  "머메이드,비즈",
+                               "sizeRange":  "55~60"
                            },
                            {
-                               "itemName":  "Dress 8-9",
-                               "price":  1370000,
-                               "imageUrl":  "dress_8_item_9.jpg",
+                               "itemName":  "베이직 벨라인 드레스",
+                               "price":  358000,
+                               "imageUrl":  "드레스_08_위시브라이드_08_07.jpg",
+                               "ord":  6,
+                               "itemType":  "MERMAID",
+                               "styleTags":  "실크,머메이드",
+                               "sizeRange":  "50~60"
+                           },
+                           {
+                               "itemName":  "스트랩 드레스",
+                               "price":  356000,
+                               "imageUrl":  "드레스_08_위시브라이드_08_08.jpg",
+                               "ord":  7,
+                               "itemType":  "ALINE",
+                               "styleTags":  "본식,실크",
+                               "sizeRange":  "50~60"
+                           },
+                           {
+                               "itemName":  "프릴 디테일 드레스",
+                               "price":  505000,
+                               "imageUrl":  "드레스_08_위시브라이드_08_09.jpg",
                                "ord":  8,
-                               "itemType":  "MINI",
-                               "styleTags":  "classic,elegant",
-                               "sizeRange":  "S-L"
+                               "itemType":  "ALINE",
+                               "styleTags":  "비즈,실크",
+                               "sizeRange":  "50~60"
                            },
                            {
-                               "itemName":  "Dress 8-10",
-                               "price":  1400000,
-                               "imageUrl":  "dress_8_item_10.jpg",
+                               "itemName":  "미니 레이스 드레스",
+                               "price":  288000,
+                               "imageUrl":  "드레스_08_위시브라이드_08_10.jpg",
                                "ord":  9,
-                               "itemType":  "SLIM",
-                               "styleTags":  "romantic,luxury",
-                               "sizeRange":  "S-L"
+                               "itemType":  "MINI",
+                               "styleTags":  "비즈,본식",
+                               "sizeRange":  "44~60"
                            },
                            {
-                               "itemName":  "Dress 8-11",
-                               "price":  1430000,
-                               "imageUrl":  "dress_8_item_11.jpg",
+                               "itemName":  "심플 A라인 드레스",
+                               "price":  350000,
+                               "imageUrl":  "드레스_08_위시브라이드_08_11.jpg",
                                "ord":  10,
                                "itemType":  "ALINE",
-                               "styleTags":  "modern,clean",
-                               "sizeRange":  "S-L"
+                               "styleTags":  "실크,본식",
+                               "sizeRange":  "50~55"
                            },
                            {
-                               "itemName":  "Dress 8-12",
-                               "price":  1460000,
-                               "imageUrl":  "dress_8_item_12.jpg",
+                               "itemName":  "백리스 드레스",
+                               "price":  573000,
+                               "imageUrl":  "드레스_08_위시브라이드_08_12.jpg",
                                "ord":  11,
-                               "itemType":  "BELL",
-                               "styleTags":  "lace,soft",
-                               "sizeRange":  "S-L"
+                               "itemType":  "ALINE",
+                               "styleTags":  "본식,실크",
+                               "sizeRange":  "44~60"
                            },
                            {
-                               "itemName":  "Dress 8-13",
-                               "price":  1490000,
-                               "imageUrl":  "dress_8_item_13.jpg",
+                               "itemName":  "코르셋 라인 드레스",
+                               "price":  408000,
+                               "imageUrl":  "드레스_08_위시브라이드_08_13.jpg",
                                "ord":  12,
                                "itemType":  "MERMAID",
-                               "styleTags":  "premium,slim",
-                               "sizeRange":  "S-L"
+                               "styleTags":  "머메이드,비즈",
+                               "sizeRange":  "44~60"
                            },
                            {
-                               "itemName":  "Dress 8-14",
-                               "price":  1520000,
-                               "imageUrl":  "dress_8_item_14.jpg",
+                               "itemName":  "심플 오프숄더 드레스",
+                               "price":  317000,
+                               "imageUrl":  "드레스_08_위시브라이드_08_14.jpg",
                                "ord":  13,
-                               "itemType":  "MINI",
-                               "styleTags":  "simple,chic",
-                               "sizeRange":  "S-L"
+                               "itemType":  "ALINE",
+                               "styleTags":  "본식,실크",
+                               "sizeRange":  "50~60"
                            },
                            {
-                               "itemName":  "Dress 8-15",
-                               "price":  1550000,
-                               "imageUrl":  "dress_8_item_15.jpg",
+                               "itemName":  "머메이드 라인 드레스",
+                               "price":  528000,
+                               "imageUrl":  "드레스_08_위시브라이드_08_15.jpg",
                                "ord":  14,
-                               "itemType":  "SLIM",
-                               "styleTags":  "flower,lovely",
-                               "sizeRange":  "S-L"
+                               "itemType":  "MERMAID",
+                               "styleTags":  "실크,본식",
+                               "sizeRange":  "44~55"
                            },
                            {
-                               "itemName":  "Dress 8-16",
-                               "price":  1580000,
-                               "imageUrl":  "dress_8_item_16.jpg",
+                               "itemName":  "브이넥 드레스",
+                               "price":  388000,
+                               "imageUrl":  "드레스_08_위시브라이드_08_16.jpg",
                                "ord":  15,
                                "itemType":  "ALINE",
-                               "styleTags":  "silk,glossy",
-                               "sizeRange":  "S-L"
+                               "styleTags":  "비즈,실크",
+                               "sizeRange":  "55~60"
                            },
                            {
-                               "itemName":  "Dress 8-17",
-                               "price":  1610000,
-                               "imageUrl":  "dress_8_item_17.jpg",
+                               "itemName":  "시폰 드레스",
+                               "price":  539000,
+                               "imageUrl":  "드레스_08_위시브라이드_08_17.jpg",
                                "ord":  16,
-                               "itemType":  "BELL",
-                               "styleTags":  "classic,elegant",
-                               "sizeRange":  "S-L"
-                           },
-                           {
-                               "itemName":  "Dress 8-18",
-                               "price":  1640000,
-                               "imageUrl":  "dress_8_item_18.jpg",
-                               "ord":  17,
                                "itemType":  "MERMAID",
-                               "styleTags":  "romantic,luxury",
-                               "sizeRange":  "S-L"
+                               "styleTags":  "머메이드,본식",
+                               "sizeRange":  "50~55"
                            },
                            {
-                               "itemName":  "Dress 8-19",
-                               "price":  1670000,
-                               "imageUrl":  "dress_8_item_19.jpg",
+                               "itemName":  "버튜 라인 드레스",
+                               "price":  431000,
+                               "imageUrl":  "드레스_08_위시브라이드_08_18.jpg",
+                               "ord":  17,
+                               "itemType":  "ALINE",
+                               "styleTags":  "본식,실크",
+                               "sizeRange":  "55~60"
+                           },
+                           {
+                               "itemName":  "벨슬리브 드레스",
+                               "price":  384000,
+                               "imageUrl":  "드레스_08_위시브라이드_08_19.jpg",
                                "ord":  18,
-                               "itemType":  "MINI",
-                               "styleTags":  "modern,clean",
-                               "sizeRange":  "S-L"
+                               "itemType":  "BELL",
+                               "styleTags":  "본식,실크",
+                               "sizeRange":  "44~50"
                            }
                        ]
     },
     {
         "cmno":  9,
-        "sizeRange":  "S-2XL",
+        "sizeRange":  "44~62",
         "dressItems":  [
                            {
-                               "itemName":  "Dress 9-1",
-                               "price":  1180000,
-                               "imageUrl":  "dress_9_item_1.jpg",
+                               "itemName":  "백리스 드레스",
+                               "price":  287000,
+                               "imageUrl":  "드레스_09_모니크 브라이덜_09_01.jpg",
                                "ord":  0,
                                "itemType":  "ALINE",
-                               "styleTags":  "classic,elegant",
-                               "sizeRange":  "S-2XL"
+                               "styleTags":  "오프숄더,A라인",
+                               "sizeRange":  "50~60"
                            },
                            {
-                               "itemName":  "Dress 9-2",
-                               "price":  1210000,
-                               "imageUrl":  "dress_9_item_2.jpg",
+                               "itemName":  "벨라인 드레스",
+                               "price":  223000,
+                               "imageUrl":  "드레스_09_모니크 브라이덜_09_02.jpg",
                                "ord":  1,
                                "itemType":  "BELL",
-                               "styleTags":  "romantic,luxury",
-                               "sizeRange":  "S-2XL"
+                               "styleTags":  "A라인,본식",
+                               "sizeRange":  "50~55"
                            },
                            {
-                               "itemName":  "Dress 9-3",
-                               "price":  1240000,
-                               "imageUrl":  "dress_9_item_3.jpg",
+                               "itemName":  "심플 슬립 드레스",
+                               "price":  475000,
+                               "imageUrl":  "드레스_09_모니크 브라이덜_09_03.jpg",
                                "ord":  2,
-                               "itemType":  "MERMAID",
-                               "styleTags":  "modern,clean",
-                               "sizeRange":  "S-2XL"
+                               "itemType":  "SLIM",
+                               "styleTags":  "본식,오프숄더",
+                               "sizeRange":  "44~50"
                            },
                            {
-                               "itemName":  "Dress 9-4",
-                               "price":  1270000,
-                               "imageUrl":  "dress_9_item_4.jpg",
+                               "itemName":  "미니 레이스 드레스",
+                               "price":  348000,
+                               "imageUrl":  "드레스_09_모니크 브라이덜_09_04.jpg",
                                "ord":  3,
                                "itemType":  "MINI",
-                               "styleTags":  "lace,soft",
-                               "sizeRange":  "S-2XL"
+                               "styleTags":  "오프숄더,A라인",
+                               "sizeRange":  "50~60"
                            },
                            {
-                               "itemName":  "Dress 9-5",
-                               "price":  1300000,
-                               "imageUrl":  "dress_9_item_5.jpg",
+                               "itemName":  "리본 포인트 드레스",
+                               "price":  342000,
+                               "imageUrl":  "드레스_09_모니크 브라이덜_09_05.jpg",
                                "ord":  4,
-                               "itemType":  "SLIM",
-                               "styleTags":  "premium,slim",
-                               "sizeRange":  "S-2XL"
+                               "itemType":  "MINI",
+                               "styleTags":  "A라인,미니멀",
+                               "sizeRange":  "44~60"
                            },
                            {
-                               "itemName":  "Dress 9-6",
-                               "price":  1330000,
-                               "imageUrl":  "dress_9_item_6.jpg",
+                               "itemName":  "라운드넥 드레스",
+                               "price":  272000,
+                               "imageUrl":  "드레스_09_모니크 브라이덜_09_06.jpg",
                                "ord":  5,
                                "itemType":  "ALINE",
-                               "styleTags":  "simple,chic",
-                               "sizeRange":  "S-2XL"
+                               "styleTags":  "오프숄더,본식",
+                               "sizeRange":  "50~55"
                            },
                            {
-                               "itemName":  "Dress 9-7",
-                               "price":  1360000,
-                               "imageUrl":  "dress_9_item_7.jpg",
+                               "itemName":  "베이직 라인 드레스",
+                               "price":  296000,
+                               "imageUrl":  "드레스_09_모니크 브라이덜_09_07.jpg",
                                "ord":  6,
-                               "itemType":  "BELL",
-                               "styleTags":  "flower,lovely",
-                               "sizeRange":  "S-2XL"
+                               "itemType":  "ALINE",
+                               "styleTags":  "A라인,본식",
+                               "sizeRange":  "50~60"
                            },
                            {
-                               "itemName":  "Dress 9-8",
-                               "price":  1390000,
-                               "imageUrl":  "dress_9_item_8.jpg",
+                               "itemName":  "비즈 장식 드레스",
+                               "price":  290000,
+                               "imageUrl":  "드레스_09_모니크 브라이덜_09_08.jpg",
                                "ord":  7,
-                               "itemType":  "MERMAID",
-                               "styleTags":  "silk,glossy",
-                               "sizeRange":  "S-2XL"
+                               "itemType":  "ALINE",
+                               "styleTags":  "A라인,본식",
+                               "sizeRange":  "44~50"
                            },
                            {
-                               "itemName":  "Dress 9-9",
-                               "price":  1420000,
-                               "imageUrl":  "dress_9_item_9.jpg",
+                               "itemName":  "머메이드 라인 드레스",
+                               "price":  372000,
+                               "imageUrl":  "드레스_09_모니크 브라이덜_09_09.jpg",
                                "ord":  8,
-                               "itemType":  "MINI",
-                               "styleTags":  "classic,elegant",
-                               "sizeRange":  "S-2XL"
+                               "itemType":  "MERMAID",
+                               "styleTags":  "본식,A라인",
+                               "sizeRange":  "55~60"
                            },
                            {
-                               "itemName":  "Dress 9-10",
-                               "price":  1450000,
-                               "imageUrl":  "dress_9_item_10.jpg",
+                               "itemName":  "튤 레이어드 드레스",
+                               "price":  289000,
+                               "imageUrl":  "드레스_09_모니크 브라이덜_09_10.jpg",
                                "ord":  9,
-                               "itemType":  "SLIM",
-                               "styleTags":  "romantic,luxury",
-                               "sizeRange":  "S-2XL"
+                               "itemType":  "ALINE",
+                               "styleTags":  "오프숄더,본식",
+                               "sizeRange":  "50~60"
                            }
                        ]
     },
     {
         "cmno":  10,
-        "sizeRange":  "XS-XL",
+        "sizeRange":  "44~58",
         "dressItems":  [
                            {
-                               "itemName":  "Dress 10-1",
-                               "price":  1230000,
-                               "imageUrl":  "dress_10_item_1.jpg",
+                               "itemName":  "벨슬리브 드레스",
+                               "price":  439000,
+                               "imageUrl":  "드레스_10_에브와르 청담_10_01.jpg",
                                "ord":  0,
-                               "itemType":  "ALINE",
-                               "styleTags":  "classic,elegant",
-                               "sizeRange":  "XS-XL"
-                           },
-                           {
-                               "itemName":  "Dress 10-2",
-                               "price":  1260000,
-                               "imageUrl":  "dress_10_item_2.jpg",
-                               "ord":  1,
                                "itemType":  "BELL",
-                               "styleTags":  "romantic,luxury",
-                               "sizeRange":  "XS-XL"
+                               "styleTags":  "수입실크,본식",
+                               "sizeRange":  "44~50"
                            },
                            {
-                               "itemName":  "Dress 10-3",
-                               "price":  1290000,
-                               "imageUrl":  "dress_10_item_3.jpg",
+                               "itemName":  "코르셋 라인 드레스",
+                               "price":  635000,
+                               "imageUrl":  "드레스_10_에브와르 청담_10_02.jpg",
+                               "ord":  1,
+                               "itemType":  "MERMAID",
+                               "styleTags":  "머메이드,본식",
+                               "sizeRange":  "44~55"
+                           },
+                           {
+                               "itemName":  "베이직 라인 드레스",
+                               "price":  638000,
+                               "imageUrl":  "드레스_10_에브와르 청담_10_03.png",
                                "ord":  2,
                                "itemType":  "MERMAID",
-                               "styleTags":  "modern,clean",
-                               "sizeRange":  "XS-XL"
+                               "styleTags":  "머메이드,비즈",
+                               "sizeRange":  "44~50"
                            },
                            {
-                               "itemName":  "Dress 10-4",
-                               "price":  1320000,
-                               "imageUrl":  "dress_10_item_4.jpg",
+                               "itemName":  "튤 레이어드 드레스",
+                               "price":  454000,
+                               "imageUrl":  "드레스_10_에브와르 청담_10_04.png",
                                "ord":  3,
-                               "itemType":  "MINI",
-                               "styleTags":  "lace,soft",
-                               "sizeRange":  "XS-XL"
+                               "itemType":  "MERMAID",
+                               "styleTags":  "머메이드,비즈",
+                               "sizeRange":  "44~50"
                            },
                            {
-                               "itemName":  "Dress 10-5",
-                               "price":  1350000,
-                               "imageUrl":  "dress_10_item_5.jpg",
+                               "itemName":  "리본 포인트 드레스",
+                               "price":  443000,
+                               "imageUrl":  "드레스_10_에브와르 청담_10_05.jpg",
                                "ord":  4,
-                               "itemType":  "SLIM",
-                               "styleTags":  "premium,slim",
-                               "sizeRange":  "XS-XL"
-                           },
-                           {
-                               "itemName":  "Dress 10-6",
-                               "price":  1380000,
-                               "imageUrl":  "dress_10_item_6.jpg",
-                               "ord":  5,
                                "itemType":  "ALINE",
-                               "styleTags":  "simple,chic",
-                               "sizeRange":  "XS-XL"
+                               "styleTags":  "수입실크,본식",
+                               "sizeRange":  "44~50"
                            },
                            {
-                               "itemName":  "Dress 10-7",
-                               "price":  1410000,
-                               "imageUrl":  "dress_10_item_7.jpg",
+                               "itemName":  "프릴 디테일 드레스",
+                               "price":  557000,
+                               "imageUrl":  "드레스_10_에브와르 청담_10_06.jpg",
+                               "ord":  5,
+                               "itemType":  "MERMAID",
+                               "styleTags":  "머메이드,본식",
+                               "sizeRange":  "44~55"
+                           },
+                           {
+                               "itemName":  "심플 라인 드레스",
+                               "price":  386000,
+                               "imageUrl":  "드레스_10_에브와르 청담_10_6.jpg",
                                "ord":  6,
-                               "itemType":  "BELL",
-                               "styleTags":  "flower,lovely",
-                               "sizeRange":  "XS-XL"
+                               "itemType":  "ALINE",
+                               "styleTags":  "수입실크,비즈",
+                               "sizeRange":  "44~50"
                            },
                            {
-                               "itemName":  "Dress 10-8",
-                               "price":  1440000,
-                               "imageUrl":  "dress_10_item_8.jpg",
+                               "itemName":  "머메이드 라인 드레스",
+                               "price":  586000,
+                               "imageUrl":  "드레스_10_에브와르 청담_10_07.png",
                                "ord":  7,
                                "itemType":  "MERMAID",
-                               "styleTags":  "silk,glossy",
-                               "sizeRange":  "XS-XL"
+                               "styleTags":  "머메이드,수입실크",
+                               "sizeRange":  "44~55"
                            },
                            {
-                               "itemName":  "Dress 10-9",
-                               "price":  1470000,
-                               "imageUrl":  "dress_10_item_9.jpg",
+                               "itemName":  "플라워 레이스 드레스",
+                               "price":  604000,
+                               "imageUrl":  "드레스_10_에브와르 청담_10_08.png",
                                "ord":  8,
-                               "itemType":  "MINI",
-                               "styleTags":  "classic,elegant",
-                               "sizeRange":  "XS-XL"
+                               "itemType":  "ALINE",
+                               "styleTags":  "수입실크,본식",
+                               "sizeRange":  "44~50"
                            },
                            {
-                               "itemName":  "Dress 10-10",
-                               "price":  1500000,
-                               "imageUrl":  "dress_10_item_10.jpg",
+                               "itemName":  "미니 원피스 드레스",
+                               "price":  407000,
+                               "imageUrl":  "드레스_10_에브와르 청담_10_9.jpg",
                                "ord":  9,
-                               "itemType":  "SLIM",
-                               "styleTags":  "romantic,luxury",
-                               "sizeRange":  "XS-XL"
-                           },
-                           {
-                               "itemName":  "Dress 10-11",
-                               "price":  1530000,
-                               "imageUrl":  "dress_10_item_11.jpg",
-                               "ord":  10,
-                               "itemType":  "ALINE",
-                               "styleTags":  "modern,clean",
-                               "sizeRange":  "XS-XL"
-                           },
-                           {
-                               "itemName":  "Dress 10-12",
-                               "price":  1560000,
-                               "imageUrl":  "dress_10_item_12.jpg",
-                               "ord":  11,
-                               "itemType":  "BELL",
-                               "styleTags":  "lace,soft",
-                               "sizeRange":  "XS-XL"
-                           },
-                           {
-                               "itemName":  "Dress 10-13",
-                               "price":  1590000,
-                               "imageUrl":  "dress_10_item_13.jpg",
-                               "ord":  12,
-                               "itemType":  "MERMAID",
-                               "styleTags":  "premium,slim",
-                               "sizeRange":  "XS-XL"
-                           },
-                           {
-                               "itemName":  "Dress 10-14",
-                               "price":  1620000,
-                               "imageUrl":  "dress_10_item_14.jpg",
-                               "ord":  13,
                                "itemType":  "MINI",
-                               "styleTags":  "simple,chic",
-                               "sizeRange":  "XS-XL"
+                               "styleTags":  "수입실크,머메이드",
+                               "sizeRange":  "44~55"
                            },
                            {
-                               "itemName":  "Dress 10-15",
-                               "price":  1650000,
-                               "imageUrl":  "dress_10_item_15.jpg",
-                               "ord":  14,
-                               "itemType":  "SLIM",
-                               "styleTags":  "flower,lovely",
-                               "sizeRange":  "XS-XL"
+                               "itemName":  "셔링 드레스",
+                               "price":  519000,
+                               "imageUrl":  "드레스_10_에브와르 청담_10_10.jpg",
+                               "ord":  10,
+                               "itemType":  "MERMAID",
+                               "styleTags":  "머메이드,수입실크",
+                               "sizeRange":  "44~50"
                            },
                            {
-                               "itemName":  "Dress 10-16",
-                               "price":  1680000,
-                               "imageUrl":  "dress_10_item_16.jpg",
-                               "ord":  15,
+                               "itemName":  "심플 슬립 드레스",
+                               "price":  576000,
+                               "imageUrl":  "드레스_10_에브와르 청담_10_11.jpg",
+                               "ord":  11,
+                               "itemType":  "MERMAID",
+                               "styleTags":  "머메이드,본식",
+                               "sizeRange":  "50~55"
+                           },
+                           {
+                               "itemName":  "라운드넥 드레스",
+                               "price":  671000,
+                               "imageUrl":  "드레스_10_에브와르 청담_10_12.jpg",
+                               "ord":  12,
                                "itemType":  "ALINE",
-                               "styleTags":  "silk,glossy",
-                               "sizeRange":  "XS-XL"
+                               "styleTags":  "비즈,수입실크",
+                               "sizeRange":  "44~55"
                            },
                            {
-                               "itemName":  "Dress 10-17",
-                               "price":  1710000,
-                               "imageUrl":  "dress_10_item_17.jpg",
+                               "itemName":  "오프숄더 드레스",
+                               "price":  595000,
+                               "imageUrl":  "드레스_10_에브와르 청담_10_13.jpg",
+                               "ord":  13,
+                               "itemType":  "MERMAID",
+                               "styleTags":  "머메이드,수입실크",
+                               "sizeRange":  "44~55"
+                           },
+                           {
+                               "itemName":  "비즈 장식 드레스",
+                               "price":  635000,
+                               "imageUrl":  "드레스_10_에브와르 청담_10_14.jpg",
+                               "ord":  14,
+                               "itemType":  "ALINE",
+                               "styleTags":  "본식,수입실크",
+                               "sizeRange":  "44~55"
+                           },
+                           {
+                               "itemName":  "브이넥 드레스",
+                               "price":  628000,
+                               "imageUrl":  "드레스_10_에브와르 청담_10_15.jpg",
+                               "ord":  15,
+                               "itemType":  "MERMAID",
+                               "styleTags":  "머메이드,비즈",
+                               "sizeRange":  "44~50"
+                           },
+                           {
+                               "itemName":  "백리스 드레스",
+                               "price":  514000,
+                               "imageUrl":  "드레스_10_에브와르 청담_10_16.jpg",
                                "ord":  16,
-                               "itemType":  "BELL",
-                               "styleTags":  "classic,elegant",
-                               "sizeRange":  "XS-XL"
+                               "itemType":  "ALINE",
+                               "styleTags":  "수입실크,비즈",
+                               "sizeRange":  "50~55"
                            },
                            {
-                               "itemName":  "Dress 10-18",
-                               "price":  1740000,
-                               "imageUrl":  "dress_10_item_18.jpg",
+                               "itemName":  "튤 스커트 드레스",
+                               "price":  538000,
+                               "imageUrl":  "드레스_10_에브와르 청담_10_17.jpg",
                                "ord":  17,
                                "itemType":  "MERMAID",
-                               "styleTags":  "romantic,luxury",
-                               "sizeRange":  "XS-XL"
+                               "styleTags":  "머메이드,수입실크",
+                               "sizeRange":  "50~55"
                            }
                        ]
     }

@@ -39,13 +39,19 @@ const adminRoles = ["ADMIN", "ROLE_ADMIN"];
 const CompanyListComponent = () => {
   const [serverData, setServerData] = useState(initState);
   const [fetching, setFetching] = useState(false);
-  const [filters, setFilters] = useState({ keyword: "", category: "", sort: "latest" });
+  const [filters, setFilters] = useState({
+    keyword: "",
+    category: "",
+    sort: "latest",
+  });
   const [reloadKey, setReloadKey] = useState(0);
   const { exceptionHandle } = useCustomLogin();
   const { page, size, refresh, moveToList, moveToRead } = useCustomMove();
   const navigate = useNavigate();
   const loginState = useSelector((state) => state.loginSlice);
-  const canManageCompany = loginState.roleNames?.some((roleName) => adminRoles.includes(roleName));
+  const canManageCompany = loginState.roleNames?.some((roleName) =>
+    adminRoles.includes(roleName),
+  );
 
   useEffect(() => {
     setFetching(true);
@@ -64,12 +70,26 @@ const CompanyListComponent = () => {
         setFetching(false);
         exceptionHandle(err);
       });
-  }, [page, size, refresh, filters.keyword, filters.category, filters.sort, reloadKey]);
+  }, [
+    page,
+    size,
+    refresh,
+    filters.keyword,
+    filters.category,
+    filters.sort,
+    reloadKey,
+  ]);
 
   const stats = useMemo(() => {
     const total = serverData.totalCount || serverData.dtoList.length;
-    const active = serverData.dtoList.filter((company) => !company.delFlag).length || total;
-    return { total, active, pending: 0, newThisMonth: Math.min(serverData.dtoList.length, 14) };
+    const active =
+      serverData.dtoList.filter((company) => !company.delFlag).length || total;
+    return {
+      total,
+      active,
+      pending: 0,
+      newThisMonth: Math.min(serverData.dtoList.length, 14),
+    };
   }, [serverData]);
 
   const handleDelete = async (cmno, name) => {
@@ -95,7 +115,9 @@ const CompanyListComponent = () => {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold">업체 관리</h2>
-          <p className="mt-1 text-sm text-slate-500">등록된 웨딩 업체를 조회하고 관리합니다.</p>
+          <p className="mt-1 text-sm text-slate-500">
+            등록된 웨딩 업체를 조회하고 관리합니다.
+          </p>
         </div>
         {canManageCompany ? (
           <button
@@ -113,7 +135,11 @@ const CompanyListComponent = () => {
         <StatCard label="전체 업체" value={stats.total} />
         <StatCard label="활성 업체" value={stats.active} tone="success" />
         <StatCard label="승인 대기" value={stats.pending} tone="warning" />
-        <StatCard label="이번 달 신규" value={stats.newThisMonth} tone="accent" />
+        <StatCard
+          label="이번 달 신규"
+          value={stats.newThisMonth}
+          tone="accent"
+        />
       </div>
 
       <div className="mb-5 flex flex-wrap gap-2">
@@ -122,12 +148,16 @@ const CompanyListComponent = () => {
           type="text"
           placeholder="업체명, 주소, 연락처로 검색"
           value={filters.keyword}
-          onChange={(e) => setFilters((prev) => ({ ...prev, keyword: e.target.value }))}
+          onChange={(e) =>
+            setFilters((prev) => ({ ...prev, keyword: e.target.value }))
+          }
         />
         <select
           className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm"
           value={filters.category}
-          onChange={(e) => setFilters((prev) => ({ ...prev, category: e.target.value }))}
+          onChange={(e) =>
+            setFilters((prev) => ({ ...prev, category: e.target.value }))
+          }
         >
           <option value="">업체 유형 전체</option>
           <option value="HALL">웨딩홀</option>
@@ -138,7 +168,9 @@ const CompanyListComponent = () => {
         <select
           className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm"
           value={filters.sort}
-          onChange={(e) => setFilters((prev) => ({ ...prev, sort: e.target.value }))}
+          onChange={(e) =>
+            setFilters((prev) => ({ ...prev, sort: e.target.value }))
+          }
         >
           <option value="latest">정렬: 최신순</option>
           <option value="name">정렬: 이름순</option>
@@ -160,41 +192,87 @@ const CompanyListComponent = () => {
           </thead>
           <tbody>
             {serverData.dtoList.map((company) => (
-              <tr key={company.cmno} className="border-t border-slate-100 hover:bg-slate-50">
+              <tr
+                key={company.cmno}
+                className="border-t border-slate-100 hover:bg-slate-50"
+              >
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <div className="h-12 w-16 overflow-hidden rounded-md bg-slate-100">
+                    <div className="h-14 w-20 overflow-hidden rounded-md bg-white">
                       {company.mainImage ? (
-                        <img className="h-full w-full object-cover" alt={company.name} src={getCompanyImageUrl(company.mainImage, true)} />
+                        <img
+                          className="h-full w-full object-contain"
+                          alt={company.name}
+                          src={getCompanyImageUrl(company.mainImage, true)}
+                        />
                       ) : (
-                        <div className="flex h-full items-center justify-center text-xs text-slate-400">이미지 없음</div>
+                        <span classname="text-xs text-slate-400">
+                          {" "}
+                          이미지 없음
+                        </span>
+                        // <div className="flex h-full items-center justify-center text-xs text-slate-400">
+                        //   이미지 없음
+                        // </div>
                       )}
                     </div>
                     <div>
-                      <div className="font-semibold text-slate-900">{company.name}</div>
-                      <div className="text-xs text-slate-500">업체 번호 {company.cmno}</div>
+                      <div className="font-semibold text-slate-900">
+                        {company.name}
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        업체 번호 {company.cmno}
+                      </div>
                     </div>
                   </div>
                 </td>
                 <td className="px-4 py-3">
-                  <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${categoryBadge[company.category] || "border-slate-200 bg-slate-50 text-slate-600"}`}>
+                  <span
+                    className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${categoryBadge[company.category] || "border-slate-200 bg-slate-50 text-slate-600"}`}
+                  >
                     {categoryLabel[company.category] || company.category}
                   </span>
                 </td>
-                <td className="max-w-56 px-4 py-3 text-slate-600">{company.address}</td>
-                <td className="px-4 py-3 text-slate-600">{company.phone || "-"}</td>
-                <td className="px-4 py-3 font-medium">{company.priceAvg ? Number(company.priceAvg).toLocaleString() : "-"}원</td>
+                <td className="max-w-56 px-4 py-3 text-slate-600">
+                  {company.address}
+                </td>
+                <td className="px-4 py-3 text-slate-600">
+                  {company.phone || "-"}
+                </td>
+                <td className="px-4 py-3 font-medium">
+                  {company.priceAvg
+                    ? Number(company.priceAvg).toLocaleString()
+                    : "-"}
+                  원
+                </td>
                 <td className="px-4 py-3">
                   <div className="flex justify-end gap-2">
-                    <button className="h-8 rounded-md border border-slate-200 px-3 text-xs hover:bg-slate-100" type="button" onClick={() => moveToRead(company.cmno)}>
+                    <button
+                      className="h-8 rounded-md border border-slate-200 px-3 text-xs hover:bg-slate-100"
+                      type="button"
+                      onClick={() => moveToRead(company.cmno)}
+                    >
                       보기
                     </button>
                     {canManageCompany ? (
                       <>
-                        <button className="h-8 rounded-md border border-blue-200 px-3 text-xs text-blue-700 hover:bg-blue-50" type="button" onClick={() => navigate({ pathname: `/companies/modify/${company.cmno}` })}>
+                        <button
+                          className="h-8 rounded-md border border-blue-200 px-3 text-xs text-blue-700 hover:bg-blue-50"
+                          type="button"
+                          onClick={() =>
+                            navigate({
+                              pathname: `/companies/modify/${company.cmno}`,
+                            })
+                          }
+                        >
                           수정
                         </button>
-                        <button className="h-8 rounded-md border border-red-200 px-3 text-xs text-red-700 hover:bg-red-50" type="button" onClick={() => handleDelete(company.cmno, company.name)}>
+                        <button
+                          className="h-8 rounded-md border border-red-200 px-3 text-xs text-red-700 hover:bg-red-50"
+                          type="button"
+                          onClick={() =>
+                            handleDelete(company.cmno, company.name)
+                          }
+                        >
                           삭제
                         </button>
                       </>
@@ -231,4 +309,3 @@ const StatCard = ({ label, value, tone = "default" }) => {
 };
 
 export default CompanyListComponent;
-

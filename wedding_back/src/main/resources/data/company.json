@@ -1,38 +1,1082 @@
-[
-  {"cmno":1,"category":"DRESS","name":"Loren Bridal","ceoName":"Kim Loren","phone":"02-511-1001","address":"Seoul Gangnam-gu Cheongdam-dong 101","latitude":37.5259,"longitude":127.0397,"description":"Premium imported bridal dress shop.","priceAvg":1500000,"delFlag":false,"imageList":[{"fileName":"dress_1_1.jpg","ord":0},{"fileName":"dress_1_2.jpg","ord":1}]},
-  {"cmno":2,"category":"DRESS","name":"White Veil","ceoName":"Lee White","phone":"02-511-1002","address":"Seoul Gangnam-gu Cheongdam-dong 202","latitude":37.5262,"longitude":127.0401,"description":"Elegant dress fitting studio.","priceAvg":1800000,"delFlag":false,"imageList":[{"fileName":"dress_2_1.jpg","ord":0},{"fileName":"dress_2_2.jpg","ord":1}]},
-  {"cmno":3,"category":"DRESS","name":"Aurore Dress","ceoName":"Park Aurore","phone":"02-511-1003","address":"Seoul Gangnam-gu Apgujeong-ro 303","latitude":37.5278,"longitude":127.0339,"description":"Luxury bridal dress boutique.","priceAvg":2500000,"delFlag":false,"imageList":[{"fileName":"dress_3_1.jpg","ord":0},{"fileName":"dress_3_2.jpg","ord":1}]},
-  {"cmno":4,"category":"DRESS","name":"Bella Rose","ceoName":"Choi Bella","phone":"02-511-1004","address":"Seoul Seocho-gu Seocho-daero 404","latitude":37.4836,"longitude":127.0327,"description":"Romantic wedding dress collection.","priceAvg":1200000,"delFlag":false,"imageList":[{"fileName":"dress_4_1.jpg","ord":0},{"fileName":"dress_4_2.jpg","ord":1}]},
-  {"cmno":5,"category":"DRESS","name":"Marie Bridal","ceoName":"Jung Marie","phone":"02-511-1005","address":"Seoul Mapo-gu Hapjeong-dong 505","latitude":37.5499,"longitude":126.9136,"description":"Modern bridal dress studio.","priceAvg":1000000,"delFlag":false,"imageList":[{"fileName":"dress_5_1.jpg","ord":0},{"fileName":"dress_5_2.jpg","ord":1}]},
-  {"cmno":6,"category":"DRESS","name":"Bonheur Bridal","ceoName":"Kang Bonheur","phone":"02-511-1006","address":"Seoul Gangnam-gu Sinsa-dong 606","latitude":37.5252,"longitude":127.0208,"description":"Classic and refined wedding dress shop.","priceAvg":1600000,"delFlag":false,"imageList":[{"fileName":"dress_6_1.jpg","ord":0},{"fileName":"dress_6_2.jpg","ord":1}]},
-  {"cmno":7,"category":"DRESS","name":"Gorema Dress","ceoName":"Oh Gorema","phone":"02-511-1007","address":"Seoul Jongno-gu Iljik-ro 707","latitude":37.5809,"longitude":126.9792,"description":"Artistic bridal dress collection.","priceAvg":1400000,"delFlag":false,"imageList":[{"fileName":"dress_7_1.jpg","ord":0},{"fileName":"dress_7_2.jpg","ord":1}]},
-  {"cmno":8,"category":"DRESS","name":"Ansi Bride","ceoName":"Han Ansi","phone":"02-511-1008","address":"Seoul Gangnam-gu Nonhyeon-ro 808","latitude":37.5116,"longitude":127.0308,"description":"Designer dress boutique.","priceAvg":3000000,"delFlag":false,"imageList":[{"fileName":"dress_8_1.jpg","ord":0},{"fileName":"dress_8_2.jpg","ord":1}]},
-  {"cmno":9,"category":"DRESS","name":"Monique Bridal","ceoName":"Seo Monique","phone":"02-511-1009","address":"Seoul Yongsan-gu Itaewon-ro 909","latitude":37.5344,"longitude":126.9946,"description":"Unique and stylish wedding dresses.","priceAvg":1300000,"delFlag":false,"imageList":[{"fileName":"dress_9_1.jpg","ord":0},{"fileName":"dress_9_2.jpg","ord":1}]},
-  {"cmno":10,"category":"DRESS","name":"Reve Couture","ceoName":"Yoon Reve","phone":"02-511-1010","address":"Seoul Gangseo-gu Magok-dong 1010","latitude":37.5578,"longitude":126.8340,"description":"Value focused bridal dress studio.","priceAvg":900000,"delFlag":false,"imageList":[{"fileName":"dress_10_1.jpg","ord":0},{"fileName":"dress_10_2.jpg","ord":1}]},
-  {"cmno":11,"category":"HALL","name":"Noble Valentina Daechi","ceoName":"Park Noble","phone":"02-522-1011","address":"Seoul Gangnam-gu Daechi-dong 11","latitude":37.4981,"longitude":127.0642,"description":"House hall with refined private ceremony mood.","priceAvg":15000000,"delFlag":false,"imageList":[{"fileName":"hall_11_1.jpg","ord":0},{"fileName":"hall_11_2.jpg","ord":1},{"fileName":"hall_11_3.jpg","ord":2}]},
-  {"cmno":12,"category":"HALL","name":"The Raum Chamber Hall","ceoName":"Kim Raum","phone":"02-522-1012","address":"Seoul Gangnam-gu Yeoksam-dong 12","latitude":37.5014,"longitude":127.0374,"description":"Elegant chamber hall for luxury weddings.","priceAvg":17000000,"delFlag":false,"imageList":[{"fileName":"hall_12_1.jpg","ord":0},{"fileName":"hall_12_2.jpg","ord":1}]},
-  {"cmno":13,"category":"HALL","name":"The Hue Wedding Small Hall","ceoName":"Lee Hue","phone":"02-522-1013","address":"Seoul Seocho-gu Banpo-dong 13","latitude":37.5081,"longitude":127.0112,"description":"Small hall for intimate wedding ceremonies.","priceAvg":9000000,"delFlag":false,"imageList":[{"fileName":"hall_13_1.jpg","ord":0},{"fileName":"hall_13_2.jpg","ord":1},{"fileName":"hall_13_3.jpg","ord":2}]},
-  {"cmno":14,"category":"HALL","name":"Le Bir More Bright Hall","ceoName":"Choi Bir","phone":"02-522-1014","address":"Seoul Mapo-gu Worldcup-ro 14","latitude":37.5567,"longitude":126.9103,"description":"Bright and warm wedding hall.","priceAvg":11000000,"delFlag":false,"imageList":[{"fileName":"hall_14_1.jpg","ord":0},{"fileName":"hall_14_2.jpg","ord":1},{"fileName":"hall_14_3.jpg","ord":2}]},
-  {"cmno":15,"category":"HALL","name":"Le Bir More Dark Hall","ceoName":"Choi Bir","phone":"02-522-1015","address":"Seoul Mapo-gu Worldcup-ro 15","latitude":37.5571,"longitude":126.9111,"description":"Calm dark-tone wedding hall.","priceAvg":12000000,"delFlag":false,"imageList":[{"fileName":"hall_15_1.jpg","ord":0},{"fileName":"hall_15_2.jpg","ord":1}]},
-  {"cmno":16,"category":"HALL","name":"Sono Felice Convention","ceoName":"Jang Sono","phone":"02-522-1016","address":"Seoul Gangnam-gu Teheran-ro 16","latitude":37.5063,"longitude":127.0612,"description":"Diamond hall with convention-scale facilities.","priceAvg":18000000,"delFlag":false,"imageList":[{"fileName":"hall_16_1.jpg","ord":0},{"fileName":"hall_16_2.jpg","ord":1},{"fileName":"hall_16_3.jpg","ord":2},{"fileName":"hall_16_4.jpg","ord":3}]},
-  {"cmno":17,"category":"HALL","name":"Arbe Rooftop Hall","ceoName":"Kang Arbe","phone":"02-522-1017","address":"Seoul Yongsan-gu Hannam-dong 17","latitude":37.5345,"longitude":127.0023,"description":"Rooftop hall with open city views.","priceAvg":13000000,"delFlag":false,"imageList":[{"fileName":"hall_17_1.jpg","ord":0},{"fileName":"hall_17_2.jpg","ord":1}]},
-  {"cmno":18,"category":"HALL","name":"Apelgamo Seolleung","ceoName":"Yoo Apel","phone":"02-522-1018","address":"Seoul Gangnam-gu Seolleung-ro 18","latitude":37.5049,"longitude":127.0493,"description":"Chapel hall near Seolleung.","priceAvg":14000000,"delFlag":false,"imageList":[{"fileName":"hall_18_1.jpg","ord":0},{"fileName":"hall_18_2.jpg","ord":1},{"fileName":"hall_18_3.jpg","ord":2},{"fileName":"hall_18_4.jpg","ord":3}]},
-  {"cmno":19,"category":"HALL","name":"Tov Hesed Florence Hall","ceoName":"Seo Tov","phone":"02-522-1019","address":"Seoul Songpa-gu Olympic-ro 19","latitude":37.5154,"longitude":127.1028,"description":"Florence hall for elegant weddings.","priceAvg":12500000,"delFlag":false,"imageList":[{"fileName":"hall_19_1.jpg","ord":0},{"fileName":"hall_19_2.jpg","ord":1}]},
-  {"cmno":21,"category":"STUDIO","name":"Daylight Studio","ceoName":"Han Photo","phone":"02-533-1001","address":"Seoul Mapo-gu Hapjeong-dong 21-1","latitude":37.5499,"longitude":126.9136,"description":"Natural light wedding photo studio.","priceAvg":600000,"delFlag":false,"imageList":[]},
-  {"cmno":22,"category":"STUDIO","name":"Classic Mood Studio","ceoName":"Jung Mood","phone":"02-533-1002","address":"Seoul Gangnam-gu Cheongdam-dong 22-2","latitude":37.5267,"longitude":127.0410,"description":"Classic indoor wedding concept studio.","priceAvg":700000,"delFlag":false,"imageList":[]},
-  {"cmno":31,"category":"MAKEUP","name":"Nail One Studio","ceoName":"Na Ilwon","phone":"02-544-1031","address":"Seoul Gangnam-gu Sinsa-dong 31","latitude":37.5252,"longitude":127.0208,"description":"Bridal nail styling studio.","priceAvg":120000,"delFlag":false,"imageList":[{"fileName":"makeup_31_1.jpg","ord":0},{"fileName":"makeup_31_2.jpg","ord":1}]},
-  {"cmno":32,"category":"MAKEUP","name":"Nail Blanc","ceoName":"Kim Blanc","phone":"02-544-1032","address":"Seoul Gangnam-gu Sinsa-dong 32","latitude":37.5255,"longitude":127.0212,"description":"Clean nail care for bridal styling.","priceAvg":130000,"delFlag":false,"imageList":[{"fileName":"makeup_32_1.jpg","ord":0},{"fileName":"makeup_32_2.jpg","ord":1}]},
-  {"cmno":33,"category":"MAKEUP","name":"Nail Glow","ceoName":"Lee Glow","phone":"02-544-1033","address":"Seoul Gangnam-gu Sinsa-dong 33","latitude":37.5258,"longitude":127.0216,"description":"Glossy bridal nail design.","priceAvg":140000,"delFlag":false,"imageList":[{"fileName":"makeup_33_1.jpg","ord":0},{"fileName":"makeup_33_2.jpg","ord":1}]},
-  {"cmno":34,"category":"MAKEUP","name":"Nail Mood","ceoName":"Park Mood","phone":"02-544-1034","address":"Seoul Gangnam-gu Sinsa-dong 34","latitude":37.5261,"longitude":127.0220,"description":"Soft mood nail styling.","priceAvg":110000,"delFlag":false,"imageList":[{"fileName":"makeup_34_1.jpg","ord":0},{"fileName":"makeup_34_2.jpg","ord":1}]},
-  {"cmno":35,"category":"MAKEUP","name":"Nail Atelier","ceoName":"Choi Atelier","phone":"02-544-1035","address":"Seoul Gangnam-gu Sinsa-dong 35","latitude":37.5264,"longitude":127.0224,"description":"Custom nail art atelier.","priceAvg":160000,"delFlag":false,"imageList":[{"fileName":"makeup_35_1.jpg","ord":0},{"fileName":"makeup_35_2.jpg","ord":1}]},
-  {"cmno":36,"category":"MAKEUP","name":"Makeup One","ceoName":"Song Makeup","phone":"02-544-1036","address":"Seoul Gangnam-gu Cheongdam-dong 36","latitude":37.5259,"longitude":127.0397,"description":"Bridal makeup specialist.","priceAvg":350000,"delFlag":false,"imageList":[{"fileName":"makeup_36_1.jpg","ord":0},{"fileName":"makeup_36_2.jpg","ord":1}]},
-  {"cmno":37,"category":"MAKEUP","name":"Makeup Rose","ceoName":"Park Rose","phone":"02-544-1037","address":"Seoul Gangnam-gu Cheongdam-dong 37","latitude":37.5262,"longitude":127.0401,"description":"Premium bridal makeup salon.","priceAvg":450000,"delFlag":false,"imageList":[{"fileName":"makeup_37_1.jpg","ord":0},{"fileName":"makeup_37_2.jpg","ord":1}]},
-  {"cmno":38,"category":"MAKEUP","name":"Makeup Blanc","ceoName":"Choi Blanc","phone":"02-544-1038","address":"Seoul Gangnam-gu Cheongdam-dong 38","latitude":37.5265,"longitude":127.0405,"description":"Bright and clean wedding makeup.","priceAvg":300000,"delFlag":false,"imageList":[{"fileName":"makeup_38_1.jpg","ord":0},{"fileName":"makeup_38_2.jpg","ord":1}]},
-  {"cmno":39,"category":"MAKEUP","name":"Makeup Natural","ceoName":"Lee Natural","phone":"02-544-1039","address":"Seoul Gangnam-gu Cheongdam-dong 39","latitude":37.5268,"longitude":127.0409,"description":"Natural bridal makeup and styling.","priceAvg":280000,"delFlag":false,"imageList":[{"fileName":"makeup_39_1.jpg","ord":0},{"fileName":"makeup_39_2.jpg","ord":1}]},
-  {"cmno":40,"category":"MAKEUP","name":"Makeup Glow","ceoName":"Yoon Glow","phone":"02-544-1040","address":"Seoul Gangnam-gu Cheongdam-dong 40","latitude":37.5271,"longitude":127.0413,"description":"Glowing wedding makeup studio.","priceAvg":400000,"delFlag":false,"imageList":[{"fileName":"makeup_40_1.jpg","ord":0},{"fileName":"makeup_40_2.jpg","ord":1}]},
-  {"cmno":41,"category":"MAKEUP","name":"Hair One","ceoName":"Han Hair","phone":"02-544-1041","address":"Seoul Seocho-gu Seocho-daero 41","latitude":37.4836,"longitude":127.0327,"description":"Bridal hair styling salon.","priceAvg":220000,"delFlag":false,"imageList":[{"fileName":"makeup_41_1.jpg","ord":0},{"fileName":"makeup_41_2.jpg","ord":1}]},
-  {"cmno":42,"category":"MAKEUP","name":"Hair Blanc","ceoName":"Jung Hair","phone":"02-544-1042","address":"Seoul Seocho-gu Seocho-daero 42","latitude":37.4840,"longitude":127.0331,"description":"Elegant bridal hair design.","priceAvg":240000,"delFlag":false,"imageList":[{"fileName":"makeup_42_1.jpg","ord":0},{"fileName":"makeup_42_2.jpg","ord":1}]},
-  {"cmno":43,"category":"MAKEUP","name":"Hair Mood","ceoName":"Kang Mood","phone":"02-544-1043","address":"Seoul Seocho-gu Seocho-daero 43","latitude":37.4844,"longitude":127.0335,"description":"Soft mood bridal hair styling.","priceAvg":210000,"delFlag":false,"imageList":[{"fileName":"makeup_43_1.jpg","ord":0},{"fileName":"makeup_43_2.jpg","ord":1}]},
-  {"cmno":44,"category":"MAKEUP","name":"Hair Atelier","ceoName":"Oh Atelier","phone":"02-544-1044","address":"Seoul Seocho-gu Seocho-daero 44","latitude":37.4848,"longitude":127.0339,"description":"Custom bridal hair atelier.","priceAvg":260000,"delFlag":false,"imageList":[{"fileName":"makeup_44_1.jpg","ord":0},{"fileName":"makeup_44_2.jpg","ord":1}]},
-  {"cmno":45,"category":"MAKEUP","name":"Hair Glow","ceoName":"Seo Glow","phone":"02-544-1045","address":"Seoul Seocho-gu Seocho-daero 45","latitude":37.4852,"longitude":127.0343,"description":"Hair styling salon for wedding day looks.","priceAvg":230000,"delFlag":false,"imageList":[{"fileName":"makeup_45_1.jpg","ord":0},{"fileName":"makeup_45_2.jpg","ord":1}]}
+﻿[
+    {
+        "cmno":  1,
+        "category":  "DRESS",
+        "name":  "라벤더드레스",
+        "ceoName":  "한서윤",
+        "phone":  "02-925-7741",
+        "address":  "서울 동대문구 무학로 32 2층",
+        "latitude":  37.5671,
+        "longitude":  127.0303,
+        "description":  "셀프웨딩과 스몰웨딩, 돌잔치 드레스를 합리적인 가격에 대여하는 동대문 소재 드레스샵입니다. 화동 드레스와 화동 슈트까지 폭넓게 갖추고 있어 가족 단위 대여 문의가 많습니다.",
+        "priceAvg":  104000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "드레스_01_라벤더드레스_01_01.jpg",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "드레스_01_라벤더드레스_01_02.jpg",
+                              "ord":  1
+                          }
+                      ]
+    },
+    {
+        "cmno":  2,
+        "category":  "DRESS",
+        "name":  "릴리스 드레스룸",
+        "ceoName":  "강지아",
+        "phone":  "032-322-5180",
+        "address":  "경기도 부천시 길주로 210 3층",
+        "latitude":  37.5029,
+        "longitude":  126.7659,
+        "description":  "셀프웨딩과 파티 드레스를 중심으로 운영하는 부천 소재 드레스 전문점입니다. 브라이덜샤워, 만삭, 돌맘 원피스까지 대여와 구매를 함께 제공하며, 방문 피팅과 택배 피팅을 모두 운영합니다.",
+        "priceAvg":  101000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "드레스_02_릴리스 드레스룸_02_01.jpg",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "드레스_02_릴리스 드레스룸_02_02.jpg",
+                              "ord":  1
+                          }
+                      ]
+    },
+    {
+        "cmno":  3,
+        "category":  "DRESS",
+        "name":  "오엘르 브라이덜",
+        "ceoName":  "윤소영",
+        "phone":  "02-3461-7720",
+        "address":  "서울 강남구 논현로72길 18 대성빌딩 2층",
+        "latitude":  37.4935,
+        "longitude":  127.042,
+        "description":  "본식 웨딩드레스를 전문으로 하는 강남 논현동 드레스샵입니다. 라인별 시즌 컬렉션을 운영하며 피팅 예약제로 운영되는 오프라인 쇼룸을 갖추고 있습니다.",
+        "priceAvg":  367000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "드레스_03_오엘르 브라이덜_03_01.jpg",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "드레스_03_오엘르 브라이덜_03_02.jpg",
+                              "ord":  1
+                          }
+                      ]
+    },
+    {
+        "cmno":  4,
+        "category":  "DRESS",
+        "name":  "베일로즈",
+        "ceoName":  "임다은",
+        "phone":  "031-924-6618",
+        "address":  "경기도 고양시 일산동구 중앙로 1275 4층",
+        "latitude":  37.6599,
+        "longitude":  126.7696,
+        "description":  "셀프웨딩 촬영에 특화된 일산 소재 드레스 스타일링 전문점입니다. 드레스와 슈즈, 소품을 함께 대여하거나 구매할 수 있고, 촬영 콘셉트에 맞춘 스타일링 상담도 제공합니다.",
+        "priceAvg":  72000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "드레스_04_베일로즈_04_01.jpg",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "드레스_04_베일로즈_04_02.jpg",
+                              "ord":  1
+                          }
+                      ]
+    },
+    {
+        "cmno":  5,
+        "category":  "DRESS",
+        "name":  "마리에 브라이드",
+        "ceoName":  "정하늘",
+        "phone":  "02-548-2231",
+        "address":  "서울 강남구 선릉로 748 세영빌딩 2층",
+        "latitude":  37.5214,
+        "longitude":  127.0406,
+        "description":  "본식과 셀프웨딩, 미니·앵클라인 드레스를 함께 다루는 강남 논현동 드레스샵입니다. 대여와 구매를 모두 지원하며 화요일부터 토요일까지 운영합니다.",
+        "priceAvg":  270000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "드레스_05_마리에 브라이드_05_01.jpg",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "드레스_05_마리에 브라이드_05_02.jpg",
+                              "ord":  1
+                          }
+                      ]
+    },
+    {
+        "cmno":  6,
+        "category":  "DRESS",
+        "name":  "벨퐁 아틀리에",
+        "ceoName":  "송미래",
+        "phone":  "02-3445-9082",
+        "address":  "서울 강남구 학동로 142 청솔빌딩 3층",
+        "latitude":  37.5124,
+        "longitude":  127.0266,
+        "description":  "2009년 문을 연 디자이너 드레스샵으로, 보유 드레스의 70% 이상을 자체 제작합니다. 셀프웨딩과 2부 드레스, 돌잔치와 화동 의상까지 맞춤 제작과 대여를 함께 제공하며 연예인 협찬 사례도 다수 있습니다.",
+        "priceAvg":  244000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "드레스_06_벨퐁 아틀리에_06_01.jpg",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "드레스_06_벨퐁 아틀리에_06_02.jpg",
+                              "ord":  1
+                          }
+                      ]
+    },
+    {
+        "cmno":  7,
+        "category":  "DRESS",
+        "name":  "끄레마 드레스",
+        "ceoName":  "박서아",
+        "phone":  "02-512-6604",
+        "address":  "서울 강남구 논현동 253-11 2층",
+        "latitude":  37.5143,
+        "longitude":  127.031,
+        "description":  "드레스 대여와 파티 드레스, 합창단복, 턱시도, 맞춤 정장을 함께 제작하는 강남 논현동 드레스샵입니다. 피팅은 사전 예약제로 운영되며 기본 대여 기간은 2박 3일입니다.",
+        "priceAvg":  112000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "드레스_07_끄레마 드레스_07_01.jpg",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "드레스_07_끄레마 드레스_07_02.jpg",
+                              "ord":  1
+                          }
+                      ]
+    },
+    {
+        "cmno":  8,
+        "category":  "DRESS",
+        "name":  "위시브라이드",
+        "ceoName":  "최유나",
+        "phone":  "02-558-3017",
+        "address":  "서울 강남구 도곡로 408 미래빌딩 5층",
+        "latitude":  37.4967,
+        "longitude":  127.0553,
+        "description":  "실크와 비즈 등 소재와 라인에 따라 다양한 드레스를 선보이는 자체 제작 디자이너 드레스샵입니다. 정교한 수작업 비즈 장식이 특징이며, 웨딩 박람회를 통한 상담 연계도 활발합니다.",
+        "priceAvg":  406000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "드레스_08_위시브라이드_08_01.jpg",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "드레스_08_위시브라이드_08_02.jpg",
+                              "ord":  1
+                          }
+                      ]
+    },
+    {
+        "cmno":  9,
+        "category":  "DRESS",
+        "name":  "모니크 브라이덜",
+        "ceoName":  "이채원",
+        "phone":  "02-3445-7710",
+        "address":  "서울 강남구 도산대로 318 4층",
+        "latitude":  37.522,
+        "longitude":  127.0363,
+        "description":  "단정하고 화려하지 않은 디자인을 지향하는 미니멀 본식 웨딩드레스 브랜드입니다. 오프숄더와 심플한 실루엣을 중심으로 한 컬렉션을 운영합니다.",
+        "priceAvg":  319000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "드레스_09_모니크 브라이덜_09_01.jpg",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "드레스_09_모니크 브라이덜_09_02.jpg",
+                              "ord":  1
+                          }
+                      ]
+    },
+    {
+        "cmno":  10,
+        "category":  "DRESS",
+        "name":  "에브와르 청담",
+        "ceoName":  "장수민",
+        "phone":  "02-545-9931",
+        "address":  "서울 강남구 청담동 92-7 3층",
+        "latitude":  37.5241,
+        "longitude":  127.0435,
+        "description":  "청담동에 위치한 프리미엄 디자이너 웨딩드레스 브랜드입니다. 유럽에서 수입한 실크 원단과 수작업 자수, 비즈 디테일을 사용하며 시즌별 컬렉션을 선보입니다.",
+        "priceAvg":  546000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "드레스_10_에브와르 청담_10_01.jpg",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "드레스_10_에브와르 청담_10_02.jpg",
+                              "ord":  1
+                          }
+                      ]
+    },
+    {
+        "cmno":  11,
+        "category":  "HALL",
+        "name":  "Noble Valentina Daechi",
+        "ceoName":  "Park Noble",
+        "phone":  "02-522-1011",
+        "address":  "Seoul Gangnam-gu Daechi-dong 11",
+        "latitude":  37.4981,
+        "longitude":  127.0642,
+        "description":  "House hall with refined private ceremony mood.",
+        "priceAvg":  15000000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "웨딩홀_노블 발렌티나 대치_하우스홀_main.jpg",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "웨딩홀_노블 발렌티나 대치_하우스홀_guest_seating.jpg",
+                              "ord":  1
+                          },
+                          {
+                              "fileName":  "웨딩홀_노블 발렌티나 대치_하우스홀_brides_room.png",
+                              "ord":  2
+                          }
+                      ]
+    },
+    {
+        "cmno":  12,
+        "category":  "HALL",
+        "name":  "The Raum Chamber Hall",
+        "ceoName":  "Kim Raum",
+        "phone":  "02-522-1012",
+        "address":  "Seoul Gangnam-gu Yeoksam-dong 12",
+        "latitude":  37.5014,
+        "longitude":  127.0374,
+        "description":  "Elegant chamber hall for luxury weddings.",
+        "priceAvg":  17000000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "웨딩홀_더라움_체임버홀_main.jpg",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "웨딩홀_더라움_체임버홀_guest_seating.jpg",
+                              "ord":  1
+                          }
+                      ]
+    },
+    {
+        "cmno":  13,
+        "category":  "HALL",
+        "name":  "The Hue Wedding Small Hall",
+        "ceoName":  "Lee Hue",
+        "phone":  "02-522-1013",
+        "address":  "Seoul Seocho-gu Banpo-dong 13",
+        "latitude":  37.5081,
+        "longitude":  127.0112,
+        "description":  "Small hall for intimate wedding ceremonies.",
+        "priceAvg":  9000000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "웨딩홀_더휴 웨딩홀_스몰홀_main.png",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "웨딩홀_더휴 웨딩홀_스몰홀_guest_seating.png",
+                              "ord":  1
+                          },
+                          {
+                              "fileName":  "웨딩홀_더휴 웨딩홀_스몰홀_brides_room.png",
+                              "ord":  2
+                          }
+                      ]
+    },
+    {
+        "cmno":  14,
+        "category":  "HALL",
+        "name":  "Le Bir More Bright Hall",
+        "ceoName":  "Choi Bir",
+        "phone":  "02-522-1014",
+        "address":  "Seoul Mapo-gu Worldcup-ro 14",
+        "latitude":  37.5567,
+        "longitude":  126.9103,
+        "description":  "Bright and warm wedding hall.",
+        "priceAvg":  11000000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "웨딩홀_르비르모어_밝은홀_main.png",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "웨딩홀_르비르모어_밝은홀_guest_seating.png",
+                              "ord":  1
+                          },
+                          {
+                              "fileName":  "웨딩홀_르비르모어_밝은홀_brides_room.png",
+                              "ord":  2
+                          }
+                      ]
+    },
+    {
+        "cmno":  15,
+        "category":  "HALL",
+        "name":  "Le Bir More Dark Hall",
+        "ceoName":  "Choi Bir",
+        "phone":  "02-522-1015",
+        "address":  "Seoul Mapo-gu Worldcup-ro 15",
+        "latitude":  37.5571,
+        "longitude":  126.9111,
+        "description":  "Calm dark-tone wedding hall.",
+        "priceAvg":  12000000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "웨딩홀_르비르모어_어두운 홀_main.png",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "웨딩홀_르비르모어_어두운 홀_brides_room.jpg",
+                              "ord":  1
+                          }
+                      ]
+    },
+    {
+        "cmno":  16,
+        "category":  "HALL",
+        "name":  "Sono Felice Convention",
+        "ceoName":  "Jang Sono",
+        "phone":  "02-522-1016",
+        "address":  "Seoul Gangnam-gu Teheran-ro 16",
+        "latitude":  37.5063,
+        "longitude":  127.0612,
+        "description":  "Diamond hall with convention-scale facilities.",
+        "priceAvg":  18000000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "웨딩홀_소노펠리체 컨벤션_다이아몬드홀_main.png",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "웨딩홀_소노펠리체 컨벤션_다이아몬드홀_guest_seating.png",
+                              "ord":  1
+                          },
+                          {
+                              "fileName":  "웨딩홀_소노펠리체 컨벤션_다이아몬드홀_brides_room.png",
+                              "ord":  2
+                          },
+                          {
+                              "fileName":  "웨딩홀_소노펠리체 컨벤션_다이아몬드홀_pyebaek_room.png",
+                              "ord":  3
+                          }
+                      ]
+    },
+    {
+        "cmno":  17,
+        "category":  "HALL",
+        "name":  "Arbe Rooftop Hall",
+        "ceoName":  "Kang Arbe",
+        "phone":  "02-522-1017",
+        "address":  "Seoul Yongsan-gu Hannam-dong 17",
+        "latitude":  37.5345,
+        "longitude":  127.0023,
+        "description":  "Rooftop hall with open city views.",
+        "priceAvg":  13000000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "웨딩홀_아르베_루프탑홀_main.png",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "웨딩홀_아르베_루프탑홀_brides_room.png",
+                              "ord":  1
+                          }
+                      ]
+    },
+    {
+        "cmno":  18,
+        "category":  "HALL",
+        "name":  "Apelgamo Seolleung",
+        "ceoName":  "Yoo Apel",
+        "phone":  "02-522-1018",
+        "address":  "Seoul Gangnam-gu Seolleung-ro 18",
+        "latitude":  37.5049,
+        "longitude":  127.0493,
+        "description":  "Chapel hall near Seolleung.",
+        "priceAvg":  14000000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "웨딩홀_아펠가모 선릉_채플홀_main.png",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "웨딩홀_아펠가모 선릉_채플홀_guest_seating.png",
+                              "ord":  1
+                          },
+                          {
+                              "fileName":  "웨딩홀_아펠가모 선릉_채플홀_brides_room.png",
+                              "ord":  2
+                          },
+                          {
+                              "fileName":  "웨딩홀_아펠가모 선릉_채플홀_pyebaek_room.png",
+                              "ord":  3
+                          }
+                      ]
+    },
+    {
+        "cmno":  19,
+        "category":  "HALL",
+        "name":  "Tov Hesed Florence Hall",
+        "ceoName":  "Seo Tov",
+        "phone":  "02-522-1019",
+        "address":  "Seoul Songpa-gu Olympic-ro 19",
+        "latitude":  37.5154,
+        "longitude":  127.1028,
+        "description":  "Florence hall for elegant weddings.",
+        "priceAvg":  12500000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "웨딩홀_토브헤세드_플로렌스홀_main.png",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "웨딩홀_토브헤세드_플로렌스홀_brides_room.png",
+                              "ord":  1
+                          }
+                      ]
+    },
+    {
+        "cmno":  20,
+        "category":  "STUDIO",
+        "name":  "스튜디오 바시움",
+        "ceoName":  "미확인",
+        "phone":  "02-6204-7070",
+        "address":  "서울특별시 강남구 논현동 56-5",
+        "latitude":  37.5175,
+        "longitude":  127.0277,
+        "description":  "심플하고 세련된 인물 중심 스튜디오. 별·달·블라인드 창가 세트 등 다양한 배경 보유. 오래 두고 봐도 질리지 않는 사진 지향.",
+        "priceAvg":  1500000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "studio4.jpg",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "studio5.jpg",
+                              "ord":  1
+                          },
+                          {
+                              "fileName":  "studio6.jpg",
+                              "ord":  2
+                          }
+                      ]
+    },
+    {
+        "cmno":  21,
+        "category":  "STUDIO",
+        "name":  "아우라 스튜디오",
+        "ceoName":  "미확인",
+        "phone":  "02-547-4569",
+        "address":  "서울특별시 강남구 논현동",
+        "latitude":  37.5135,
+        "longitude":  127.0255,
+        "description":  "고급스럽고 따뜻한 무드의 연예인 화보 스타일 스튜디오. 클래식하고 럭셔리한 분위기 연출에 특화.",
+        "priceAvg":  2000000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "studio7.jpg",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "studio8.jpg",
+                              "ord":  1
+                          },
+                          {
+                              "fileName":  "studio9.jpg",
+                              "ord":  2
+                          }
+                      ]
+    },
+    {
+        "cmno":  22,
+        "category":  "STUDIO",
+        "name":  "원규스튜디오 (WONKYU+)",
+        "ceoName":  "원규",
+        "phone":  "02-516-8824",
+        "address":  "서울특별시 강남구 청담동",
+        "latitude":  37.5227,
+        "longitude":  127.0459,
+        "description":  "웨딩스냅의 전설로 불리는 스튜디오. 국내·해외 촬영 모두 가능하며 세련되고 트렌디한 스타일로 유명.",
+        "priceAvg":  3000000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "studio10.jpg",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "studio11.jpg",
+                              "ord":  1
+                          },
+                          {
+                              "fileName":  "studio12.jpg",
+                              "ord":  2
+                          }
+                      ]
+    },
+    {
+        "cmno":  23,
+        "category":  "STUDIO",
+        "name":  "루나스튜디오",
+        "ceoName":  "미확인",
+        "phone":  "02-545-5411",
+        "address":  "서울특별시 강남구 청담동",
+        "latitude":  37.5228,
+        "longitude":  127.0428,
+        "description":  "자연광을 활용한 감성적인 연출. 빈티지하고 부드러운 느낌을 원하는 커플에게 추천. 피부 톤 화사하게 표현.",
+        "priceAvg":  1500000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "studio13.jpg",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "studio14.jpg",
+                              "ord":  1
+                          },
+                          {
+                              "fileName":  "studio15.jpg",
+                              "ord":  2
+                          }
+                      ]
+    },
+    {
+        "cmno":  24,
+        "category":  "STUDIO",
+        "name":  "스위트메리 스튜디오",
+        "ceoName":  "미확인",
+        "phone":  "02-546-1379",
+        "address":  "서울특별시 강남구 논현동",
+        "latitude":  37.5148,
+        "longitude":  127.0248,
+        "description":  "클래식하고 우아한 분위기 연출. 화려한 드레스를 돋보이게 해주는 배경이 많아 만족도 높음.",
+        "priceAvg":  1600000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "studio7.jpg",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "studio8.jpg",
+                              "ord":  1
+                          },
+                          {
+                              "fileName":  "studio9.jpg",
+                              "ord":  2
+                          }
+                      ]
+    },
+    {
+        "cmno":  25,
+        "category":  "STUDIO",
+        "name":  "더브라이드 스튜디오",
+        "ceoName":  "미확인",
+        "phone":  "070-7702-8871",
+        "address":  "서울특별시 용산구 한남동",
+        "latitude":  37.5346,
+        "longitude":  127.0043,
+        "description":  "영화 속 한 장면 같은 로맨틱한 분위기 연출. 신부님들의 감성을 자극하는 아름다운 컨셉 보유.",
+        "priceAvg":  1700000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "studio16.jpg",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "studio17.jpg",
+                              "ord":  1
+                          },
+                          {
+                              "fileName":  "studio18.jpg",
+                              "ord":  2
+                          }
+                      ]
+    },
+    {
+        "cmno":  26,
+        "category":  "STUDIO",
+        "name":  "모노그램 스튜디오",
+        "ceoName":  "미확인",
+        "phone":  "02-2644-2440",
+        "address":  "서울특별시 마포구",
+        "latitude":  37.5501,
+        "longitude":  126.9145,
+        "description":  "미니멀하고 깔끔한 스타일 특화. 모던하고 세련된 현대적 감각의 웨딩사진. 촬영 편의성 높음.",
+        "priceAvg":  1400000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "studio19.jpg",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "studio20.jpg",
+                              "ord":  1
+                          },
+                          {
+                              "fileName":  "studio21.jpg",
+                              "ord":  2
+                          }
+                      ]
+    },
+    {
+        "cmno":  27,
+        "category":  "STUDIO",
+        "name":  "어반스튜디오",
+        "ceoName":  "미확인",
+        "phone":  "070-4277-7577",
+        "address":  "서울특별시 성동구 성수동2가 280",
+        "latitude":  37.5447,
+        "longitude":  127.056,
+        "description":  "트렌디하고 유니크한 다양한 세트와 다채로운 배경 보유. 인스타 감성 MZ세대 커플에게 인기. 반려동물 촬영 가능.",
+        "priceAvg":  1800000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "studio10.jpg",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "studio11.jpg",
+                              "ord":  1
+                          },
+                          {
+                              "fileName":  "studio12.jpg",
+                              "ord":  2
+                          }
+                      ]
+    },
+    {
+        "cmno":  28,
+        "category":  "STUDIO",
+        "name":  "엘스튜디오 (L Studio)",
+        "ceoName":  "미확인",
+        "phone":  "031-000-0000",
+        "address":  "경기도 고양시 일산",
+        "latitude":  37.6584,
+        "longitude":  126.832,
+        "description":  "일산 대표 웨딩스튜디오. 가족사진·리마인드웨딩·스몰웨딩 전문. 각종 예능·영화·드라마 세트장으로도 사용.",
+        "priceAvg":  1000000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "studio22.jpg",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "studio23.jpg",
+                              "ord":  1
+                          },
+                          {
+                              "fileName":  "studio24.jpg",
+                              "ord":  2
+                          }
+                      ]
+    },
+    {
+        "cmno":  29,
+        "category":  "STUDIO",
+        "name":  "가우디웨딩",
+        "ceoName":  "임우진",
+        "phone":  "031-000-0000",
+        "address":  "경기도 수원시 팔달구 경수대로 442 G타워5층",
+        "latitude":  37.2636,
+        "longitude":  127.0286,
+        "description":  "수원 대표 웨딩 전문 업체. 야외 자연 컨셉 촬영 특화. 대표 임우진. 경기 서남부권 커플에게 접근성 좋음.",
+        "priceAvg":  1200000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "studio1.jpg",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "studio2.jpg",
+                              "ord":  1
+                          },
+                          {
+                              "fileName":  "studio3.jpg",
+                              "ord":  2
+                          }
+                      ]
+    },
+    {
+        "cmno":  31,
+        "category":  "MAKEUP",
+        "name":  "Nail One Studio",
+        "ceoName":  "Na Ilwon",
+        "phone":  "02-544-1031",
+        "address":  "Seoul Gangnam-gu Sinsa-dong 31",
+        "latitude":  37.5252,
+        "longitude":  127.0208,
+        "description":  "Bridal nail styling studio.",
+        "priceAvg":  120000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "네일_네일1.png",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "네일_네일2.png",
+                              "ord":  1
+                          }
+                      ]
+    },
+    {
+        "cmno":  32,
+        "category":  "MAKEUP",
+        "name":  "Nail Blanc",
+        "ceoName":  "Kim Blanc",
+        "phone":  "02-544-1032",
+        "address":  "Seoul Gangnam-gu Sinsa-dong 32",
+        "latitude":  37.5255,
+        "longitude":  127.0212,
+        "description":  "Clean nail care for bridal styling.",
+        "priceAvg":  130000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "네일_네일3.png",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "네일_네일4.png",
+                              "ord":  1
+                          }
+                      ]
+    },
+    {
+        "cmno":  33,
+        "category":  "MAKEUP",
+        "name":  "Nail Glow",
+        "ceoName":  "Lee Glow",
+        "phone":  "02-544-1033",
+        "address":  "Seoul Gangnam-gu Sinsa-dong 33",
+        "latitude":  37.5258,
+        "longitude":  127.0216,
+        "description":  "Glossy bridal nail design.",
+        "priceAvg":  140000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "네일_네일5.png",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "네일_네일6.png",
+                              "ord":  1
+                          }
+                      ]
+    },
+    {
+        "cmno":  34,
+        "category":  "MAKEUP",
+        "name":  "Nail Mood",
+        "ceoName":  "Park Mood",
+        "phone":  "02-544-1034",
+        "address":  "Seoul Gangnam-gu Sinsa-dong 34",
+        "latitude":  37.5261,
+        "longitude":  127.022,
+        "description":  "Soft mood nail styling.",
+        "priceAvg":  110000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "네일_네일7.png",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "네일_네일8.png",
+                              "ord":  1
+                          }
+                      ]
+    },
+    {
+        "cmno":  35,
+        "category":  "MAKEUP",
+        "name":  "Nail Atelier",
+        "ceoName":  "Choi Atelier",
+        "phone":  "02-544-1035",
+        "address":  "Seoul Gangnam-gu Sinsa-dong 35",
+        "latitude":  37.5264,
+        "longitude":  127.0224,
+        "description":  "Custom nail art atelier.",
+        "priceAvg":  160000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "네일_네일9.png",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "네일_네일10.png",
+                              "ord":  1
+                          }
+                      ]
+    },
+    {
+        "cmno":  36,
+        "category":  "MAKEUP",
+        "name":  "Makeup One",
+        "ceoName":  "Song Makeup",
+        "phone":  "02-544-1036",
+        "address":  "Seoul Gangnam-gu Cheongdam-dong 36",
+        "latitude":  37.5259,
+        "longitude":  127.0397,
+        "description":  "Bridal makeup specialist.",
+        "priceAvg":  350000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "메이크업_메이크업1.png",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "메이크업_메이크업2.png",
+                              "ord":  1
+                          }
+                      ]
+    },
+    {
+        "cmno":  37,
+        "category":  "MAKEUP",
+        "name":  "Makeup Rose",
+        "ceoName":  "Park Rose",
+        "phone":  "02-544-1037",
+        "address":  "Seoul Gangnam-gu Cheongdam-dong 37",
+        "latitude":  37.5262,
+        "longitude":  127.0401,
+        "description":  "Premium bridal makeup salon.",
+        "priceAvg":  450000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "메이크업_메이크업3.png",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "메이크업_메이크업4.png",
+                              "ord":  1
+                          }
+                      ]
+    },
+    {
+        "cmno":  38,
+        "category":  "MAKEUP",
+        "name":  "Makeup Blanc",
+        "ceoName":  "Choi Blanc",
+        "phone":  "02-544-1038",
+        "address":  "Seoul Gangnam-gu Cheongdam-dong 38",
+        "latitude":  37.5265,
+        "longitude":  127.0405,
+        "description":  "Bright and clean wedding makeup.",
+        "priceAvg":  300000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "메이크업_메이크업5.png",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "메이크업_메이크업6.png",
+                              "ord":  1
+                          }
+                      ]
+    },
+    {
+        "cmno":  39,
+        "category":  "MAKEUP",
+        "name":  "Makeup Natural",
+        "ceoName":  "Lee Natural",
+        "phone":  "02-544-1039",
+        "address":  "Seoul Gangnam-gu Cheongdam-dong 39",
+        "latitude":  37.5268,
+        "longitude":  127.0409,
+        "description":  "Natural bridal makeup and styling.",
+        "priceAvg":  280000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "메이크업_메이크업7.png",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "메이크업_메이크업8.png",
+                              "ord":  1
+                          }
+                      ]
+    },
+    {
+        "cmno":  40,
+        "category":  "MAKEUP",
+        "name":  "Makeup Glow",
+        "ceoName":  "Yoon Glow",
+        "phone":  "02-544-1040",
+        "address":  "Seoul Gangnam-gu Cheongdam-dong 40",
+        "latitude":  37.5271,
+        "longitude":  127.0413,
+        "description":  "Glowing wedding makeup studio.",
+        "priceAvg":  400000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "메이크업_메이크업9.png",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "메이크업_메이크업10.png",
+                              "ord":  1
+                          }
+                      ]
+    },
+    {
+        "cmno":  41,
+        "category":  "MAKEUP",
+        "name":  "Hair One",
+        "ceoName":  "Han Hair",
+        "phone":  "02-544-1041",
+        "address":  "Seoul Seocho-gu Seocho-daero 41",
+        "latitude":  37.4836,
+        "longitude":  127.0327,
+        "description":  "Bridal hair styling salon.",
+        "priceAvg":  220000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "헤어_헤어1.jpg",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "헤어_헤어2.jpg",
+                              "ord":  1
+                          }
+                      ]
+    },
+    {
+        "cmno":  42,
+        "category":  "MAKEUP",
+        "name":  "Hair Blanc",
+        "ceoName":  "Jung Hair",
+        "phone":  "02-544-1042",
+        "address":  "Seoul Seocho-gu Seocho-daero 42",
+        "latitude":  37.484,
+        "longitude":  127.0331,
+        "description":  "Elegant bridal hair design.",
+        "priceAvg":  240000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "헤어_헤어3.jpg",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "헤어_헤어4.png",
+                              "ord":  1
+                          }
+                      ]
+    },
+    {
+        "cmno":  43,
+        "category":  "MAKEUP",
+        "name":  "Hair Mood",
+        "ceoName":  "Kang Mood",
+        "phone":  "02-544-1043",
+        "address":  "Seoul Seocho-gu Seocho-daero 43",
+        "latitude":  37.4844,
+        "longitude":  127.0335,
+        "description":  "Soft mood bridal hair styling.",
+        "priceAvg":  210000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "헤어_헤어5.png",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "헤어_헤어6.png",
+                              "ord":  1
+                          }
+                      ]
+    },
+    {
+        "cmno":  44,
+        "category":  "MAKEUP",
+        "name":  "Hair Atelier",
+        "ceoName":  "Oh Atelier",
+        "phone":  "02-544-1044",
+        "address":  "Seoul Seocho-gu Seocho-daero 44",
+        "latitude":  37.4848,
+        "longitude":  127.0339,
+        "description":  "Custom bridal hair atelier.",
+        "priceAvg":  260000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "헤어_헤어7.png",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "헤어_헤어8.png",
+                              "ord":  1
+                          }
+                      ]
+    },
+    {
+        "cmno":  45,
+        "category":  "MAKEUP",
+        "name":  "Hair Glow",
+        "ceoName":  "Seo Glow",
+        "phone":  "02-544-1045",
+        "address":  "Seoul Seocho-gu Seocho-daero 45",
+        "latitude":  37.4852,
+        "longitude":  127.0343,
+        "description":  "Hair styling salon for wedding day looks.",
+        "priceAvg":  230000,
+        "delFlag":  false,
+        "imageList":  [
+                          {
+                              "fileName":  "헤어_헤어9.png",
+                              "ord":  0
+                          },
+                          {
+                              "fileName":  "헤어_헤어10.png",
+                              "ord":  1
+                          }
+                      ]
+    }
 ]
