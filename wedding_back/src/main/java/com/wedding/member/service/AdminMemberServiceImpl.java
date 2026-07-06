@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.wedding.global.dto.PageResponseDTO;
 import com.wedding.member.domain.Member;
+import com.wedding.member.domain.MemberRole;
 import com.wedding.member.dto.AdminMemberDTO;
 import com.wedding.member.dto.AdminMemberSearchDTO;
 import com.wedding.member.dto.MemberStatusUpdateDTO;
@@ -68,6 +69,10 @@ public class AdminMemberServiceImpl implements AdminMemberService {
         Member member = memberRepository.findById(email)
                 .orElseThrow(() -> new NoSuchElementException("해당 회원을 찾을 수 없습니다: " + email));
 
+        if (member.getMemberRoleList().contains(MemberRole.ADMIN)) {
+            throw new IllegalStateException("관리자 계정은 상태를 변경할 수 없습니다.");
+        }
+
         switch (status) {
             case "BLACKLIST" -> {
                 if (updateDTO.getReason() == null || updateDTO.getReason().isBlank()) {
@@ -98,6 +103,7 @@ public class AdminMemberServiceImpl implements AdminMemberService {
                 .suspendReason(member.getSuspendReason())
                 .suspendUntil(member.getSuspendUntil())
                 .emailVerified(member.isEmailVerified())
+                .admin(member.getMemberRoleList().contains(MemberRole.ADMIN))
                 .build();
     }
 

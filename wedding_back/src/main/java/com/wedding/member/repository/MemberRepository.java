@@ -18,6 +18,7 @@ public interface MemberRepository extends JpaRepository<Member, String> {
   boolean existsByNickname(String nickname);
 
 
+  @EntityGraph(attributePaths = {"memberRoleList"})
   @Query("select m from Member m " +
           "where (:keyword is null or :keyword = '' " +
           "       or m.nickname like concat('%', :keyword, '%') " +

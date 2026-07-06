@@ -28,6 +28,8 @@ const LoginComponent = () => {
   };
 
   const handleClickLogin = (e) => {
+    e.preventDefault();
+
     doLogin(loginParam).then((data) => {
       console.log(data);
       if (data.error) {
@@ -89,72 +91,81 @@ const LoginComponent = () => {
         <h2 className="font-display text-2xl text-plum-900 mb-1">로그인</h2>
         <p className="text-plum-500 text-sm mb-8">계정에 로그인하세요</p>
 
-        <div className="mb-4">
-          <label className={labelClass}>이메일</label>
-          <input
-            className={inputClass}
-            name="email"
-            type="text"
-            placeholder="example@email.com"
-            value={loginParam.email}
-            onChange={handleChange}
-          ></input>
-        </div>
-
-        <div className="mb-2">
-          <label className={labelClass}>비밀번호</label>
-          <input
-            className={inputClass}
-            name="pw"
-            type="password"
-            placeholder="비밀번호를 입력하세요"
-            value={loginParam.pw}
-            onChange={handleChange}
-          ></input>
-        </div>
-
-        {failInfo && (
+        <form onSubmit={handleClickLogin}>
           <div className="mb-4">
-            <div className="text-rose-600 text-xs font-medium mb-1">
-              ⚠ 비밀번호가 틀렸어요 ({failInfo.failCount}/
-              {failInfo.maxFailCount}회)
-            </div>
-            <div className="w-full h-1.5 bg-rose-100 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-rose-500 transition-all"
-                style={{
-                  width: `${(failInfo.failCount / failInfo.maxFailCount) * 100}%`,
-                }}
-              ></div>
-            </div>
-          </div>
-        )}
-
-        <div className="flex items-center justify-between mb-6 mt-4">
-          <label className="flex items-center gap-2 text-sm text-plum-900/70">
+            <label className={labelClass}>이메일</label>
             <input
-              type="checkbox"
-              name="rememberMe"
-              checked={loginParam.rememberMe}
+              className={inputClass}
+              name="email"
+              type="email"
+              lang="en"
+              inputMode="email"
+              autoComplete="email"
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck={false}
+              placeholder="example@email.com"
+              value={loginParam.email}
               onChange={handleChange}
-              className="accent-rose-500"
-            />
-            로그인 유지 (30일)
-          </label>
-          <button
-            className="text-sm text-rose-600 hover:text-rose-700 font-medium"
-            onClick={() => moveToPath("/auth/password-reset")}
-          >
-            비밀번호 찾기
-          </button>
-        </div>
+            ></input>
+          </div>
 
-        <button
-          className="w-full py-3 rounded-xl bg-rose-gradient text-white font-semibold shadow-lg shadow-rose-200 hover:shadow-rose-300 hover:-translate-y-0.5 transition-all"
-          onClick={handleClickLogin}
-        >
-          로그인
-        </button>
+          <div className="mb-2">
+            <label className={labelClass}>비밀번호</label>
+            <input
+              className={inputClass}
+              name="pw"
+              type="password"
+              placeholder="비밀번호를 입력하세요"
+              value={loginParam.pw}
+              onChange={handleChange}
+            ></input>
+          </div>
+
+          {failInfo && (
+            <div className="mb-4">
+              <div className="text-rose-600 text-xs font-medium mb-1">
+                ⚠ 비밀번호가 틀렸어요 ({failInfo.failCount}/
+                {failInfo.maxFailCount}회)
+              </div>
+              <div className="w-full h-1.5 bg-rose-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-rose-500 transition-all"
+                  style={{
+                    width: `${(failInfo.failCount / failInfo.maxFailCount) * 100}%`,
+                  }}
+                ></div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between mb-6 mt-4">
+            <label className="flex items-center gap-2 text-sm text-plum-900/70">
+              <input
+                type="checkbox"
+                name="rememberMe"
+                checked={loginParam.rememberMe}
+                onChange={handleChange}
+                className="accent-rose-500"
+              />
+              로그인 유지 (30일)
+            </label>
+            <button
+              type="button"
+              className="text-sm text-rose-600 hover:text-rose-700 font-medium"
+              onClick={() => moveToPath("/auth/password-reset")}
+            >
+              비밀번호 찾기
+            </button>
+          </div>
+
+          <button
+            type="submit"
+            className="w-full py-3 rounded-xl bg-rose-gradient text-white font-semibold shadow-lg shadow-rose-200 hover:shadow-rose-300 hover:-translate-y-0.5 transition-all"
+          >
+            로그인
+          </button>
+        </form>
 
         <div className="flex items-center gap-3 my-6">
           <div className="flex-1 h-px bg-plum-900/10"></div>

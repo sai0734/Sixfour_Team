@@ -31,6 +31,15 @@ const CheckoutSuccessPage = lazy(
 const CheckoutFailPage = lazy(
   () => import("../pages/checkout/CheckoutFailPage"),
 );
+const AdminProductListPage = lazy(
+  () => import("../pages/admin/AdminProductListPage"),
+);
+const AdminOrderListPage = lazy(
+  () => import("../pages/admin/AdminOrderListPage"),
+);
+const AdminOrderDetailPage = lazy(
+  () => import("../pages/admin/AdminOrderDetailPage"),
+);
 
 const root = createBrowserRouter([
   {
@@ -96,6 +105,36 @@ const root = createBrowserRouter([
       <AdminOnly>
         <Suspense fallback={Loading}>
           <AdminMemberManage />
+        </Suspense>
+      </AdminOnly>
+    ),
+  },
+  {
+    path: "admin/products",
+    element: (
+      <AdminOnly>
+        <Suspense fallback={Loading}>
+          <AdminProductListPage />
+        </Suspense>
+      </AdminOnly>
+    ),
+  },
+  {
+    path: "admin/orders",
+    element: (
+      <AdminOnly>
+        <Suspense fallback={Loading}>
+          <AdminOrderListPage />
+        </Suspense>
+      </AdminOnly>
+    ),
+  },
+  {
+    path: "admin/orders/:ono",
+    element: (
+      <AdminOnly>
+        <Suspense fallback={Loading}>
+          <AdminOrderDetailPage />
         </Suspense>
       </AdminOnly>
     ),

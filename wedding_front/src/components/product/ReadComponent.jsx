@@ -64,6 +64,9 @@ const ReadComponent = ({ pno }) => {
       ([productData, optionData]) => {
         setProduct(productData);
         setOptions(optionData);
+        // 수정: 고정된 "기본" 버튼 대신, 옵션 목록의 첫 번째 항목을 기본 선택값으로 설정
+        // (더미데이터의 옵션 목록엔 이미 "각인 없음", "기본 포장"처럼 0원짜리 기본 선택지가 포함돼 있음)
+        setSelectedOption(optionData.length > 0 ? optionData[0] : null);
         setFetching(false);
       },
     );
@@ -119,7 +122,6 @@ const ReadComponent = ({ pno }) => {
     }
   };
 
-  // 바로 구매 - 장바구니를 거치지 않고 이 상품 하나만 결제 페이지로 전달
   const handleClickBuyNow = () => {
     if (!loginState.email) {
       alert("로그인이 필요한 기능입니다.");
@@ -127,7 +129,7 @@ const ReadComponent = ({ pno }) => {
     }
 
     const directItem = {
-      cino: null, // 장바구니 아이템이 아니므로 없음
+      cino: null,
       pno: pno,
       pono: selectedOption ? selectedOption.pono : null,
       pname: product.pname,
@@ -187,18 +189,11 @@ const ReadComponent = ({ pno }) => {
 
           {options.length > 0 && (
             <div className="border-t border-line pt-4 mb-4">
-              <p className="text-xs text-ink-soft mb-2">포장 옵션</p>
+              <p className="text-xs text-ink-soft mb-2">
+                {options[0]?.optionName ?? "옵션"}
+              </p>
               <div className="flex gap-2 flex-wrap mb-4">
-                <span
-                  onClick={() => setSelectedOption(null)}
-                  className={`border rounded-full px-3.5 py-1.5 text-xs cursor-pointer ${
-                    selectedOption === null
-                      ? "border-brand text-brand-accent bg-brand-light"
-                      : "border-line-soft"
-                  }`}
-                >
-                  기본
-                </span>
+                {/* 수정: 고정 "기본" 버튼 제거, 옵션 목록만 그대로 렌더링 */}
                 {options.map((opt) => (
                   <span
                     key={opt.pono}
@@ -255,7 +250,6 @@ const ReadComponent = ({ pno }) => {
             >
               장바구니 담기
             </button>
-            {/* 수정: 알럿 대신 실제 바로구매 핸들러 연결 */}
             <button
               onClick={handleClickBuyNow}
               className="flex-1 h-[46px] rounded-full bg-brand text-white text-sm font-medium"

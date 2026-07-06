@@ -266,6 +266,11 @@ const MemberManageComponent = () => {
                     >
                       {statusLabel[member.status] || member.status}
                     </span>
+                    {member.admin ? (
+                      <span className="ml-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 border border-blue-200">
+                        관리자
+                      </span>
+                    ) : null}
                     {member.status === "BLACKLIST" && member.suspendReason ? (
                       <div className="mt-1 text-xs text-slate-400">
                         {member.suspendReason}
@@ -276,36 +281,42 @@ const MemberManageComponent = () => {
                     ) : null}
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-1.5">
-                      {member.status !== "BLACKLIST" && (
-                        <button
-                          disabled={actionEmail === member.email}
-                          onClick={() => openSuspendModal(member)}
-                          className="rounded-md bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-100 disabled:opacity-50"
-                        >
-                          정지
-                        </button>
-                      )}
-                      {member.status === "ACTIVE" && (
-                        <button
-                          disabled={actionEmail === member.email}
-                          onClick={() => handleDormant(member)}
-                          className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-200 disabled:opacity-50"
-                        >
-                          휴면 전환
-                        </button>
-                      )}
-                      {(member.status === "BLACKLIST" ||
-                        member.status === "DORMANT") && (
-                        <button
-                          disabled={actionEmail === member.email}
-                          onClick={() => handleReactivate(member)}
-                          className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
-                        >
-                          정상 복귀
-                        </button>
-                      )}
-                    </div>
+                    {member.admin ? (
+                      <span className="text-xs text-slate-400">
+                        관리자 계정은 상태를 변경할 수 없어요
+                      </span>
+                    ) : (
+                      <div className="flex flex-wrap gap-1.5">
+                        {member.status !== "BLACKLIST" && (
+                          <button
+                            disabled={actionEmail === member.email}
+                            onClick={() => openSuspendModal(member)}
+                            className="rounded-md bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-100 disabled:opacity-50"
+                          >
+                            정지
+                          </button>
+                        )}
+                        {member.status === "ACTIVE" && (
+                          <button
+                            disabled={actionEmail === member.email}
+                            onClick={() => handleDormant(member)}
+                            className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-200 disabled:opacity-50"
+                          >
+                            휴면 전환
+                          </button>
+                        )}
+                        {(member.status === "BLACKLIST" ||
+                          member.status === "DORMANT") && (
+                          <button
+                            disabled={actionEmail === member.email}
+                            onClick={() => handleReactivate(member)}
+                            className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
+                          >
+                            정상 복귀
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))
