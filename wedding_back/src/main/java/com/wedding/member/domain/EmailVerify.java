@@ -41,7 +41,7 @@ public class EmailVerify {
 
   // 인증 전까지 임시 보관하는 가입 신청 데이터 (JSON)
   @Lob
-  @Column(nullable = false)
+  @Column(columnDefinition = "LONGTEXT", nullable = false)
   private String payload;
 
   @CreatedDate
