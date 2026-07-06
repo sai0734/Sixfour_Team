@@ -52,7 +52,12 @@ const LoginComponent = () => {
       } else {
         setFailInfo(null);
         alert("로그인 성공");
-        moveToPath("/");
+
+        const isAdmin = data.roleNames?.some((roleName) =>
+          ["ADMIN", "ROLE_ADMIN"].includes(roleName),
+        );
+
+        moveToPath(isAdmin ? "/admin" : "/");
       }
     });
   };
