@@ -26,4 +26,14 @@ public class OrderNotificationService {
 
     }
 
+    // 상태 변경(배송중/배송완료/환불 등) 알림 이메일 (비동기)
+    @Async
+    public void sendStatusChangeNotification(String memberEmail, Orders orders, String newStatus) {
+        try {
+            mailService.sendOrderStatusChangeEmail(memberEmail, orders.getOrderNumber(), newStatus);
+        } catch (Exception e) {
+            log.error("주문 상태변경 이메일 발송 실패", e);
+        }
+    }
+
 }

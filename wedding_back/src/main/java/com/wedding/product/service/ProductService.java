@@ -3,6 +3,8 @@ package com.wedding.product.service;
 import com.wedding.global.dto.PageRequestDTO;
 import com.wedding.global.dto.PageResponseDTO;
 import com.wedding.product.domain.Product;
+import com.wedding.product.dto.AdminProductListDTO;
+import com.wedding.product.dto.AdminProductSearchDTO;
 import com.wedding.product.dto.ProductDTO;
 import com.wedding.product.dto.ProductSearchDTO;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,5 +34,8 @@ public interface ProductService {
 
     // 카테고리 목록 조회하기
     List<String> getCategoryList();
+
+    // 관리자용 상품 리스트 조회
+    PageResponseDTO<AdminProductListDTO> getAdminProductList(AdminProductSearchDTO searchDTO);
 
 }
