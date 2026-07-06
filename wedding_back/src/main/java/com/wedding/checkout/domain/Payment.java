@@ -42,4 +42,8 @@ public class Payment {
     @Column(nullable = true)
     private LocalDateTime approvedAt;
 
+    public void changePayStatus(String payStatus) {
+        this.payStatus = payStatus;
+    }
+
 }

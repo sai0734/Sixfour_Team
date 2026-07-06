@@ -77,4 +77,21 @@ public class Orders extends BaseTimeEntity {
         this.shippingFee = shippingFee;
     }
 
+    public void changeTrackingNo(String trackingNo) {
+        this.trackingNo = trackingNo;
+    }
+
+    public void changeAdminMemo(String adminMemo) {
+        this.adminMemo = adminMemo;
+    }
+
+    public void changeShippingInfo(String receiverName, String receiverPhone,
+                                   String zipcode, String address, String addressDetail) {
+        this.receiverName = receiverName;
+        this.receiverPhone = receiverPhone;
+        this.zipcode = zipcode;
+        this.address = address;
+        this.addressDetail = addressDetail;
+    }
+
 }

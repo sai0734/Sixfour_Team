@@ -28,7 +28,7 @@ public class APILoginSuccessHandler implements AuthenticationSuccessHandler{
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication)
-    throws IOException, ServletException{
+            throws IOException, ServletException{
         log.info("-------------------------------");
         log.info(authentication);
         log.info("-------------------------------");
@@ -45,8 +45,8 @@ public class APILoginSuccessHandler implements AuthenticationSuccessHandler{
         Map<String, Object> claims  = memberDTO.getClaims();
 
 
-        String accessToken = JWTUtil.generateToken(claims, 10);
-        String refreshToken = JWTUtil.generateToken(claims,60*24);
+        String accessToken = JWTUtil.generateToken(claims, 60 * 24);
+        String refreshToken = JWTUtil.generateToken(claims,60*24*2);
 
         // 로그인 유지("rememberMe") 체크 여부 - 프론트에서 넘겨주면 30일, 아니면 7일 TTL
         boolean rememberMe = "true".equals(request.getParameter("rememberMe"));

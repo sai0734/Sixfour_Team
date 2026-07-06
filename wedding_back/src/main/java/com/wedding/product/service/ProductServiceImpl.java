@@ -4,6 +4,8 @@ import com.wedding.global.dto.PageRequestDTO;
 import com.wedding.global.dto.PageResponseDTO;
 import com.wedding.product.domain.Product;
 import com.wedding.product.domain.ProductImage;
+import com.wedding.product.dto.AdminProductListDTO;
+import com.wedding.product.dto.AdminProductSearchDTO;
 import com.wedding.product.dto.ProductDTO;
 import com.wedding.product.dto.ProductSearchDTO;
 import com.wedding.product.repository.ProductRepository;
@@ -26,6 +28,8 @@ import java.util.stream.Collectors;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
+
+    private static final int LOW_STOCK_THRESHOLD = 10;
 
     // 상품 전체 리스트 조회하기 (대표이미지 1개, 삭제안된 상품) - 검색조건 없이 새 메서드로 위임
     @Override
@@ -219,6 +223,58 @@ public class ProductServiceImpl implements ProductService {
 
         return pno;
 
+    }
+
+    // 관리자용 상품 리스트 조회 (판매상태 / 재고부족 계산)
+    @Override
+    public PageResponseDTO<AdminProductListDTO> getAdminProductList(AdminProductSearchDTO searchDTO) {
+
+        Sort sort = resolveSort(searchDTO.getSortType());
+
+        Pageable pageable = PageRequest.of(
+                searchDTO.getPage() - 1,
+                searchDTO.getSize(),
+                sort);
+
+        Page<Object[]> result = productRepository.adminSearchProductList(
+                searchDTO.getKeyword(),
+                searchDTO.getCategory(),
+                searchDTO.getSaleStatus(),
+                pageable);
+
+        List<AdminProductListDTO> dtoList = result.get().map(arr -> {
+
+            Product product = (Product) arr[0];
+            ProductImage productImage = (ProductImage) arr[1];
+
+            String saleStatus;
+            if (product.isDelFlag()) {
+                saleStatus = "HIDDEN";
+            } else if (product.getStockQty() <= 0) {
+                saleStatus = "SOLD_OUT";
+            } else {
+                saleStatus = "ON_SALE";
+            }
+
+            return AdminProductListDTO.builder()
+                    .pno(product.getPno())
+                    .pname(product.getPname())
+                    .thumbnail(productImage != null ? productImage.getFileName() : null)
+                    .category(product.getCategory())
+                    .price(product.getPrice())
+                    .stockQty(product.getStockQty())
+                    .delFlag(product.isDelFlag())
+                    .saleStatus(saleStatus)
+                    .lowStock(!product.isDelFlag() && product.getStockQty() > 0 && product.getStockQty() <= LOW_STOCK_THRESHOLD)
+                    .build();
+
+        }).collect(Collectors.toList());
+
+        return PageResponseDTO.<AdminProductListDTO>withAll()
+                .dtoList(dtoList)
+                .pageRequestDTO(searchDTO)
+                .totalCount(result.getTotalElements())
+                .build();
     }
 
 }
