@@ -16,6 +16,7 @@ const DressItemRouter = lazy(
 const AdminDashboard = lazy(() => import("../pages/admin/AdminDashboardPage"));
 const ChecklistListPage = lazy(() => import("../pages/checklist/ListPage"));
 const PrepHubPage = lazy(() => import("../pages/prep/HubPage"));
+const PrepPaymentPage = lazy(() => import("../pages/prep/PaymentPage"));
 const BudgetListPage = lazy(() => import("../pages/budget/ListPage"));
 const MyPageHub = lazy(() => import("../pages/mypage/HubPage"));
 const BoardHubPage = lazy(() => import("../pages/board/HubPage"));
@@ -170,6 +171,14 @@ const root = createBrowserRouter([
     element: (
       <Suspense fallback={Loading}>
         <PrepHubPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/prep/payment",
+    element: (
+      <Suspense fallback={Loading}>
+        <PrepPaymentPage />
       </Suspense>
     ),
   },
