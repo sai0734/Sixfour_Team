@@ -5,6 +5,7 @@ import useCustomLogin from "../../hooks/useCustomLogin";
 import { getListByMember as getChecklist } from "../../api/checklistApi";
 import { getListByMember as getBudget } from "../../api/budgetApi";
 import { getByMember as getWeddingPlan } from "../../api/weddingplanApi";
+import { getListByMember as getHallPayments } from "../../api/hallPaymentApi";
 
 const HubPage = () => {
   const { loginState } = useCustomLogin();
@@ -12,6 +13,7 @@ const HubPage = () => {
   const [checklist, setChecklist] = useState([]);
   const [budgetList, setBudgetList] = useState([]);
   const [plan, setPlan] = useState(null);
+  const [payments, setPayments] = useState([]);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -21,10 +23,12 @@ const HubPage = () => {
       getChecklist(loginState.email),
       getBudget(loginState.email),
       getWeddingPlan(loginState.email).catch(() => null),
-    ]).then(([checklistData, budgetData, planData]) => {
+      getHallPayments(loginState.email).catch(() => []),
+    ]).then(([checklistData, budgetData, planData, paymentData]) => {
       setChecklist(checklistData);
       setBudgetList(budgetData);
       setPlan(planData);
+      setPayments(paymentData);
       setLoaded(true);
     });
   }, [loginState.email]);
@@ -70,15 +74,23 @@ const HubPage = () => {
       )
     : null;
 
+  const pendingPayments = payments.filter((p) => p.status === "대기");
+  const pendingAmount = pendingPayments.reduce(
+    (s, p) => s + (p.amount || 0),
+    0,
+  );
+
   return (
     <PrepLayout
       eyebrow="PREP HUB"
       title="준비 관리"
       subtitle="한눈에 보는 우리 결혼 준비 현황"
     >
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        {/* D-day 카드 */}
-        <div className="bg-white rounded-2xl border border-line p-6">
+      <div className="grid grid-cols-3 gap-4 mb-4">
+        <Link
+          to="/prep/dday"
+          className="bg-white rounded-2xl border border-line p-6 hover:border-brand transition-colors"
+        >
           <p className="text-xs text-ink-muted mb-2">예식일</p>
           {plan?.weddingDate ? (
             <>
@@ -92,9 +104,8 @@ const HubPage = () => {
               웨딩플랜에서 예식일을 등록해보세요
             </p>
           )}
-        </div>
+        </Link>
 
-        {/* 체크리스트 요약 카드 */}
         <Link
           to="/checklist/list"
           className="bg-white rounded-2xl border border-line p-6 hover:border-brand transition-colors"
@@ -106,7 +117,6 @@ const HubPage = () => {
           </p>
         </Link>
 
-        {/* 예산 요약 카드 */}
         <Link
           to="/budget/list"
           className="bg-white rounded-2xl border border-line p-6 hover:border-brand transition-colors"
@@ -125,10 +135,19 @@ const HubPage = () => {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white rounded-2xl border border-line p-6 opacity-60">
-          <p className="text-sm font-medium text-ink mb-1">납부 관리</p>
-          <p className="text-xs text-ink-faint">준비 중인 기능입니다</p>
-        </div>
+        <Link
+          to="/prep/payment"
+          className="bg-white rounded-2xl border border-line p-6 hover:border-brand transition-colors"
+        >
+          <p className="text-xs text-ink-muted mb-2">납부 관리</p>
+          <p className="text-2xl font-medium text-ink mb-1">
+            {pendingAmount.toLocaleString()}원
+          </p>
+          <p className="text-xs text-ink-faint">
+            대기중인 납부 {pendingPayments.length}건
+          </p>
+        </Link>
+
         <div className="bg-white rounded-2xl border border-line p-6 opacity-60">
           <p className="text-sm font-medium text-ink mb-1">AI 드레스</p>
           <p className="text-xs text-ink-faint">준비 중인 기능입니다</p>
