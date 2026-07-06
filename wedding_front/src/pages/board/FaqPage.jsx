@@ -5,7 +5,15 @@ import BoardFilterSidebar from "../../components/board/BoardFilterSidebar";
 import FaqItem from "../../components/faq/FaqItem";
 import { getList } from "../../api/faqApi";
 
-const CATEGORY_OPTIONS = ["예산", "업체", "일정", "계약", "기타"];
+const CATEGORY_OPTIONS = [
+  "회원·로그인",
+  "예산",
+  "업체·예약",
+  "일정",
+  "답례품 쇼핑몰",
+  "커뮤니티",
+  "기타",
+];
 
 const FaqPage = () => {
   const [faqs, setFaqs] = useState([]);

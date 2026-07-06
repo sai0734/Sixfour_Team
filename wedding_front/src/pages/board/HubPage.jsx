@@ -14,11 +14,15 @@ import {
   putOne,
   deleteOne,
 } from "../../api/boardApi";
+import { upload as uploadImages } from "../../api/boardImageApi";
 import { checkLiked, likeOne, unlikeOne } from "../../api/boardLikeApi";
 import useCustomLogin from "../../hooks/useCustomLogin";
 
 const HubPage = () => {
   const { loginState } = useCustomLogin();
+  const isAdmin = loginState.roleNames?.some((r) =>
+    ["ADMIN", "ROLE_ADMIN"].includes(r),
+  );
 
   const [posts, setPosts] = useState([]);
   const [bestPosts, setBestPosts] = useState([]);
@@ -72,7 +76,14 @@ const HubPage = () => {
   };
 
   const handleAdd = (formValues) => {
-    postAdd({ ...formValues, memberEmail: loginState.email })
+    const { files, ...boardData } = formValues;
+
+    postAdd({ ...boardData, memberEmail: loginState.email })
+      .then((res) => {
+        if (files && files.length > 0) {
+          return uploadImages(res.boardId, files);
+        }
+      })
       .then(() => {
         setModalOpen(false);
         setRefresh((r) => !r);
@@ -211,6 +222,7 @@ const HubPage = () => {
         <DetailModal
           board={detailPost}
           isOwner={detailPost.memberEmail === loginState.email}
+          isAdmin={isAdmin}
           liked={liked}
           onToggleLike={handleToggleLike}
           onCommentCountChange={handleCommentCountChange}

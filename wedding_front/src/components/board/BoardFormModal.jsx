@@ -36,6 +36,12 @@ const BoardFormModal = ({
       : initState(fixedType),
   );
 
+  const [files, setFiles] = useState([]);
+
+  const handleFileChange = (e) => {
+    setFiles(Array.from(e.target.files || []));
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((f) => ({ ...f, [name]: value }));
@@ -57,6 +63,7 @@ const BoardFormModal = ({
       ...form,
       category: activeCategoryOptions ? form.category : null,
       rating: form.boardType === "REVIEW" ? Number(form.rating) : null,
+      files,
     });
   };
 
@@ -148,6 +155,26 @@ const BoardFormModal = ({
               onChange={handleChange}
             />
           </label>
+
+          {mode === "add" && (
+            <label className="flex flex-col gap-2">
+              <span className="text-xs font-medium text-ink-soft">
+                사진/동영상 첨부
+              </span>
+              <input
+                type="file"
+                accept="image/*,video/*"
+                multiple
+                onChange={handleFileChange}
+                className="text-sm text-ink-soft file:mr-3 file:h-9 file:px-4 file:rounded-full file:border-0 file:bg-surface file:text-xs file:font-medium file:text-ink-soft hover:file:bg-cream"
+              />
+              {files.length > 0 && (
+                <span className="text-[11px] text-ink-faint">
+                  {files.length}개 선택됨
+                </span>
+              )}
+            </label>
+          )}
         </div>
 
         <div className="flex justify-end gap-2 mt-6">
