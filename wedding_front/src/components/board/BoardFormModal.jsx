@@ -156,10 +156,10 @@ const BoardFormModal = ({
             />
           </label>
 
-          {mode === "add" && (
+          {(mode === "add" || mode === "edit") && (
             <label className="flex flex-col gap-2">
               <span className="text-xs font-medium text-ink-soft">
-                사진/동영상 첨부
+                사진/동영상 첨부{mode === "edit" && " (추가)"}
               </span>
               <input
                 type="file"

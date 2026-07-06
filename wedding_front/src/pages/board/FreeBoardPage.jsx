@@ -105,23 +105,36 @@ const FreeBoardPage = () => {
 
     postAdd({ ...boardData, memberEmail: loginState.email })
       .then((res) => {
-        if (files && files.length > 0) {
-          return uploadImages(res.boardId, files);
-        }
-      })
-      .then(() => {
         setModalOpen(false);
         setRefresh((r) => !r);
+
+        if (files && files.length > 0) {
+          uploadImages(res.boardId, files).catch((e) => {
+            console.error(e);
+            alert(
+              "글은 등록됐지만, 이미지/동영상 업로드에는 실패했어요. (BoardImage 백엔드가 적용/재시작 됐는지 확인해주세요)",
+            );
+          });
+        }
       })
       .catch((e) => console.error(e));
   };
 
   const handleEditSubmit = (formValues) => {
-    putOne({ ...editTarget, ...formValues })
+    const { files, ...boardData } = formValues;
+
+    putOne({ ...editTarget, ...boardData })
       .then(() => {
         setEditTarget(null);
         setDetailPost(null);
         setRefresh((r) => !r);
+
+        if (files && files.length > 0) {
+          uploadImages(editTarget.boardId, files).catch((e) => {
+            console.error(e);
+            alert("수정은 됐지만, 이미지/동영상 업로드에는 실패했어요.");
+          });
+        }
       })
       .catch((e) => console.error(e));
   };
