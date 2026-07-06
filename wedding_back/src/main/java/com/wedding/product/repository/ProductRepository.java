@@ -51,4 +51,20 @@ public interface ProductRepository extends JpaRepository<Product, Long>{
           "where p.delFlag = false and p.category is not null order by p.category")
   List<String> findDistinctCategories();
 
+  // 관리자용 상풍 리스트 조회 (숨김 상품도 전부 포함)
+  @Query("select p, pi from Product p left join p.imageList pi " +
+          "where (pi.ord = 0 or pi is null) " +
+          "and (:keyword is null or :keyword = '' or p.pname like concat('%', :keyword, '%')) " +
+          "and (:category is null or :category = '' or p.category = :category) " +
+          "and (:saleStatus is null or :saleStatus = '' " +
+          "     or (:saleStatus = 'HIDDEN' and p.delFlag = true) " +
+          "     or (:saleStatus = 'SOLD_OUT' and p.delFlag = false and p.stockQty <= 0) " +
+          "     or (:saleStatus = 'ON_SALE' and p.delFlag = false and p.stockQty > 0))")
+  Page<Object[]> adminSearchProductList(@Param("keyword") String keyword,
+                                        @Param("category") String category,
+                                        @Param("saleStatus") String saleStatus,
+                                        Pageable pageable);
+
+
+
 }

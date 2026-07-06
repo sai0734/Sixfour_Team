@@ -10,6 +10,8 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
 @Log4j2
@@ -22,6 +24,15 @@ public class MailServiceImpl implements MailService {
 
   @Value("${com.wedding.front.host}")
   private String frontHost;
+
+  private static final Map<String, String> STATUS_LABEL = Map.of(
+          "PAID", "결제완료",
+          "SHIPPING_READY", "배송준비중",
+          "SHIPPING", "배송중",
+          "DELIVERED", "배송완료",
+          "REFUNDED", "환불완료",
+          "CANCELLED", "주문취소"
+  );
 
   @Override
   public void sendVerificationEmail(String toEmail, String token) {
@@ -100,6 +111,24 @@ public class MailServiceImpl implements MailService {
                     + "<p><b>주문번호:</b> " + orderNumber + "</p>"
                     + "<p><b>결제금액:</b> " + String.format("%,d", amount) + "원</p>"
                     + "<p style='margin-top:16px; color:#888;'>주문해 주셔서 감사합니다.</p>"
+                    + "</div>";
+
+    sendHtmlMail(toEmail, subject, content);
+  }
+
+  // 주문 상태 변경 알림 메일
+  @Override
+  public void sendOrderStatusChangeEmail(String toEmail, String orderNumber, String newStatus) {
+
+    String label = STATUS_LABEL.getOrDefault(newStatus, newStatus);
+
+    String subject = "[Wedding] 주문 상태가 변경되었습니다 (주문번호 " + orderNumber + ")";
+    String content =
+            "<div style='font-family:sans-serif; line-height:1.6;'>"
+                    + "<h2>주문 상태 변경 안내</h2>"
+                    + "<p><b>주문번호:</b> " + orderNumber + "</p>"
+                    + "<p><b>변경된 상태:</b> " + label + "</p>"
+                    + "<p style='margin-top:16px; color:#888;'>문의사항이 있으시면 고객센터로 연락해 주세요.</p>"
                     + "</div>";
 
     sendHtmlMail(toEmail, subject, content);

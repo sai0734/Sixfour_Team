@@ -9,4 +9,7 @@ public interface MailService {
   // 주문 완료 확인 메일 (HYH 추가사항)
   void sendOrderConfirmationEmail(String toEmail, String orderNumber, int amount);
 
+  // 주문 상태 변경(배송중/배송완료 등) 알림 메일
+  void sendOrderStatusChangeEmail(String toEmail, String orderNumber, String newStatus);
+
 }

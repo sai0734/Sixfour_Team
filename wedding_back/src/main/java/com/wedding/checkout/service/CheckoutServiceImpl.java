@@ -9,7 +9,7 @@ import com.wedding.checkout.domain.Payment;
 import com.wedding.checkout.dto.*;
 import com.wedding.checkout.repository.OrderRepository;
 import com.wedding.checkout.repository.PaymentRepository;
-import com.wedding.checkout.util.TossPaymentClient;
+import com.wedding.global.util.TossPaymentClient;
 import com.wedding.member.domain.Member;
 import com.wedding.product.domain.Product;
 import com.wedding.product.domain.ProductOption;
