@@ -65,7 +65,7 @@ public class CartServiceImpl implements CartService {
 
             cartItem = builder.build();
         } else {
-            cartItem.changeQty(qty);
+            cartItem.changeQty(cartItem.getQty() + qty);
         }
 
         cartItemRepository.save(cartItem);
