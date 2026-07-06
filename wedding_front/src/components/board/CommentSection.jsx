@@ -5,24 +5,42 @@ import {
   putOne,
   deleteOne,
 } from "../../api/commentApi";
+import {
+  upload as uploadCommentImages,
+  listByComment,
+} from "../../api/commentImageApi";
+import { fileUrl, isVideoFile } from "../../api/boardImageApi";
 import useCustomLogin from "../../hooks/useCustomLogin";
 
 const CommentSection = ({ boardId, onCountChange }) => {
   const { loginState } = useCustomLogin();
 
   const [comments, setComments] = useState([]);
+  const [imagesMap, setImagesMap] = useState({});
   const [refresh, setRefresh] = useState(false);
 
   const [newContent, setNewContent] = useState("");
+  const [newFiles, setNewFiles] = useState([]);
   const [replyTargetId, setReplyTargetId] = useState(null);
   const [replyContent, setReplyContent] = useState("");
+  const [replyFiles, setReplyFiles] = useState([]);
   const [editTargetId, setEditTargetId] = useState(null);
   const [editContent, setEditContent] = useState("");
 
   useEffect(() => {
     if (!boardId) return;
 
-    getListByBoard(boardId).then((data) => setComments(data));
+    getListByBoard(boardId).then((data) => {
+      setComments(data);
+
+      Promise.all(
+        data.map((c) =>
+          listByComment(c.commentId).then((imgs) => [c.commentId, imgs]),
+        ),
+      ).then((pairs) => {
+        setImagesMap(Object.fromEntries(pairs));
+      });
+    });
   }, [boardId, refresh]);
 
   const topLevel = comments.filter((c) => !c.parentId);
@@ -38,10 +56,17 @@ const CommentSection = ({ boardId, onCountChange }) => {
       parentId: null,
       content: newContent,
     })
-      .then(() => {
+      .then((res) => {
         setNewContent("");
         setRefresh((r) => !r);
         onCountChange && onCountChange(1);
+
+        if (newFiles.length > 0) {
+          uploadCommentImages(res.commentId, newFiles).catch((e) =>
+            console.error(e),
+          );
+        }
+        setNewFiles([]);
       })
       .catch((e) => console.error(e));
   };
@@ -55,11 +80,18 @@ const CommentSection = ({ boardId, onCountChange }) => {
       parentId,
       content: replyContent,
     })
-      .then(() => {
+      .then((res) => {
         setReplyTargetId(null);
         setReplyContent("");
         setRefresh((r) => !r);
         onCountChange && onCountChange(1);
+
+        if (replyFiles.length > 0) {
+          uploadCommentImages(res.commentId, replyFiles).catch((e) =>
+            console.error(e),
+          );
+        }
+        setReplyFiles([]);
       })
       .catch((e) => console.error(e));
   };
@@ -87,6 +119,33 @@ const CommentSection = ({ boardId, onCountChange }) => {
         onCountChange && onCountChange(-1);
       })
       .catch((e) => console.error(e));
+  };
+
+  const renderMedia = (commentId) => {
+    const images = imagesMap[commentId];
+    if (!images || images.length === 0) return null;
+
+    return (
+      <div className="grid grid-cols-3 gap-1.5 mt-2 mb-1">
+        {images.map((img) =>
+          isVideoFile(img.imageUrl) ? (
+            <video
+              key={img.imageId}
+              src={fileUrl(img.imageUrl)}
+              controls
+              className="w-full rounded-lg bg-black"
+            />
+          ) : (
+            <img
+              key={img.imageId}
+              src={fileUrl(img.imageUrl)}
+              alt=""
+              className="w-full rounded-lg object-cover aspect-square"
+            />
+          ),
+        )}
+      </div>
+    );
   };
 
   const renderComment = (comment, isReply = false) => {
@@ -146,9 +205,12 @@ const CommentSection = ({ boardId, onCountChange }) => {
               </div>
             </div>
           ) : (
-            <p className="text-xs text-ink whitespace-pre-wrap">
-              {comment.content}
-            </p>
+            <>
+              <p className="text-xs text-ink whitespace-pre-wrap">
+                {comment.content}
+              </p>
+              {renderMedia(comment.commentId)}
+            </>
           )}
 
           {!comment.deleted && !isEditing && (
@@ -192,21 +254,30 @@ const CommentSection = ({ boardId, onCountChange }) => {
 
         {/* 답글 입력창 */}
         {replyTargetId === comment.commentId && (
-          <div className="ml-8 mt-2 flex gap-2">
+          <div className="ml-8 mt-2 flex flex-col gap-2">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="답글을 입력하세요"
+                value={replyContent}
+                onChange={(e) => setReplyContent(e.target.value)}
+                className="flex-1 h-9 px-3 rounded-lg border border-line-soft text-xs focus:outline-none focus:border-brand"
+              />
+              <button
+                type="button"
+                onClick={() => handleAddReply(comment.commentId)}
+                className="h-9 px-4 rounded-lg bg-brand text-white text-xs font-medium hover:bg-brand-dark"
+              >
+                등록
+              </button>
+            </div>
             <input
-              type="text"
-              placeholder="답글을 입력하세요"
-              value={replyContent}
-              onChange={(e) => setReplyContent(e.target.value)}
-              className="flex-1 h-9 px-3 rounded-lg border border-line-soft text-xs focus:outline-none focus:border-brand"
+              type="file"
+              accept="image/*,video/*"
+              multiple
+              onChange={(e) => setReplyFiles(Array.from(e.target.files || []))}
+              className="text-[11px] text-ink-faint file:mr-2 file:h-7 file:px-3 file:rounded-full file:border-0 file:bg-surface file:text-[11px] file:text-ink-soft"
             />
-            <button
-              type="button"
-              onClick={() => handleAddReply(comment.commentId)}
-              className="h-9 px-4 rounded-lg bg-brand text-white text-xs font-medium hover:bg-brand-dark"
-            >
-              등록
-            </button>
           </div>
         )}
 
@@ -228,21 +299,30 @@ const CommentSection = ({ boardId, onCountChange }) => {
         댓글 {comments.filter((c) => !c.deleted).length}
       </p>
 
-      <div className="flex gap-2 mb-4">
+      <div className="flex flex-col gap-2 mb-4">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="댓글을 입력하세요"
+            value={newContent}
+            onChange={(e) => setNewContent(e.target.value)}
+            className="flex-1 h-10 px-4 rounded-lg border border-line-soft text-sm focus:outline-none focus:border-brand"
+          />
+          <button
+            type="button"
+            onClick={handleAddComment}
+            className="h-10 px-5 rounded-lg bg-brand text-white text-sm font-medium hover:bg-brand-dark"
+          >
+            등록
+          </button>
+        </div>
         <input
-          type="text"
-          placeholder="댓글을 입력하세요"
-          value={newContent}
-          onChange={(e) => setNewContent(e.target.value)}
-          className="flex-1 h-10 px-4 rounded-lg border border-line-soft text-sm focus:outline-none focus:border-brand"
+          type="file"
+          accept="image/*,video/*"
+          multiple
+          onChange={(e) => setNewFiles(Array.from(e.target.files || []))}
+          className="text-[11px] text-ink-faint file:mr-2 file:h-7 file:px-3 file:rounded-full file:border-0 file:bg-surface file:text-[11px] file:text-ink-soft"
         />
-        <button
-          type="button"
-          onClick={handleAddComment}
-          className="h-10 px-5 rounded-lg bg-brand text-white text-sm font-medium hover:bg-brand-dark"
-        >
-          등록
-        </button>
       </div>
 
       {topLevel.length === 0 ? (

@@ -14,11 +14,15 @@ import {
   putOne,
   deleteOne,
 } from "../../api/boardApi";
+import { upload as uploadImages } from "../../api/boardImageApi";
 import { checkLiked, likeOne, unlikeOne } from "../../api/boardLikeApi";
 import useCustomLogin from "../../hooks/useCustomLogin";
 
 const HubPage = () => {
   const { loginState } = useCustomLogin();
+  const isAdmin = loginState.roleNames?.some((r) =>
+    ["ADMIN", "ROLE_ADMIN"].includes(r),
+  );
 
   const [posts, setPosts] = useState([]);
   const [bestPosts, setBestPosts] = useState([]);
@@ -72,20 +76,40 @@ const HubPage = () => {
   };
 
   const handleAdd = (formValues) => {
-    postAdd({ ...formValues, memberEmail: loginState.email })
-      .then(() => {
+    const { files, ...boardData } = formValues;
+
+    postAdd({ ...boardData, memberEmail: loginState.email })
+      .then((res) => {
         setModalOpen(false);
         setRefresh((r) => !r);
+
+        if (files && files.length > 0) {
+          uploadImages(res.boardId, files).catch((e) => {
+            console.error(e);
+            alert(
+              "글은 등록됐지만, 이미지/동영상 업로드에는 실패했어요. (BoardImage 백엔드가 적용/재시작 됐는지 확인해주세요)",
+            );
+          });
+        }
       })
       .catch((e) => console.error(e));
   };
 
   const handleEditSubmit = (formValues) => {
-    putOne({ ...editTarget, ...formValues })
+    const { files, ...boardData } = formValues;
+
+    putOne({ ...editTarget, ...boardData })
       .then(() => {
         setEditTarget(null);
         setDetailPost(null);
         setRefresh((r) => !r);
+
+        if (files && files.length > 0) {
+          uploadImages(editTarget.boardId, files).catch((e) => {
+            console.error(e);
+            alert("수정은 됐지만, 이미지/동영상 업로드에는 실패했어요.");
+          });
+        }
       })
       .catch((e) => console.error(e));
   };
@@ -211,6 +235,7 @@ const HubPage = () => {
         <DetailModal
           board={detailPost}
           isOwner={detailPost.memberEmail === loginState.email}
+          isAdmin={isAdmin}
           liked={liked}
           onToggleLike={handleToggleLike}
           onCommentCountChange={handleCommentCountChange}
