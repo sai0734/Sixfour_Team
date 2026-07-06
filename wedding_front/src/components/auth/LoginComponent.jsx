@@ -75,6 +75,12 @@ const LoginComponent = () => {
     });
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      handleClickLogin(e);
+    }
+  };
+
   return (
     <AuthLayout
       eyebrow="안전한 로그인"
@@ -107,6 +113,7 @@ const LoginComponent = () => {
               placeholder="example@email.com"
               value={loginParam.email}
               onChange={handleChange}
+              onKeyDown={handleKeyDown}
             ></input>
           </div>
 
@@ -119,6 +126,7 @@ const LoginComponent = () => {
               placeholder="비밀번호를 입력하세요"
               value={loginParam.pw}
               onChange={handleChange}
+              onKeyDown={handleKeyDown}
             ></input>
           </div>
 

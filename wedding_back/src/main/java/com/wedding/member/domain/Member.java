@@ -35,6 +35,7 @@ public class Member extends BaseTimeEntity {
   private boolean emailVerified = false;
 
   @ElementCollection(fetch = FetchType.LAZY)
+  @Enumerated(EnumType.STRING)
   @Builder.Default
   private List<MemberRole> memberRoleList = new ArrayList<>();
 
