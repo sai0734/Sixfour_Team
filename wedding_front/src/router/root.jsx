@@ -17,12 +17,14 @@ const AdminDashboard = lazy(() => import("../pages/admin/AdminDashboardPage"));
 const ChecklistListPage = lazy(() => import("../pages/checklist/ListPage"));
 const PrepHubPage = lazy(() => import("../pages/prep/HubPage"));
 const PrepPaymentPage = lazy(() => import("../pages/prep/PaymentPage"));
+const PrepDdayPage = lazy(() => import("../pages/prep/DdayPage"));
 const BudgetListPage = lazy(() => import("../pages/budget/ListPage"));
 const MyPageHub = lazy(() => import("../pages/mypage/HubPage"));
 const BoardHubPage = lazy(() => import("../pages/board/HubPage"));
 const FreeBoardPage = lazy(() => import("../pages/board/FreeBoardPage"));
 const ReviewBoardPage = lazy(() => import("../pages/board/ReviewBoardPage"));
 const SeniorMatchPage = lazy(() => import("../pages/board/SeniorMatchPage"));
+const FaqPage = lazy(() => import("../pages/board/FaqPage"));
 const CartPage = lazy(() => import("../pages/cart/CartPage"));
 const CheckoutPage = lazy(() => import("../pages/checkout/CheckoutPage"));
 const CheckoutSuccessPage = lazy(
@@ -167,6 +169,14 @@ const root = createBrowserRouter([
     ),
   },
   {
+    path: "/board/faq",
+    element: (
+      <Suspense fallback={Loading}>
+        <FaqPage />
+      </Suspense>
+    ),
+  },
+  {
     path: "/prep/hub",
     element: (
       <Suspense fallback={Loading}>
@@ -179,6 +189,14 @@ const root = createBrowserRouter([
     element: (
       <Suspense fallback={Loading}>
         <PrepPaymentPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/prep/dday",
+    element: (
+      <Suspense fallback={Loading}>
+        <PrepDdayPage />
       </Suspense>
     ),
   },

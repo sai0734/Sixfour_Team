@@ -4,7 +4,7 @@ const TABS = [
   { key: "ALL", label: "전체", to: "/board/list" },
   { key: "FREE", label: "자유게시판", to: "/board/free" },
   { key: "REVIEW", label: "후기게시판", to: "/board/review" },
-  { key: "FAQ", label: "자주 묻는 질문", to: null },
+  { key: "FAQ", label: "자주 묻는 질문", to: "/board/faq" },
   { key: "SENIOR", label: "선배 부부 매칭", to: "/board/senior" },
 ];
 
