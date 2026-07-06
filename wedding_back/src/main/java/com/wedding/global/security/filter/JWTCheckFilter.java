@@ -36,6 +36,7 @@ public class JWTCheckFilter extends OncePerRequestFilter{
         }
 
         String path = request.getRequestURI();
+        String method = request.getMethod();
 
         log.info("check uri......................."+path);
 
@@ -44,9 +45,30 @@ public class JWTCheckFilter extends OncePerRequestFilter{
         return true;
       }
 
-        // 이미지 조회 경로는 체크하지 않는다면
-        if(path.startsWith("/api/products/view/")){
-            return true;
+        // 이미지 조회 경로는 체크하지 않는다면 ()
+        if(method.equals("GET")) {
+
+            if(path.equals("/api/product/list")) return true;
+
+            if(path.startsWith("/api/product/view/")) return true;
+
+            if(path.startsWith("/api/product/")) {
+
+                String rest = path.substring("/api/product/".length());
+
+                // 슬래시 없이 pno만 있는 경우: /api/product/21
+                if(!rest.contains("/")) return true;
+
+                // pno/options 형태: /api/product/21/options
+                if(rest.endsWith("/options")) return true;
+
+                // pno/options/price 형태: /api/product/21/options/price
+                if(rest.endsWith("/options/price")) return true;
+
+                if(rest.endsWith("/reviews")) return true;
+
+                if(rest.endsWith("/qna")) return true;
+            }
         }
 
         if(path.startsWith("/api/companies/images/view/")){
@@ -106,6 +128,11 @@ public class JWTCheckFilter extends OncePerRequestFilter{
 
       log.error("JWT Check Error..............");
       log.error(e.getMessage());
+
+        // 수정: 토큰 검증 실패 시 401 상태코드를 명시적으로 지정
+        // (이게 없으면 기본값 200으로 응답이 나가서, 프론트 axios가 이 응답을
+        //  "정상 성공"으로 착각하고 {"error": "..."} 객체를 그대로 데이터로 써버림)
+      response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
       Gson gson = new Gson();
       String msg = gson.toJson(Map.of("error", "ERROR_ACCESS_TOKEN"));

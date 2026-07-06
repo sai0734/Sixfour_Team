@@ -22,6 +22,14 @@ const BoardHubPage = lazy(() => import("../pages/board/HubPage"));
 const FreeBoardPage = lazy(() => import("../pages/board/FreeBoardPage"));
 const ReviewBoardPage = lazy(() => import("../pages/board/ReviewBoardPage"));
 const SeniorMatchPage = lazy(() => import("../pages/board/SeniorMatchPage"));
+const CartPage = lazy(() => import("../pages/cart/CartPage"));
+const CheckoutPage = lazy(() => import("../pages/checkout/CheckoutPage"));
+const CheckoutSuccessPage = lazy(
+  () => import("../pages/checkout/CheckoutSuccessPage"),
+);
+const CheckoutFailPage = lazy(
+  () => import("../pages/checkout/CheckoutFailPage"),
+);
 
 const root = createBrowserRouter([
   {
@@ -162,6 +170,38 @@ const root = createBrowserRouter([
     element: (
       <Suspense fallback={Loading}>
         <PrepHubPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/cart",
+    element: (
+      <Suspense fallback={Loading}>
+        <CartPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/checkout",
+    element: (
+      <Suspense fallback={Loading}>
+        <CheckoutPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/checkout/success",
+    element: (
+      <Suspense fallback={Loading}>
+        <CheckoutSuccessPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/checkout/fail",
+    element: (
+      <Suspense fallback={Loading}>
+        <CheckoutFailPage />
       </Suspense>
     ),
   },

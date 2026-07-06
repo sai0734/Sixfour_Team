@@ -4,6 +4,7 @@ import com.wedding.global.dto.PageRequestDTO;
 import com.wedding.global.dto.PageResponseDTO;
 import com.wedding.global.util.CustomFileUtil;
 import com.wedding.product.dto.ProductDTO;
+import com.wedding.product.dto.ProductSearchDTO;
 import com.wedding.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -27,16 +28,16 @@ public class ProductController {
     private final ProductService productService;
     private final CustomFileUtil customFileUtil;
 
-    // 상품 전체 리스트 조회하기 (대표이미지 1개, 삭제안된 상품)
-    @GetMapping("/list")
-    public PageResponseDTO<ProductDTO> list(PageRequestDTO pageRequestDTO) {
-
-        log.info("ProductController_list 실행~~~~~~~~");
-
-        PageResponseDTO<ProductDTO> pageResponseDTO = productService.getProductList(pageRequestDTO);
-
-        return pageResponseDTO;
-    }
+//    // 상품 전체 리스트 조회하기 (대표이미지 1개, 삭제안된 상품)
+//    @GetMapping("/list")
+//    public PageResponseDTO<ProductDTO> list(PageRequestDTO pageRequestDTO) {
+//
+//        log.info("ProductController_list 실행~~~~~~~~");
+//
+//        PageResponseDTO<ProductDTO> pageResponseDTO = productService.getProductList(pageRequestDTO);
+//
+//        return pageResponseDTO;
+//    }
 
     // 상품 1개 조회하기
     @GetMapping("/{pno}")
@@ -136,6 +137,24 @@ public class ProductController {
         log.info("ProductController_viewFile 실행~~~~~~~~");
 
         return customFileUtil.getFile(fileName);
+    }
+
+    // 상품 전체 리스트 조회하기 (카테고리/가격/평점/검색어 필터 지원)
+    @GetMapping("/list")
+    public PageResponseDTO<ProductDTO> list(ProductSearchDTO productSearchDTO) {
+
+        log.info("ProductController_list 실행~~~~~~~~");
+
+        return productService.getProductList(productSearchDTO);
+    }
+
+    // 카테고리 목록 조회하기
+    @GetMapping("/categories")
+    public List<String> categories() {
+
+        log.info("ProductController_categories 실행~~~~~~~~");
+
+        return productService.getCategoryList();
     }
 
 }

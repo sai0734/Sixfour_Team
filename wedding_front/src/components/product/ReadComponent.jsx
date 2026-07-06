@@ -1,130 +1,365 @@
-import { useEffect, useState } from "react";
-import { getOne } from "../../api/productApi";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { getOne, getOptions } from "../../api/productApi";
+import { postAdd, deleteWish, isWished } from "../../api/wishApi";
 import { API_SERVER_HOST } from "../../api/reservationApi";
 import useCustomMove from "../../hooks/useCustomMove";
 import FetchingModal from "../common/FetchingModal";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import useCustomCart from "../../hooks/useCustomCart";
+import ProductGalleryComponent from "./ProductGalleryComponent";
+import ProductDetailInfoComponent from "./ProductDetailInfoComponent";
+import ReviewSectionComponent from "./ReviewSectionComponent";
+import QnaSectionComponent from "./QnaSectionComponent";
+import ShippingPolicyComponent from "./ShippingPolicyComponent";
+import RelatedProductsComponent from "./RelatedProductsComponent";
 
 const initState = {
   pno: 0,
   pname: "",
   pdesc: "",
   price: 0,
+  category: "",
   uploadFileNames: [],
 };
 
 const host = API_SERVER_HOST;
 
+const SECTIONS = [
+  { key: "desc", label: "상세정보" },
+  { key: "review", label: "리뷰" },
+  { key: "qna", label: "Q&A" },
+  { key: "shipping", label: "배송안내" },
+];
+
+const SCROLL_OFFSET = 90;
+
 const ReadComponent = ({ pno }) => {
   const [product, setProduct] = useState(initState);
+  const [options, setOptions] = useState([]);
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [qty, setQty] = useState(1);
+  const [activeSection, setActiveSection] = useState("desc");
 
-  //화면 이동용 함수
-  const { moveToList, moveToModify } = useCustomMove();
-
-  //fetching
+  const [wished, setWished] = useState(false);
   const [fetching, setFetching] = useState(false);
 
-  // 장바구니 기능
-  const { changeCart, cartItems } = useCustomCart();
-
-  // 로그인 정보
+  const { moveToList, moveToModify } = useCustomMove();
+  const { changeCart } = useCustomCart();
   const { loginState } = useCustomLogin();
+  const navigate = useNavigate();
 
-  const handleClickAddCart = () => {
-    let qty = 1;
+  const isAdmin = loginState.roleNames?.includes("ADMIN");
 
-    const addedItem = cartItems.filter((item) => item.pno === parseInt(pno))[0];
+  const sectionRefs = useRef({});
 
-    if (addedItem) {
-      if (
-        window.confirm("이미 추가된 상품입니다. 추가하시겠습니까? ") === false
-      ) {
-        return;
-      }
-      qty = addedItem.qty + 1;
-    }
-
-    changeCart({ email: loginState.email, pno: pno, qty: qty });
+  const loadProduct = () => {
+    return getOne(pno).then((data) => setProduct(data));
   };
 
   useEffect(() => {
     setFetching(true);
 
-    getOne(pno).then((data) => {
-      setProduct(data);
-      setFetching(false);
-    });
+    Promise.all([getOne(pno), getOptions(pno)]).then(
+      ([productData, optionData]) => {
+        setProduct(productData);
+        setOptions(optionData);
+        setFetching(false);
+      },
+    );
   }, [pno]);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    setActiveSection("desc");
+  }, [pno]);
+
+  useEffect(() => {
+    if (!loginState.email) return;
+
+    isWished(pno).then((data) => setWished(data.wished));
+  }, [pno, loginState.email]);
+
+  const totalPrice = useMemo(() => {
+    const extra = selectedOption ? selectedOption.extraPrice : 0;
+    return (product.price + extra) * qty;
+  }, [product.price, selectedOption, qty]);
+
+  const handleClickWish = () => {
+    if (!loginState.email) {
+      alert("로그인이 필요한 기능입니다.");
+      return;
+    }
+
+    const action = wished ? deleteWish(pno) : postAdd(pno);
+
+    action.then(() => setWished(!wished));
+  };
+
+  const handleClickAddCart = () => {
+    changeCart({
+      email: loginState.email,
+      pno: pno,
+      pono: selectedOption ? selectedOption.pono : null,
+      qty: qty,
+      pname: product.pname,
+      price: product.price,
+      imageFile: product.uploadFileNames?.[0],
+      optionName: selectedOption?.optionName ?? null,
+      optionValue: selectedOption?.optionValue ?? null,
+      extraPrice: selectedOption?.extraPrice ?? 0,
+    });
+
+    const goToCart = window.confirm(
+      "장바구니에 담았습니다. 장바구니로 이동하시겠습니까?",
+    );
+
+    if (goToCart) {
+      navigate("/cart");
+    }
+  };
+
+  // 바로 구매 - 장바구니를 거치지 않고 이 상품 하나만 결제 페이지로 전달
+  const handleClickBuyNow = () => {
+    if (!loginState.email) {
+      alert("로그인이 필요한 기능입니다.");
+      return;
+    }
+
+    const directItem = {
+      cino: null, // 장바구니 아이템이 아니므로 없음
+      pno: pno,
+      pono: selectedOption ? selectedOption.pono : null,
+      pname: product.pname,
+      price: product.price,
+      qty: qty,
+      imageFile: product.uploadFileNames?.[0],
+      optionName: selectedOption?.optionName ?? null,
+      optionValue: selectedOption?.optionValue ?? null,
+      extraPrice: selectedOption?.extraPrice ?? 0,
+    };
+
+    navigate("/checkout", { state: { directItem } });
+  };
+
+  const handleClickSection = (key) => {
+    setActiveSection(key);
+
+    const el = sectionRefs.current[key];
+    if (el) {
+      const top =
+        el.getBoundingClientRect().top + window.scrollY - SCROLL_OFFSET;
+      window.scrollTo({ top, behavior: "smooth" });
+    }
+  };
+
   return (
-    <div className="border-2 border-sky-200 mt-10 m-2 p-4">
+    <div className="bg-white">
       {fetching ? <FetchingModal /> : <></>}
 
-      <div className="flex justify-center mt-10">
-        <div className="relative mb-4 flex w-full flex-wrap items-stretch">
-          <div className="w-1/5 p-6 text-right font-bold">PNO</div>
-          <div className="w-4/5 p-6 rounded-r border border-solid shadow-md">
-            {product.pno}
+      <p className="max-w-[1140px] mx-auto px-6 pt-5 text-xs text-ink-faint">
+        답례품 쇼핑몰 {product.category ? `> ${product.category}` : ""} {" > "}
+        <span className="text-ink-soft">{product.pname}</span>
+      </p>
+
+      <div className="max-w-[1140px] mx-auto px-6 pt-5 grid grid-cols-[460px_1fr] gap-14">
+        <ProductGalleryComponent
+          pname={product.pname}
+          uploadFileNames={product.uploadFileNames}
+          host={host}
+        />
+
+        <div>
+          <p className="text-xs tracking-[0.15em] text-brand-accent mb-2.5">
+            {product.category}
+          </p>
+          <p className="font-serif text-2xl mb-1.5">{product.pname}</p>
+          <p className="text-xs text-ink-faint flex items-center gap-1 mb-3">
+            {"★".repeat(Math.round(product.ratingAvg || 0))}
+            <span className="text-line-soft">
+              {"★".repeat(5 - Math.round(product.ratingAvg || 0))}
+            </span>
+            {product.ratingAvg?.toFixed(1)} · 후기 {product.reviewCount}개
+          </p>
+          <p className="text-2xl font-medium mb-5">
+            {product.price?.toLocaleString()}원
+          </p>
+
+          {options.length > 0 && (
+            <div className="border-t border-line pt-4 mb-4">
+              <p className="text-xs text-ink-soft mb-2">포장 옵션</p>
+              <div className="flex gap-2 flex-wrap mb-4">
+                <span
+                  onClick={() => setSelectedOption(null)}
+                  className={`border rounded-full px-3.5 py-1.5 text-xs cursor-pointer ${
+                    selectedOption === null
+                      ? "border-brand text-brand-accent bg-brand-light"
+                      : "border-line-soft"
+                  }`}
+                >
+                  기본
+                </span>
+                {options.map((opt) => (
+                  <span
+                    key={opt.pono}
+                    onClick={() => setSelectedOption(opt)}
+                    className={`border rounded-full px-3.5 py-1.5 text-xs cursor-pointer ${
+                      selectedOption?.pono === opt.pono
+                        ? "border-brand text-brand-accent bg-brand-light"
+                        : "border-line-soft"
+                    }`}
+                  >
+                    {opt.optionValue}
+                    {opt.extraPrice > 0 &&
+                      ` +${opt.extraPrice.toLocaleString()}원`}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <p className="text-xs text-ink-soft mb-2">수량</p>
+          <div className="flex items-center gap-3.5 border border-line-soft rounded-full w-fit px-4 py-1.5 text-sm mb-5">
+            <button onClick={() => setQty((q) => Math.max(1, q - 1))}>−</button>
+            <span>{qty}</span>
+            <button onClick={() => setQty((q) => q + 1)}>+</button>
           </div>
-        </div>
-      </div>
-      <div className="flex justify-center">
-        <div className="relative mb-4 flex w-full flex-wrap items-stretch">
-          <div className="w-1/5 p-6 text-right font-bold">PNAME</div>
-          <div className="w-4/5 p-6 rounded-r border border-solid shadow-md">
-            {product.pname}
+
+          <div className="border-t border-line pt-4 mb-4 flex justify-between items-baseline">
+            <span className="text-sm text-ink-soft">총 상품금액</span>
+            <span className="text-xl font-medium">
+              {totalPrice.toLocaleString()}원
+            </span>
           </div>
-        </div>
-      </div>
-      <div className="flex justify-center">
-        <div className="relative mb-4 flex w-full flex-wrap items-stretch">
-          <div className="w-1/5 p-6 text-right font-bold">PRICE</div>
-          <div className="w-4/5 p-6 rounded-r border border-solid shadow-md">
-            {product.price}
+
+          <div className="flex gap-2.5">
+            <button
+              onClick={handleClickWish}
+              className="w-[46px] h-[46px] border border-line-soft rounded-full flex items-center justify-center"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                className="w-4.5 h-4.5"
+                fill={wished ? "#D4537E" : "none"}
+                stroke="#D4537E"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M19.5 12.572 12 20l-7.5-7.428a5 5 0 1 1 7.5-6.566 5 5 0 1 1 7.5 6.566Z" />
+              </svg>
+            </button>
+            <button
+              onClick={handleClickAddCart}
+              className="flex-1 h-[46px] rounded-full border border-line-soft text-sm font-medium"
+            >
+              장바구니 담기
+            </button>
+            {/* 수정: 알럿 대신 실제 바로구매 핸들러 연결 */}
+            <button
+              onClick={handleClickBuyNow}
+              className="flex-1 h-[46px] rounded-full bg-brand text-white text-sm font-medium"
+            >
+              바로 구매
+            </button>
           </div>
+
+          {isAdmin && (
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={() => moveToModify(pno)}
+                className="text-xs text-ink-faint underline"
+              >
+                상품 수정 (관리자)
+              </button>
+            </div>
+          )}
         </div>
-      </div>
-      <div className="flex justify-center">
-        <div className="relative mb-4 flex w-full flex-wrap items-stretch">
-          <div className="w-1/5 p-6 text-right font-bold">PDESC</div>
-          <div className="w-4/5 p-6 rounded-r border border-solid shadow-md">
-            {product.pdesc}
-          </div>
-        </div>
-      </div>
-      <div className="w-full justify-center flex  flex-col m-auto items-center">
-        {product.uploadFileNames.map((imgFile, i) => (
-          <img
-            alt="product"
-            key={i}
-            className="p-4 w-1/2"
-            src={`${host}/api/product/view/${imgFile}`}
-          />
-        ))}
       </div>
 
-      <div className="flex justify-end p-4">
-        <button
-          type="button"
-          className="inline-block rounded p-4 m-2 text-xl w-32  text-white bg-green-500"
-          onClick={handleClickAddCart}
+      <div className="sticky top-0 bg-white z-10 border-b border-line mt-14">
+        <div className="max-w-[1140px] mx-auto px-6 flex gap-7 text-sm">
+          {SECTIONS.map((sec) => (
+            <span
+              key={sec.key}
+              onClick={() => handleClickSection(sec.key)}
+              className={`py-3.5 cursor-pointer border-b-2 ${
+                activeSection === sec.key
+                  ? "text-ink font-medium border-brand"
+                  : "text-ink-faint border-transparent"
+              }`}
+            >
+              {sec.label}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="max-w-[1140px] mx-auto px-6">
+        <div
+          ref={(el) => (sectionRefs.current.desc = el)}
+          className="py-10 border-b border-line"
         >
-          Add Cart
-        </button>
-        <button
-          type="button"
-          className="inline-block rounded p-4 m-2 text-xl w-32  text-white bg-red-500"
-          onClick={() => moveToModify(pno)}
+          <p className="text-sm font-medium mb-4">상세정보</p>
+          <ProductDetailInfoComponent
+            pdesc={product.pdesc}
+            uploadFileNames={product.uploadFileNames}
+            host={host}
+          />
+        </div>
+
+        <div
+          ref={(el) => (sectionRefs.current.review = el)}
+          className="py-10 border-b border-line"
         >
-          Modify
-        </button>
+          <p className="text-sm font-medium mb-4">
+            리뷰 ({product.reviewCount || 0})
+          </p>
+          <ReviewSectionComponent
+            pno={pno}
+            host={host}
+            isLoggedIn={!!loginState.email}
+            isAdmin={isAdmin}
+            myEmail={loginState.email}
+            onStatsChange={loadProduct}
+          />
+        </div>
+
+        <div
+          ref={(el) => (sectionRefs.current.qna = el)}
+          className="py-10 border-b border-line"
+        >
+          <p className="text-sm font-medium mb-4">Q&A</p>
+          <QnaSectionComponent
+            pno={pno}
+            isLoggedIn={!!loginState.email}
+            isAdmin={isAdmin}
+            myEmail={loginState.email}
+          />
+        </div>
+
+        <div
+          ref={(el) => (sectionRefs.current.shipping = el)}
+          className="py-10 mb-10"
+        >
+          <p className="text-sm font-medium mb-4">배송안내</p>
+          <ShippingPolicyComponent />
+        </div>
+      </div>
+
+      <RelatedProductsComponent
+        currentPno={pno}
+        category={product.category}
+        host={host}
+        onClickProduct={(newPno) => navigate(`/product/read/${newPno}`)}
+      />
+
+      <div className="max-w-[1140px] mx-auto px-6 pb-16 flex justify-end">
         <button
-          type="button"
-          className="rounded p-4 m-2 text-xl w-32 text-white bg-blue-500"
           onClick={moveToList}
+          className="h-11 px-6 rounded-full border border-line-soft text-sm"
         >
-          List
+          목록으로
         </button>
       </div>
     </div>

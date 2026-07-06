@@ -1,0 +1,38 @@
+package com.wedding.checkout.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
+
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class OrderDTO {
+
+    private Long ono;
+
+    private String orderNumber;
+
+    private int totalPrice;
+
+    private int shippingFee;
+
+    private String receiverName;
+
+    private String receiverPhone;
+
+    private String zipcode;
+
+    private String address;
+
+    private String addressDetail;
+
+    private String orderStatus;
+
+    private List<OrderItemDTO> items;
+
+}

@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Long>{
@@ -26,5 +27,28 @@ public interface ProductRepository extends JpaRepository<Product, Long>{
   @Modifying(clearAutomatically = true)
   @Query("update Product p set p.delFlag = :flag where p.pno = :pno")
     void softDelete(@Param("pno") Long pno,  @Param("flag") boolean flag);
+
+  // 카테고리(다중) + 검색어 + 가격범위 + 평점으로 상품 리스트 조회하기
+  @Query("select p, pi from Product p left join p.imageList pi " +
+          "where p.delFlag = false " +
+          "and (pi.ord = 0 or pi is null) " +
+          "and (:categories is null or p.category in :categories) " +
+          "and (:keyword is null or :keyword = '' " +
+          "     or p.pname like concat('%', :keyword, '%') " +
+          "     or p.pdesc like concat('%', :keyword, '%')) " +
+          "and (:minPrice is null or p.price >= :minPrice) " +
+          "and (:maxPrice is null or p.price <= :maxPrice) " +
+          "and (:minRating is null or p.ratingAvg >= :minRating)")
+  Page<Object[]> searchProductList(@Param("categories") List<String> categories,
+                                   @Param("keyword") String keyword,
+                                   @Param("minPrice") Integer minPrice,
+                                   @Param("maxPrice") Integer maxPrice,
+                                   @Param("minRating") Double minRating,
+                                   Pageable pageable);
+
+  // 카테고리 목록 조회하기 (필터용, 중복 제거)
+  @Query("select distinct p.category from Product p " +
+          "where p.delFlag = false and p.category is not null order by p.category")
+  List<String> findDistinctCategories();
 
 }
