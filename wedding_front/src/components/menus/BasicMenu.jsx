@@ -31,6 +31,10 @@ const BasicMenu = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, [location.pathname]);
 
+  const isAdmin = loginState.roleNames?.some((roleName) =>
+    ["ADMIN", "ROLE_ADMIN"].includes(roleName),
+  );
+
   const isActive = (prefix) =>
     prefix === "/"
       ? location.pathname === "/"
@@ -96,17 +100,33 @@ const BasicMenu = () => {
             </Link>
 
             {!loginState.email ? (
-              <Link to="/auth/login" className="login">
-                로그인
-              </Link>
+              <>
+                <Link to="/auth/join" className="login">
+                  회원가입
+                </Link>
+                <Link to="/auth/login" className="btn-header">
+                  로그인
+                </Link>
+              </>
+            ) : isAdmin ? (
+              <>
+                <Link to="/admin" className="login">
+                  관리자페이지
+                </Link>
+                <Link to="/auth/logout" className="btn-header">
+                  로그아웃
+                </Link>
+              </>
             ) : (
-              <Link to="/auth/logout" className="login">
-                로그아웃
-              </Link>
+              <>
+                <Link to="/mypage" className="login">
+                  마이페이지
+                </Link>
+                <Link to="/auth/logout" className="btn-header">
+                  로그아웃
+                </Link>
+              </>
             )}
-            <Link to="/auth/login" className="btn-header">
-              시작하기
-            </Link>
           </div>
         </div>
       </header>
