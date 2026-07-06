@@ -1,9 +1,12 @@
+import { useEffect, useState } from "react";
 import { BOARD_TYPE_LABELS } from "./BoardFormModal";
 import CommentSection from "./CommentSection";
+import { listByBoard, fileUrl, isVideoFile } from "../../api/boardImageApi";
 
 const DetailModal = ({
   board,
   isOwner,
+  isAdmin,
   liked,
   onToggleLike,
   onCommentCountChange,
@@ -11,7 +14,17 @@ const DetailModal = ({
   onDelete,
   onClose,
 }) => {
+  const [images, setImages] = useState([]);
+
+  useEffect(() => {
+    if (!board) return;
+
+    listByBoard(board.boardId).then((data) => setImages(data));
+  }, [board?.boardId]);
+
   if (!board) return null;
+
+  const canHide = isOwner || isAdmin;
 
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
@@ -45,9 +58,31 @@ const DetailModal = ({
           <span>댓글 {board.commentCount}</span>
         </div>
 
-        <p className="text-sm text-ink whitespace-pre-wrap leading-relaxed mb-6">
+        <p className="text-sm text-ink whitespace-pre-wrap leading-relaxed mb-4">
           {board.content}
         </p>
+
+        {images.length > 0 && (
+          <div className="grid grid-cols-2 gap-2 mb-6">
+            {images.map((img) =>
+              isVideoFile(img.imageUrl) ? (
+                <video
+                  key={img.imageId}
+                  src={fileUrl(img.imageUrl)}
+                  controls
+                  className="w-full rounded-xl bg-black"
+                />
+              ) : (
+                <img
+                  key={img.imageId}
+                  src={fileUrl(img.imageUrl)}
+                  alt=""
+                  className="w-full rounded-xl object-cover"
+                />
+              ),
+            )}
+          </div>
+        )}
 
         {board.aiSummary && (
           <div className="bg-surface rounded-xl p-4 mb-6">
@@ -91,22 +126,22 @@ const DetailModal = ({
 
         <div className="flex justify-end gap-2 mt-4">
           {isOwner && (
-            <>
-              <button
-                type="button"
-                onClick={onEdit}
-                className="h-9 px-4 rounded-full border border-line-soft text-xs text-ink-soft hover:bg-cream"
-              >
-                수정
-              </button>
-              <button
-                type="button"
-                onClick={onDelete}
-                className="h-9 px-4 rounded-full border border-line-soft text-xs text-red-600 hover:bg-cream"
-              >
-                삭제
-              </button>
-            </>
+            <button
+              type="button"
+              onClick={onEdit}
+              className="h-9 px-4 rounded-full border border-line-soft text-xs text-ink-soft hover:bg-cream"
+            >
+              수정
+            </button>
+          )}
+          {canHide && (
+            <button
+              type="button"
+              onClick={onDelete}
+              className="h-9 px-4 rounded-full border border-line-soft text-xs text-red-600 hover:bg-cream"
+            >
+              {isOwner ? "삭제" : "숨김 처리"}
+            </button>
           )}
           <button
             type="button"
