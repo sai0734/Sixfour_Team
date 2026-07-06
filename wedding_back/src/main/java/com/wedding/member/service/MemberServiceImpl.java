@@ -59,7 +59,7 @@ public class MemberServiceImpl implements MemberService {
   private final SocialAccountRepository socialAccountRepository;
   private final MailService mailService;
   private final ObjectMapper objectMapper;
-    private final PasswordEncoder passwordEncoder;
+  private final PasswordEncoder passwordEncoder;
 
   @Override
   public MemberDTO getKakaoMember(String accessToken) {
@@ -70,7 +70,7 @@ public class MemberServiceImpl implements MemberService {
 
     log.info("email: " + email );
 
-Optional<Member> result = memberRepository.findById(email);
+    Optional<Member> result = memberRepository.findById(email);
 
     // 기존의 회원
     if(result.isPresent()){
@@ -125,12 +125,12 @@ Optional<Member> result = memberRepository.findById(email);
 
     UriComponents uriBuilder = UriComponentsBuilder.fromHttpUrl(kakaoGetUserURL).build();
 
-    ResponseEntity<LinkedHashMap> response = 
-      restTemplate.exchange(
-      uriBuilder.toString(), 
-      HttpMethod.GET, 
-      entity, 
-      LinkedHashMap.class);
+    ResponseEntity<LinkedHashMap> response =
+            restTemplate.exchange(
+                    uriBuilder.toString(),
+                    HttpMethod.GET,
+                    entity,
+                    LinkedHashMap.class);
 
     log.info(response);
 
@@ -149,7 +149,7 @@ Optional<Member> result = memberRepository.findById(email);
 
   }
 
-    private String makeTempPassword() {
+  private String makeTempPassword() {
 
     StringBuffer buffer = new StringBuffer();
 
@@ -159,33 +159,33 @@ Optional<Member> result = memberRepository.findById(email);
     return buffer.toString();
   }
 
-  
+
   private Member makeSocialMember(String email) {
 
-   String tempPassword = makeTempPassword();
+    String tempPassword = makeTempPassword();
 
-   log.info("tempPassword: " + tempPassword);
+    log.info("tempPassword: " + tempPassword);
 
-   // 닉네임 unique 제약이 있어서, 모두에게 "소셜회원"을 그대로 주면
-   // 두 번째 카카오 가입자부터 저장이 실패함 → 임시로 겹치지 않는 값을 붙여줌
-   // (추가정보 입력 화면에서 사용자가 원하는 닉네임으로 바로 바꾸게 됨)
-   String nickname = "소셜회원" + java.util.UUID.randomUUID().toString().substring(0, 8);
+    // 닉네임 unique 제약이 있어서, 모두에게 "소셜회원"을 그대로 주면
+    // 두 번째 카카오 가입자부터 저장이 실패함 → 임시로 겹치지 않는 값을 붙여줌
+    // (추가정보 입력 화면에서 사용자가 원하는 닉네임으로 바로 바꾸게 됨)
+    String nickname = "소셜회원" + java.util.UUID.randomUUID().toString().substring(0, 8);
 
-   Member member = Member.builder()
-   .email(email)
-   .pw(passwordEncoder.encode(tempPassword))
-   .nickname(nickname)
-   .social(true)
-   .build();
+    Member member = Member.builder()
+            .email(email)
+            .pw(passwordEncoder.encode(tempPassword))
+            .nickname(nickname)
+            .social(true)
+            .build();
 
-   member.addRole(MemberRole.USER);
+    member.addRole(MemberRole.USER);
 
-   return member;
+    return member;
 
   }
 
-  
-    @Override
+
+  @Override
   public void modifyMember(MemberModifyDTO memberModifyDTO) {
 
     Optional<Member> result = memberRepository.findById(memberModifyDTO.getEmail());
