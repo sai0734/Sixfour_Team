@@ -4,5 +4,7 @@ public enum MealType {
   KOREAN,
   WESTERN,
   BUFFET,
-  FUSION
+  FUSION,
+  COURSE,
+  BOTH
 }

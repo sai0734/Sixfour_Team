@@ -1,18 +1,16 @@
 package com.wedding.company.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wedding.company.dto.CompanyDTO;
 import com.wedding.company.dto.CompanyListDTO;
 import com.wedding.company.dto.CompanySearchDTO;
 import com.wedding.company.service.CompanyService;
 import com.wedding.global.dto.PageResponseDTO;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.core.io.ClassPathResource;
@@ -48,59 +46,40 @@ public class CompanyController {
         new ClassPathResource("data/company.json").getInputStream(),
         new TypeReference<List<Map<String, Object>>>() {});
 
-    companies.removeIf(company ->
-        "STUDIO".equals(company.get("category"))
-            && ((List<?>) company.getOrDefault("imageList", List.of())).isEmpty());
+    Map<Long, Map<String, Object>> hallByCmno = readDetailByCmno(objectMapper, "data/hall.json");
+    Map<Long, Map<String, Object>> dressByCmno = readDetailByCmno(objectMapper, "data/dress.json");
+    Map<Long, Map<String, Object>> makeupByCmno = readDetailByCmno(objectMapper, "data/makeup.json");
+    Map<Long, Map<String, Object>> studioByCmno = readDetailByCmno(objectMapper, "data/studio.json");
 
-    JsonNode studios = objectMapper.readTree(
-        new ClassPathResource("data/studio.json").getInputStream());
-
-    long nextCmno = companies.stream()
-        .map(company -> ((Number) company.get("cmno")).longValue())
-        .max(Long::compareTo)
-        .orElse(0L) + 1;
-
-    for (JsonNode studio : studios) {
-      companies.add(toCompanyDummy(studio, nextCmno++));
+    for (Map<String, Object> company : companies) {
+      Long cmno = ((Number) company.get("cmno")).longValue();
+      String category = (String) company.get("category");
+      if ("HALL".equals(category) && hallByCmno.containsKey(cmno)) {
+        company.put("hallDetail", hallByCmno.get(cmno));
+      }
+      if ("DRESS".equals(category) && dressByCmno.containsKey(cmno)) {
+        company.put("dressDetail", dressByCmno.get(cmno));
+      }
+      if ("MAKEUP".equals(category) && makeupByCmno.containsKey(cmno)) {
+        company.put("makeupDetail", makeupByCmno.get(cmno));
+      }
+      if ("STUDIO".equals(category) && studioByCmno.containsKey(cmno)) {
+        company.put("studioDetail", studioByCmno.get(cmno));
+      }
     }
 
     return companies;
   }
 
-  private Map<String, Object> toCompanyDummy(JsonNode studio, long cmno) {
-    Map<String, Object> company = new LinkedHashMap<>();
-    company.put("cmno", cmno);
-    company.put("category", "STUDIO");
-    company.put("name", studio.path("name").asText());
-    company.put("ceoName", studio.path("owner").asText("미확인"));
-    company.put("phone", studio.path("phone").asText());
-    company.put("address", studio.path("address").asText());
-    company.put("latitude", studio.path("lat").asDouble());
-    company.put("longitude", studio.path("lng").asDouble());
-    company.put("description", studio.path("description").asText());
-    company.put("priceAvg", parsePriceAvg(studio.path("priceRange").asText()));
-    company.put("delFlag", false);
-    company.put("imageList", toImageList(studio.path("uploadFileNames")));
-    return company;
-  }
+  private Map<Long, Map<String, Object>> readDetailByCmno(ObjectMapper objectMapper, String path) throws Exception {
+    List<Map<String, Object>> details = objectMapper.readValue(
+        new ClassPathResource(path).getInputStream(),
+        new TypeReference<List<Map<String, Object>>>() {});
 
-  private List<Map<String, Object>> toImageList(JsonNode uploadFileNames) {
-    List<Map<String, Object>> imageList = new ArrayList<>();
-    for (int i = 0; i < uploadFileNames.size(); i++) {
-      Map<String, Object> image = new LinkedHashMap<>();
-      image.put("fileName", uploadFileNames.get(i).asText());
-      image.put("ord", i);
-      imageList.add(image);
-    }
-    return imageList;
-  }
-
-  private BigDecimal parsePriceAvg(String priceRange) {
-    String number = priceRange.replaceAll("[^0-9].*", "");
-    if (number.isBlank()) {
-      return BigDecimal.ZERO;
-    }
-    return BigDecimal.valueOf(Long.parseLong(number) * 10000L);
+    return details.stream()
+        .collect(Collectors.toMap(
+            detail -> ((Number) detail.get("cmno")).longValue(),
+            Function.identity()));
   }
 
   @GetMapping("/{cmno}")

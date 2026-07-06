@@ -1,17 +1,232 @@
 [
-  {"cmno":31,"includesHairService":false,"includesMakeupService":false,"includesNailService":true,"hairPrice":null,"makeupPrice":null,"nailPrice":120000,"packages":[{"packageType":"NAIL","discountRate":0}]},
-  {"cmno":32,"includesHairService":false,"includesMakeupService":false,"includesNailService":true,"hairPrice":null,"makeupPrice":null,"nailPrice":130000,"packages":[{"packageType":"NAIL","discountRate":5}]},
-  {"cmno":33,"includesHairService":false,"includesMakeupService":false,"includesNailService":true,"hairPrice":null,"makeupPrice":null,"nailPrice":140000,"packages":[{"packageType":"NAIL","discountRate":5}]},
-  {"cmno":34,"includesHairService":false,"includesMakeupService":false,"includesNailService":true,"hairPrice":null,"makeupPrice":null,"nailPrice":110000,"packages":[{"packageType":"NAIL","discountRate":0}]},
-  {"cmno":35,"includesHairService":false,"includesMakeupService":false,"includesNailService":true,"hairPrice":null,"makeupPrice":null,"nailPrice":160000,"packages":[{"packageType":"NAIL","discountRate":10}]},
-  {"cmno":36,"includesHairService":false,"includesMakeupService":true,"includesNailService":false,"hairPrice":null,"makeupPrice":350000,"nailPrice":null,"packages":[{"packageType":"MAKEUP","discountRate":0}]},
-  {"cmno":37,"includesHairService":false,"includesMakeupService":true,"includesNailService":true,"hairPrice":null,"makeupPrice":450000,"nailPrice":80000,"packages":[{"packageType":"MAKEUP","discountRate":5},{"packageType":"FULL","discountRate":12}]},
-  {"cmno":38,"includesHairService":false,"includesMakeupService":true,"includesNailService":false,"hairPrice":null,"makeupPrice":300000,"nailPrice":null,"packages":[{"packageType":"MAKEUP","discountRate":0}]},
-  {"cmno":39,"includesHairService":false,"includesMakeupService":true,"includesNailService":false,"hairPrice":null,"makeupPrice":280000,"nailPrice":null,"packages":[{"packageType":"MAKEUP","discountRate":5}]},
-  {"cmno":40,"includesHairService":true,"includesMakeupService":true,"includesNailService":false,"hairPrice":120000,"makeupPrice":400000,"nailPrice":null,"packages":[{"packageType":"HAIR_MAKEUP","discountRate":10}]},
-  {"cmno":41,"includesHairService":true,"includesMakeupService":false,"includesNailService":false,"hairPrice":220000,"makeupPrice":null,"nailPrice":null,"packages":[{"packageType":"HAIR","discountRate":0}]},
-  {"cmno":42,"includesHairService":true,"includesMakeupService":false,"includesNailService":false,"hairPrice":240000,"makeupPrice":null,"nailPrice":null,"packages":[{"packageType":"HAIR","discountRate":5}]},
-  {"cmno":43,"includesHairService":true,"includesMakeupService":false,"includesNailService":false,"hairPrice":210000,"makeupPrice":null,"nailPrice":null,"packages":[{"packageType":"HAIR","discountRate":0}]},
-  {"cmno":44,"includesHairService":true,"includesMakeupService":true,"includesNailService":false,"hairPrice":260000,"makeupPrice":180000,"nailPrice":null,"packages":[{"packageType":"HAIR_MAKEUP","discountRate":8}]},
-  {"cmno":45,"includesHairService":true,"includesMakeupService":false,"includesNailService":false,"hairPrice":230000,"makeupPrice":null,"nailPrice":null,"packages":[{"packageType":"HAIR","discountRate":0}]}
+  {
+    "cmno": 31,
+    "includesHairService": true,
+    "includesMakeupService": true,
+    "includesNailService": true,
+    "hairPrice": 280000,
+    "makeupPrice": 320000,
+    "nailPrice": 150000,
+    "packages": [
+      {
+        "packageType": "TWO",
+        "discountRate": 0.08
+      },
+      {
+        "packageType": "THREE",
+        "discountRate": 0.12
+      }
+    ]
+  },
+  {
+    "cmno": 32,
+    "includesHairService": true,
+    "includesMakeupService": true,
+    "includesNailService": false,
+    "hairPrice": 260000,
+    "makeupPrice": 300000,
+    "nailPrice": null,
+    "packages": [
+      {
+        "packageType": "TWO",
+        "discountRate": 0.08
+      }
+    ]
+  },
+  {
+    "cmno": 33,
+    "includesHairService": true,
+    "includesMakeupService": true,
+    "includesNailService": true,
+    "hairPrice": 300000,
+    "makeupPrice": 350000,
+    "nailPrice": 160000,
+    "packages": [
+      {
+        "packageType": "TWO",
+        "discountRate": 0.08
+      },
+      {
+        "packageType": "THREE",
+        "discountRate": 0.12
+      }
+    ]
+  },
+  {
+    "cmno": 34,
+    "includesHairService": false,
+    "includesMakeupService": true,
+    "includesNailService": false,
+    "hairPrice": null,
+    "makeupPrice": 280000,
+    "nailPrice": null,
+    "packages": []
+  },
+  {
+    "cmno": 35,
+    "includesHairService": true,
+    "includesMakeupService": true,
+    "includesNailService": true,
+    "hairPrice": 270000,
+    "makeupPrice": 310000,
+    "nailPrice": 140000,
+    "packages": [
+      {
+        "packageType": "TWO",
+        "discountRate": 0.08
+      },
+      {
+        "packageType": "THREE",
+        "discountRate": 0.12
+      }
+    ]
+  },
+  {
+    "cmno": 36,
+    "includesHairService": true,
+    "includesMakeupService": false,
+    "includesNailService": false,
+    "hairPrice": 290000,
+    "makeupPrice": null,
+    "nailPrice": null,
+    "packages": []
+  },
+  {
+    "cmno": 37,
+    "includesHairService": false,
+    "includesMakeupService": true,
+    "includesNailService": true,
+    "hairPrice": null,
+    "makeupPrice": 290000,
+    "nailPrice": 125000,
+    "packages": [
+      {
+        "packageType": "TWO",
+        "discountRate": 0.08
+      }
+    ]
+  },
+  {
+    "cmno": 38,
+    "includesHairService": true,
+    "includesMakeupService": true,
+    "includesNailService": true,
+    "hairPrice": 220000,
+    "makeupPrice": 260000,
+    "nailPrice": 110000,
+    "packages": [
+      {
+        "packageType": "TWO",
+        "discountRate": 0.08
+      },
+      {
+        "packageType": "THREE",
+        "discountRate": 0.12
+      }
+    ]
+  },
+  {
+    "cmno": 39,
+    "includesHairService": false,
+    "includesMakeupService": false,
+    "includesNailService": true,
+    "hairPrice": null,
+    "makeupPrice": null,
+    "nailPrice": 135000,
+    "packages": []
+  },
+  {
+    "cmno": 40,
+    "includesHairService": true,
+    "includesMakeupService": true,
+    "includesNailService": true,
+    "hairPrice": 310000,
+    "makeupPrice": 360000,
+    "nailPrice": 165000,
+    "packages": [
+      {
+        "packageType": "TWO",
+        "discountRate": 0.08
+      },
+      {
+        "packageType": "THREE",
+        "discountRate": 0.12
+      }
+    ]
+  },
+  {
+    "cmno": 41,
+    "includesHairService": null,
+    "includesMakeupService": null,
+    "includesNailService": null,
+    "hairPrice": null,
+    "makeupPrice": null,
+    "nailPrice": null,
+    "packages": [
+      {
+        "packageType": "HAIR",
+        "discountRate": 0
+      }
+    ]
+  },
+  {
+    "cmno": 42,
+    "includesHairService": null,
+    "includesMakeupService": null,
+    "includesNailService": null,
+    "hairPrice": null,
+    "makeupPrice": null,
+    "nailPrice": null,
+    "packages": [
+      {
+        "packageType": "HAIR",
+        "discountRate": 0.05
+      }
+    ]
+  },
+  {
+    "cmno": 43,
+    "includesHairService": null,
+    "includesMakeupService": null,
+    "includesNailService": null,
+    "hairPrice": null,
+    "makeupPrice": null,
+    "nailPrice": null,
+    "packages": [
+      {
+        "packageType": "HAIR",
+        "discountRate": 0
+      }
+    ]
+  },
+  {
+    "cmno": 44,
+    "includesHairService": null,
+    "includesMakeupService": null,
+    "includesNailService": null,
+    "hairPrice": null,
+    "makeupPrice": null,
+    "nailPrice": null,
+    "packages": [
+      {
+        "packageType": "HAIR_MAKEUP",
+        "discountRate": 0.08
+      }
+    ]
+  },
+  {
+    "cmno": 45,
+    "includesHairService": null,
+    "includesMakeupService": null,
+    "includesNailService": null,
+    "hairPrice": null,
+    "makeupPrice": null,
+    "nailPrice": null,
+    "packages": [
+      {
+        "packageType": "HAIR",
+        "discountRate": 0
+      }
+    ]
+  }
 ]
