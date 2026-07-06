@@ -3,6 +3,7 @@ package com.wedding.member.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 import com.wedding.global.domain.BaseTimeEntity;
@@ -37,13 +38,22 @@ public class Member extends BaseTimeEntity {
   @Builder.Default
   private List<MemberRole> memberRoleList = new ArrayList<>();
 
+
+  private String suspendReason;
+
+
+  private LocalDateTime suspendUntil;
+
+
+  private LocalDateTime lastLoginAt;
+
   public void addRole(MemberRole memberRole){
 
-      memberRoleList.add(memberRole);
+    memberRoleList.add(memberRole);
   }
 
   public void clearRole(){
-      memberRoleList.clear();
+    memberRoleList.clear();
   }
 
   public void changeNickname(String nickname) {
@@ -64,6 +74,31 @@ public class Member extends BaseTimeEntity {
 
   public void verifyEmail() {
     this.emailVerified = true;
+  }
+
+
+  public void suspend(String reason, LocalDateTime until) {
+    this.status = "BLACKLIST";
+    this.suspendReason = reason;
+    this.suspendUntil = until;
+  }
+
+
+  public void reactivate() {
+    this.status = "ACTIVE";
+    this.suspendReason = null;
+    this.suspendUntil = null;
+  }
+
+
+  public void markDormant() {
+    this.status = "DORMANT";
+    this.suspendReason = null;
+    this.suspendUntil = null;
+  }
+
+  public void touchLogin() {
+    this.lastLoginAt = LocalDateTime.now();
   }
 
 }
