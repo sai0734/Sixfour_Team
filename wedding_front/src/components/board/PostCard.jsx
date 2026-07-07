@@ -27,7 +27,7 @@ const PostCard = ({ post, onClick, showTypeBadge = false }) => {
       <p className="text-sm font-medium text-ink mb-2">{post.title}</p>
 
       <div className="flex items-center justify-between text-xs text-ink-faint">
-        <span>{post.memberEmail}</span>
+        <span>{post.nickname || post.memberEmail}</span>
         <div className="flex items-center gap-3">
           <span>♡ {post.likeCount}</span>
           <span>💬 {post.commentCount}</span>

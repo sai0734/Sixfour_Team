@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { BOARD_TYPE_LABELS } from "./BoardFormModal";
 import CommentSection from "./CommentSection";
 import { listByBoard, fileUrl, isVideoFile } from "../../api/boardImageApi";
+import useCustomLogin from "../../hooks/useCustomLogin";
+import { saveViewedBoard } from "../../util/boardViewHistory";
 
 const DetailModal = ({
   board,
@@ -14,13 +16,15 @@ const DetailModal = ({
   onDelete,
   onClose,
 }) => {
+  const { loginState } = useCustomLogin();
   const [images, setImages] = useState([]);
 
   useEffect(() => {
-    if (!board) return;
+    if (!board?.boardId) return;
 
+    saveViewedBoard(board.boardId, loginState.email);
     listByBoard(board.boardId).then((data) => setImages(data));
-  }, [board?.boardId]);
+  }, [board?.boardId, loginState.email]);
 
   if (!board) return null;
 
@@ -49,7 +53,7 @@ const DetailModal = ({
         <p className="text-lg font-medium text-ink mb-2">{board.title}</p>
 
         <div className="flex items-center gap-3 text-xs text-ink-faint mb-5">
-          <span>{board.memberEmail}</span>
+          <span>{board.nickname || board.memberEmail}</span>
           <span>·</span>
           <span>{board.regDate}</span>
           <span>·</span>

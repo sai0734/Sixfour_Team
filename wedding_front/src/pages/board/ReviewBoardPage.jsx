@@ -116,7 +116,11 @@ const ReviewBoardPage = () => {
   const handleAdd = (formValues) => {
     const { files, ...boardData } = formValues;
 
-    postAdd({ ...boardData, memberEmail: loginState.email })
+    postAdd({
+      ...boardData,
+      memberEmail: loginState.email,
+      nickname: loginState.nickname,
+    })
       .then((res) => {
         setModalOpen(false);
         setRefresh((r) => !r);
