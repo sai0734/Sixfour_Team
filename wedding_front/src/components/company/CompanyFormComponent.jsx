@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { getCompanyImageUrl, getOne, postAdd, putOne, uploadCompanyImages } from "../../api/companyApi";
 import FetchingModal from "../common/FetchingModal";
 import ResultModal from "../common/ResultModal";
@@ -34,7 +34,12 @@ const CompanyFormComponent = ({ mode = "add" }) => {
   const [previews, setPreviews] = useState([]);
   const uploadRef = useRef();
   const navigate = useNavigate();
+  const location = useLocation();
   const { exceptionHandle } = useCustomLogin();
+  // 관리자 경로에서 등록/수정한 뒤에는 관리자용 업체 경로로 돌아갑니다.
+  const companyPathPrefix = location.pathname.startsWith("/admin/companies")
+    ? "/admin/companies"
+    : "/companies";
 
   useEffect(() => {
     if (!isModify) {
@@ -131,7 +136,11 @@ const CompanyFormComponent = ({ mode = "add" }) => {
   const closeModal = () => {
     const targetCmno = result || cmno;
     setResult(null);
-    navigate({ pathname: isModify ? `/companies/read/${targetCmno}` : "/companies/list" });
+    navigate({
+      pathname: isModify
+        ? `${companyPathPrefix}/read/${targetCmno}`
+        : `${companyPathPrefix}/list`,
+    });
   };
 
   return (
@@ -149,7 +158,13 @@ const CompanyFormComponent = ({ mode = "add" }) => {
         <button
           type="button"
           className="flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 text-slate-600 hover:bg-slate-50"
-          onClick={() => navigate({ pathname: isModify ? `/companies/read/${cmno}` : "/companies/list" })}
+          onClick={() =>
+            navigate({
+              pathname: isModify
+                ? `${companyPathPrefix}/read/${cmno}`
+                : `${companyPathPrefix}/list`,
+            })
+          }
           title="뒤로"
         >
           {"<"}
@@ -257,7 +272,17 @@ const CompanyFormComponent = ({ mode = "add" }) => {
       </FormSection>
 
       <div className="mt-5 flex items-center justify-between border-t border-slate-200 pt-5">
-        <button className="rounded-md border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50" type="button" onClick={() => navigate({ pathname: isModify ? `/companies/read/${cmno}` : "/companies/list" })}>
+        <button
+          className="rounded-md border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+          type="button"
+          onClick={() =>
+            navigate({
+              pathname: isModify
+                ? `${companyPathPrefix}/read/${cmno}`
+                : `${companyPathPrefix}/list`,
+            })
+          }
+        >
           취소
         </button>
         <button className="rounded-md bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700" type="button" onClick={handleSubmit}>

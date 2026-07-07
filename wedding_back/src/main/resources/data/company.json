@@ -13,11 +13,11 @@
         "delFlag":  false,
         "imageList":  [
                           {
-                              "fileName":  "드레스_01_라벤더드레스_01_01.jpg",
+                              "fileName":  "dress_1_1.jpg",
                               "ord":  0
                           },
                           {
-                              "fileName":  "드레스_01_라벤더드레스_01_02.jpg",
+                              "fileName":  "dress_1_2.jpg",
                               "ord":  1
                           }
                       ]
@@ -36,11 +36,11 @@
         "delFlag":  false,
         "imageList":  [
                           {
-                              "fileName":  "드레스_02_릴리스 드레스룸_02_01.jpg",
+                              "fileName":  "dress_2_1.jpg",
                               "ord":  0
                           },
                           {
-                              "fileName":  "드레스_02_릴리스 드레스룸_02_02.jpg",
+                              "fileName":  "dress_2_2.jpg",
                               "ord":  1
                           }
                       ]
@@ -59,11 +59,11 @@
         "delFlag":  false,
         "imageList":  [
                           {
-                              "fileName":  "드레스_03_오엘르 브라이덜_03_01.jpg",
+                              "fileName":  "dress_3_1.jpg",
                               "ord":  0
                           },
                           {
-                              "fileName":  "드레스_03_오엘르 브라이덜_03_02.jpg",
+                              "fileName":  "dress_3_2.jpg",
                               "ord":  1
                           }
                       ]
@@ -82,11 +82,11 @@
         "delFlag":  false,
         "imageList":  [
                           {
-                              "fileName":  "드레스_04_베일로즈_04_01.jpg",
+                              "fileName":  "dress_4_1.jpg",
                               "ord":  0
                           },
                           {
-                              "fileName":  "드레스_04_베일로즈_04_02.jpg",
+                              "fileName":  "dress_4_2.jpg",
                               "ord":  1
                           }
                       ]
@@ -105,11 +105,11 @@
         "delFlag":  false,
         "imageList":  [
                           {
-                              "fileName":  "드레스_05_마리에 브라이드_05_01.jpg",
+                              "fileName":  "dress_5_1.jpg",
                               "ord":  0
                           },
                           {
-                              "fileName":  "드레스_05_마리에 브라이드_05_02.jpg",
+                              "fileName":  "dress_5_2.jpg",
                               "ord":  1
                           }
                       ]
@@ -128,11 +128,11 @@
         "delFlag":  false,
         "imageList":  [
                           {
-                              "fileName":  "드레스_06_벨퐁 아틀리에_06_01.jpg",
+                              "fileName":  "dress_6_1.jpg",
                               "ord":  0
                           },
                           {
-                              "fileName":  "드레스_06_벨퐁 아틀리에_06_02.jpg",
+                              "fileName":  "dress_6_2.jpg",
                               "ord":  1
                           }
                       ]
@@ -151,11 +151,11 @@
         "delFlag":  false,
         "imageList":  [
                           {
-                              "fileName":  "드레스_07_끄레마 드레스_07_01.jpg",
+                              "fileName":  "dress_7_1.jpg",
                               "ord":  0
                           },
                           {
-                              "fileName":  "드레스_07_끄레마 드레스_07_02.jpg",
+                              "fileName":  "dress_7_2.jpg",
                               "ord":  1
                           }
                       ]
@@ -174,11 +174,11 @@
         "delFlag":  false,
         "imageList":  [
                           {
-                              "fileName":  "드레스_08_위시브라이드_08_01.jpg",
+                              "fileName":  "dress_8_1.jpg",
                               "ord":  0
                           },
                           {
-                              "fileName":  "드레스_08_위시브라이드_08_02.jpg",
+                              "fileName":  "dress_8_2.jpg",
                               "ord":  1
                           }
                       ]
@@ -197,11 +197,11 @@
         "delFlag":  false,
         "imageList":  [
                           {
-                              "fileName":  "드레스_09_모니크 브라이덜_09_01.jpg",
+                              "fileName":  "dress_9_1.jpg",
                               "ord":  0
                           },
                           {
-                              "fileName":  "드레스_09_모니크 브라이덜_09_02.jpg",
+                              "fileName":  "dress_9_2.jpg",
                               "ord":  1
                           }
                       ]
@@ -220,11 +220,11 @@
         "delFlag":  false,
         "imageList":  [
                           {
-                              "fileName":  "드레스_10_에브와르 청담_10_01.jpg",
+                              "fileName":  "dress_10_1.jpg",
                               "ord":  0
                           },
                           {
-                              "fileName":  "드레스_10_에브와르 청담_10_02.jpg",
+                              "fileName":  "dress_10_2.jpg",
                               "ord":  1
                           }
                       ]
