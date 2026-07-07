@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+// MAIN EDIT: read login role to choose company list route.
+import { useSelector } from "react-redux";
 import BasicMenu from "../components/menus/BasicMenu";
 
 const heroSlides = [
@@ -40,6 +42,13 @@ const heroSlides = [
 const MainPage = () => {
   const [activeSlide, setActiveSlide] = useState(0);
   const currentSlide = heroSlides[activeSlide];
+  // MAIN EDIT: admins use /admin/companies/list, normal users use /companies/list.
+  const loginState = useSelector((state) => state.loginSlice);
+  const isAdmin = loginState.roleNames?.some((roleName) =>
+    ["ADMIN", "ROLE_ADMIN"].includes(roleName),
+  );
+  // 관리자 계정은 업체 둘러보기 버튼에서 관리자용 업체 관리 경로로 이동합니다.
+  const companyListPath = isAdmin ? "/admin/companies/list" : "/companies/list";
 
   useEffect(() => {
     const delay = activeSlide === 0 ? 5000 : 3000;
@@ -298,15 +307,15 @@ const MainPage = () => {
           답례품 준비까지 결혼을 준비하는 모든 과정을 하나로 모았습니다
         </p>
         <div className="about-buttons">
-          <a href="#" className="btn btn-outline">
+          {/* MAIN EDIT: company browse button follows companyListPath. */}
+          <Link to={companyListPath} className="btn btn-outline">
             업체 둘러보기
-          </a>
+          </Link>
           <a href="#" className="btn btn-brand">
             지금 시작하기
           </a>
         </div>
       </section>
-
       <section className="trust-section">
         <div className="trust-inner">
           <div className="stats-grid">
