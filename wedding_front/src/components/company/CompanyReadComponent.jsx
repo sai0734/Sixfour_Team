@@ -1,5 +1,5 @@
 ﻿import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { deleteOne, getCompanyImageUrl, getOne } from "../../api/companyApi";
 import FetchingModal from "../common/FetchingModal";
@@ -71,10 +71,15 @@ const CompanyReadComponent = () => {
   const [fetching, setFetching] = useState(false);
   const { exceptionHandle } = useCustomLogin();
   const navigate = useNavigate();
+  const location = useLocation();
   const loginState = useSelector((state) => state.loginSlice);
   const canManageCompany = loginState.roleNames?.some((roleName) =>
     adminRoles.includes(roleName),
   );
+  // 관리자 경로에서 상세로 들어온 경우 목록/수정 이동도 관리자 경로로 유지합니다.
+  const companyPathPrefix = location.pathname.startsWith("/admin/companies")
+    ? "/admin/companies"
+    : "/companies";
 
   useEffect(() => {
     setFetching(true);
@@ -97,7 +102,7 @@ const CompanyReadComponent = () => {
     try {
       setFetching(true);
       await deleteOne(cmno);
-      navigate({ pathname: "/companies/list" });
+      navigate({ pathname: `${companyPathPrefix}/list` });
     } catch (err) {
       exceptionHandle(err);
     } finally {
@@ -119,8 +124,10 @@ const CompanyReadComponent = () => {
     STUDIO: "h-40 w-50",
   };
 
-  const getDetailImageClass = (category) => detailImageClassByCategory[category] || "h-80 w-full";
-  const getThumbnailImageClass = (category) => thumbnailImageClassByCategory[category] || "h-28 w-full";
+  const getDetailImageClass = (category) =>
+    detailImageClassByCategory[category] || "h-80 w-full";
+  const getThumbnailImageClass = (category) =>
+    thumbnailImageClassByCategory[category] || "h-28 w-full";
 
   return (
     <section className="mx-auto max-w-5xl p-4 text-slate-800">
@@ -131,7 +138,7 @@ const CompanyReadComponent = () => {
           <button
             className="mb-3 rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
             type="button"
-            onClick={() => navigate({ pathname: "/companies/list" })}
+            onClick={() => navigate({ pathname: `${companyPathPrefix}/list` })}
           >
             목록으로
           </button>
@@ -149,7 +156,11 @@ const CompanyReadComponent = () => {
               <button
                 className="rounded-md border border-blue-200 px-3 py-2 text-sm text-blue-700 hover:bg-blue-50"
                 type="button"
-                onClick={() => navigate({ pathname: `/companies/modify/${company.cmno}` })}
+                onClick={() =>
+                  navigate({
+                    pathname: `${companyPathPrefix}/modify/${company.cmno}`,
+                  })
+                }
               >
                 수정
               </button>
@@ -195,7 +206,14 @@ const CompanyReadComponent = () => {
           <InfoRow label="대표자" value={company.ceoName || "-"} />
           <InfoRow label="연락처" value={company.phone || "-"} />
           <InfoRow label="주소" value={company.address || "-"} />
-          <InfoRow label="평균 가격" value={company.priceAvg ? `${Number(company.priceAvg).toLocaleString()}원` : "-"} />
+          <InfoRow
+            label="평균 가격"
+            value={
+              company.priceAvg
+                ? `${Number(company.priceAvg).toLocaleString()}원`
+                : "-"
+            }
+          />
           <InfoRow label="위도" value={company.latitude ?? "-"} />
           <InfoRow label="경도" value={company.longitude ?? "-"} />
         </div>
@@ -236,7 +254,10 @@ const MakeupDetail = ({ detail }) => {
     <DetailSection title="메이크업 상세">
       <div className="grid gap-3 sm:grid-cols-3">
         <InfoRow label="헤어 가격" value={formatPrice(detail.hairPrice)} />
-        <InfoRow label="메이크업 가격" value={formatPrice(detail.makeupPrice)} />
+        <InfoRow
+          label="메이크업 가격"
+          value={formatPrice(detail.makeupPrice)}
+        />
         <InfoRow label="네일 가격" value={formatPrice(detail.nailPrice)} />
       </div>
       {packages.length > 0 ? (
@@ -244,7 +265,9 @@ const MakeupDetail = ({ detail }) => {
           {packages.map((pkg, index) => (
             <InfoRow
               key={`${pkg.packageType || "PACKAGE"}-${index}`}
-              label={packageTypeLabel[pkg.packageType] || pkg.packageType || "패키지"}
+              label={
+                packageTypeLabel[pkg.packageType] || pkg.packageType || "패키지"
+              }
               value={formatDiscountRate(pkg.discountRate)}
             />
           ))}
@@ -261,14 +284,28 @@ const DressDetail = ({ detail }) => {
     <DetailSection title="보유 드레스">
       <InfoRow label="보유 사이즈" value={detail.sizeRange || "-"} />
       <div className="mt-4 grid gap-3 md:grid-cols-2">
-        {items.slice(0, 12).map((item, index) => (
-          <ItemCard key={`${item.itemName}-${index}`} title={item.itemName}>
-            <InfoLine label="가격" value={formatPrice(item.price)} />
-            <InfoLine label="타입" value={dressTypeLabel[item.itemType] || item.itemType || "-"} />
-            <InfoLine label="사이즈" value={item.sizeRange || "-"} />
-            <InfoLine label="태그" value={item.styleTags || "-"} />
-          </ItemCard>
-        ))}
+        {items.slice(0, 12).map((item, index) => {
+          const imageSrc = item.imageUrl ? getCompanyImageUrl(item.imageUrl) : null;
+          return (
+            <ItemCard key={`${item.itemName}-${index}`} title={item.itemName}>
+              {imageSrc && (
+                <img
+                  src={imageSrc}
+                  alt={item.itemName}
+                  className="mb-3 h-56 w-full rounded-md object-contain"
+                />
+              )}
+
+              <InfoLine label="가격" value={formatPrice(item.price)} />
+              <InfoLine
+                label="타입"
+                value={dressTypeLabel[item.itemType] || item.itemType || "-"}
+              />
+              <InfoLine label="사이즈" value={item.sizeRange || "-"} />
+              <InfoLine label="태그" value={item.styleTags || "-"} />
+            </ItemCard>
+          );
+        })}
       </div>
     </DetailSection>
   );
@@ -281,14 +318,27 @@ const HallDetail = ({ detail }) => {
     <DetailSection title="웨딩홀 상세">
       <div className="grid gap-3 sm:grid-cols-2">
         <InfoRow label="홀명" value={detail.hallName || "-"} />
-        <InfoRow label="홀 유형" value={hallTypeLabel[detail.hallType] || detail.hallType || "-"} />
+        <InfoRow
+          label="홀 유형"
+          value={hallTypeLabel[detail.hallType] || detail.hallType || "-"}
+        />
       </div>
       <div className="mt-4 grid gap-3 md:grid-cols-2">
         {items.map((item, index) => (
           <ItemCard key={`${item.itemName}-${index}`} title={item.itemName}>
             <InfoLine label="가격" value={formatPrice(item.price)} />
-            <InfoLine label="수용 인원" value={item.capacity ? `${Number(item.capacity).toLocaleString()}명` : "-"} />
-            <InfoLine label="식사 유형" value={mealTypeLabel[item.mealType] || item.mealType || "-"} />
+            <InfoLine
+              label="수용 인원"
+              value={
+                item.capacity
+                  ? `${Number(item.capacity).toLocaleString()}명`
+                  : "-"
+              }
+            />
+            <InfoLine
+              label="식사 유형"
+              value={mealTypeLabel[item.mealType] || item.mealType || "-"}
+            />
           </ItemCard>
         ))}
       </div>
@@ -298,11 +348,15 @@ const HallDetail = ({ detail }) => {
 
 const StudioDetail = ({ detail }) => {
   if (!detail) return null;
-  const tags = Array.isArray(detail.themeTags) ? detail.themeTags.join(", ") : detail.themeTags;
+  const tags = Array.isArray(detail.themeTags)
+    ? detail.themeTags.join(", ")
+    : detail.themeTags;
   return (
     <DetailSection title="스튜디오 상세">
       <InfoRow label="테마" value={tags || detail.theme || "-"} />
-      {detail.priceRange ? <InfoRow label="가격대" value={detail.priceRange} /> : null}
+      {detail.priceRange ? (
+        <InfoRow label="가격대" value={detail.priceRange} />
+      ) : null}
       {detail.rating ? <InfoRow label="평점" value={detail.rating} /> : null}
     </DetailSection>
   );
@@ -317,7 +371,9 @@ const DetailSection = ({ title, children }) => (
 
 const ItemCard = ({ title, children }) => (
   <div className="rounded-md border border-slate-100 p-4">
-    <div className="mb-2 text-sm font-semibold text-slate-800">{title || "항목"}</div>
+    <div className="mb-2 text-sm font-semibold text-slate-800">
+      {title || "항목"}
+    </div>
     <div className="space-y-1">{children}</div>
   </div>
 );

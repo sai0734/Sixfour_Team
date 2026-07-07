@@ -43,6 +43,12 @@ const AdminOrderListPage = lazy(
 const AdminOrderDetailPage = lazy(
   () => import("../pages/admin/AdminOrderDetailPage"),
 );
+const CompanyListPage = lazy(() => import("../pages/company/CompanyListPage"));
+const CompanyAddPage = lazy(() => import("../pages/company/CompanyAddPage"));
+const CompanyModifyPage = lazy(
+  () => import("../pages/company/CompanyModifyPage"),
+);
+const CompanyReadPage = lazy(() => import("../pages/company/CompanyReadPage"));
 
 const root = createBrowserRouter([
   {
@@ -138,6 +144,50 @@ const root = createBrowserRouter([
       <AdminOnly>
         <Suspense fallback={Loading}>
           <AdminOrderDetailPage />
+        </Suspense>
+      </AdminOnly>
+    ),
+  },
+  {
+    path: "admin/companies",
+    element: <Navigate replace to="/admin/companies/list" />,
+  },
+  {
+    path: "admin/companies/list",
+    element: (
+      <AdminOnly>
+        <Suspense fallback={Loading}>
+          <CompanyListPage />
+        </Suspense>
+      </AdminOnly>
+    ),
+  },
+  {
+    path: "admin/companies/add",
+    element: (
+      <AdminOnly>
+        <Suspense fallback={Loading}>
+          <CompanyAddPage />
+        </Suspense>
+      </AdminOnly>
+    ),
+  },
+  {
+    path: "admin/companies/modify/:cmno",
+    element: (
+      <AdminOnly>
+        <Suspense fallback={Loading}>
+          <CompanyModifyPage />
+        </Suspense>
+      </AdminOnly>
+    ),
+  },
+  {
+    path: "admin/companies/read/:cmno",
+    element: (
+      <AdminOnly>
+        <Suspense fallback={Loading}>
+          <CompanyReadPage />
         </Suspense>
       </AdminOnly>
     ),

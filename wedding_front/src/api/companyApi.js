@@ -72,10 +72,27 @@ export const getCompanyImageUrl = (fileName, thumbnail = false) => {
   if (!fileName) {
     return "";
   }
-  if (/^(https?:)?\/\//.test(fileName) || fileName.startsWith("/")) {
-    return fileName;
+
+  const normalizedFileName = String(fileName).trim();
+
+  if (/^(https?:)?\/\//.test(normalizedFileName)) {
+    return normalizedFileName;
   }
-  return `${imageHost}/view/${thumbnail ? `s_${fileName}` : fileName}`;
+
+  if (normalizedFileName.startsWith("/api/")) {
+    return `${API_SERVER_HOST}${normalizedFileName}`;
+  }
+
+  if (normalizedFileName.startsWith("/")) {
+    return `${API_SERVER_HOST}${normalizedFileName}`;
+  }
+
+  const viewFileName =
+    thumbnail && !normalizedFileName.startsWith("s_")
+      ? `s_${normalizedFileName}`
+      : normalizedFileName;
+
+  return `${imageHost}/view/${encodeURIComponent(viewFileName)}`;
 };
 
 export const getDummyList = async (pageParam = {}) => {

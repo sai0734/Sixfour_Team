@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { deleteOne, getCompanyImageUrl, getList } from "../../api/companyApi";
 import FetchingModal from "../common/FetchingModal";
@@ -46,12 +46,34 @@ const CompanyListComponent = () => {
   });
   const [reloadKey, setReloadKey] = useState(0);
   const { exceptionHandle } = useCustomLogin();
-  const { page, size, refresh, moveToList, moveToRead } = useCustomMove();
+  const { page, size, refresh } = useCustomMove();
   const navigate = useNavigate();
+  const location = useLocation();
   const loginState = useSelector((state) => state.loginSlice);
   const canManageCompany = loginState.roleNames?.some((roleName) =>
     adminRoles.includes(roleName),
   );
+  // 관리자 경로에서 들어온 경우 등록/수정 이동도 /admin/companies 하위로 유지합니다.
+  const companyPathPrefix = location.pathname.startsWith("/admin/companies")
+    ? "/admin/companies"
+    : "/companies";
+
+  const moveToCompanyRead = (cmno) => {
+    navigate({
+      pathname: `${companyPathPrefix}/read/${cmno}`,
+      search: `page=${page}&size=${size}`,
+    });
+  };
+
+  const moveToCompanyList = (pageParam) => {
+    const pageNum = pageParam?.page || page;
+    const sizeNum = pageParam?.size || size;
+
+    navigate({
+      pathname: `${companyPathPrefix}/list`,
+      search: `page=${pageNum}&size=${sizeNum}`,
+    });
+  };
 
   useEffect(() => {
     setFetching(true);
@@ -113,17 +135,17 @@ const CompanyListComponent = () => {
       {fetching ? <FetchingModal /> : null}
 
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-semibold">업체 관리</h2>
-          <p className="mt-1 text-sm text-slate-500">
-            등록된 웨딩 업체를 조회하고 관리합니다.
-          </p>
+        <div className="text-center">
+          <h2 className="text-xl font-semibold">
+            {canManageCompany ? "업체 관리" : "업체 리스트"}
+          </h2>
+          <p className="mt-1 text-sm text-slate-500"></p>
         </div>
         {canManageCompany ? (
           <button
             type="button"
             className="inline-flex h-10 items-center gap-2 rounded-md border border-blue-600 bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700"
-            onClick={() => navigate({ pathname: "/companies/add" })}
+            onClick={() => navigate({ pathname: `${companyPathPrefix}/add` })}
           >
             <span className="text-lg leading-none">+</span>
             업체 등록
@@ -131,16 +153,18 @@ const CompanyListComponent = () => {
         ) : null}
       </div>
 
-      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard label="전체 업체" value={stats.total} />
-        <StatCard label="활성 업체" value={stats.active} tone="success" />
-        <StatCard label="승인 대기" value={stats.pending} tone="warning" />
-        <StatCard
-          label="이번 달 신규"
-          value={stats.newThisMonth}
-          tone="accent"
-        />
-      </div>
+      {canManageCompany ? (
+        <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <StatCard label="전체 업체" value={stats.total} />
+          <StatCard label="활성 업체" value={stats.active} tone="success" />
+          <StatCard label="승인 대기" value={stats.pending} tone="warning" />
+          <StatCard
+            label="이번 달 신규"
+            value={stats.newThisMonth}
+            tone="accent"
+          />
+        </div>
+      ) : null}
 
       <div className="mb-5 flex flex-wrap gap-2">
         <input
@@ -199,21 +223,7 @@ const CompanyListComponent = () => {
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
                     <div className="h-14 w-20 overflow-hidden rounded-md bg-white">
-                      {company.mainImage ? (
-                        <img
-                          className="h-full w-full object-contain"
-                          alt={company.name}
-                          src={getCompanyImageUrl(company.mainImage, true)}
-                        />
-                      ) : (
-                        <span classname="text-xs text-slate-400">
-                          {" "}
-                          이미지 없음
-                        </span>
-                        // <div className="flex h-full items-center justify-center text-xs text-slate-400">
-                        //   이미지 없음
-                        // </div>
-                      )}
+                      <CompanyThumb company={company} />
                     </div>
                     <div>
                       <div className="font-semibold text-slate-900">
@@ -249,7 +259,7 @@ const CompanyListComponent = () => {
                     <button
                       className="h-8 rounded-md border border-slate-200 px-3 text-xs hover:bg-slate-100"
                       type="button"
-                      onClick={() => moveToRead(company.cmno)}
+                      onClick={() => moveToCompanyRead(company.cmno)}
                     >
                       보기
                     </button>
@@ -260,7 +270,7 @@ const CompanyListComponent = () => {
                           type="button"
                           onClick={() =>
                             navigate({
-                              pathname: `/companies/modify/${company.cmno}`,
+                              pathname: `${companyPathPrefix}/modify/${company.cmno}`,
                             })
                           }
                         >
@@ -286,9 +296,33 @@ const CompanyListComponent = () => {
       </div>
 
       <div className="mt-5">
-        <PageComponent serverData={serverData} movePage={moveToList} />
+        <PageComponent serverData={serverData} movePage={moveToCompanyList} />
       </div>
     </section>
+  );
+};
+
+// 이미지가 깨질 때 브라우저 깨진 아이콘 대신 "이미지 없음" 상태를 보여줍니다.
+const CompanyThumb = ({ company }) => {
+  const [hasImageError, setHasImageError] = useState(false);
+  const imageFile = company.mainImage || company.uploadFileNames?.[0];
+  const imageUrl = imageFile ? getCompanyImageUrl(imageFile, true) : "";
+
+  if (!imageUrl || hasImageError) {
+    return (
+      <div className="flex h-full items-center justify-center bg-slate-50 text-xs text-slate-400">
+        이미지 없음
+      </div>
+    );
+  }
+
+  return (
+    <img
+      className="h-full w-full object-contain"
+      alt={company.name}
+      src={imageUrl}
+      onError={() => setHasImageError(true)}
+    />
   );
 };
 
