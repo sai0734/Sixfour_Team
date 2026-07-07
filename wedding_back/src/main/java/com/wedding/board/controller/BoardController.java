@@ -28,7 +28,7 @@ public class BoardController {
     private final BoardService service;
 
     // 전체 목록, ?type=FREE 로 필터링도 가능
-    // 예: GET /api/boards/ 또는 GET /api/boards/?type=QNA
+    // 예: GET /api/boards/ 또는 GET /api/boards/?type=REVIEW
     @GetMapping("/")
     public List<BoardDTO> list(@RequestParam(name = "type", required = false) String type) {
 

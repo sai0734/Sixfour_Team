@@ -1,6 +1,56 @@
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import BasicMenu from "../components/menus/BasicMenu";
 
+const heroSlides = [
+  {
+    eyebrow: "WEDDING ALL IN ONE",
+    title: "두 사람의 시작을\n가장 가까이에서",
+    desc: "예식장을 고르는 순간부터 답례품을 고민하는 순간까지\n결혼이라는 가장 어려운 일을, 함께 준비합니다",
+    linkText: "",
+    linkTo: "",
+    imageType: "main",
+  },
+  {
+    eyebrow: "01 — AI WEDDING PLAN",
+    title: "예산과 날짜만 알면\nAI가 웨딩플랜을 짜드려요",
+    desc: "예산, 날짜, 하객 수, 원하는 스타일을 입력하면\n일정과 예산 배분까지 자동으로 설계하고, 꼭 맞는 웨딩홀·스드메·예복까지 추천해드립니다",
+    linkText: "AI 웨딩플랜 만들어보기 →",
+    linkTo: "#",
+    imageType: "plan",
+  },
+  {
+    eyebrow: "02 — PREPARATION",
+    title: "D-day까지 해야 할 일을\n하나씩 정리해드려요",
+    desc: "예식까지 남은 시간을 기준으로\n체크리스트와 예산, 납부 일정을 자동으로 관리합니다",
+    linkText: "준비관리 둘러보기 →",
+    linkTo: "/prep/hub",
+    imageType: "prep",
+  },
+  {
+    eyebrow: "03 — GIFT SHOP",
+    title: "하객들에게 전하는\n마음, 답례품 쇼핑몰",
+    desc: "캔들, 디퓨저, 수건 세트까지\n취향대로 고르고 바로 주문할 수 있어요",
+    linkText: "답례품 구경하기 →",
+    linkTo: "/product/list",
+    imageType: "gift",
+  },
+];
+
 const MainPage = () => {
+  const [activeSlide, setActiveSlide] = useState(0);
+  const currentSlide = heroSlides[activeSlide];
+
+  useEffect(() => {
+    const delay = activeSlide === 0 ? 5000 : 3000;
+
+    const timer = setTimeout(() => {
+      setActiveSlide((prev) => (prev + 1) % heroSlides.length);
+    }, delay);
+
+    return () => clearTimeout(timer);
+  }, [activeSlide]);
+
   return (
     <>
       <BasicMenu />
@@ -116,18 +166,120 @@ const MainPage = () => {
           />
         </svg>
 
-        <div className="hero-content">
-          <p className="hero-eyebrow serif">WEDDING ALL IN ONE</p>
-          <p className="hero-title serif">
-            두 사람의 시작을
-            <br />
-            가장 가까이에서
-          </p>
-          <p className="hero-sub serif">
-            예식장을 고르는 순간부터 답례품을 고민하는 순간까지
-            <br />
-            결혼이라는 가장 어려운 일을, 함께 준비합니다
-          </p>
+        <div
+          className={`hero-content hero-slider-content ${currentSlide.imageType !== "main" ? "has-visual" : ""}`}
+          key={activeSlide}
+        >
+          <div className="hero-slide-text">
+            <p className="hero-eyebrow serif">{currentSlide.eyebrow}</p>
+            <p className="hero-title serif">{currentSlide.title}</p>
+            <p className="hero-sub serif">{currentSlide.desc}</p>
+
+            {currentSlide.linkText && currentSlide.linkTo === "#" && (
+              <a href="#" className="hero-feature-link">
+                {currentSlide.linkText}
+              </a>
+            )}
+
+            {currentSlide.linkText && currentSlide.linkTo !== "#" && (
+              <Link to={currentSlide.linkTo} className="hero-feature-link">
+                {currentSlide.linkText}
+              </Link>
+            )}
+          </div>
+
+          {currentSlide.imageType !== "main" && (
+            <div className={`hero-slide-image ${currentSlide.imageType}`}>
+              {currentSlide.imageType === "plan" && (
+                <svg viewBox="0 0 120 120" fill="none">
+                  <path
+                    d="M60 14l7.5 25.5L93 47l-25.5 7.5L60 80l-7.5-25.5L27 47l25.5-7.5L60 14z"
+                    fill="currentColor"
+                  />
+                  <path
+                    d="M91 72l4 13.5 13.5 4-13.5 4-4 13.5-4-13.5-13.5-4 13.5-4L91 72z"
+                    fill="currentColor"
+                    opacity="0.65"
+                  />
+                  <path
+                    d="M28 78h30M28 92h42"
+                    stroke="currentColor"
+                    strokeWidth="5"
+                    strokeLinecap="round"
+                    opacity="0.45"
+                  />
+                </svg>
+              )}
+
+              {currentSlide.imageType === "prep" && (
+                <svg viewBox="0 0 120 120" fill="none">
+                  <rect
+                    x="25"
+                    y="18"
+                    width="70"
+                    height="84"
+                    rx="10"
+                    stroke="currentColor"
+                    strokeWidth="6"
+                    opacity="0.55"
+                  />
+                  <path
+                    d="M42 43l8 8 17-19"
+                    stroke="currentColor"
+                    strokeWidth="7"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M42 68h38M42 84h28"
+                    stroke="currentColor"
+                    strokeWidth="6"
+                    strokeLinecap="round"
+                    opacity="0.5"
+                  />
+                </svg>
+              )}
+
+              {currentSlide.imageType === "gift" && (
+                <svg viewBox="0 0 120 120" fill="none">
+                  <rect
+                    x="26"
+                    y="48"
+                    width="68"
+                    height="48"
+                    rx="8"
+                    stroke="currentColor"
+                    strokeWidth="6"
+                  />
+                  <path
+                    d="M60 48v48M22 48h76"
+                    stroke="currentColor"
+                    strokeWidth="6"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M60 43c-8-24-34-17-23 0 6 9 23 5 23 5s17 4 23-5c11-17-15-24-23 0z"
+                    stroke="currentColor"
+                    strokeWidth="6"
+                    strokeLinejoin="round"
+                    opacity="0.7"
+                  />
+                </svg>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="hero-dots" aria-label="메인 슬라이드 선택">
+          {heroSlides.map((slide, index) => (
+            <button
+              key={slide.eyebrow}
+              type="button"
+              aria-label={`${index + 1}번 슬라이드 보기`}
+              className={activeSlide === index ? "active" : ""}
+              onClick={() => setActiveSlide(index)}
+            />
+          ))}
         </div>
 
         <div className="scroll-indicator">
@@ -152,118 +304,6 @@ const MainPage = () => {
           <a href="#" className="btn btn-brand">
             지금 시작하기
           </a>
-        </div>
-      </section>
-
-      <section className="feature-section">
-        <div className="feature-grid">
-          <div className="feature-text">
-            <p className="eyebrow">01 — AI WEDDING PLAN</p>
-            <p className="feature-title">
-              예산과 날짜만 알면
-              <br />
-              AI가 웨딩플랜을 짜드려요
-            </p>
-            <p className="feature-desc">
-              예산, 날짜, 하객 수, 원하는 스타일을 입력하면
-              <br />
-              일정과 예산 배분까지 자동으로 설계하고, 꼭 맞는
-              웨딩홀·스드메·예복까지 추천해드립니다
-            </p>
-            <a href="#" className="feature-link">
-              AI 웨딩플랜 만들어보기 →
-            </a>
-          </div>
-          <div
-            className="feature-image"
-            style={{ background: "linear-gradient(135deg, #FBEAF0, #EEDFE8)" }}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              style={{ color: "#D4537E", opacity: "0.4" }}
-            >
-              <path d="M12 2l1.6 5.4L19 9l-5.4 1.6L12 16l-1.6-5.4L5 9l5.4-1.6z" />
-              <path d="M19 14l.8 2.7 2.7.8-2.7.8-.8 2.7-.8-2.7-2.7-.8 2.7-.8z" />
-            </svg>
-          </div>
-        </div>
-      </section>
-
-      <section className="feature-section alt">
-        <div className="feature-grid reverse">
-          <div
-            className="feature-image"
-            style={{ background: "linear-gradient(135deg, #E1F5EE, #D4ECE3)" }}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#0F6E56"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{ opacity: "0.4" }}
-            >
-              <path d="M9 6h11M9 12h11M9 18h11" />
-              <path d="m3 6 1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2" />
-            </svg>
-          </div>
-          <div className="feature-text">
-            <p className="eyebrow">02 — PREPARATION</p>
-            <p className="feature-title">
-              D-day까지 해야 할 일을
-              <br />
-              하나씩 정리해드려요
-            </p>
-            <p className="feature-desc">
-              예식까지 남은 시간을 기준으로
-              <br />
-              체크리스트와 예산, 납부 일정을 자동으로 관리합니다
-            </p>
-            <a href="#" className="feature-link">
-              준비관리 둘러보기 →
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <section className="feature-section">
-        <div className="feature-grid">
-          <div className="feature-text">
-            <p className="eyebrow">03 — GIFT SHOP</p>
-            <p className="feature-title">
-              하객들에게 전하는
-              <br />
-              마음, 답례품 쇼핑몰
-            </p>
-            <p className="feature-desc">
-              캔들, 디퓨저, 수건 세트까지
-              <br />
-              취향대로 고르고 바로 주문할 수 있어요
-            </p>
-            <a href="#" className="feature-link">
-              답례품 구경하기 →
-            </a>
-          </div>
-          <div
-            className="feature-image"
-            style={{ background: "linear-gradient(135deg, #FAEEDA, #F3E0C2)" }}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#854F0B"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{ opacity: "0.4" }}
-            >
-              <circle cx="9" cy="21" r="1" />
-              <circle cx="19" cy="21" r="1" />
-              <path d="M2.5 3h2l2.4 12.4a2 2 0 0 0 2 1.6h8.6a2 2 0 0 0 2-1.6L21.5 7H6" />
-            </svg>
-          </div>
         </div>
       </section>
 
@@ -552,6 +592,93 @@ const MainPage = () => {
     text-align: center;
     padding: 0 24px;
   }
+  .hero-slider-content {
+    max-width: 1120px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 44px;
+    animation: heroFade 0.65s ease;
+  }
+  .hero-slide-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .hero-slider-content.has-visual {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 460px);
+    text-align: left;
+  }
+  .hero-slider-content.has-visual .hero-slide-text {
+    align-items: flex-start;
+  }
+  .hero-slider-content.has-visual .hero-sub {
+    max-width: 560px;
+  }
+  .hero-feature-link {
+    margin-top: 28px;
+    display: inline-flex;
+    align-items: center;
+    height: 46px;
+    padding: 0 24px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.38);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    backdrop-filter: blur(8px);
+  }
+  .hero-feature-link:hover {
+    background: rgba(255, 255, 255, 0.24);
+  }
+  .hero-slide-image {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border-radius: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.9);
+    border: 1px solid rgba(255,255,255,0.26);
+    box-shadow: 0 28px 80px rgba(0,0,0,0.24);
+    backdrop-filter: blur(8px);
+  }
+  .hero-slide-image.plan { background: linear-gradient(135deg, rgba(212,83,126,0.72), rgba(251,234,240,0.28)); }
+  .hero-slide-image.prep { background: linear-gradient(135deg, rgba(15,110,86,0.72), rgba(225,245,238,0.28)); }
+  .hero-slide-image.gift { background: linear-gradient(135deg, rgba(133,79,11,0.72), rgba(250,238,218,0.30)); }
+  .hero-slide-image svg {
+    width: 42%;
+    min-width: 140px;
+    max-width: 220px;
+  }
+  .hero-dots {
+    position: absolute;
+    z-index: 12;
+    left: 50%;
+    bottom: 104px;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .hero-dots button {
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.75);
+    background: rgba(255,255,255,0.2);
+    cursor: pointer;
+    transition: width 0.25s ease, background 0.25s ease;
+  }
+  .hero-dots button.active {
+    width: 28px;
+    background: #fff;
+  }
+  @keyframes heroFade {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
   .hero-eyebrow {
     font-size: 13px;
     letter-spacing: 0.2em;
@@ -563,6 +690,7 @@ const MainPage = () => {
     color: #fff;
     line-height: 1.25;
     margin-bottom: 24px;
+    white-space: pre-line;
   }
   .hero-sub {
     font-size: 14px;
@@ -570,6 +698,7 @@ const MainPage = () => {
     line-height: 1.7;
     max-width: 440px;
     font-style: italic;
+    white-space: pre-line;
   }
   .scroll-indicator {
     position: absolute;
@@ -591,6 +720,38 @@ const MainPage = () => {
     width: 1px;
     height: 32px;
     background: rgba(255,255,255,0.4);
+  }
+
+  @media (max-width: 900px) {
+    .hero-slider-content.has-visual {
+      grid-template-columns: 1fr;
+      text-align: center;
+    }
+    .hero-slider-content.has-visual .hero-slide-text {
+      align-items: center;
+    }
+    .hero-slide-image {
+      max-width: 420px;
+      margin: 0 auto;
+    }
+    .hero-title {
+      font-size: 40px;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .hero {
+      min-height: 720px;
+    }
+    .hero-title {
+      font-size: 34px;
+    }
+    .hero-slide-image {
+      max-width: 300px;
+    }
+    .hero-dots {
+      bottom: 92px;
+    }
   }
 
   /* ===== About ===== */

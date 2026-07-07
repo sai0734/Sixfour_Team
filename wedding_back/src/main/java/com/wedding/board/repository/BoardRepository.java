@@ -17,4 +17,10 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
     // 베스트 게시글 (좋아요 많은 순 상위 3개) - 커뮤허브 "베스트 게시글" 섹션용
     List<Board> findTop3ByDeletedFalseOrderByLikeCountDesc();
 
+    // 더미데이터 중복 삽입 방지용 - 실제 회원 글과 안 섞이도록 전용 memberEmail로 카운트
+    long countByMemberEmail(String memberEmail);
+
+    // 댓글 더미데이터 로더가 특정 게시글을 제목으로 찾아 boardId를 얻기 위함
+    java.util.Optional<Board> findFirstByTitle(String title);
+
 }

@@ -20,7 +20,10 @@ public class Board {
 
     private String memberEmail;
 
-    // FREE / REVIEW / QNA
+    // 작성 시점의 닉네임 스냅샷 (화면 표시용, Member 테이블과 실시간 연동 아님)
+    private String nickname;
+
+    // FREE / REVIEW
     private String boardType;
 
     // Q&A 카테고리 (예산/업체/일정/기타) - FREE/REVIEW는 null

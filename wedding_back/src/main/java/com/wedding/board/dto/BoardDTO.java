@@ -18,6 +18,8 @@ public class BoardDTO {
 
     private String memberEmail;
 
+    private String nickname;
+
     private String boardType;
 
     private String category;

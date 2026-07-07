@@ -23,6 +23,9 @@ public class Comment {
 
     private String memberEmail;
 
+    // 작성 시점의 닉네임 스냅샷
+    private String nickname;
+
     // null = 댓글(최상위), 값 있음 = 대댓글 (부모 댓글의 commentId)
     @Column(name = "parent_id")
     private Long parentId;
@@ -33,10 +36,6 @@ public class Comment {
     // AI 자동답변 여부 - 지금은 항상 false, AI 기능 붙일 때 사용
     @Builder.Default
     private boolean ai = false;
-
-    // Q&A 채택 여부 - QNA 게시판을 안 만들기로 해서 지금은 사실상 안 쓰임, 스펙 유지 차원에서 필드만 보존
-    @Builder.Default
-    private boolean adopted = false;
 
     @Builder.Default
     private boolean deleted = false;

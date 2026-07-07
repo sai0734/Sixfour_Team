@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import BasicMenu from "../../components/menus/BasicMenu";
 import BoardTopTabs from "../../components/board/BoardTopTabs";
 import PostCard from "../../components/board/PostCard";
@@ -16,7 +16,28 @@ import {
 } from "../../api/boardApi";
 import { upload as uploadImages } from "../../api/boardImageApi";
 import { checkLiked, likeOne, unlikeOne } from "../../api/boardLikeApi";
+import {
+  getViewedBoardIds,
+  saveViewedBoard,
+} from "../../util/boardViewHistory";
 import useCustomLogin from "../../hooks/useCustomLogin";
+
+const RECENT_POSTS_PAGE_SIZE = 5;
+
+const getPageNumbers = (currentPage, totalPages) => {
+  if (totalPages <= 0) return [];
+
+  const visibleCount = Math.min(5, totalPages);
+  let start = currentPage <= 3 ? 1 : currentPage - 2;
+  let end = start + visibleCount - 1;
+
+  if (end > totalPages) {
+    end = totalPages;
+    start = Math.max(1, end - visibleCount + 1);
+  }
+
+  return Array.from({ length: end - start + 1 }, (_, idx) => start + idx);
+};
 
 const HubPage = () => {
   const { loginState } = useCustomLogin();
@@ -26,6 +47,10 @@ const HubPage = () => {
 
   const [posts, setPosts] = useState([]);
   const [bestPosts, setBestPosts] = useState([]);
+  const [viewedBoardIds, setViewedBoardIds] = useState(() =>
+    getViewedBoardIds(loginState.email),
+  );
+  const [currentPage, setCurrentPage] = useState(1);
   const [refresh, setRefresh] = useState(false);
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -41,7 +66,41 @@ const HubPage = () => {
     getList().then((data) => setPosts(data));
   }, [refresh]);
 
+  useEffect(() => {
+    setViewedBoardIds(getViewedBoardIds(loginState.email));
+    setCurrentPage(1);
+  }, [loginState.email]);
+
+  const viewedPosts = useMemo(() => {
+    if (viewedBoardIds.length === 0) return [];
+
+    return posts
+      .filter((post) => viewedBoardIds.includes(Number(post.boardId)))
+      .sort(
+        (a, b) =>
+          viewedBoardIds.indexOf(Number(a.boardId)) -
+          viewedBoardIds.indexOf(Number(b.boardId)),
+      );
+  }, [posts, viewedBoardIds]);
+
+  const totalPages = Math.ceil(viewedPosts.length / RECENT_POSTS_PAGE_SIZE);
+  const pageNumbers = getPageNumbers(currentPage, totalPages);
+  const pagedPosts = viewedPosts.slice(
+    (currentPage - 1) * RECENT_POSTS_PAGE_SIZE,
+    currentPage * RECENT_POSTS_PAGE_SIZE,
+  );
+
+  useEffect(() => {
+    if (totalPages > 0 && currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
   const openDetail = (boardId) => {
+    const nextViewedBoardIds = saveViewedBoard(boardId, loginState.email);
+    setViewedBoardIds(nextViewedBoardIds);
+    setCurrentPage(1);
+
     getOne(boardId).then((data) => {
       setDetailPost(data);
       checkLiked(boardId, loginState.email).then((result) => setLiked(result));
@@ -78,7 +137,11 @@ const HubPage = () => {
   const handleAdd = (formValues) => {
     const { files, ...boardData } = formValues;
 
-    postAdd({ ...boardData, memberEmail: loginState.email })
+    postAdd({
+      ...boardData,
+      memberEmail: loginState.email,
+      nickname: loginState.nickname,
+    })
       .then((res) => {
         setModalOpen(false);
         setRefresh((r) => !r);
@@ -191,17 +254,23 @@ const HubPage = () => {
               </div>
             )}
 
-            {/* 최근 게시글 (전체 타입 혼합) */}
-            <p className="text-sm font-medium text-ink mb-3">📝 최근 게시글</p>
+            {/* 최근 본 게시글 */}
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-medium text-ink">📝 최근 본 게시글</p>
+              <p className="text-xs text-ink-faint">
+                직접 클릭한 게시글만 표시 · {viewedPosts.length}건
+              </p>
+            </div>
 
-            {posts.length === 0 && (
+            {viewedPosts.length === 0 && (
               <div className="text-center text-ink-faint py-16 bg-white rounded-2xl border border-line">
-                게시글이 없습니다.
+                아직 직접 열어본 게시글이 없습니다. 자유게시판이나
+                후기게시판에서 게시글을 클릭하면 여기에 표시됩니다.
               </div>
             )}
 
             <div className="flex flex-col gap-3">
-              {posts.map((post) => (
+              {pagedPosts.map((post) => (
                 <PostCard
                   key={post.boardId}
                   post={post}
@@ -210,6 +279,25 @@ const HubPage = () => {
                 />
               ))}
             </div>
+
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-8">
+                {pageNumbers.map((pageNo) => (
+                  <button
+                    key={pageNo}
+                    type="button"
+                    onClick={() => setCurrentPage(pageNo)}
+                    className={`w-9 h-9 rounded-full text-sm border transition-colors ${
+                      currentPage === pageNo
+                        ? "bg-brand text-white border-brand"
+                        : "bg-white text-ink-muted border-line hover:border-brand hover:text-brand"
+                    }`}
+                  >
+                    {pageNo}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
