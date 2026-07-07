@@ -5,8 +5,7 @@ import {
   bulkChangeOrderStatus,
 } from "../../api/adminOrderApi";
 import PageComponent from "../common/PageComponent";
-import AdminNavComponent from "./AdminNavComponent";
-import BasicLayout from "../../layouts/BasicLayout";
+import AdminLayout from "../../layouts/AdminLayout";
 
 const STATUS_TABS = [
   { key: "", label: "전체" },
@@ -81,139 +80,133 @@ const AdminOrderListComponent = () => {
   };
 
   return (
-    <BasicLayout showCart={false}>
-      <div className="bg-white min-h-screen pb-20 pt-20">
-        <AdminNavComponent />
+    <AdminLayout>
+      <p className="font-serif text-2xl mb-5">주문 관리</p>
 
-        <div className="max-w-[1200px] mx-auto px-6">
-          <p className="font-serif text-2xl mb-5">주문 관리</p>
+      <div className="flex gap-5 border-b border-line mb-5 text-sm">
+        {STATUS_TABS.map((tab) => (
+          <span
+            key={tab.key}
+            onClick={() => {
+              setPage(1);
+              setStatus(tab.key);
+            }}
+            className={`pb-3 cursor-pointer ${
+              status === tab.key
+                ? "text-ink font-medium border-b-2 border-brand"
+                : "text-ink-faint"
+            }`}
+          >
+            {tab.label}
+          </span>
+        ))}
+      </div>
 
-          <div className="flex gap-5 border-b border-line mb-5 text-sm">
-            {STATUS_TABS.map((tab) => (
-              <span
-                key={tab.key}
-                onClick={() => {
-                  setPage(1);
-                  setStatus(tab.key);
-                }}
-                className={`pb-3 cursor-pointer ${
-                  status === tab.key
-                    ? "text-ink font-medium border-b-2 border-brand"
-                    : "text-ink-faint"
-                }`}
-              >
-                {tab.label}
-              </span>
-            ))}
-          </div>
-
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={keywordInput}
-                onChange={(e) => setKeywordInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                placeholder="주문번호 또는 주문자명 검색"
-                className="h-9 px-4 border border-line-soft rounded-lg text-sm w-64"
-              />
-              <button
-                onClick={handleSearch}
-                className="h-9 px-4 border border-line-soft rounded-lg text-sm"
-              >
-                검색
-              </button>
-            </div>
-
-            <div className="flex gap-2 items-center">
-              <select
-                value={bulkStatus}
-                onChange={(e) => setBulkStatus(e.target.value)}
-                className="h-9 px-3 border border-line-soft rounded-lg text-sm"
-              >
-                <option value="SHIPPING_READY">배송준비로 변경</option>
-                <option value="SHIPPING">배송중으로 변경</option>
-                <option value="DELIVERED">배송완료로 변경</option>
-              </select>
-              <button
-                onClick={handleBulkChange}
-                className="h-9 px-4 rounded-lg bg-brand text-white text-sm"
-              >
-                선택 일괄 변경 ({selectedOnos.length})
-              </button>
-            </div>
-          </div>
-
-          <table className="w-full text-sm border-t border-line">
-            <thead>
-              <tr className="border-b border-line text-ink-faint text-xs">
-                <th className="py-3 w-10"></th>
-                <th className="py-3 text-left">주문번호</th>
-                <th className="py-3 text-left">주문자</th>
-                <th className="py-3 text-right">결제금액</th>
-                <th className="py-3 text-center">상태</th>
-                <th className="py-3 text-left">주문일</th>
-              </tr>
-            </thead>
-            <tbody>
-              {serverData.dtoList.map((o) => (
-                <tr key={o.ono} className="border-b border-line hover:bg-cream">
-                  <td
-                    className="py-2.5 text-center"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedOnos.includes(o.ono)}
-                      onChange={() => handleToggleSelect(o.ono)}
-                      className="accent-brand"
-                    />
-                  </td>
-                  <td
-                    onClick={() => navigate(`/admin/orders/${o.ono}`)}
-                    className="py-2.5 cursor-pointer text-brand-accent"
-                  >
-                    {o.orderNumber}
-                  </td>
-                  <td
-                    onClick={() => navigate(`/admin/orders/${o.ono}`)}
-                    className="py-2.5 cursor-pointer"
-                  >
-                    {o.receiverName} ({o.memberEmail})
-                  </td>
-                  <td
-                    onClick={() => navigate(`/admin/orders/${o.ono}`)}
-                    className="py-2.5 text-right cursor-pointer"
-                  >
-                    {o.totalPrice?.toLocaleString()}원
-                  </td>
-                  <td
-                    onClick={() => navigate(`/admin/orders/${o.ono}`)}
-                    className="py-2.5 text-center cursor-pointer"
-                  >
-                    <span className="px-2 py-1 rounded-full text-xs bg-brand-light text-brand-accent">
-                      {STATUS_TABS.find((t) => t.key === o.orderStatus)
-                        ?.label ?? o.orderStatus}
-                    </span>
-                  </td>
-                  <td
-                    onClick={() => navigate(`/admin/orders/${o.ono}`)}
-                    className="py-2.5 text-ink-faint cursor-pointer"
-                  >
-                    {o.regDate?.slice(0, 10)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <PageComponent
-            serverData={serverData}
-            movePage={(pageParam) => setPage(pageParam.page)}
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={keywordInput}
+            onChange={(e) => setKeywordInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            placeholder="주문번호 또는 주문자명 검색"
+            className="h-9 px-4 border border-line-soft rounded-lg text-sm w-64"
           />
+          <button
+            onClick={handleSearch}
+            className="h-9 px-4 border border-line-soft rounded-lg text-sm"
+          >
+            검색
+          </button>
+        </div>
+
+        <div className="flex gap-2 items-center">
+          <select
+            value={bulkStatus}
+            onChange={(e) => setBulkStatus(e.target.value)}
+            className="h-9 px-3 border border-line-soft rounded-lg text-sm"
+          >
+            <option value="SHIPPING_READY">배송준비로 변경</option>
+            <option value="SHIPPING">배송중으로 변경</option>
+            <option value="DELIVERED">배송완료로 변경</option>
+          </select>
+          <button
+            onClick={handleBulkChange}
+            className="h-9 px-4 rounded-lg bg-brand text-white text-sm"
+          >
+            선택 일괄 변경 ({selectedOnos.length})
+          </button>
         </div>
       </div>
-    </BasicLayout>
+
+      <table className="w-full text-sm border-t border-line">
+        <thead>
+          <tr className="border-b border-line text-ink-faint text-xs">
+            <th className="py-3 w-10"></th>
+            <th className="py-3 text-left">주문번호</th>
+            <th className="py-3 text-left">주문자</th>
+            <th className="py-3 text-right">결제금액</th>
+            <th className="py-3 text-center">상태</th>
+            <th className="py-3 text-left">주문일</th>
+          </tr>
+        </thead>
+        <tbody>
+          {serverData.dtoList.map((o) => (
+            <tr key={o.ono} className="border-b border-line hover:bg-cream">
+              <td
+                className="py-2.5 text-center"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedOnos.includes(o.ono)}
+                  onChange={() => handleToggleSelect(o.ono)}
+                  className="accent-brand"
+                />
+              </td>
+              <td
+                onClick={() => navigate(`/admin/orders/${o.ono}`)}
+                className="py-2.5 cursor-pointer text-brand-accent"
+              >
+                {o.orderNumber}
+              </td>
+              <td
+                onClick={() => navigate(`/admin/orders/${o.ono}`)}
+                className="py-2.5 cursor-pointer"
+              >
+                {o.receiverName} ({o.memberEmail})
+              </td>
+              <td
+                onClick={() => navigate(`/admin/orders/${o.ono}`)}
+                className="py-2.5 text-right cursor-pointer"
+              >
+                {o.totalPrice?.toLocaleString()}원
+              </td>
+              <td
+                onClick={() => navigate(`/admin/orders/${o.ono}`)}
+                className="py-2.5 text-center cursor-pointer"
+              >
+                <span className="px-2 py-1 rounded-full text-xs bg-brand-light text-brand-accent">
+                  {STATUS_TABS.find((t) => t.key === o.orderStatus)?.label ??
+                    o.orderStatus}
+                </span>
+              </td>
+              <td
+                onClick={() => navigate(`/admin/orders/${o.ono}`)}
+                className="py-2.5 text-ink-faint cursor-pointer"
+              >
+                {o.regDate?.slice(0, 10)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <PageComponent
+        serverData={serverData}
+        movePage={(pageParam) => setPage(pageParam.page)}
+      />
+    </AdminLayout>
   );
 };
 
