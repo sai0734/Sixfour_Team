@@ -9,8 +9,7 @@ import {
   refundOrder,
 } from "../../api/adminOrderApi";
 import { getReviews, postReply, deleteReview } from "../../api/reviewApi";
-import AdminNavComponent from "./AdminNavComponent";
-import BasicLayout from "../../layouts/BasicLayout";
+import AdminLayout from "../../layouts/AdminLayout";
 
 const STATUS_LABEL = {
   PAID: "결제완료",
@@ -160,11 +159,11 @@ const AdminOrderDetailComponent = ({ ono }) => {
 
   if (!order) {
     return (
-      <BasicLayout showCart={false}>
-        <div className="p-10 text-center text-ink-faint text-sm pt-20">
+      <AdminLayout>
+        <div className="p-10 text-center text-ink-faint text-sm">
           불러오는 중...
         </div>
-      </BasicLayout>
+      </AdminLayout>
     );
   }
 
@@ -253,222 +252,203 @@ const AdminOrderDetailComponent = ({ ono }) => {
   );
 
   return (
-    <BasicLayout showCart={false}>
-      <div className="bg-white min-h-screen pb-20 pt-20">
-        <AdminNavComponent />
-
-        <div className="max-w-[900px] mx-auto px-6">
-          <div className="flex justify-between items-center mb-5">
-            <p className="font-serif text-2xl">
-              주문 상세 - {order.orderNumber}
-            </p>
-            <button
-              onClick={() => navigate("/admin/orders")}
-              className="text-xs text-ink-faint underline"
-            >
-              목록으로
-            </button>
-          </div>
-
-          <section className="border-t border-line pt-4 mb-6">
-            <p className="text-sm font-medium mb-3">주문 정보</p>
-            <p className="text-sm text-ink-soft">주문자: {order.memberEmail}</p>
-            <p className="text-sm text-ink-soft">
-              받으실 분: {order.receiverName} / {order.receiverPhone}
-            </p>
-            <p className="text-sm text-ink-soft">
-              배송지: [{order.zipcode}] {order.address} {order.addressDetail}
-            </p>
-            {order.request && (
-              <p className="text-sm text-ink-soft">요청사항: {order.request}</p>
-            )}
-
-            <div className="mt-3 flex flex-col gap-1">
-              {order.items.map((item, i) => (
-                <div key={i} className="flex justify-between text-sm">
-                  <span>
-                    {item.pname} × {item.qty}
-                  </span>
-                  <span>{(item.price * item.qty).toLocaleString()}원</span>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="border-t border-line pt-4 mb-6">
-            <p className="text-sm font-medium mb-3">결제 내역</p>
-            <p className="text-sm text-ink-soft">
-              결제 수단: {order.payMethod ?? "-"}
-            </p>
-            <p className="text-sm text-ink-soft">
-              PG 거래ID: {order.pgTid ?? "-"}
-            </p>
-            <p className="text-sm text-ink-soft">
-              결제 상태: {order.payStatus ?? "-"}
-            </p>
-            <p className="text-sm text-ink-soft">
-              상품금액:{" "}
-              {(order.totalPrice - order.shippingFee).toLocaleString()}원 /
-              배송비: {order.shippingFee.toLocaleString()}원
-            </p>
-            <p className="text-sm font-medium mt-1">
-              총 결제금액: {order.totalPrice.toLocaleString()}원
-            </p>
-          </section>
-
-          <section className="border-t border-line pt-4 mb-6">
-            <p className="text-sm font-medium mb-3">
-              주문 상태 제어 (현재:{" "}
-              {STATUS_LABEL[order.orderStatus] ?? order.orderStatus})
-            </p>
-            <div className="flex gap-2 flex-wrap">
-              {STATUS_FLOW.map((s) => (
-                <button
-                  key={s}
-                  onClick={() => handleChangeStatus(s)}
-                  disabled={order.orderStatus === s}
-                  className={`h-9 px-4 rounded-full text-xs border ${
-                    order.orderStatus === s
-                      ? "bg-brand text-white border-brand"
-                      : "border-line-soft"
-                  }`}
-                >
-                  {STATUS_LABEL[s]}
-                </button>
-              ))}
-            </div>
-          </section>
-
-          {order.orderStatus !== "REFUNDED" &&
-            order.orderStatus !== "CANCELLED" && (
-              <section className="border-t border-line pt-4 mb-6">
-                <p className="text-sm font-medium mb-3">환불 처리</p>
-                <button
-                  onClick={handleRefund}
-                  className="h-9 px-4 rounded-full border border-red-300 text-red-600 text-xs"
-                >
-                  환불 승인 (PG 결제취소)
-                </button>
-              </section>
-            )}
-
-          <section className="border-t border-line pt-4 mb-6">
-            <p className="text-sm font-medium mb-3">배송 정보 등록/수정</p>
-            <div className="flex flex-col gap-2 mb-3">
-              <input
-                value={shippingForm.receiverName}
-                onChange={(e) =>
-                  setShippingForm({
-                    ...shippingForm,
-                    receiverName: e.target.value,
-                  })
-                }
-                placeholder="받으실 분"
-                className="h-9 px-3 border border-line-soft rounded-lg text-sm"
-              />
-              <input
-                value={shippingForm.receiverPhone}
-                onChange={(e) =>
-                  setShippingForm({
-                    ...shippingForm,
-                    receiverPhone: e.target.value,
-                  })
-                }
-                placeholder="연락처"
-                className="h-9 px-3 border border-line-soft rounded-lg text-sm"
-              />
-              <div className="flex gap-2">
-                <input
-                  value={shippingForm.zipcode}
-                  onChange={(e) =>
-                    setShippingForm({
-                      ...shippingForm,
-                      zipcode: e.target.value,
-                    })
-                  }
-                  placeholder="우편번호"
-                  className="h-9 px-3 border border-line-soft rounded-lg text-sm w-28"
-                />
-                <input
-                  value={shippingForm.address}
-                  onChange={(e) =>
-                    setShippingForm({
-                      ...shippingForm,
-                      address: e.target.value,
-                    })
-                  }
-                  placeholder="주소"
-                  className="h-9 px-3 border border-line-soft rounded-lg text-sm flex-1"
-                />
-              </div>
-              <input
-                value={shippingForm.addressDetail}
-                onChange={(e) =>
-                  setShippingForm({
-                    ...shippingForm,
-                    addressDetail: e.target.value,
-                  })
-                }
-                placeholder="상세주소"
-                className="h-9 px-3 border border-line-soft rounded-lg text-sm"
-              />
-            </div>
-            <button
-              onClick={handleSaveShipping}
-              className="h-9 px-4 rounded-full bg-brand text-white text-xs"
-            >
-              배송지 저장
-            </button>
-
-            <div className="flex gap-2 mt-4">
-              <input
-                value={trackingNo}
-                onChange={(e) => setTrackingNo(e.target.value)}
-                placeholder="운송장 번호"
-                className="h-9 px-3 border border-line-soft rounded-lg text-sm flex-1"
-              />
-              <button
-                onClick={handleSaveTracking}
-                className="h-9 px-4 rounded-full border border-line-soft text-xs"
-              >
-                운송장 저장
-              </button>
-            </div>
-          </section>
-
-          <section className="border-t border-line pt-4 mb-6">
-            <p className="text-sm font-medium mb-3">
-              해당 상품 리뷰 모니터링 및 답글 관리
-            </p>
-            {uniqueProducts.map((item) => (
-              <AdminReviewMiniSection
-                key={item.pno}
-                pno={item.pno}
-                pname={item.pname}
-              />
-            ))}
-          </section>
-
-          <section className="border-t border-line pt-4 mb-10">
-            <p className="text-sm font-medium mb-3">
-              관리자 전용 메모 (CS 요청사항 등)
-            </p>
-            <textarea
-              value={memo}
-              onChange={(e) => setMemo(e.target.value)}
-              rows={3}
-              className="w-full border border-line-soft rounded-lg p-3 text-sm resize-none"
-            />
-            <button
-              onClick={handleSaveMemo}
-              className="h-9 px-4 mt-2 rounded-full border border-line-soft text-xs"
-            >
-              메모 저장
-            </button>
-          </section>
-        </div>
+    // AdminLayout으로 교체 (좌측 관리자 메뉴 포함)
+    <AdminLayout>
+      <div className="flex justify-between items-center mb-5">
+        <p className="font-serif text-2xl">주문 상세 - {order.orderNumber}</p>
+        <button
+          onClick={() => navigate("/admin/orders")}
+          className="text-xs text-ink-faint underline"
+        >
+          목록으로
+        </button>
       </div>
-    </BasicLayout>
+
+      <section className="border-t border-line pt-4 mb-6">
+        <p className="text-sm font-medium mb-3">주문 정보</p>
+        <p className="text-sm text-ink-soft">주문자: {order.memberEmail}</p>
+        <p className="text-sm text-ink-soft">
+          받으실 분: {order.receiverName} / {order.receiverPhone}
+        </p>
+        <p className="text-sm text-ink-soft">
+          배송지: [{order.zipcode}] {order.address} {order.addressDetail}
+        </p>
+        {order.request && (
+          <p className="text-sm text-ink-soft">요청사항: {order.request}</p>
+        )}
+
+        <div className="mt-3 flex flex-col gap-1">
+          {order.items.map((item, i) => (
+            <div key={i} className="flex justify-between text-sm">
+              <span>
+                {item.pname} × {item.qty}
+              </span>
+              <span>{(item.price * item.qty).toLocaleString()}원</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="border-t border-line pt-4 mb-6">
+        <p className="text-sm font-medium mb-3">결제 내역</p>
+        <p className="text-sm text-ink-soft">
+          결제 수단: {order.payMethod ?? "-"}
+        </p>
+        <p className="text-sm text-ink-soft">PG 거래ID: {order.pgTid ?? "-"}</p>
+        <p className="text-sm text-ink-soft">
+          결제 상태: {order.payStatus ?? "-"}
+        </p>
+        <p className="text-sm text-ink-soft">
+          상품금액: {(order.totalPrice - order.shippingFee).toLocaleString()}원
+          / 배송비: {order.shippingFee.toLocaleString()}원
+        </p>
+        <p className="text-sm font-medium mt-1">
+          총 결제금액: {order.totalPrice.toLocaleString()}원
+        </p>
+      </section>
+
+      <section className="border-t border-line pt-4 mb-6">
+        <p className="text-sm font-medium mb-3">
+          주문 상태 제어 (현재:{" "}
+          {STATUS_LABEL[order.orderStatus] ?? order.orderStatus})
+        </p>
+        <div className="flex gap-2 flex-wrap">
+          {STATUS_FLOW.map((s) => (
+            <button
+              key={s}
+              onClick={() => handleChangeStatus(s)}
+              disabled={order.orderStatus === s}
+              className={`h-9 px-4 rounded-full text-xs border ${
+                order.orderStatus === s
+                  ? "bg-brand text-white border-brand"
+                  : "border-line-soft"
+              }`}
+            >
+              {STATUS_LABEL[s]}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {order.orderStatus !== "REFUNDED" &&
+        order.orderStatus !== "CANCELLED" && (
+          <section className="border-t border-line pt-4 mb-6">
+            <p className="text-sm font-medium mb-3">환불 처리</p>
+            <button
+              onClick={handleRefund}
+              className="h-9 px-4 rounded-full border border-red-300 text-red-600 text-xs"
+            >
+              환불 승인 (PG 결제취소)
+            </button>
+          </section>
+        )}
+
+      <section className="border-t border-line pt-4 mb-6">
+        <p className="text-sm font-medium mb-3">배송 정보 등록/수정</p>
+        <div className="flex flex-col gap-2 mb-3">
+          <input
+            value={shippingForm.receiverName}
+            onChange={(e) =>
+              setShippingForm({ ...shippingForm, receiverName: e.target.value })
+            }
+            placeholder="받으실 분"
+            className="h-9 px-3 border border-line-soft rounded-lg text-sm"
+          />
+          <input
+            value={shippingForm.receiverPhone}
+            onChange={(e) =>
+              setShippingForm({
+                ...shippingForm,
+                receiverPhone: e.target.value,
+              })
+            }
+            placeholder="연락처"
+            className="h-9 px-3 border border-line-soft rounded-lg text-sm"
+          />
+          <div className="flex gap-2">
+            <input
+              value={shippingForm.zipcode}
+              onChange={(e) =>
+                setShippingForm({ ...shippingForm, zipcode: e.target.value })
+              }
+              placeholder="우편번호"
+              className="h-9 px-3 border border-line-soft rounded-lg text-sm w-28"
+            />
+            <input
+              value={shippingForm.address}
+              onChange={(e) =>
+                setShippingForm({ ...shippingForm, address: e.target.value })
+              }
+              placeholder="주소"
+              className="h-9 px-3 border border-line-soft rounded-lg text-sm flex-1"
+            />
+          </div>
+          <input
+            value={shippingForm.addressDetail}
+            onChange={(e) =>
+              setShippingForm({
+                ...shippingForm,
+                addressDetail: e.target.value,
+              })
+            }
+            placeholder="상세주소"
+            className="h-9 px-3 border border-line-soft rounded-lg text-sm"
+          />
+        </div>
+        <button
+          onClick={handleSaveShipping}
+          className="h-9 px-4 rounded-full bg-brand text-white text-xs"
+        >
+          배송지 저장
+        </button>
+
+        <div className="flex gap-2 mt-4">
+          <input
+            value={trackingNo}
+            onChange={(e) => setTrackingNo(e.target.value)}
+            placeholder="운송장 번호"
+            className="h-9 px-3 border border-line-soft rounded-lg text-sm flex-1"
+          />
+          <button
+            onClick={handleSaveTracking}
+            className="h-9 px-4 rounded-full border border-line-soft text-xs"
+          >
+            운송장 저장
+          </button>
+        </div>
+      </section>
+
+      <section className="border-t border-line pt-4 mb-6">
+        <p className="text-sm font-medium mb-3">
+          해당 상품 리뷰 모니터링 및 답글 관리
+        </p>
+        {uniqueProducts.map((item) => (
+          <AdminReviewMiniSection
+            key={item.pno}
+            pno={item.pno}
+            pname={item.pname}
+          />
+        ))}
+      </section>
+
+      <section className="border-t border-line pt-4 mb-10">
+        <p className="text-sm font-medium mb-3">
+          관리자 전용 메모 (CS 요청사항 등)
+        </p>
+        <textarea
+          value={memo}
+          onChange={(e) => setMemo(e.target.value)}
+          rows={3}
+          className="w-full border border-line-soft rounded-lg p-3 text-sm resize-none"
+        />
+        <button
+          onClick={handleSaveMemo}
+          className="h-9 px-4 mt-2 rounded-full border border-line-soft text-xs"
+        >
+          메모 저장
+        </button>
+      </section>
+    </AdminLayout>
   );
 };
 

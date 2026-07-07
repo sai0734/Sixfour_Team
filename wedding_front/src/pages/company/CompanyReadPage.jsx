@@ -1,11 +1,11 @@
-﻿import BasicLayout from "../../layouts/BasicLayout";
+﻿import AdminLayout from "../../layouts/AdminLayout";
 import CompanyReadComponent from "../../components/company/CompanyReadComponent";
 
 const CompanyReadPage = () => {
   return (
-    <BasicLayout showCart={false}>
+    <AdminLayout>
       <CompanyReadComponent />
-    </BasicLayout>
+    </AdminLayout>
   );
 };
 
