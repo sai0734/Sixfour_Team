@@ -1,11 +1,11 @@
-import BasicLayout from "../../layouts/BasicLayout";
+import AdminLayout from "../../layouts/AdminLayout";
 import AdminDashboardComponent from "../../components/admin/AdminDashboardComponent";
 
 const AdminDashboardPage = () => {
   return (
-    <BasicLayout showCart={false}>
+    <AdminLayout>
       <AdminDashboardComponent />
-    </BasicLayout>
+    </AdminLayout>
   );
 };
 

@@ -1,11 +1,11 @@
-import BasicLayout from "../../layouts/BasicLayout";
+import AdminLayout from "../../layouts/AdminLayout";
 import MemberManageComponent from "../../components/admin/MemberManageComponent";
 
 const MemberManagePage = () => {
   return (
-    <BasicLayout showCart={false}>
+    <AdminLayout>
       <MemberManageComponent />
-    </BasicLayout>
+    </AdminLayout>
   );
 };
 
