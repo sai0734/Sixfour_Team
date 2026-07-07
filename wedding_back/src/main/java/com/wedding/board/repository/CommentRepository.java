@@ -14,4 +14,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     // 게시글 삭제 시 댓글 개수 파악 등에 사용 가능
     long countByBoardIdAndDeletedFalse(Long boardId);
 
+    // 더미데이터 중복 삽입 방지용
+    long countByMemberEmail(String memberEmail);
+
 }

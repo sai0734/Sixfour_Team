@@ -53,6 +53,7 @@ const CommentSection = ({ boardId, onCountChange }) => {
     postAdd({
       boardId,
       memberEmail: loginState.email,
+      nickname: loginState.nickname,
       parentId: null,
       content: newContent,
     })
@@ -77,6 +78,7 @@ const CommentSection = ({ boardId, onCountChange }) => {
     postAdd({
       boardId,
       memberEmail: loginState.email,
+      nickname: loginState.nickname,
       parentId,
       content: replyContent,
     })
@@ -166,7 +168,7 @@ const CommentSection = ({ boardId, onCountChange }) => {
               {isReply && (
                 <span className="text-brand text-sm leading-none">↳</span>
               )}
-              {comment.deleted ? "" : comment.memberEmail}
+              {comment.deleted ? "" : comment.nickname || comment.memberEmail}
               {isReply && !comment.deleted && (
                 <span className="text-[10px] text-brand-accent bg-brand-light px-1.5 py-0.5 rounded-full ml-1">
                   답글

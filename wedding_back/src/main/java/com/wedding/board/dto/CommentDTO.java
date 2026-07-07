@@ -20,13 +20,13 @@ public class CommentDTO {
 
     private String memberEmail;
 
+    private String nickname;
+
     private Long parentId;
 
     private String content;
 
     private boolean ai;
-
-    private boolean adopted;
 
     private boolean deleted;
 
