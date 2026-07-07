@@ -38,6 +38,7 @@ public class Comment {
     private boolean ai = false;
 
     @Builder.Default
+    @Column(nullable = false)
     private boolean deleted = false;
 
     @Builder.Default

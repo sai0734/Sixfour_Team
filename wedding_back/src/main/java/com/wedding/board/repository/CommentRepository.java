@@ -17,4 +17,6 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     // 더미데이터 중복 삽입 방지용
     long countByMemberEmail(String memberEmail);
 
+    void deleteByMemberEmail(String memberEmail);
+
 }
