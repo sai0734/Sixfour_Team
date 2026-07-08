@@ -4,15 +4,18 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.google.gson.Gson;
+import com.wedding.member.domain.Member;
 import com.wedding.member.dto.MemberDTO;
 import com.wedding.global.util.JWTUtil;
 import com.wedding.global.util.RedisTokenService;
+import com.wedding.member.repository.MemberRepository;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -26,6 +29,7 @@ import lombok.extern.log4j.Log4j2;
 public class JWTCheckFilter extends OncePerRequestFilter{
 
     private final RedisTokenService redisTokenService;
+    private final MemberRepository memberRepository;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException{
@@ -141,6 +145,18 @@ public class JWTCheckFilter extends OncePerRequestFilter{
             Boolean social = (Boolean) claims.get("social");
             List<String> roleNames = (List<String>) claims.get("roleNames");
 
+            // 이미 발급된 accessToken이 살아있어도, 그 사이 관리자가 정지/휴면 처리했으면 즉시 차단
+            Optional<Member> memberOpt = memberRepository.findById(email);
+
+            if (memberOpt.isPresent()) {
+                String status = memberOpt.get().getStatus();
+
+                if ("BLACKLIST".equals(status) || "DORMANT".equals(status)) {
+                    sendBlockedResponse(response);
+                    return;
+                }
+            }
+
             MemberDTO memberDTO = new MemberDTO(email, pw, nickname, social.booleanValue(), roleNames);
 
             log.info("-----------------------------------");
@@ -173,6 +189,20 @@ public class JWTCheckFilter extends OncePerRequestFilter{
             printWriter.close();
 
         }
+    }
+
+    // 정지/휴면 회원의 요청을 즉시 차단할 때 쓰는 응답 (일반 토큰 오류와 구분되는 전용 에러코드)
+    private void sendBlockedResponse(HttpServletResponse response) throws IOException {
+
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+
+        Gson gson = new Gson();
+        String msg = gson.toJson(Map.of("error", "ERROR_ACCOUNT_BLOCKED"));
+
+        response.setContentType("application/json");
+        PrintWriter printWriter = response.getWriter();
+        printWriter.println(msg);
+        printWriter.close();
     }
 
 }

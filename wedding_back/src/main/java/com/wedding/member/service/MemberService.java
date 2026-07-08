@@ -13,12 +13,15 @@ import com.wedding.member.dto.SocialCompleteDTO;
 
 @Transactional
 public interface MemberService {
-    
+
     MemberDTO getKakaoMember(String accessToken);
     void modifyMember(MemberModifyDTO memberModifyDTO);
     void join(JoinDTO joinDTO);
     boolean checkEmailAvailable(String email);
     boolean checkNicknameAvailable(String nickname);
+
+    // 전화번호 상태: AVAILABLE(사용가능) / UNAVAILABLE(단순 중복) / BLOCKED(정지·휴면 회원 번호)
+    String getPhoneCheckStatus(String phone);
     void completeSocialProfile(SocialCompleteDTO socialCompleteDTO);
     boolean hasProfile(String email);
     String verifyEmail(String token);
@@ -26,15 +29,15 @@ public interface MemberService {
     void requestPasswordReset(PasswordResetRequestDTO requestDTO);
     String confirmPasswordReset(PasswordResetConfirmDTO confirmDTO);
 
-        default MemberDTO entityToDTO(Member member){
-        
+    default MemberDTO entityToDTO(Member member){
+
         MemberDTO dto = new MemberDTO(
-            member.getEmail(),
-             member.getPw(), 
-             member.getNickname(), 
-             member.isSocial(), 
-             member.getMemberRoleList().stream()
-             .map(memberRole -> memberRole.name()).collect(Collectors.toList()));
+                member.getEmail(),
+                member.getPw(),
+                member.getNickname(),
+                member.isSocial(),
+                member.getMemberRoleList().stream()
+                        .map(memberRole -> memberRole.name()).collect(Collectors.toList()));
         return dto;
     }
 }

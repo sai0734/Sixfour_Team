@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { useSelector } from "react-redux";
-import { socialCompletePost, checkNicknameAvailable } from "../../api/authApi";
+import {
+  socialCompletePost,
+  checkNicknameAvailable,
+  checkPhoneAvailable,
+} from "../../api/authApi";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import AuthLayout from "./AuthLayout";
 
@@ -28,6 +32,7 @@ const PHONE_REGEX = /^01[0-9]-?\d{3,4}-?\d{4}$/;
 const SocialCompleteComponent = () => {
   const [completeParam, setCompleteParam] = useState({ ...initState });
   const [nicknameStatus, setNicknameStatus] = useState(null);
+  const [phoneStatus, setPhoneStatus] = useState(null);
   const [touched, setTouched] = useState({
     nickname: false,
     name: false,
@@ -65,6 +70,32 @@ const SocialCompleteComponent = () => {
       });
   };
 
+  const handleBlurPhone = () => {
+    markTouched("phone");
+
+    if (!completeParam.phone) return;
+
+    if (!PHONE_REGEX.test(completeParam.phone)) {
+      setPhoneStatus("invalid");
+      return;
+    }
+
+    setPhoneStatus("checking");
+
+    checkPhoneAvailable(completeParam.phone)
+      .then((data) => {
+        if (data.blocked) {
+          setPhoneStatus("blocked");
+        } else {
+          setPhoneStatus(data.available ? "available" : "unavailable");
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        setPhoneStatus(null);
+      });
+  };
+
   const markTouched = (name) => {
     setTouched((prev) => ({ ...prev, [name]: true }));
   };
@@ -82,6 +113,7 @@ const SocialCompleteComponent = () => {
   const handleChangePhone = (e) => {
     completeParam.phone = formatPhoneNumber(e.target.value);
     setCompleteParam({ ...completeParam });
+    setPhoneStatus(null);
   };
 
   const handleClickAllAgree = (e) => {
@@ -139,6 +171,18 @@ const SocialCompleteComponent = () => {
       return;
     }
 
+    if (phoneStatus === "unavailable") {
+      alert("이미 사용 중인 휴대폰 번호입니다.");
+      return;
+    }
+
+    if (phoneStatus === "blocked") {
+      alert(
+        "정지 또는 휴면 처리된 회원과 동일한 전화번호입니다. 관리자에게 문의해주세요.",
+      );
+      return;
+    }
+
     if (!completeParam.address) {
       alert("주소는 필수입니다.");
       return;
@@ -165,7 +209,10 @@ const SocialCompleteComponent = () => {
       })
       .catch((err) => {
         console.log(err);
-        alert("처리 중 오류가 발생했습니다.");
+
+        const msg = err.response?.data?.msg;
+
+        alert(msg || "처리 중 오류가 발생했습니다.");
       });
   };
 
@@ -196,22 +243,24 @@ const SocialCompleteComponent = () => {
       return (
         <div className={errMsgClass}>휴대폰 번호는 필수 입력 항목입니다.</div>
       );
-    if (
-      touched.phone &&
-      completeParam.phone &&
-      !PHONE_REGEX.test(completeParam.phone)
-    )
+    if (phoneStatus === "invalid")
       return (
         <div className={errMsgClass}>
           올바른 휴대폰 번호 형식이 아니에요 (예: 010-1234-5678)
         </div>
       );
-    if (
-      touched.phone &&
-      completeParam.phone &&
-      PHONE_REGEX.test(completeParam.phone)
-    )
+    if (phoneStatus === "checking")
+      return <div className="text-plum-500 text-xs mt-1">확인 중...</div>;
+    if (phoneStatus === "available")
       return <div className={okMsgClass}>✓ 사용가능!</div>;
+    if (phoneStatus === "unavailable")
+      return <div className={errMsgClass}>이미 사용 중인 휴대폰 번호예요</div>;
+    if (phoneStatus === "blocked")
+      return (
+        <div className={errMsgClass}>
+          차단(정지·휴면)된 회원의 번호예요. 관리자에게 문의해주세요.
+        </div>
+      );
     return null;
   };
 
@@ -285,7 +334,7 @@ const SocialCompleteComponent = () => {
             placeholder="010-1234-5678"
             value={completeParam.phone}
             onChange={handleChangePhone}
-            onBlur={() => markTouched("phone")}
+            onBlur={handleBlurPhone}
           ></input>
           {renderPhoneMsg()}
         </div>

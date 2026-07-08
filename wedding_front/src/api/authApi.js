@@ -80,3 +80,11 @@ export const checkNicknameAvailable = async (nickname) => {
 
   return res.data; // { available: true/false }
 };
+
+export const checkPhoneAvailable = async (phone) => {
+  const res = await axios.get(`${host}/check-phone`, {
+    params: { phone },
+  });
+
+  return res.data; // { available: true/false }
+};
