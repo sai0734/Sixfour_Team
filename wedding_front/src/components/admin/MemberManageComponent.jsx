@@ -21,12 +21,14 @@ const statusLabel = {
   ACTIVE: "정상",
   BLACKLIST: "정지",
   DORMANT: "휴면",
+  WITHDRAWN: "탈퇴",
 };
 
 const statusColor = {
   ACTIVE: "bg-emerald-50 text-emerald-700 border border-emerald-200",
   BLACKLIST: "bg-red-50 text-red-700 border border-red-200",
   DORMANT: "bg-slate-100 text-slate-600 border border-slate-200",
+  WITHDRAWN: "bg-slate-200 text-slate-500 border border-slate-300",
 };
 
 const formatDate = (value) => {
@@ -39,8 +41,10 @@ const MemberManageComponent = () => {
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState("");
 
+  // 검색창에 입력 중인 값 (아직 조회에 반영 안 됨)
   const [keywordInput, setKeywordInput] = useState("");
 
+  // 실제 조회에 사용되는 조건
   const [queryParam, setQueryParam] = useState({
     page: 1,
     size: 10,
@@ -48,11 +52,12 @@ const MemberManageComponent = () => {
     status: "",
   });
 
+  // 정지 처리 모달 대상 (null이면 닫힘)
   const [suspendTarget, setSuspendTarget] = useState(null);
   const [suspendReason, setSuspendReason] = useState("");
   const [suspendDays, setSuspendDays] = useState("7");
 
-  const [actionEmail, setActionEmail] = useState(null);
+  const [actionEmail, setActionEmail] = useState(null); // 처리중인 행 (버튼 중복 클릭 방지)
 
   const fetchList = (param) => {
     setFetching(true);
@@ -198,6 +203,7 @@ const MemberManageComponent = () => {
             { value: "ACTIVE", label: "정상" },
             { value: "BLACKLIST", label: "정지" },
             { value: "DORMANT", label: "휴면" },
+            { value: "WITHDRAWN", label: "탈퇴" },
           ].map((opt) => (
             <button
               key={opt.value || "ALL"}
@@ -284,6 +290,10 @@ const MemberManageComponent = () => {
                     {member.admin ? (
                       <span className="text-xs text-slate-400">
                         관리자 계정은 상태를 변경할 수 없어요
+                      </span>
+                    ) : member.status === "WITHDRAWN" ? (
+                      <span className="text-xs text-slate-400">
+                        탈퇴한 회원이에요
                       </span>
                     ) : (
                       <div className="flex flex-wrap gap-1.5">

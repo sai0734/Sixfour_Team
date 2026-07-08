@@ -41,6 +41,7 @@ public class APILoginFailHandler implements AuthenticationFailureHandler{
         boolean pendingVerification = false;
         boolean suspended = false;
         boolean dormant = false;
+        boolean withdrawn = false;
         int failCount = 0;
         String suspendReason = null;
         String suspendUntil = null;
@@ -53,10 +54,11 @@ public class APILoginFailHandler implements AuthenticationFailureHandler{
 
                 suspended = "BLACKLIST".equals(member.getStatus());
                 dormant = "DORMANT".equals(member.getStatus());
+                withdrawn = "WITHDRAWN".equals(member.getStatus());
                 suspendReason = member.getSuspendReason();
                 suspendUntil = member.getSuspendUntil() != null ? member.getSuspendUntil().toString() : null;
 
-                if (!suspended && !dormant) {
+                if (!suspended && !dormant && !withdrawn) {
                     LoginFail loginFail = loginFailRepository.getByMemberEmail(email)
                             .orElseGet(() -> LoginFail.builder().member(member).build());
 
@@ -91,6 +93,8 @@ public class APILoginFailHandler implements AuthenticationFailureHandler{
             errorCode = "ERROR_ACCOUNT_SUSPENDED";
         } else if (dormant) {
             errorCode = "ERROR_ACCOUNT_DORMANT";
+        } else if (withdrawn) {
+            errorCode = "ERROR_ACCOUNT_WITHDRAWN";
         } else if (pendingVerification) {
             errorCode = "ERROR_EMAIL_NOT_VERIFIED";
         } else {

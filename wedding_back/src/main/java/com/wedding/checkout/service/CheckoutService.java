@@ -6,6 +6,8 @@ import com.wedding.checkout.dto.ConfirmRequestDTO;
 import com.wedding.checkout.dto.OrderDTO;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Transactional
 public interface CheckoutService {
 
@@ -20,5 +22,8 @@ public interface CheckoutService {
 
     // 가장 최근 결제완료 주문의 배송지 조회 (배송지 불러오기용)
     AddressDTO getLatestAddress(String memberEmail);
+
+    // 회원 본인 주문 목록
+    List<OrderDTO> listMyOrders(String memberEmail);
 
 }

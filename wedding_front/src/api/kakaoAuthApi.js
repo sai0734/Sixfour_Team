@@ -17,6 +17,14 @@ export const getKakaoLoginLink = () => {
   return kakaoURL;
 };
 
+// 마이페이지에서 "카카오 계정 연동하기" 눌렀을 때 사용 - state 파라미터로 "이건 로그인이 아니라 연동 요청"임을 표시
+// (카카오는 이 state 값을 그대로 콜백에 돌려주므로, 리다이렉트 페이지에서 이 값을 보고 로그인/연동을 분기함)
+export const getKakaoLinkLink = () => {
+  const kakaoURL = `${auth_code_path}?client_id=${rest_api_key}&redirect_uri=${redirect_uri}&response_type=code&state=link`;
+
+  return kakaoURL;
+};
+
 export const getKakaoLogoutLink = () => {
   const kakaoLogoutURL = `${logout_path}?client_id=${rest_api_key}&logout_redirect_uri=${logout_redirect_uri}`;
 

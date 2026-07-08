@@ -61,4 +61,15 @@ public class MemberDetail {
     this.addressDetail = addressDetail;
   }
 
+  // 회원탈퇴 시 개인정보 파기(익명화) - 주문/리뷰 등에서 참조하는 email(Member)은 남기되
+  // 실명/연락처/주소 같은 진짜 개인정보만 지움
+  public void anonymize() {
+    this.name = null;
+    this.phone = null;
+    this.birthDate = null;
+    this.zipCode = null;
+    this.address = null;
+    this.addressDetail = null;
+  }
+
 }

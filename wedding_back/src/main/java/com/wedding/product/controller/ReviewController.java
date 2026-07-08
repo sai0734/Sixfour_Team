@@ -130,4 +130,15 @@ public class ReviewController {
         return Map.of("RESULT", "SUCCESS");
     }
 
+    // 회원 본인 리뷰 목록 (마이페이지용)
+    @PreAuthorize("hasAnyRole('USER')")
+    @GetMapping("/reviews/my")
+    public List<ReviewDTO> listMyReviews(Principal principal) {
+
+        log.info("ReviewController_listMyReviews 실행~~~~~~~~");
+
+        return reviewService.listByMember(principal.getName());
+
+    }
+
 }

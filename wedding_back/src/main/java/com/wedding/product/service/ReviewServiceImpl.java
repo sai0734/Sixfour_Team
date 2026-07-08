@@ -205,4 +205,29 @@ public class ReviewServiceImpl implements ReviewService {
         productRepository.save(product);
     }
 
+    @Override
+    public List<ReviewDTO> listByMember(String memberEmail) {
+        List<Review> reviews = reviewRepository.listTopReviewsByMember(memberEmail);
+        return reviews.stream()
+                .map(review -> {
+                    Long pno = review.getProduct().getPno();
+                    List<String> fileNames = review.getImageList().stream()
+                            .map(img -> img.getFileName())
+                            .collect(Collectors.toList());
+                    return ReviewDTO.builder()
+                            .rno(review.getRno())
+                            .pno(pno)
+                            .memberEmail(review.getMember().getEmail())
+                            .nickname(review.getMember().getNickname())
+                            .rating(review.getRating())
+                            .content(review.getContent())
+                            .uploadFileNames(fileNames)
+                            .regDate(review.getRegDate())
+                            .isMine(true)
+                            .replies(null)
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
+
 }

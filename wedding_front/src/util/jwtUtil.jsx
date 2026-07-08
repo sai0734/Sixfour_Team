@@ -75,6 +75,11 @@ const responseFail = async (err) => {
     return Promise.reject(err);
   }
 
+  if (data?.error === "ERROR_ACCOUNT_WITHDRAWN") {
+    forceLogout("탈퇴한 계정입니다.");
+    return Promise.reject(err);
+  }
+
   // accessToken 만료: refreshToken으로 자동 갱신 후 원래 요청 재시도
   if (data?.error === "ERROR_ACCESS_TOKEN") {
     const authCookieValue = getCookie("auth");
@@ -105,12 +110,14 @@ const responseFail = async (err) => {
     } catch (refreshErr) {
       const refreshErrData = refreshErr.response?.data;
 
-      // refresh 자체도 정지/휴면으로 거부된 경우
+      // refresh 자체도 정지/휴면/탈퇴로 거부된 경우
       if (
         refreshErrData?.error === "ERROR_ACCOUNT_SUSPENDED" ||
         refreshErrData?.error === "ERROR_ACCOUNT_DORMANT"
       ) {
         forceLogout("차단(정지·휴면)된 회원입니다. 관리자에게 문의해주세요.");
+      } else if (refreshErrData?.error === "ERROR_ACCOUNT_WITHDRAWN") {
+        forceLogout("탈퇴한 계정입니다.");
       }
 
       return Promise.reject(refreshErr);

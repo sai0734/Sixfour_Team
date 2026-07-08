@@ -11,6 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 
 @RestController
 @Log4j2
@@ -58,6 +59,17 @@ public class CheckoutController {
         log.info("CheckoutController_lastAddress 실행~~~~~~~~");
 
         return checkoutService.getLatestAddress(principal.getName());
+    }
+
+    // 회원 본인 주문 목록(마이페이지 결제 내역용)
+    @PreAuthorize("hasAnyRole('USER')")
+    @GetMapping("/api/my-order")
+    public List<OrderDTO> myOrders(Principal principal) {
+
+        log.info("CheckoutController_myOrders 실행~~~~~~~~");
+
+        return checkoutService.listMyOrders(principal.getName());
+
     }
 
 }
