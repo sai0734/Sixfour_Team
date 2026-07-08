@@ -1,272 +1,294 @@
-﻿[
-    {
-        "cmno":  11,
-        "hallName":  "더라움",
-        "address":  "서울특별시 강남구 언주로 564",
-        "latitude":  37.5047,
-        "longitude":  127.0489,
-        "phone":  "02-538-3366",
-        "representative":  "박성찬",
-        "hallType":  "GARDEN",
-        "description":  "유럽고성분위기의바로크양식인테리어. 캐슬·가든·하우스웨딩등다양한컨셉웨딩가능. 특급호텔출신쉐프와전문큐레이터서비스제공. 선정릉역도보 6분, 주차 300대.",
-        "imageUrl":  "웨딩홀_노블 발렌티나 대치_하우스홀_main.jpg",
-        "hallItems":  [
-                          {
-                              "itemName":  "마제스틱볼룸",
-                              "price":  25000000,
-                              "capacity":  500,
-                              "imageUrl":  "웨딩홀_노블 발렌티나 대치_하우스홀_main.jpg",
-                              "ord":  0,
-                              "mealType":  "COURSE"
-                          },
-                          {
-                              "itemName":  "그라스가든",
-                              "price":  20000000,
-                              "capacity":  300,
-                              "imageUrl":  "웨딩홀_노블 발렌티나 대치_하우스홀_guest_seating.jpg",
-                              "ord":  1,
-                              "mealType":  "COURSE"
-                          },
-                          {
-                              "itemName":  "체임버홀",
-                              "price":  15000000,
-                              "capacity":  150,
-                              "imageUrl":  null,
-                              "ord":  2,
-                              "mealType":  "COURSE"
-                          }
-                      ]
-    },
-    {
-        "cmno":  12,
-        "hallName":  "그랜드 인터컨티넨탈",
-        "address":  "서울특별시 강남구 테헤란로 521",
-        "latitude":  37.5087,
-        "longitude":  127.0623,
-        "phone":  "02-555-5656",
-        "representative":  "김현준",
-        "hallType":  "HOTEL",
-        "description":  "강남특1급호텔웨딩. 그랜드볼룸최대 940명수용. 코엑스삼성역도보 1분. 호텔급코스요리제공.",
-        "imageUrl":  "웨딩홀_더라움_체임버홀_main.jpg",
-        "hallItems":  [
-                          {
-                              "itemName":  "그랜드볼룸",
-                              "price":  35000000,
-                              "capacity":  940,
-                              "imageUrl":  "웨딩홀_더라움_체임버홀_main.jpg",
-                              "ord":  0,
-                              "mealType":  "COURSE"
-                          },
-                          {
-                              "itemName":  "오키드볼룸",
-                              "price":  15000000,
-                              "capacity":  200,
-                              "imageUrl":  "웨딩홀_더라움_체임버홀_guest_seating.jpg",
-                              "ord":  1,
-                              "mealType":  "COURSE"
-                          },
-                          {
-                              "itemName":  "카네이션\u0026메이플룸",
-                              "price":  8000000,
-                              "capacity":  40,
-                              "imageUrl":  null,
-                              "ord":  2,
-                              "mealType":  "COURSE"
-                          },
-                          {
-                              "itemName":  "로즈룸",
-                              "price":  9000000,
-                              "capacity":  80,
-                              "imageUrl":  null,
-                              "ord":  3,
-                              "mealType":  "COURSE"
-                          }
-                      ]
-    },
-    {
-        "cmno":  13,
-        "hallName":  "르비르모어",
-        "address":  "서울특별시 강남구 테헤란로 406",
-        "latitude":  37.5,
-        "longitude":  127.0561,
-        "phone":  "02-501-7000",
-        "representative":  "정승석",
-        "hallType":  "BANQUET",
-        "description":  "로맨틱한순백의공간에서우아하고감각적인웨딩경험. 밝은홀·어두운홀 2가지컨셉의단독홀운영. 90분간격프라이빗예식. 선릉역역세권.",
-        "imageUrl":  "웨딩홀_더휴 웨딩홀_스몰홀_main.png",
-        "hallItems":  [
-                          {
-                              "itemName":  "밝은홀",
-                              "price":  11000000,
-                              "capacity":  700,
-                              "imageUrl":  "웨딩홀_더휴 웨딩홀_스몰홀_main.png",
-                              "ord":  0,
-                              "mealType":  "BUFFET"
-                          },
-                          {
-                              "itemName":  "어두운 홀",
-                              "price":  11000000,
-                              "capacity":  700,
-                              "imageUrl":  "웨딩홀_더휴 웨딩홀_스몰홀_brides_room.png",
-                              "ord":  1,
-                              "mealType":  "BUFFET"
-                          }
-                      ]
-    },
-    {
-        "cmno":  14,
-        "hallName":  "아펠가모 선릉",
-        "address":  "서울특별시 강남구 압구정로 201",
-        "latitude":  37.5274,
-        "longitude":  127.0286,
-        "phone":  "02-515-7364",
-        "representative":  "이지수",
-        "hallType":  "BANQUET",
-        "description":  "작고아담하지만따뜻하고아늑한채플홀특화. 단독홀로신부대기실·홀·연회장동선편리. 음식퀄리티로정평. 주차여유로움.",
-        "imageUrl":  "웨딩홀_르비르모어_밝은홀_main.png",
-        "hallItems":  [
-                          {
-                              "itemName":  "채플홀",
-                              "price":  12000000,
-                              "capacity":  300,
-                              "imageUrl":  "웨딩홀_르비르모어_밝은홀_main.png",
-                              "ord":  0,
-                              "mealType":  "BOTH"
-                          }
-                      ]
-    },
-    {
-        "cmno":  15,
-        "hallName":  "그랜드힐 컨벤션",
-        "address":  "서울특별시 강남구 역삼동 679",
-        "latitude":  37.501,
-        "longitude":  127.0385,
-        "phone":  "02-2005-1010",
-        "representative":  "최병훈",
-        "hallType":  "BANQUET",
-        "description":  "언덕위웅장하고트렌디한모던클래식스타일. 8미터높은천고의그랜드볼룸과로맨틱한사브리나홀보유. 역삼역인근.",
-        "imageUrl":  "웨딩홀_르비르모어_어두운 홀_main.png",
-        "hallItems":  [
-                          {
-                              "itemName":  "그랜드볼룸",
-                              "price":  10000000,
-                              "capacity":  400,
-                              "imageUrl":  "웨딩홀_르비르모어_어두운 홀_main.png",
-                              "ord":  0,
-                              "mealType":  "BUFFET"
-                          },
-                          {
-                              "itemName":  "사브리나",
-                              "price":  6000000,
-                              "capacity":  120,
-                              "imageUrl":  "웨딩홀_르비르모어_어두운 홀_brides_room.jpg",
-                              "ord":  1,
-                              "mealType":  "BUFFET"
-                          }
-                      ]
-    },
-    {
-        "cmno":  16,
-        "hallName":  "노블발렌티 대치",
-        "address":  "서울특별시 강남구 대치동 889-5",
-        "latitude":  37.4944,
-        "longitude":  127.0625,
-        "phone":  "02-501-7000",
-        "representative":  "황민경",
-        "hallType":  "BANQUET",
-        "description":  "도심속대저택컨셉의클래식하우스웨딩. 2019년강남최초오픈. 프라이빗예식특화. 메인볼룸·하우스홀·가든테라스 3개홀보유.",
-        "imageUrl":  "웨딩홀_소노펠리체 컨벤션_다이아몬드홀_main.png",
-        "hallItems":  [
-                          {
-                              "itemName":  "메인볼룸",
-                              "price":  15000000,
-                              "capacity":  350,
-                              "imageUrl":  "웨딩홀_소노펠리체 컨벤션_다이아몬드홀_main.png",
-                              "ord":  0,
-                              "mealType":  "COURSE"
-                          },
-                          {
-                              "itemName":  "하우스홀",
-                              "price":  10000000,
-                              "capacity":  200,
-                              "imageUrl":  "웨딩홀_소노펠리체 컨벤션_다이아몬드홀_guest_seating.png",
-                              "ord":  1,
-                              "mealType":  "COURSE"
-                          },
-                          {
-                              "itemName":  "가든테라스",
-                              "price":  7000000,
-                              "capacity":  100,
-                              "imageUrl":  "웨딩홀_소노펠리체 컨벤션_다이아몬드홀_pyebaek_room.png",
-                              "ord":  2,
-                              "mealType":  "COURSE"
-                          }
-                      ]
-    },
-    {
-        "cmno":  17,
-        "hallName":  "토브헤세드",
-        "address":  "서울특별시 강남구 청담동 115-16",
-        "latitude":  37.524,
-        "longitude":  127.0455,
-        "phone":  "02-3448-9066",
-        "representative":  "장수현",
-        "hallType":  "BANQUET",
-        "description":  "나만의프라이빗맞춤웨딩이가능한강남고품격하우스웨딩홀. 단독홀운영. 소규모·야외웨딩특화. 청담동위치.",
-        "imageUrl":  "웨딩홀_아르베_루프탑홀_main.png",
-        "hallItems":  [
-                          {
-                              "itemName":  "플로렌스홀",
-                              "price":  18000000,
-                              "capacity":  200,
-                              "imageUrl":  "웨딩홀_아르베_루프탑홀_main.png",
-                              "ord":  0,
-                              "mealType":  "COURSE"
-                          }
-                      ]
-    },
-    {
-        "cmno":  18,
-        "hallName":  "아르베",
-        "address":  "서울특별시 강남구 논현동 215",
-        "latitude":  37.5163,
-        "longitude":  127.0421,
-        "phone":  "02-536-4000",
-        "representative":  "김태영",
-        "hallType":  "BANQUET",
-        "description":  "꿈꾸던웨딩을위한로맨틱한베뉴. 루프탑홀보유. 맛깔스러운뷔페로정평. 논현역인근.",
-        "imageUrl":  "웨딩홀_아펠가모 선릉_채플홀_main.png",
-        "hallItems":  [
-                          {
-                              "itemName":  "루프탑홀",
-                              "price":  7000000,
-                              "capacity":  120,
-                              "imageUrl":  "웨딩홀_아펠가모 선릉_채플홀_main.png",
-                              "ord":  0,
-                              "mealType":  "BOTH"
-                          }
-                      ]
-    },
-    {
-        "cmno":  19,
-        "hallName":  "소노펠리체 컨벤션",
-        "address":  "서울특별시 강남구 삼성동 159-6",
-        "latitude":  37.5135,
-        "longitude":  127.0591,
-        "phone":  "02-2222-7401",
-        "representative":  "박지연",
-        "hallType":  "BANQUET",
-        "description":  "높은층고와웅장한로비. 신부대기실·홀·연회장한층배치로동선편리. 코엑스인근. 단독홀로 90분간격프라이빗예식진행.",
-        "imageUrl":  "웨딩홀_토브헤세드_플로렌스홀_main.png",
-        "hallItems":  [
-                          {
-                              "itemName":  "다이아몬드홀",
-                              "price":  13000000,
-                              "capacity":  450,
-                              "imageUrl":  "웨딩홀_토브헤세드_플로렌스홀_main.png",
-                              "ord":  0,
-                              "mealType":  "BUFFET"
-                          }
-                      ]
-    }
+[
+  {
+    "cmno": 11,
+    "hallName": "더라움",
+    "address": "서울특별시 강남구 언주로 564",
+    "latitude": 37.5047,
+    "longitude": 127.0489,
+    "phone": "02-538-3366",
+    "representative": "박성찬",
+    "hallType": "GARDEN",
+    "description": "유럽 고성 분위기의 바로크 양식 인테리어. 캐슬·가든·하우스웨딩 등 다양한 컨셉 웨딩 가능. 특급호텔 출신 쉐프와 전문 큐레이터 서비스 제공. 선정릉역 도보 6분, 주차 300대.",
+    "imageUrl": "웨딩홀_더라움_마제스틱볼룸_main.jpg",
+    "hallItems": [
+      {
+        "itemName": "마제스틱볼룸",
+        "price": 25000000,
+        "capacity": 500,
+        "imageUrl": "웨딩홀_더라움_마제스틱볼룸_main.jpg",
+        "ord": 0,
+        "mealType": "COURSE"
+      },
+      {
+        "itemName": "그라스가든",
+        "price": 20000000,
+        "capacity": 300,
+        "imageUrl": "웨딩홀_더라움_그라스가든_main.jpg",
+        "ord": 1,
+        "mealType": "COURSE"
+      },
+      {
+        "itemName": "체임버홀",
+        "price": 15000000,
+        "capacity": 150,
+        "imageUrl": "웨딩홀_더라움_체임버홀_main.jpg",
+        "ord": 2,
+        "mealType": "COURSE"
+      }
+    ]
+  },
+  {
+    "cmno": 12,
+    "hallName": "그랜드 인터컨티넨탈",
+    "address": "서울특별시 강남구 테헤란로 521",
+    "latitude": 37.5087,
+    "longitude": 127.0623,
+    "phone": "02-555-5656",
+    "representative": "김현준",
+    "hallType": "HOTEL",
+    "description": "강남 특1급 호텔 웨딩. 그랜드볼룸 최대 940명 수용. 코엑스 삼성역 도보 1분. 호텔급 코스 요리 제공.",
+    "imageUrl": "웨딩홀_그랜드 인터컨티넨탈_그랜드볼룸_main.jpg",
+    "hallItems": [
+      {
+        "itemName": "그랜드볼룸",
+        "price": 35000000,
+        "capacity": 940,
+        "imageUrl": "웨딩홀_그랜드 인터컨티넨탈_그랜드볼룸_main.jpg",
+        "ord": 0,
+        "mealType": "COURSE"
+      },
+      {
+        "itemName": "오키드볼룸",
+        "price": 15000000,
+        "capacity": 200,
+        "imageUrl": "웨딩홀_그랜드 인터컨티넨탈_오키드볼룸_main.png",
+        "ord": 1,
+        "mealType": "COURSE"
+      },
+      {
+        "itemName": "카네이션&메이플룸",
+        "price": 8000000,
+        "capacity": 40,
+        "imageUrl": "웨딩홀_그랜드 인터컨티넨탈_카네이션&메이플룸_main.png",
+        "ord": 2,
+        "mealType": "COURSE"
+      },
+      {
+        "itemName": "로즈룸",
+        "price": 9000000,
+        "capacity": 80,
+        "imageUrl": "웨딩홀_그랜드 인터컨티넨탈_로즈룸_main.png",
+        "ord": 3,
+        "mealType": "COURSE"
+      }
+    ]
+  },
+  {
+    "cmno": 13,
+    "hallName": "르비르모어",
+    "address": "서울특별시 강남구 테헤란로 406",
+    "latitude": 37.5,
+    "longitude": 127.0561,
+    "phone": "02-501-7000",
+    "representative": "정승석",
+    "hallType": "BANQUET",
+    "description": "로맨틱한 순백의 공간에서 우아하고 감각적인 웨딩 경험. 밝은홀·어두운홀 2가지 컨셉의 단독홀 운영. 90분 간격 프라이빗 예식. 선릉역 역세권.",
+    "imageUrl": "웨딩홀_르비르모어_밝은홀_main.png",
+    "hallItems": [
+      {
+        "itemName": "밝은홀",
+        "price": 11000000,
+        "capacity": 700,
+        "imageUrl": "웨딩홀_르비르모어_밝은홀_main.png",
+        "ord": 0,
+        "mealType": "BUFFET"
+      },
+      {
+        "itemName": "어두운 홀",
+        "price": 11000000,
+        "capacity": 700,
+        "imageUrl": "웨딩홀_르비르모어_어두운 홀_main.png",
+        "ord": 1,
+        "mealType": "BUFFET"
+      }
+    ]
+  },
+  {
+    "cmno": 14,
+    "hallName": "아펠가모 선릉",
+    "address": "서울특별시 강남구 압구정로 201",
+    "latitude": 37.5274,
+    "longitude": 127.0286,
+    "phone": "02-515-7364",
+    "representative": "이지수",
+    "hallType": "BANQUET",
+    "description": "작고 아담하지만 따뜻하고 아늑한 채플홀 특화. 단독홀로 신부대기실·홀·연회장 동선 편리. 음식 퀄리티로 정평. 주차 여유로움.",
+    "imageUrl": "웨딩홀_아펠가모 선릉_채플홀_main.png",
+    "hallItems": [
+      {
+        "itemName": "채플홀",
+        "price": 12000000,
+        "capacity": 300,
+        "imageUrl": "웨딩홀_아펠가모 선릉_채플홀_main.png",
+        "ord": 0,
+        "mealType": "BOTH"
+      }
+    ]
+  },
+  {
+    "cmno": 15,
+    "hallName": "그랜드힐 컨벤션",
+    "address": "서울특별시 강남구 역삼동 679",
+    "latitude": 37.501,
+    "longitude": 127.0385,
+    "phone": "02-2005-1010",
+    "representative": "최병훈",
+    "hallType": "BANQUET",
+    "description": "언덕 위 웅장하고 트렌디한 모던 클래식 스타일. 8미터 높은 천고의 그랜드볼룸과 로맨틱한 사브리나홀 보유. 역삼역 인근.",
+    "imageUrl": "웨딩홀_그랜드힐 컨벤션_그랜드볼룸_main.png",
+    "hallItems": [
+      {
+        "itemName": "그랜드볼룸",
+        "price": 10000000,
+        "capacity": 400,
+        "imageUrl": "웨딩홀_그랜드힐 컨벤션_그랜드볼룸_main.png",
+        "ord": 0,
+        "mealType": "BUFFET"
+      },
+      {
+        "itemName": "사브리나",
+        "price": 6000000,
+        "capacity": 120,
+        "imageUrl": "웨딩홀_그랜드힐 컨벤션_사브리나_main.png",
+        "ord": 1,
+        "mealType": "BUFFET"
+      }
+    ]
+  },
+  {
+    "cmno": 16,
+    "hallName": "노블발렌티 대치",
+    "address": "서울특별시 강남구 대치동 889-5",
+    "latitude": 37.4944,
+    "longitude": 127.0625,
+    "phone": "02-501-7000",
+    "representative": "황민경",
+    "hallType": "BANQUET",
+    "description": "도심 속 대저택 컨셉의 클래식 하우스웨딩. 2019년 강남 최초 오픈. 프라이빗 예식 특화. 메인볼룸·하우스홀·가든테라스 3개 홀 보유.",
+    "imageUrl": "웨딩홀_노블 발렌티나 대치_메인볼룸_main.jpg",
+    "hallItems": [
+      {
+        "itemName": "메인볼룸",
+        "price": 15000000,
+        "capacity": 350,
+        "imageUrl": "웨딩홀_노블 발렌티나 대치_메인볼룸_main.jpg",
+        "ord": 0,
+        "mealType": "COURSE"
+      },
+      {
+        "itemName": "하우스홀",
+        "price": 10000000,
+        "capacity": 200,
+        "imageUrl": "웨딩홀_노블 발렌티나 대치_하우스홀_main.jpg",
+        "ord": 1,
+        "mealType": "COURSE"
+      },
+      {
+        "itemName": "가든테라스",
+        "price": 7000000,
+        "capacity": 100,
+        "imageUrl": "웨딩홀_노블 발렌티나 대치_가든테라스_main.png",
+        "ord": 2,
+        "mealType": "COURSE"
+      }
+    ]
+  },
+  {
+    "cmno": 17,
+    "hallName": "토브헤세드",
+    "address": "서울특별시 강남구 청담동 115-16",
+    "latitude": 37.524,
+    "longitude": 127.0455,
+    "phone": "02-3448-9066",
+    "representative": "장수현",
+    "hallType": "BANQUET",
+    "description": "나만의 프라이빗 맞춤웨딩이 가능한 강남 고품격 하우스웨딩홀. 단독홀 운영. 소규모·야외 웨딩 특화. 청담동 위치.",
+    "imageUrl": "웨딩홀_토브헤세드_플로렌스홀_main.png",
+    "hallItems": [
+      {
+        "itemName": "플로렌스홀",
+        "price": 18000000,
+        "capacity": 200,
+        "imageUrl": "웨딩홀_토브헤세드_플로렌스홀_main.png",
+        "ord": 0,
+        "mealType": "COURSE"
+      }
+    ]
+  },
+  {
+    "cmno": 18,
+    "hallName": "아르베",
+    "address": "서울특별시 강남구 논현동 215",
+    "latitude": 37.5163,
+    "longitude": 127.0421,
+    "phone": "02-536-4000",
+    "representative": "김태영",
+    "hallType": "BANQUET",
+    "description": "꿈꾸던 웨딩을 위한 로맨틱한 베뉴. 루프탑홀 보유. 맛깔스러운 뷔페로 정평. 논현역 인근.",
+    "imageUrl": "웨딩홀_아르베_루프탑홀_main.png",
+    "hallItems": [
+      {
+        "itemName": "루프탑홀",
+        "price": 7000000,
+        "capacity": 120,
+        "imageUrl": "웨딩홀_아르베_루프탑홀_main.png",
+        "ord": 0,
+        "mealType": "BOTH"
+      }
+    ]
+  },
+  {
+    "cmno": 19,
+    "hallName": "소노펠리체 컨벤션",
+    "address": "서울특별시 강남구 삼성동 159-6",
+    "latitude": 37.5135,
+    "longitude": 127.0591,
+    "phone": "02-2222-7401",
+    "representative": "박지연",
+    "hallType": "BANQUET",
+    "description": "높은 층고와 웅장한 로비. 신부대기실·홀·연회장 한 층 배치로 동선 편리. 코엑스 인근. 단독홀로 90분 간격 프라이빗 예식 진행.",
+    "imageUrl": "웨딩홀_소노펠리체 컨벤션_다이아몬드홀_main.png",
+    "hallItems": [
+      {
+        "itemName": "다이아몬드홀",
+        "price": 13000000,
+        "capacity": 450,
+        "imageUrl": "웨딩홀_소노펠리체 컨벤션_다이아몬드홀_main.png",
+        "ord": 0,
+        "mealType": "BUFFET"
+      }
+    ]
+  },
+  {
+    "cmno": 20,
+    "hallName": "더휴 웨딩홀",
+    "address": "서울특별시 강남구 삼성동 141-26 EK타워",
+    "latitude": 37.5128,
+    "longitude": 127.0598,
+    "phone": "02-6188-0188",
+    "representative": "윤정민",
+    "hallType": "BANQUET",
+    "description": "삼성역 도보 5분. 모던한 인테리어의 소규모 특화 웨딩홀. 합리적인 가격대로 강남 위치 대비 접근성 우수.",
+    "imageUrl": "웨딩홀_더휴 웨딩홀_스몰홀_main.png",
+    "hallItems": [
+      {
+        "itemName": "스몰홀",
+        "price": 5000000,
+        "capacity": 100,
+        "imageUrl": "웨딩홀_더휴 웨딩홀_스몰홀_main.png",
+        "ord": 0,
+        "mealType": "BUFFET"
+      }
+    ]
+  }
 ]
