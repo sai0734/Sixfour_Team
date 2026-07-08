@@ -151,8 +151,8 @@ public class JWTCheckFilter extends OncePerRequestFilter{
             if (memberOpt.isPresent()) {
                 String status = memberOpt.get().getStatus();
 
-                if ("BLACKLIST".equals(status) || "DORMANT".equals(status)) {
-                    sendBlockedResponse(response);
+                if ("BLACKLIST".equals(status) || "DORMANT".equals(status) || "WITHDRAWN".equals(status)) {
+                    sendBlockedResponse(response, status);
                     return;
                 }
             }
@@ -191,13 +191,15 @@ public class JWTCheckFilter extends OncePerRequestFilter{
         }
     }
 
-    // 정지/휴면 회원의 요청을 즉시 차단할 때 쓰는 응답 (일반 토큰 오류와 구분되는 전용 에러코드)
-    private void sendBlockedResponse(HttpServletResponse response) throws IOException {
+    // 정지/휴면/탈퇴 회원의 요청을 즉시 차단할 때 쓰는 응답 (일반 토큰 오류와 구분되는 전용 에러코드)
+    private void sendBlockedResponse(HttpServletResponse response, String status) throws IOException {
 
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 
+        String errorCode = "WITHDRAWN".equals(status) ? "ERROR_ACCOUNT_WITHDRAWN" : "ERROR_ACCOUNT_BLOCKED";
+
         Gson gson = new Gson();
-        String msg = gson.toJson(Map.of("error", "ERROR_ACCOUNT_BLOCKED"));
+        String msg = gson.toJson(Map.of("error", errorCode));
 
         response.setContentType("application/json");
         PrintWriter printWriter = response.getWriter();

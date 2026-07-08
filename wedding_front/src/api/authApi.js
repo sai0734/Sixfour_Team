@@ -88,3 +88,40 @@ export const checkPhoneAvailable = async (phone) => {
 
   return res.data; // { available: true/false }
 };
+
+export const withdrawPost = async (email) => {
+  const res = await jwtAxios.delete(`${API_SERVER_HOST}/api/member/withdraw`, {
+    data: { email },
+  });
+
+  return res.data;
+};
+
+export const linkKakaoAccountPost = async (email, kakaoAccessToken) => {
+  const res = await jwtAxios.post(`${API_SERVER_HOST}/api/member/social-link`, {
+    email,
+    kakaoAccessToken,
+  });
+
+  return res.data;
+};
+
+export const unlinkSocialAccount = async (email, provider) => {
+  const res = await jwtAxios.delete(
+    `${API_SERVER_HOST}/api/member/social-unlink/${provider}`,
+    { params: { email } },
+  );
+
+  return res.data;
+};
+
+export const getSocialAccounts = async (email) => {
+  const res = await jwtAxios.get(
+    `${API_SERVER_HOST}/api/member/social-accounts`,
+    {
+      params: { email },
+    },
+  );
+
+  return res.data; // { providers: ["kakao", ...] }
+};

@@ -29,6 +29,14 @@ public interface MemberService {
     void requestPasswordReset(PasswordResetRequestDTO requestDTO);
     String confirmPasswordReset(PasswordResetConfirmDTO confirmDTO);
 
+    // 회원탈퇴
+    void withdrawMember(String email);
+
+    // 소셜(카카오) 계정 연동 추가/해제 및 조회
+    void linkKakaoAccount(String email, String kakaoAccessToken);
+    void unlinkSocialAccount(String email, String provider);
+    java.util.List<String> getLinkedProviders(String email);
+
     default MemberDTO entityToDTO(Member member){
 
         MemberDTO dto = new MemberDTO(

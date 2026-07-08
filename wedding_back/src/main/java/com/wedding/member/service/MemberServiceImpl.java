@@ -99,6 +99,11 @@ public class MemberServiceImpl implements MemberService {
                 "ERROR_ACCOUNT_DORMANT", null, null);
       }
 
+      if ("WITHDRAWN".equals(member.getStatus())) {
+        throw new com.wedding.member.exception.MemberBlockedException(
+                "ERROR_ACCOUNT_WITHDRAWN", null, null);
+      }
+
       ensureSocialAccount(member, providerId);
 
       MemberDTO memberDTO = entityToDTO(member);
@@ -548,5 +553,85 @@ public class MemberServiceImpl implements MemberService {
     log.info("password reset complete: " + member.getEmail());
 
     return "SUCCESS";
+  }
+
+  @Override
+  public void withdrawMember(String email) {
+
+    Member member = memberRepository.findById(email).orElseThrow();
+
+    member.withdraw();
+    memberRepository.save(member);
+
+    memberDetailRepository.getByMemberEmail(email).ifPresent(detail -> {
+      detail.anonymize();
+      memberDetailRepository.save(detail);
+    });
+
+    socialAccountRepository.deleteAllByMember_Email(email);
+
+    log.info("member withdrawn: " + email);
+  }
+
+  @Override
+  public void linkKakaoAccount(String email, String kakaoAccessToken) {
+
+    Map<String, String> kakaoInfo = getKakaoUserInfo(kakaoAccessToken);
+    String providerId = kakaoInfo.get("providerId");
+
+    Optional<SocialAccount> existing = socialAccountRepository.findByProviderAndProviderId("kakao", providerId);
+
+    if (existing.isPresent()) {
+      if (existing.get().getMember().getEmail().equals(email)) {
+        // 이미 본인 계정에 연동되어 있음 - 그냥 통과
+        return;
+      }
+      throw new IllegalStateException("이미 다른 계정에 연동된 카카오 계정입니다.");
+    }
+
+    Member member = memberRepository.findById(email).orElseThrow();
+
+    SocialAccount socialAccount = SocialAccount.builder()
+            .member(member)
+            .provider("kakao")
+            .providerId(providerId)
+            .build();
+
+    socialAccountRepository.save(socialAccount);
+
+    log.info("kakao account linked: " + email);
+  }
+
+  @Override
+  public void unlinkSocialAccount(String email, String provider) {
+
+    Member member = memberRepository.findById(email).orElseThrow();
+
+    List<SocialAccount> linked = socialAccountRepository.findAllByMember_Email(email);
+
+    SocialAccount target = linked.stream()
+            .filter(sa -> sa.getProvider().equals(provider))
+            .findFirst()
+            .orElseThrow(() -> new IllegalStateException("연동되어 있지 않습니다."));
+
+    // 원래 소셜 가입(비밀번호를 본인이 모를 가능성이 높음)인데 이게 마지막 남은 연동이면,
+    // 해제 시 로그인 수단이 아예 사라지므로 차단
+    if (linked.size() == 1 && member.isSocial()) {
+      throw new IllegalStateException(
+              "최소 하나의 로그인 수단이 필요합니다. 먼저 비밀번호를 설정한 후 연동 해제해주세요.");
+    }
+
+    socialAccountRepository.delete(target);
+
+    log.info(provider + " account unlinked: " + email);
+  }
+
+  @Override
+  public List<String> getLinkedProviders(String email) {
+
+    return socialAccountRepository.findAllByMember_Email(email)
+            .stream()
+            .map(SocialAccount::getProvider)
+            .toList();
   }
 }
