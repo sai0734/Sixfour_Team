@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import MyPageLayout from "../../layouts/MyPageLayout";
 import PlanComponent from "../../components/weddingplan/PlanComponent";
 import WishTab from "../../components/companywish/WishTab";
 import ReservationTab from "../../components/reservation/ReservationTab";
 import PaymentTab from "../../components/mypage/PaymentTab";
 import MyPostsTab from "../../components/mypage/MyPostsTab";
+import AccountSettingsTab from "../../components/mypage/AccountSettingsTab";
 
 const TABS = [
   { key: "plan", label: "플랜", enabled: true },
@@ -12,10 +14,20 @@ const TABS = [
   { key: "payment", label: "결제 내역", enabled: true },
   { key: "wish", label: "찜 목록", enabled: true },
   { key: "myposts", label: "내가 쓴 글", enabled: true },
+  { key: "account", label: "계정 설정", enabled: true },
 ];
 
 const HubPage = () => {
-  const [activeTab, setActiveTab] = useState("plan");
+  const [searchParams] = useSearchParams();
+
+  // 예: /mypage?tab=account 로 들어오면 "계정 설정" 탭이 바로 열림
+  // (탭 목록에 없는 값이 오면 무시하고 기본값인 "plan"으로)
+  const requestedTab = searchParams.get("tab");
+  const initialTab = TABS.some((tab) => tab.key === requestedTab)
+    ? requestedTab
+    : "plan";
+
+  const [activeTab, setActiveTab] = useState(initialTab);
 
   return (
     <MyPageLayout
@@ -58,6 +70,7 @@ const HubPage = () => {
       {activeTab === "payment" && <PaymentTab />}
       {activeTab === "wish" && <WishTab />}
       {activeTab === "myposts" && <MyPostsTab />}
+      {activeTab === "account" && <AccountSettingsTab />}
     </MyPageLayout>
   );
 };

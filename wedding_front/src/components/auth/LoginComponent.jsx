@@ -46,6 +46,8 @@ const LoginComponent = () => {
           data.error === "ERROR_ACCOUNT_DORMANT"
         ) {
           alert("차단(정지·휴면)된 회원입니다. 관리자에게 문의해주세요.");
+        } else if (data.error === "ERROR_ACCOUNT_WITHDRAWN") {
+          alert("탈퇴한 계정입니다.");
         } else if (data.error === "ERROR_EMAIL_NOT_VERIFIED") {
           alert(
             "전송된 이메일을 확인해주세요. 인증을 완료해야 로그인할 수 있어요.",

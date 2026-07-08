@@ -1,5 +1,6 @@
 package com.wedding.member.controller;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,6 +12,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.wedding.global.util.CustomJWTException;
 import com.wedding.global.util.JWTUtil;
 import com.wedding.global.util.RedisTokenService;
+import com.wedding.member.domain.Member;
+import com.wedding.member.exception.MemberBlockedException;
+import com.wedding.member.repository.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -21,6 +25,7 @@ import lombok.extern.log4j.Log4j2;
 public class AuthRefreshController {
 
     private final RedisTokenService redisTokenService;
+    private final MemberRepository memberRepository;
 
     @RequestMapping("/api/auth/refresh")
     public Map<String, Object> refresh(
@@ -49,6 +54,40 @@ public class AuthRefreshController {
         log.info("refresh ... claims: " + claims);
 
         String email = (String) claims.get("email");
+
+        // 정지(BLACKLIST)/휴면(DORMANT) 회원은 accessToken 만료 시점에 재발급을 거부한다.
+        // 관리자가 로그인 이후에 정지시켜도, 다음 accessToken 만료 타이밍(최대 24시간 이내)에
+        // 여기서 확실히 걸러져 더 이상 갱신되지 않는다.
+        Member member = memberRepository.findById(email).orElse(null);
+
+        if (member != null) {
+
+            // 정지 기간이 지났으면 자동으로 정상 복귀
+            if ("BLACKLIST".equals(member.getStatus())
+                    && member.getSuspendUntil() != null
+                    && !member.getSuspendUntil().isAfter(LocalDateTime.now())) {
+                member.reactivate();
+                memberRepository.save(member);
+            }
+
+            if ("BLACKLIST".equals(member.getStatus())) {
+                redisTokenService.deleteRefreshToken(email);
+                throw new MemberBlockedException(
+                        "ERROR_ACCOUNT_SUSPENDED",
+                        member.getSuspendReason(),
+                        member.getSuspendUntil() == null ? null : member.getSuspendUntil().toString());
+            }
+
+            if ("DORMANT".equals(member.getStatus())) {
+                redisTokenService.deleteRefreshToken(email);
+                throw new MemberBlockedException("ERROR_ACCOUNT_DORMANT", null, null);
+            }
+
+            if ("WITHDRAWN".equals(member.getStatus())) {
+                redisTokenService.deleteRefreshToken(email);
+                throw new MemberBlockedException("ERROR_ACCOUNT_WITHDRAWN", null, null);
+            }
+        }
 
         // Redis에 저장된 refresh 토큰과 일치하는지 확인 (로그아웃/강제만료 등으로 무효화된 토큰 차단)
         // 단, Redis 자체가 꺼져있는 환경(시연 PC 등)에서는 조회 결과가 항상 null이라

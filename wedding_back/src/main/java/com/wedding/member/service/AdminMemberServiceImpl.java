@@ -73,6 +73,10 @@ public class AdminMemberServiceImpl implements AdminMemberService {
             throw new IllegalStateException("관리자 계정은 상태를 변경할 수 없습니다.");
         }
 
+        if ("WITHDRAWN".equals(member.getStatus())) {
+            throw new IllegalStateException("탈퇴한 회원은 상태를 변경할 수 없습니다.");
+        }
+
         switch (status) {
             case "BLACKLIST" -> {
                 if (updateDTO.getReason() == null || updateDTO.getReason().isBlank()) {
