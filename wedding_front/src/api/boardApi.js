@@ -16,6 +16,13 @@ export const getBest = async () => {
   return res.data;
 };
 
+// 마이페이지 "내가 쓴 글"
+export const getListByMember = async (memberEmail) => {
+  const res = await jwtAxios.get(`${prefix}/member/${memberEmail}`);
+
+  return res.data;
+};
+
 export const getOne = async (boardId) => {
   const res = await jwtAxios.get(`${prefix}/${boardId}`);
 

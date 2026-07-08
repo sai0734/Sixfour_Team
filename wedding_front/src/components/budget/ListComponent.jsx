@@ -5,6 +5,7 @@ import {
   putOne,
   deleteOne,
 } from "../../api/budgetApi";
+import { getByMember as getWeddingPlan } from "../../api/weddingplanApi";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import BudgetFormModal from "./BudgetFormModal";
 
@@ -30,6 +31,7 @@ const ListComponent = () => {
   const { loginState } = useCustomLogin();
 
   const [budgetList, setBudgetList] = useState([]);
+  const [plan, setPlan] = useState(null);
   const [refresh, setRefresh] = useState(false);
 
   const [modalMode, setModalMode] = useState(null); // null | "add" | "edit"
@@ -44,6 +46,9 @@ const ListComponent = () => {
     getListByMember(loginState.email).then((data) => {
       setBudgetList(data);
     });
+    getWeddingPlan(loginState.email)
+      .then((data) => setPlan(data))
+      .catch(() => setPlan(null));
   }, [loginState.email, refresh]);
 
   const openAddModal = () => {
@@ -122,7 +127,11 @@ const ListComponent = () => {
     );
   }
 
-  const totalBudget = budgetList.reduce((s, i) => s + (i.budgetAmount || 0), 0);
+  const itemizedBudget = budgetList.reduce(
+    (s, i) => s + (i.budgetAmount || 0),
+    0,
+  );
+  const totalBudget = plan?.totalBudget || itemizedBudget;
   const totalActual = budgetList.reduce((s, i) => s + (i.actualAmount || 0), 0);
   const remaining = totalBudget - totalActual;
 
@@ -145,6 +154,11 @@ const ListComponent = () => {
           <p className="text-xl font-medium text-ink">
             {totalBudget.toLocaleString()}원
           </p>
+          {!plan?.totalBudget && (
+            <p className="text-[10px] text-ink-faint mt-1">
+              마이페이지 웨딩플랜에서 설정 가능
+            </p>
+          )}
         </div>
         <div className="bg-white rounded-2xl border border-line p-5">
           <p className="text-xs text-ink-muted mb-1">현재 지출</p>

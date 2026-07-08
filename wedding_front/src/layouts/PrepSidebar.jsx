@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 
 // 실제로 만들어진 기능만 enabled: true. 나머지는 목업에만 있는 예정 기능이라 클릭해도 이동 안 함.
+// 마이페이지 관련 항목은 MyPageSidebar로 분리했음 (구조 분리)
 const MENU_GROUPS = [
   {
     label: "준비 관리",
@@ -11,13 +12,6 @@ const MENU_GROUPS = [
       { name: "D-day 관리", path: "/prep/dday", enabled: true },
       { name: "납부 관리", path: "/prep/payment", enabled: true },
       { name: "AI 드레스", path: "/prep/ai-dress", enabled: false },
-    ],
-  },
-  {
-    label: "마이페이지",
-    items: [
-      { name: "마이페이지", path: "/mypage", enabled: true },
-      { name: "회원정보 수정", path: "/auth/modify", enabled: true },
     ],
   },
 ];

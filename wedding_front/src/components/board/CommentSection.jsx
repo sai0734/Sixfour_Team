@@ -50,6 +50,9 @@ const CommentSection = ({ boardId, onCountChange }) => {
   const handleAddComment = () => {
     if (!newContent.trim()) return;
 
+    const filesToUpload = newFiles;
+    setNewFiles([]);
+
     postAdd({
       boardId,
       memberEmail: loginState.email,
@@ -57,23 +60,30 @@ const CommentSection = ({ boardId, onCountChange }) => {
       parentId: null,
       content: newContent,
     })
-      .then((res) => {
+      .then(async (res) => {
         setNewContent("");
-        setRefresh((r) => !r);
         onCountChange && onCountChange(1);
 
-        if (newFiles.length > 0) {
-          uploadCommentImages(res.commentId, newFiles).catch((e) =>
+        // 파일 업로드가 끝난 뒤에 refresh를 트리거해야
+        // 방금 올린 첨부파일이 목록 재조회 시 바로 같이 보인다.
+        // (전에는 업로드를 기다리지 않고 바로 refresh부터 해서,
+        //  재조회 시점엔 아직 업로드가 안 끝나 이미지가 빠진 채로 로딩됐음)
+        if (filesToUpload.length > 0) {
+          await uploadCommentImages(res.commentId, filesToUpload).catch((e) =>
             console.error(e),
           );
         }
-        setNewFiles([]);
+
+        setRefresh((r) => !r);
       })
       .catch((e) => console.error(e));
   };
 
   const handleAddReply = (parentId) => {
     if (!replyContent.trim()) return;
+
+    const filesToUpload = replyFiles;
+    setReplyFiles([]);
 
     postAdd({
       boardId,
@@ -82,18 +92,18 @@ const CommentSection = ({ boardId, onCountChange }) => {
       parentId,
       content: replyContent,
     })
-      .then((res) => {
+      .then(async (res) => {
         setReplyTargetId(null);
         setReplyContent("");
-        setRefresh((r) => !r);
         onCountChange && onCountChange(1);
 
-        if (replyFiles.length > 0) {
-          uploadCommentImages(res.commentId, replyFiles).catch((e) =>
+        if (filesToUpload.length > 0) {
+          await uploadCommentImages(res.commentId, filesToUpload).catch((e) =>
             console.error(e),
           );
         }
-        setReplyFiles([]);
+
+        setRefresh((r) => !r);
       })
       .catch((e) => console.error(e));
   };
