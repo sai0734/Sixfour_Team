@@ -85,6 +85,30 @@ public class JWTCheckFilter extends OncePerRequestFilter{
             return true; // 회사 목록/상세/더미 조회가 JWT 필터에 막혀 프론트 공개 조회가 실패하던 문제 수정
         }
 
+        // 게시판 목록/상세 조회는 비로그인 사용자도 볼 수 있어야 함 (커뮤니티 글은 공개 조회)
+        if(method.equals("GET") && path.equals("/api/boards/")) {
+            return true;
+        }
+        if(method.equals("GET") && path.equals("/api/boards/best")) {
+            return true;
+        }
+        if(method.equals("GET") && path.matches("/api/boards/\\d+")) {
+            return true;
+        }
+
+        // 댓글 목록 조회도 공개 (게시글을 보면 댓글도 같이 보여야 하므로)
+        if(method.equals("GET") && path.matches("/api/comments/board/\\d+")) {
+            return true;
+        }
+
+        // FAQ 목록/상세 조회도 공개
+        if(method.equals("GET") && path.equals("/api/faqs/")) {
+            return true;
+        }
+        if(method.equals("GET") && path.matches("/api/faqs/\\d+")) {
+            return true;
+        }
+
         return false;
     }
 

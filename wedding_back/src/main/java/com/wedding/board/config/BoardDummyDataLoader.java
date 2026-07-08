@@ -10,9 +10,11 @@ import org.springframework.stereotype.Component;
 
 import com.wedding.board.domain.Board;
 import com.wedding.board.repository.BoardRepository;
+import com.wedding.board.repository.CommentRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.transaction.annotation.Transactional;
 
 // 실제 회원 계정과 무관한 표시용 닉네임으로 채워진 더미 게시글.
 // 서버 부팅 시 한 번만 실행되고, 이미 있으면 건너뜀(전용 memberEmail로 판별).
@@ -24,6 +26,8 @@ import lombok.extern.log4j.Log4j2;
 public class BoardDummyDataLoader implements CommandLineRunner {
 
     private final BoardRepository boardRepository;
+
+    private final CommentRepository commentRepository;
 
     private static final String DUMMY_EMAIL = "dummy-board@wedding.local";
 
@@ -37,11 +41,13 @@ public class BoardDummyDataLoader implements CommandLineRunner {
     private int idx = 0;
 
     @Override
+    @Transactional
     public void run(String... args) {
 
         if (boardRepository.countByMemberEmail(DUMMY_EMAIL) > 0) {
-            log.info("게시판 더미데이터 이미 존재, 로딩 생략");
-            return;
+            log.info("기존 게시판 더미데이터 삭제 후 다시 로딩.........");
+            commentRepository.deleteByMemberEmail("dummy-comment@wedding.local");
+            boardRepository.deleteByMemberEmail(DUMMY_EMAIL);
         }
 
         log.info("게시판 더미데이터 100개 로딩 시작.........");
@@ -100,7 +106,11 @@ public class BoardDummyDataLoader implements CommandLineRunner {
         addFree(boards, "업체정보", "웨딩 플래너 이용 후기",
                 "직접 준비 vs 플래너 이용, 장단점 느낀 점 공유합니다.");
         addFree(boards, "업체정보", "답례품 제작 업체 후기",
-                "실용성 위주로 골랐던 경험 나눠드려요.");
+                "저희는 하객 180명 기준으로 답례품을 준비했고, 최종적으로 수건 2P 세트와 미니 디퓨저 중에 고민하다가 수건 세트로 결정했어요.\n" +
+                        "처음에는 예쁜 캔들이 더 웨딩 분위기와 잘 맞는다고 생각했는데, 부모님 쪽 하객분들은 실용적인 선물을 더 선호하신다고 해서 방향을 바꿨습니다.\n" +
+                        "업체는 온라인 견적 3곳, 오프라인 샘플 1곳을 비교했고 1개당 포장 포함 8,900원 정도로 맞췄어요.\n" +
+                        "배송은 예식 10일 전에 받았고, 혹시 몰라 여분 15개를 추가 주문했는데 당일에 생각보다 유용했습니다.\n" +
+                        "포장 리본 색상, 감사 스티커 문구, 쇼핑백 포함 여부에 따라 가격이 달라지니 견적 받을 때 꼭 한 번에 확인해보세요.");
 
         addFree(boards, "잡담", "결혼 앞두니 잠이 안 와요",
                 "다들 이런 기분이셨나요 ㅠㅠ");
@@ -128,7 +138,11 @@ public class BoardDummyDataLoader implements CommandLineRunner {
                 "저보다 부모님이 더 신나 보이셔서 웃겼어요.");
 
         addFree(boards, "꿀팁", "청첩장 모임 준비 꿀팁 공유해요",
-                "미리 준비해두면 편한 것들 정리했어요.");
+                "청첩장 모임을 4번 정도 나눠서 진행해보니, 장소 예약보다 참석자 동선 정리가 훨씬 중요하더라고요.\n" +
+                        "저희는 회사 동료, 대학 친구, 가족 지인, 신랑 측 친구 이렇게 그룹을 나눴고 각 모임마다 6~10명 정도로 맞췄습니다.\n" +
+                        "식당은 너무 시끄러운 곳보다 대화하기 좋은 룸이나 반개별석이 있는 곳이 좋았고, 예산은 1인당 3~4만원 정도 잡으니 부담이 덜했어요.\n" +
+                        "종이 청첩장은 여분을 넉넉히 챙기고, 모바일 청첩장 링크도 바로 보낼 수 있게 메모장에 저장해두면 편합니다.\n" +
+                        "그리고 축의금이나 참석 여부 이야기가 자연스럽게 나올 수 있어서, 예식 시간·주차·식사 안내는 미리 정리해두는 걸 추천드려요.");
         addFree(boards, "꿀팁", "웨딩홀 계약 전 꼭 확인해야 할 것들",
                 "계약서 조항 꼼꼼히 보라는 말, 진짜 중요해요.");
         addFree(boards, "꿀팁", "스드메 계약 시 체크리스트",
@@ -155,7 +169,11 @@ public class BoardDummyDataLoader implements CommandLineRunner {
         addReview(boards, "홀", "강남 그레이스 웨딩홀 후기 - 가성비 끝판왕",
                 "가격 대비 만족도 매우 높음. 수용인원 300명, 주차 편리. 식사 퀄리티도 기대 이상이었어요.", 5);
         addReview(boards, "홀", "잠실 롯데호텔 웨딩홀 이용 후기",
-                "시설은 최고인데 가격대가 있는 편이에요. 예산 넉넉하신 분들께 추천.", 4);
+                "저희는 잠실 롯데호텔 웨딩홀에서 토요일 점심 예식으로 진행했고, 보증 인원은 250명으로 계약했습니다.\n" +
+                        "홀 분위기는 호텔답게 고급스럽고 천고가 높아서 입장할 때 사진이 정말 잘 나왔어요. 특히 버진로드 조명과 생화 장식이 과하지 않아서 깔끔한 느낌을 좋아하는 분들께 잘 맞을 것 같습니다.\n" +
+                        "식대는 최종 견적 기준 1인 12만원대였고, 꽃 장식과 음향, 폐백실 사용 여부까지 더하니 전체 예산은 예상보다 꽤 올라갔습니다.\n" +
+                        "대신 하객분들이 음식과 주차는 정말 만족해하셨고, 지방에서 오신 친척분들도 위치 찾기 쉽다고 말씀해주셨어요.\n" +
+                        "예산 여유가 있고 호텔 웨딩 특유의 안정적인 진행을 원하신다면 추천하지만, 가성비만 보고 고르기에는 부담이 있을 수 있습니다.", 4);
         addReview(boards, "홀", "여의도 한강뷰 웨딩홀 다녀왔어요",
                 "사진 정말 예쁘게 나왔어요. 강력 추천합니다.", 5);
         addReview(boards, "홀", "컨벤션 이용 후기 - 아쉬운 점도 있었어요",
@@ -182,7 +200,11 @@ public class BoardDummyDataLoader implements CommandLineRunner {
         addReview(boards, "스드메", "메이크업 리허설 후기",
                 "원하는 스타일 미리 상담하니 만족스러웠어요.", 4);
         addReview(boards, "스드메", "드레스 피팅 꿀팁 후기",
-                "미리 붓기 관리하고 가시길 추천해요.", 4);
+                "드레스 피팅은 청담 쪽 샵 3곳을 하루에 몰아서 다녀왔고, 저는 오후보다 오전 피팅이 훨씬 컨디션이 좋았어요.\n" +
+                        "전날 짠 음식은 피하고 물을 많이 마셨더니 얼굴 붓기가 덜했고, 누드톤 속옷과 머리끈을 챙겨가니 갈아입을 때 편했습니다.\n" +
+                        "샵마다 추천해주는 라인이 다르기 때문에 처음부터 머메이드나 A라인 하나로 고정하지 말고 최소 2~3가지 실루엣은 입어보는 걸 추천해요.\n" +
+                        "저는 사진으로 봤을 때 예쁜 드레스와 실제로 입었을 때 체형에 맞는 드레스가 완전히 달라서 놀랐습니다.\n" +
+                        "피팅 사진 촬영 가능 여부, 피팅비, 헬퍼비, 본식 드레스 업그레이드 비용은 샵마다 달라서 예약 전에 꼭 확인하시는 게 좋아요.", 4);
         addReview(boards, "스드메", "스드메 업체 응대 아쉬웠던 후기",
                 "연락이 잘 안 돼서 답답했어요.", 2);
         addReview(boards, "스드메", "본식 스냅 작가님 실력 후기",
@@ -209,7 +231,11 @@ public class BoardDummyDataLoader implements CommandLineRunner {
         addReview(boards, "예복", "예복 대여 기간 확인 꼭 하세요",
                 "저는 하루 차이로 추가 비용 냈어요.", 3);
         addReview(boards, "예복", "체형 고려한 예복 선택 후기",
-                "체형 커버 잘 되는 핏 찾는 게 중요하더라고요.", 4);
+                "신랑이 어깨는 넓은 편인데 허리 라인이 애매해서 기성복과 맞춤 예복을 둘 다 비교해봤습니다.\n" +
+                        "처음에는 가격 때문에 기성복을 생각했는데, 막상 입어보니 어깨에 맞추면 허리가 남고 허리에 맞추면 팔 움직임이 불편하더라고요.\n" +
+                        "결국 맞춤 예복으로 진행했고 기본 원단 기준 95만원, 셔츠와 보타이까지 포함해서 총 118만원 정도 나왔습니다.\n" +
+                        "상담 때 체형 보완을 위해 재킷 기장, 라펠 폭, 바지 밑위 길이를 조정해주셨고 사진으로 봤을 때 확실히 비율이 좋아 보였어요.\n" +
+                        "예복은 단순히 브랜드보다 체형을 얼마나 잘 봐주는지가 중요해서, 최소 두 곳 이상 피팅해보고 결정하는 걸 추천드립니다.", 4);
         addReview(boards, "예복", "혼주 예복 맞춤 후기",
                 "부모님도 만족하셨어요.", 5);
         addReview(boards, "예복", "예복 피팅 3회 진행 후기",
