@@ -92,3 +92,9 @@ export const deleteReview = async (pno, rno) => {
   const res = await jwtAxios.delete(`${host}/${pno}/reviews/${rno}`);
   return res.data;
 };
+
+// 마이페이지 "내가 쓴 글" - 답례품 리뷰 (회원 본인이 쓴 리뷰 전체)
+export const getMyReviews = async () => {
+  const res = await jwtAxios.get(`${host}/reviews/my`);
+  return res.data;
+};

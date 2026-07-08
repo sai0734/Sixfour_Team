@@ -133,7 +133,9 @@ const HubPage = () => {
           <p
             className={`text-2xl font-medium mb-1 ${remaining < 0 ? "text-red-600" : "text-ink"}`}
           >
-            {remaining.toLocaleString()}원
+            {remaining < 0
+              ? `${Math.abs(remaining).toLocaleString()}원 초과`
+              : `${remaining.toLocaleString()}원`}
           </p>
           <p className="text-xs text-ink-faint">
             지출 {totalActual.toLocaleString()} / {totalBudget.toLocaleString()}

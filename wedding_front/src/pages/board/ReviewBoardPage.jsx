@@ -6,6 +6,7 @@ import SearchSortBar from "../../components/board/SearchSortBar";
 import PostCard from "../../components/board/PostCard";
 import BoardFormModal from "../../components/board/BoardFormModal";
 import DetailModal from "../../components/board/DetailModal";
+import BoardPagination from "../../components/board/BoardPagination";
 import {
   getList,
   getOne,
@@ -18,6 +19,7 @@ import { checkLiked, likeOne, unlikeOne } from "../../api/boardLikeApi";
 import useCustomLogin from "../../hooks/useCustomLogin";
 
 const VENDOR_CATEGORIES = ["홀", "스드메", "예복", "예물", "기타"];
+const PAGE_SIZE = 10;
 
 const RATING_OPTIONS = [
   { value: 5, label: "★★★★★" },
@@ -39,6 +41,7 @@ const ReviewBoardPage = () => {
   const [keyword, setKeyword] = useState("");
   const [sort, setSort] = useState("recent");
   const [refresh, setRefresh] = useState(false);
+  const [page, setPage] = useState(1);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
@@ -78,6 +81,15 @@ const ReviewBoardPage = () => {
 
     return result;
   }, [posts, activeCategory, activeRating, keyword, sort]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [activeCategory, activeRating, keyword, sort]);
+
+  const pagedPosts = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return visiblePosts.slice(start, start + PAGE_SIZE);
+  }, [visiblePosts, page]);
 
   const openDetail = (boardId) => {
     getOne(boardId).then((data) => {
@@ -236,7 +248,7 @@ const ReviewBoardPage = () => {
             )}
 
             <div className="flex flex-col gap-3">
-              {visiblePosts.map((post) => (
+              {pagedPosts.map((post) => (
                 <PostCard
                   key={post.boardId}
                   post={post}
@@ -244,6 +256,13 @@ const ReviewBoardPage = () => {
                 />
               ))}
             </div>
+
+            <BoardPagination
+              currentPage={page}
+              totalItems={visiblePosts.length}
+              pageSize={PAGE_SIZE}
+              onPageChange={setPage}
+            />
           </main>
         </div>
       </div>

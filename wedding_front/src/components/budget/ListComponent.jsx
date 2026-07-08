@@ -167,11 +167,15 @@ const ListComponent = () => {
           </p>
         </div>
         <div className="bg-white rounded-2xl border border-line p-5">
-          <p className="text-xs text-ink-muted mb-1">잔여 예산</p>
+          <p className="text-xs text-ink-muted mb-1">
+            {remaining < 0 ? "초과 예산" : "잔여 예산"}
+          </p>
           <p
             className={`text-xl font-medium ${remaining < 0 ? "text-red-600" : "text-ink"}`}
           >
-            {remaining.toLocaleString()}원
+            {remaining < 0
+              ? `${Math.abs(remaining).toLocaleString()}원`
+              : `${remaining.toLocaleString()}원`}
           </p>
         </div>
       </div>

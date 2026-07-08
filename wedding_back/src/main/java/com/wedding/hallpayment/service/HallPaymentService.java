@@ -10,9 +10,9 @@ public interface HallPaymentService {
 
     HallPaymentDTO get(Long paymentId);
 
-    void modify(HallPaymentDTO hallPaymentDTO);
+    void modify(HallPaymentDTO hallPaymentDTO, String requesterEmail);
 
-    void remove(Long paymentId);
+    void remove(Long paymentId, String requesterEmail);
 
     // 납부 기한 순으로 조회 (마이페이지 결제내역 / 준비관리 납부관리 공용)
     List<HallPaymentDTO> listByMember(String memberEmail);

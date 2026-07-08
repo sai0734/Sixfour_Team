@@ -48,11 +48,15 @@ public class ChecklistServiceImpl implements ChecklistService {
     }
 
     @Override
-    public void modify(ChecklistDTO checklistDTO) {
+    public void modify(ChecklistDTO checklistDTO, String requesterEmail) {
 
         Optional<Checklist> result = checklistRepository.findById(checklistDTO.getChecklistId());
 
         Checklist checklist = result.orElseThrow();
+
+        if (!checklist.getMemberEmail().equals(requesterEmail)) {
+            throw new IllegalStateException("본인의 체크리스트 항목만 수정할 수 있습니다.");
+        }
 
         checklist.changeTitle(checklistDTO.getTitle());
         checklist.changeIsDone(checklistDTO.isDone());
@@ -64,7 +68,15 @@ public class ChecklistServiceImpl implements ChecklistService {
     }
 
     @Override
-    public void remove(Long checklistId) {
+    public void remove(Long checklistId, String requesterEmail) {
+
+        Optional<Checklist> result = checklistRepository.findById(checklistId);
+
+        Checklist checklist = result.orElseThrow();
+
+        if (!checklist.getMemberEmail().equals(requesterEmail)) {
+            throw new IllegalStateException("본인의 체크리스트 항목만 삭제할 수 있습니다.");
+        }
 
         checklistRepository.deleteById(checklistId);
     }

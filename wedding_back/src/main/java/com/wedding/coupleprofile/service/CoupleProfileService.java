@@ -10,9 +10,9 @@ public interface CoupleProfileService {
 
     CoupleProfileDTO getByMember(String memberEmail);
 
-    void modify(CoupleProfileDTO coupleProfileDTO);
+    void modify(CoupleProfileDTO coupleProfileDTO, String requesterEmail);
 
-    void remove(Long profileId);
+    void remove(Long profileId, String requesterEmail);
 
     // 매칭 화면용 - 본인 프로필 제외 전체 목록
     List<CoupleProfileDTO> listOthers(String excludeMemberEmail);

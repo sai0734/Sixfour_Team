@@ -11,10 +11,11 @@ public interface BoardService {
     // 상세 조회 - 호출할 때마다 조회수 +1
     BoardDTO get(Long boardId);
 
-    void modify(BoardDTO boardDTO);
+    // requesterEmail: 소유자 또는 관리자만 수정/삭제 가능 (isAdmin이 true면 소유자 아니어도 허용)
+    void modify(BoardDTO boardDTO, String requesterEmail);
 
     // 실제 삭제가 아니라 소프트 삭제 (deleted = true)
-    void remove(Long boardId);
+    void remove(Long boardId, String requesterEmail, boolean isAdmin);
 
     List<BoardDTO> listAll();
 

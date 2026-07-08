@@ -1,8 +1,11 @@
 package com.wedding.board.controller;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -60,8 +63,12 @@ public class BoardController {
         return service.get(boardId);
     }
 
+    @PreAuthorize("hasAnyRole('USER')")
     @PostMapping("/")
-    public Map<String, Long> register(@RequestBody BoardDTO boardDTO) {
+    public Map<String, Long> register(@RequestBody BoardDTO boardDTO, Principal principal) {
+
+        // 작성자는 요청 바디가 아니라 로그인한 본인으로 강제한다 (남의 이름으로 글 작성 방지)
+        boardDTO.setMemberEmail(principal.getName());
 
         log.info("BoardDTO: " + boardDTO);
 
@@ -70,26 +77,36 @@ public class BoardController {
         return Map.of("boardId", boardId);
     }
 
+    @PreAuthorize("hasAnyRole('USER')")
     @PutMapping("/{boardId}")
     public Map<String, String> modify(
             @PathVariable(name = "boardId") Long boardId,
-            @RequestBody BoardDTO boardDTO) {
+            @RequestBody BoardDTO boardDTO,
+            Principal principal) {
 
         boardDTO.setBoardId(boardId);
 
         log.info("Modify: " + boardDTO);
 
-        service.modify(boardDTO);
+        service.modify(boardDTO, principal.getName());
 
         return Map.of("RESULT", "SUCCESS");
     }
 
+    // 삭제는 본인 또는 관리자 (게시판 모더레이션 유지)
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @DeleteMapping("/{boardId}")
-    public Map<String, String> remove(@PathVariable(name = "boardId") Long boardId) {
+    public Map<String, String> remove(
+            @PathVariable(name = "boardId") Long boardId,
+            Authentication authentication) {
 
         log.info("Remove(soft): " + boardId);
 
-        service.remove(boardId);
+        String email = authentication.getName();
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        service.remove(boardId, email, isAdmin);
 
         return Map.of("RESULT", "SUCCESS");
     }

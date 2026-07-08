@@ -46,11 +46,15 @@ public class BudgetServiceImpl implements BudgetService {
     }
 
     @Override
-    public void modify(BudgetDTO budgetDTO) {
+    public void modify(BudgetDTO budgetDTO, String requesterEmail) {
 
         Optional<Budget> result = budgetRepository.findById(budgetDTO.getBudgetId());
 
         Budget budget = result.orElseThrow();
+
+        if (!budget.getMemberEmail().equals(requesterEmail)) {
+            throw new IllegalStateException("본인의 예산 항목만 수정할 수 있습니다.");
+        }
 
         budget.changeCategory(budgetDTO.getCategory());
         budget.changeBudgetAmount(budgetDTO.getBudgetAmount());
@@ -62,7 +66,15 @@ public class BudgetServiceImpl implements BudgetService {
     }
 
     @Override
-    public void remove(Long budgetId) {
+    public void remove(Long budgetId, String requesterEmail) {
+
+        Optional<Budget> result = budgetRepository.findById(budgetId);
+
+        Budget budget = result.orElseThrow();
+
+        if (!budget.getMemberEmail().equals(requesterEmail)) {
+            throw new IllegalStateException("본인의 예산 항목만 삭제할 수 있습니다.");
+        }
 
         budgetRepository.deleteById(budgetId);
     }

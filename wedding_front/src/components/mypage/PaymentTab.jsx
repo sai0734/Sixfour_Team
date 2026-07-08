@@ -1,5 +1,6 @@
 import { useState } from "react";
 import HallPaymentTab from "../hallpayment/HallPaymentTab";
+import ProductPaymentTab from "./ProductPaymentTab";
 
 const VENDOR_SUBTABS = [
   { key: "hall", label: "홀", enabled: true },
@@ -29,8 +30,11 @@ const PaymentTab = () => {
         <button
           type="button"
           onClick={() => setTopTab("product")}
-          title="준비 중인 기능입니다"
-          className="h-9 px-5 rounded-full text-sm font-medium bg-surface text-ink-faint cursor-not-allowed"
+          className={`h-9 px-5 rounded-full text-sm font-medium ${
+            topTab === "product"
+              ? "bg-brand text-white"
+              : "bg-surface text-ink-muted"
+          }`}
         >
           답례품 쇼핑몰
         </button>
@@ -72,11 +76,7 @@ const PaymentTab = () => {
         </>
       )}
 
-      {topTab === "product" && (
-        <div className="text-center text-ink-faint py-16 bg-white rounded-2xl border border-line">
-          준비 중인 기능입니다.
-        </div>
-      )}
+      {topTab === "product" && <ProductPaymentTab />}
     </div>
   );
 };

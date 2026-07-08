@@ -1,8 +1,10 @@
 package com.wedding.budget.controller;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -42,8 +44,11 @@ public class BudgetController {
         return service.listByMember(memberEmail);
     }
 
+    @PreAuthorize("hasAnyRole('USER')")
     @PostMapping("/")
-    public Map<String, Long> register(@RequestBody BudgetDTO budgetDTO) {
+    public Map<String, Long> register(@RequestBody BudgetDTO budgetDTO, Principal principal) {
+
+        budgetDTO.setMemberEmail(principal.getName());
 
         log.info("BudgetDTO: " + budgetDTO);
 
@@ -52,26 +57,31 @@ public class BudgetController {
         return Map.of("budgetId", budgetId);
     }
 
+    @PreAuthorize("hasAnyRole('USER')")
     @PutMapping("/{budgetId}")
     public Map<String, String> modify(
             @PathVariable(name = "budgetId") Long budgetId,
-            @RequestBody BudgetDTO budgetDTO) {
+            @RequestBody BudgetDTO budgetDTO,
+            Principal principal) {
 
         budgetDTO.setBudgetId(budgetId);
 
         log.info("Modify: " + budgetDTO);
 
-        service.modify(budgetDTO);
+        service.modify(budgetDTO, principal.getName());
 
         return Map.of("RESULT", "SUCCESS");
     }
 
+    @PreAuthorize("hasAnyRole('USER')")
     @DeleteMapping("/{budgetId}")
-    public Map<String, String> remove(@PathVariable(name = "budgetId") Long budgetId) {
+    public Map<String, String> remove(
+            @PathVariable(name = "budgetId") Long budgetId,
+            Principal principal) {
 
         log.info("Remove: " + budgetId);
 
-        service.remove(budgetId);
+        service.remove(budgetId, principal.getName());
 
         return Map.of("RESULT", "SUCCESS");
     }

@@ -46,11 +46,15 @@ public class HallPaymentServiceImpl implements HallPaymentService {
     }
 
     @Override
-    public void modify(HallPaymentDTO hallPaymentDTO) {
+    public void modify(HallPaymentDTO hallPaymentDTO, String requesterEmail) {
 
         Optional<HallPayment> result = hallPaymentRepository.findById(hallPaymentDTO.getPaymentId());
 
         HallPayment hallPayment = result.orElseThrow();
+
+        if (!hallPayment.getMemberEmail().equals(requesterEmail)) {
+            throw new IllegalStateException("본인의 납부 항목만 수정할 수 있습니다.");
+        }
 
         hallPayment.changePaymentType(hallPaymentDTO.getPaymentType());
         hallPayment.changeAmount(hallPaymentDTO.getAmount());
@@ -62,7 +66,15 @@ public class HallPaymentServiceImpl implements HallPaymentService {
     }
 
     @Override
-    public void remove(Long paymentId) {
+    public void remove(Long paymentId, String requesterEmail) {
+
+        Optional<HallPayment> result = hallPaymentRepository.findById(paymentId);
+
+        HallPayment hallPayment = result.orElseThrow();
+
+        if (!hallPayment.getMemberEmail().equals(requesterEmail)) {
+            throw new IllegalStateException("본인의 납부 항목만 삭제할 수 있습니다.");
+        }
 
         hallPaymentRepository.deleteById(paymentId);
     }

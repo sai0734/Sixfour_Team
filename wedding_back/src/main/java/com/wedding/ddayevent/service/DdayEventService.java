@@ -8,9 +8,9 @@ public interface DdayEventService {
 
     Long register(DdayEventDTO ddayEventDTO);
 
-    void modify(DdayEventDTO ddayEventDTO);
+    void modify(DdayEventDTO ddayEventDTO, String requesterEmail);
 
-    void remove(Long ddayId);
+    void remove(Long ddayId, String requesterEmail);
 
     List<DdayEventDTO> listByMember(String memberEmail);
 

@@ -6,6 +6,7 @@ import SearchSortBar from "../../components/board/SearchSortBar";
 import PostCard from "../../components/board/PostCard";
 import BoardFormModal from "../../components/board/BoardFormModal";
 import DetailModal from "../../components/board/DetailModal";
+import BoardPagination from "../../components/board/BoardPagination";
 import {
   getList,
   getOne,
@@ -18,6 +19,7 @@ import { checkLiked, likeOne, unlikeOne } from "../../api/boardLikeApi";
 import useCustomLogin from "../../hooks/useCustomLogin";
 
 const FREE_CATEGORIES = ["웨딩준비", "업체정보", "잡담", "꿀팁"];
+const PAGE_SIZE = 10;
 
 const FreeBoardPage = () => {
   const { loginState } = useCustomLogin();
@@ -30,6 +32,7 @@ const FreeBoardPage = () => {
   const [keyword, setKeyword] = useState("");
   const [sort, setSort] = useState("recent");
   const [refresh, setRefresh] = useState(false);
+  const [page, setPage] = useState(1);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
@@ -65,6 +68,17 @@ const FreeBoardPage = () => {
 
     return result;
   }, [posts, activeCategory, keyword, sort]);
+
+  // 필터/정렬/검색어가 바뀌면 1페이지로 리셋 (안 그러면 예전 페이지에 머물러서
+  // 필터링 후 글이 몇 개 안 남았는데 빈 페이지를 보고 있을 수 있음)
+  useEffect(() => {
+    setPage(1);
+  }, [activeCategory, keyword, sort]);
+
+  const pagedPosts = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return visiblePosts.slice(start, start + PAGE_SIZE);
+  }, [visiblePosts, page]);
 
   const openDetail = (boardId) => {
     getOne(boardId).then((data) => {
@@ -214,7 +228,7 @@ const FreeBoardPage = () => {
             )}
 
             <div className="flex flex-col gap-3">
-              {visiblePosts.map((post) => (
+              {pagedPosts.map((post) => (
                 <PostCard
                   key={post.boardId}
                   post={post}
@@ -222,6 +236,13 @@ const FreeBoardPage = () => {
                 />
               ))}
             </div>
+
+            <BoardPagination
+              currentPage={page}
+              totalItems={visiblePosts.length}
+              pageSize={PAGE_SIZE}
+              onPageChange={setPage}
+            />
           </main>
         </div>
       </div>
