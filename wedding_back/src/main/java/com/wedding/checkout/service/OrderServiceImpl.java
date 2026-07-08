@@ -18,17 +18,20 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Log4j2
-public class AdminOrderServiceImpl implements AdminOrderService {
+public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final PaymentRepository paymentRepository;
     private final TossPaymentClient tossPaymentClient;
     private final OrderNotificationService orderNotificationService;
+
+    private static final Set<String> TERMINAL_ORDER_STATUSES = Set.of("REFUNDED", "CANCELLED");
 
     @Override
     public PageResponseDTO<AdminOrderListDTO> listOrders(AdminOrderSearchDTO searchDTO) {
@@ -112,6 +115,16 @@ public class AdminOrderServiceImpl implements AdminOrderService {
         Orders orders = orderRepository.findById(ono)
                 .orElseThrow(() -> new NoSuchElementException("주문을 찾을 수 없습니다. ono=" + ono));
 
+        if (TERMINAL_ORDER_STATUSES.contains(orders.getOrderStatus())) {
+            throw new IllegalStateException("환불/취소된 주문은 상태를 변경할 수 없습니다.");
+        }
+
+        paymentRepository.findLatestByOrderOno(ono).ifPresent(payment -> {
+            if ("CANCELED".equals(payment.getPayStatus())) {
+                throw new IllegalStateException("결제가 취소된 주문은 배송 상태를 변경할 수 없습니다.");
+            }
+        });
+
         orders.changeStatus(newStatus);
         orderRepository.save(orders);
 
@@ -163,12 +176,21 @@ public class AdminOrderServiceImpl implements AdminOrderService {
         Payment payment = paymentRepository.findLatestByOrderOno(ono)
                 .orElseThrow(() -> new NoSuchElementException("결제 정보를 찾을 수 없습니다. ono=" + ono));
 
+        if (TERMINAL_ORDER_STATUSES.contains(orders.getOrderStatus())) {
+            throw new IllegalStateException("이미 종료된 주문입니다.");
+        }
+
+        if ("CANCELED".equals(payment.getPayStatus())) {
+            throw new IllegalStateException("이미 취소된 결제입니다.");
+        }
+
         tossPaymentClient.cancelPayment(payment.getPgTid(), reason);
 
         payment.changePayStatus("CANCELED");
         orders.changeStatus("REFUNDED");
 
         orderRepository.save(orders);
+        paymentRepository.save(payment);
 
         orderNotificationService.sendStatusChangeNotification(orders.getMember().getEmail(), orders, "REFUNDED");
     }

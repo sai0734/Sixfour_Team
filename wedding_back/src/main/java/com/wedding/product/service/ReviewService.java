@@ -1,5 +1,6 @@
 package com.wedding.product.service;
 
+import com.wedding.product.domain.Review;
 import com.wedding.product.dto.ReviewDTO;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,5 +29,8 @@ public interface ReviewService {
 
     // 리뷰 작성 자격 확인 (구매 이력 없으면 예외)
     void checkReviewEligibility(String memberEmail, Long pno);
+
+    // 회원 본인 리뷰 목록 조회
+    List<ReviewDTO> listByMember(String memberEmail);
 
 }

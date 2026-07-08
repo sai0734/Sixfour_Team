@@ -1,7 +1,7 @@
 package com.wedding.checkout.controller;
 
 import com.wedding.checkout.dto.*;
-import com.wedding.checkout.service.AdminOrderService;
+import com.wedding.checkout.service.OrderService;
 import com.wedding.global.dto.PageResponseDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -16,9 +16,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 @RequestMapping("/api/admin/orders")
 @PreAuthorize("hasAnyRole('ADMIN')")
-public class AdminOrderController {
+public class OrderController {
 
-    private final AdminOrderService adminOrderService;
+    private final OrderService adminOrderService;
 
     @GetMapping
     public PageResponseDTO<AdminOrderListDTO> list(AdminOrderSearchDTO searchDTO) {

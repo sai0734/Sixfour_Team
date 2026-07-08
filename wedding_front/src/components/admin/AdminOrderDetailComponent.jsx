@@ -15,6 +15,8 @@ import {
 import { getReviews, postReply, deleteReview } from "../../api/reviewApi";
 import AdminLayout from "../../layouts/AdminLayout";
 
+const TERMINAL_STATUSES = ["REFUNDED", "CANCELLED"];
+
 const STATUS_LABEL = {
   PAID: "결제완료",
   SHIPPING_READY: "배송준비",
@@ -187,6 +189,11 @@ const AdminOrderDetailComponent = ({ ono }) => {
     );
   }
 
+  const isTerminalOrder = TERMINAL_STATUSES.includes(order.orderStatus);
+  const isPaymentCanceled = order.payStatus === "CANCELED";
+  const isStatusLocked = isTerminalOrder || isPaymentCanceled;
+  const canRefund = !isStatusLocked;
+
   const handleChangeStatus = (newStatus) => {
     if (
       !window.confirm(
@@ -331,17 +338,22 @@ const AdminOrderDetailComponent = ({ ono }) => {
           주문 상태 제어 (현재:{" "}
           {STATUS_LABEL[order.orderStatus] ?? order.orderStatus})
         </p>
+        {isStatusLocked && (
+          <p className="text-xs text-ink-faint mb-3">
+            환불/취소된 주문은 배송 상태를 변경할 수 없습니다.
+          </p>
+        )}
         <div className="flex gap-2 flex-wrap">
           {STATUS_FLOW.map((s) => (
             <button
               key={s}
               onClick={() => handleChangeStatus(s)}
-              disabled={order.orderStatus === s}
+              disabled={isStatusLocked || order.orderStatus === s}
               className={`h-9 px-4 rounded-full text-xs border ${
                 order.orderStatus === s
                   ? "bg-brand text-white border-brand"
                   : "border-line-soft"
-              }`}
+              } ${isStatusLocked ? "opacity-40 cursor-not-allowed" : ""}`}
             >
               {STATUS_LABEL[s]}
             </button>
@@ -349,18 +361,21 @@ const AdminOrderDetailComponent = ({ ono }) => {
         </div>
       </section>
 
-      {order.orderStatus !== "REFUNDED" &&
-        order.orderStatus !== "CANCELLED" && (
-          <section className="border-t border-line pt-4 mb-6">
-            <p className="text-sm font-medium mb-3">환불 처리</p>
-            <button
-              onClick={handleRefund}
-              className="h-9 px-4 rounded-full border border-red-300 text-red-600 text-xs"
-            >
-              환불 승인 (PG 결제취소)
-            </button>
-          </section>
+      <section className="border-t border-line pt-4 mb-6">
+        <p className="text-sm font-medium mb-3">환불 처리</p>
+        {canRefund ? (
+          <button
+            onClick={handleRefund}
+            className="h-9 px-4 rounded-full border border-red-300 text-red-600 text-xs"
+          >
+            환불 승인 (PG 결제취소)
+          </button>
+        ) : (
+          <p className="text-sm text-ink-soft">
+            환불 처리가 완료된 주문입니다. (결제 상태: {order.payStatus ?? "-"})
+          </p>
         )}
+      </section>
 
       <section className="border-t border-line pt-4 mb-6">
         <p className="text-sm font-medium mb-3">배송 정보 등록/수정</p>
