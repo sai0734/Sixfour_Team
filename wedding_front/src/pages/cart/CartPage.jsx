@@ -130,7 +130,6 @@ const CartPage = () => {
   };
 
   return (
-    // 신규 추가: BasicLayout으로 감싸서 다른 페이지들처럼 상단 헤더가 보이게 함
     <BasicLayout showCart={false}>
       <div className="bg-white min-h-screen">
         {fetching ? <FetchingModal /> : <></>}
