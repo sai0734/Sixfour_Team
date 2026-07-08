@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {
+  createSearchParams,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import {
   getAdminOrderDetail,
   changeOrderStatus,
@@ -125,6 +129,8 @@ const AdminReviewMiniSection = ({ pno, pname }) => {
 
 const AdminOrderDetailComponent = ({ ono }) => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
   const [order, setOrder] = useState(null);
 
   const [shippingForm, setShippingForm] = useState({
@@ -136,6 +142,20 @@ const AdminOrderDetailComponent = ({ ono }) => {
   });
   const [trackingNo, setTrackingNo] = useState("");
   const [memo, setMemo] = useState("");
+
+  const handleBackToList = () => {
+    const page = searchParams.get("page");
+    const size = searchParams.get("size") || "10";
+
+    if (page) {
+      navigate({
+        pathname: "/admin/orders",
+        search: createSearchParams({ page, size }).toString(),
+      });
+    } else {
+      navigate("/admin/orders");
+    }
+  };
 
   const fetchDetail = () => {
     getAdminOrderDetail(ono).then((data) => {
@@ -252,12 +272,11 @@ const AdminOrderDetailComponent = ({ ono }) => {
   );
 
   return (
-    // AdminLayout으로 교체 (좌측 관리자 메뉴 포함)
     <AdminLayout>
       <div className="flex justify-between items-center mb-5">
         <p className="font-serif text-2xl">주문 상세 - {order.orderNumber}</p>
         <button
-          onClick={() => navigate("/admin/orders")}
+          onClick={handleBackToList}
           className="text-xs text-ink-faint underline"
         >
           목록으로

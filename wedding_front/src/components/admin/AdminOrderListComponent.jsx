@@ -1,5 +1,9 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import {
+  createSearchParams,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import {
   getAdminOrderList,
   bulkChangeOrderStatus,
@@ -26,15 +30,47 @@ const initState = {
 
 const AdminOrderListComponent = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const selectAllRef = useRef(null);
+
+  const page = Number(searchParams.get("page")) || 1;
+  const size = Number(searchParams.get("size")) || 10;
+
+  const moveToList = (pageParam) => {
+    const pageNum = pageParam?.page ?? page;
+    const sizeNum = pageParam?.size ?? size;
+
+    navigate({
+      pathname: "/admin/orders",
+      search: createSearchParams({ page: pageNum, size: sizeNum }).toString(),
+    });
+  };
+
+  const listQuery = createSearchParams({ page, size }).toString();
+
+  const goToDetail = (ono) => {
+    navigate({ pathname: `/admin/orders/${ono}`, search: listQuery });
+  };
 
   const [serverData, setServerData] = useState(initState);
-  const [page, setPage] = useState(1);
-  const [size] = useState(10);
+
   const [status, setStatus] = useState("");
   const [keywordInput, setKeywordInput] = useState("");
   const [keyword, setKeyword] = useState("");
   const [selectedOnos, setSelectedOnos] = useState([]);
   const [bulkStatus, setBulkStatus] = useState("SHIPPING_READY");
+
+  useEffect(() => {
+    if (!searchParams.get("page")) {
+      navigate(
+        {
+          pathname: "/admin/orders",
+          search: createSearchParams({ page: 1, size }).toString(),
+        },
+        { replace: true },
+      );
+    }
+  }, [navigate, searchParams, size]);
 
   const fetchList = () => {
     getAdminOrderList({ page, size, keyword, status, sortType: "latest" }).then(
@@ -51,7 +87,7 @@ const AdminOrderListComponent = () => {
   }, [page, size, keyword, status]);
 
   const handleSearch = () => {
-    setPage(1);
+    moveToList({ page: 1, size });
     setKeyword(keywordInput);
   };
 
@@ -59,6 +95,32 @@ const AdminOrderListComponent = () => {
     setSelectedOnos((prev) =>
       prev.includes(ono) ? prev.filter((o) => o !== ono) : [...prev, ono],
     );
+  };
+
+  const currentPageOnos = serverData.dtoList.map((o) => o.ono);
+
+  const isAllSelected =
+    currentPageOnos.length > 0 &&
+    currentPageOnos.every((ono) => selectedOnos.includes(ono));
+
+  const isSomeSelected = currentPageOnos.some((ono) =>
+    selectedOnos.includes(ono),
+  );
+
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = isSomeSelected && !isAllSelected;
+    }
+  }, [isSomeSelected, isAllSelected]);
+
+  const handleToggleSelectAll = () => {
+    if (isSomeSelected) {
+      setSelectedOnos((prev) =>
+        prev.filter((ono) => !currentPageOnos.includes(ono)),
+      );
+    } else {
+      setSelectedOnos((prev) => [...new Set([...prev, ...currentPageOnos])]);
+    }
   };
 
   const handleBulkChange = () => {
@@ -88,7 +150,7 @@ const AdminOrderListComponent = () => {
           <span
             key={tab.key}
             onClick={() => {
-              setPage(1);
+              moveToList({ page: 1, size });
               setStatus(tab.key);
             }}
             className={`pb-3 cursor-pointer ${
@@ -142,7 +204,16 @@ const AdminOrderListComponent = () => {
       <table className="w-full text-sm border-t border-line">
         <thead>
           <tr className="border-b border-line text-ink-faint text-xs">
-            <th className="py-3 w-10"></th>
+            <th className="py-3 w-10 text-center">
+              <input
+                ref={selectAllRef}
+                type="checkbox"
+                checked={isAllSelected}
+                onChange={handleToggleSelectAll}
+                className="accent-brand"
+                title="현재 페이지 전체 선택/해제"
+              />
+            </th>
             <th className="py-3 text-left">주문번호</th>
             <th className="py-3 text-left">주문자</th>
             <th className="py-3 text-right">결제금액</th>
@@ -165,25 +236,25 @@ const AdminOrderListComponent = () => {
                 />
               </td>
               <td
-                onClick={() => navigate(`/admin/orders/${o.ono}`)}
+                onClick={() => goToDetail(o.ono)}
                 className="py-2.5 cursor-pointer text-brand-accent"
               >
                 {o.orderNumber}
               </td>
               <td
-                onClick={() => navigate(`/admin/orders/${o.ono}`)}
+                onClick={() => goToDetail(o.ono)}
                 className="py-2.5 cursor-pointer"
               >
                 {o.receiverName} ({o.memberEmail})
               </td>
               <td
-                onClick={() => navigate(`/admin/orders/${o.ono}`)}
+                onClick={() => goToDetail(o.ono)}
                 className="py-2.5 text-right cursor-pointer"
               >
                 {o.totalPrice?.toLocaleString()}원
               </td>
               <td
-                onClick={() => navigate(`/admin/orders/${o.ono}`)}
+                onClick={() => goToDetail(o.ono)}
                 className="py-2.5 text-center cursor-pointer"
               >
                 <span className="px-2 py-1 rounded-full text-xs bg-brand-light text-brand-accent">
@@ -192,7 +263,7 @@ const AdminOrderListComponent = () => {
                 </span>
               </td>
               <td
-                onClick={() => navigate(`/admin/orders/${o.ono}`)}
+                onClick={() => goToDetail(o.ono)}
                 className="py-2.5 text-ink-faint cursor-pointer"
               >
                 {o.regDate?.slice(0, 10)}
@@ -204,7 +275,9 @@ const AdminOrderListComponent = () => {
 
       <PageComponent
         serverData={serverData}
-        movePage={(pageParam) => setPage(pageParam.page)}
+        movePage={(pageParam) =>
+          moveToList({ page: pageParam.page, size: pageParam.size ?? size })
+        }
       />
     </AdminLayout>
   );
