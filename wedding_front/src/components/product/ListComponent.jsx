@@ -1,4 +1,9 @@
 import { useEffect, useState } from "react";
+import {
+  createSearchParams,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import { getList, getCategories } from "../../api/productApi";
 import { postAdd, deleteWish, isWished } from "../../api/wishApi";
 import useCustomMove from "../../hooks/useCustomMove";
@@ -30,7 +35,10 @@ const initState = {
 
 const ListComponent = () => {
   const { exceptionHandle, loginState } = useCustomLogin();
-  const { size, refresh, moveToRead } = useCustomMove();
+
+  const { page, size, refresh, moveToRead, moveToList } = useCustomMove();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const [serverData, setServerData] = useState(initState);
   const [categoryList, setCategoryList] = useState([]);
@@ -40,7 +48,7 @@ const ListComponent = () => {
   const [ratingFilterOn, setRatingFilterOn] = useState(false);
   const [keywordInput, setKeywordInput] = useState("");
   const [keyword, setKeyword] = useState("");
-  const [localPage, setLocalPage] = useState(1);
+
   const [sortType, setSortType] = useState("popular");
 
   const [fetching, setFetching] = useState(false);
@@ -52,13 +60,25 @@ const ListComponent = () => {
   }, []);
 
   useEffect(() => {
+    if (!searchParams.get("page")) {
+      navigate(
+        {
+          pathname: "/product/list",
+          search: createSearchParams({ page: 1, size }).toString(),
+        },
+        { replace: true },
+      );
+    }
+  }, [navigate, searchParams, size]);
+
+  useEffect(() => {
     setFetching(true);
 
     const priceBand =
       selectedPriceBand !== null ? PRICE_BANDS[selectedPriceBand] : null;
 
     getList({
-      page: localPage,
+      page,
       size,
       categories: selectedCategories,
       keyword,
@@ -73,7 +93,7 @@ const ListComponent = () => {
       })
       .catch((err) => exceptionHandle(err));
   }, [
-    localPage,
+    page,
     size,
     selectedCategories,
     keyword,
@@ -104,30 +124,51 @@ const ListComponent = () => {
     });
   }, [serverData.dtoList, loginState.email]);
 
+  const resetPageForFilter = () => {
+    if (page === 1) {
+      return;
+    }
+
+    moveToList({ page: 1, size }, { replace: true, preventScrollReset: true });
+  };
+
+  const handleResetToDefaultList = () => {
+    setKeywordInput("");
+    setKeyword("");
+    setSelectedCategories([]);
+    setSelectedPriceBand(null);
+    setRatingFilterOn(false);
+    setSortType("popular");
+    resetPageForFilter();
+  };
+
+  const isEmptySearchResult =
+    !fetching && keyword.trim() !== "" && serverData.dtoList.length === 0;
+
   const handleToggleCategory = (cat) => {
-    setLocalPage(1);
+    resetPageForFilter();
     setSelectedCategories((prev) =>
       prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat],
     );
   };
 
   const handleTogglePriceBand = (idx) => {
-    setLocalPage(1);
+    resetPageForFilter();
     setSelectedPriceBand((prev) => (prev === idx ? null : idx));
   };
 
   const handleToggleRating = () => {
-    setLocalPage(1);
+    resetPageForFilter();
     setRatingFilterOn((prev) => !prev);
   };
 
   const handleSearch = () => {
-    setLocalPage(1);
+    resetPageForFilter();
     setKeyword(keywordInput);
   };
 
   const handleChangeSort = (key) => {
-    setLocalPage(1);
+    resetPageForFilter();
     setSortType(key);
   };
 
@@ -193,18 +234,44 @@ const ListComponent = () => {
             onSearch={handleSearch}
           />
 
-          <ProductGridComponent
-            dtoList={serverData.dtoList}
-            host={host}
-            wishedSet={wishedSet}
-            onClickWish={handleClickWish}
-            onClickCard={moveToRead}
-          />
+          {isEmptySearchResult ? (
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+              <p className="text-base text-ink mb-2">
+                <span className="font-medium text-brand">"{keyword}"</span>
+                와(과) 일치하는 항목이 없습니다.
+              </p>
+              <p className="text-sm text-ink-muted mb-8">
+                다른 검색어를 입력하거나 기본 목록으로 돌아가 보세요.
+              </p>
+              <button
+                type="button"
+                onClick={handleResetToDefaultList}
+                className="h-10 px-6 rounded-full border border-line text-sm text-ink hover:border-brand hover:text-brand transition-colors"
+              >
+                기본 목록 가기
+              </button>
+            </div>
+          ) : (
+            <>
+              <ProductGridComponent
+                dtoList={serverData.dtoList}
+                host={host}
+                wishedSet={wishedSet}
+                onClickWish={handleClickWish}
+                onClickCard={moveToRead}
+              />
 
-          <PageComponent
-            serverData={serverData}
-            movePage={(pageParam) => setLocalPage(pageParam.page)}
-          />
+              <PageComponent
+                serverData={serverData}
+                movePage={(pageParam) =>
+                  moveToList({
+                    page: pageParam.page,
+                    size: pageParam.size ?? size,
+                  })
+                }
+              />
+            </>
+          )}
         </section>
       </div>
     </div>

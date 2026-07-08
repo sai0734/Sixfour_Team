@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import KakaoLoginComponent from "./KakaoLoginComponent";
 import AuthLayout from "./AuthLayout";
@@ -17,7 +18,9 @@ const LoginComponent = () => {
   const [loginParam, setLoginParam] = useState({ ...initState });
   const [failInfo, setFailInfo] = useState(null);
 
-  const { doLogin, moveToPath } = useCustomLogin();
+  const location = useLocation();
+  const { doLogin, moveToPath, getLoginRedirectPath, clearLoginRedirectPath } =
+    useCustomLogin();
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -58,6 +61,17 @@ const LoginComponent = () => {
         }
       } else {
         setFailInfo(null);
+
+        const redirectPath =
+          location.state?.from || getLoginRedirectPath() || null;
+
+        if (redirectPath) {
+          clearLoginRedirectPath();
+          alert("로그인 성공");
+          moveToPath(redirectPath);
+          return;
+        }
+
         alert("로그인 성공");
 
         const isAdmin = data.roleNames?.some((roleName) =>
