@@ -3,6 +3,8 @@ import { createSearchParams, Navigate, useNavigate } from "react-router-dom";
 import { loginPostAsync, logout } from "../slices/loginSlice";
 import { mergeGuestCartAsync } from "../slices/cartSlice";
 
+const LOGIN_REDIRECT_KEY = "loginRedirect";
+
 const useCustomLogin = () => {
   const navigate = useNavigate();
 
@@ -38,8 +40,20 @@ const useCustomLogin = () => {
     navigate({ pathname: path }, { replace: true });
   };
 
-  const moveToLogin = () => {
-    navigate({ pathname: "/auth/login" }, { replace: true });
+  const moveToLogin = (returnPath) => {
+    if (returnPath) {
+      sessionStorage.setItem(LOGIN_REDIRECT_KEY, returnPath);
+    }
+    navigate(
+      { pathname: "/auth/login" },
+      { replace: true, state: returnPath ? { from: returnPath } : undefined },
+    );
+  };
+  const getLoginRedirectPath = () => {
+    return sessionStorage.getItem(LOGIN_REDIRECT_KEY);
+  };
+  const clearLoginRedirectPath = () => {
+    sessionStorage.removeItem(LOGIN_REDIRECT_KEY);
   };
 
   const moveToLoginReturn = () => {
@@ -76,6 +90,8 @@ const useCustomLogin = () => {
     moveToPath,
     moveToLogin,
     moveToLoginReturn,
+    getLoginRedirectPath,
+    clearLoginRedirectPath,
     exceptionHandle,
   };
 };

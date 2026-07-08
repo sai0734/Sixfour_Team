@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {
+  createSearchParams,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import { getAdminProductList } from "../../api/adminProductApi";
 import { deleteOne, getCategories } from "../../api/productApi";
 import { API_SERVER_HOST } from "../../api/reservationApi";
@@ -23,12 +27,26 @@ const initState = {
 
 const AdminProductListComponent = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const page = Number(searchParams.get("page")) || 1;
+  const size = Number(searchParams.get("size")) || 10;
+
+  const moveToList = (pageParam) => {
+    const pageNum = pageParam?.page ?? page;
+    const sizeNum = pageParam?.size ?? size;
+
+    navigate({
+      pathname: "/admin/products",
+      search: createSearchParams({ page: pageNum, size: sizeNum }).toString(),
+    });
+  };
+
+  const listQuery = createSearchParams({ page, size }).toString();
 
   const [serverData, setServerData] = useState(initState);
   const [categoryList, setCategoryList] = useState([]);
 
-  const [page, setPage] = useState(1);
-  const [size] = useState(10);
   const [keywordInput, setKeywordInput] = useState("");
   const [keyword, setKeyword] = useState("");
   const [category, setCategory] = useState("");
@@ -38,6 +56,18 @@ const AdminProductListComponent = () => {
   useEffect(() => {
     getCategories().then((data) => setCategoryList(data));
   }, []);
+
+  useEffect(() => {
+    if (!searchParams.get("page")) {
+      navigate(
+        {
+          pathname: "/admin/products",
+          search: createSearchParams({ page: 1, size }).toString(),
+        },
+        { replace: true },
+      );
+    }
+  }, [navigate, searchParams, size]);
 
   const fetchList = () => {
     getAdminProductList({
@@ -56,7 +86,7 @@ const AdminProductListComponent = () => {
   }, [page, size, keyword, category, saleStatus, sortType]);
 
   const handleSearch = () => {
-    setPage(1);
+    moveToList({ page: 1, size });
     setKeyword(keywordInput);
   };
 
@@ -65,12 +95,12 @@ const AdminProductListComponent = () => {
   };
 
   const handleClickRow = (pno) => {
-    navigate(`/product/read/${pno}`);
+    navigate({ pathname: `/product/read/${pno}`, search: listQuery });
   };
 
   const handleClickModify = (e, pno) => {
     e.stopPropagation();
-    navigate(`/product/modify/${pno}`);
+    navigate({ pathname: `/product/modify/${pno}`, search: listQuery });
   };
 
   const handleClickDelete = (e, pno, pname) => {
@@ -86,7 +116,6 @@ const AdminProductListComponent = () => {
   };
 
   return (
-    // AdminLayout으로 교체 (좌측 관리자 메뉴 포함)
     <AdminLayout>
       <div className="flex justify-between items-center mb-5">
         <p className="font-serif text-2xl">상품 관리</p>
@@ -117,7 +146,7 @@ const AdminProductListComponent = () => {
         <select
           value={category}
           onChange={(e) => {
-            setPage(1);
+            moveToList({ page: 1, size }); // [수정]
             setCategory(e.target.value);
           }}
           className="h-9 px-3 border border-line-soft rounded-lg text-sm"
@@ -133,7 +162,7 @@ const AdminProductListComponent = () => {
         <select
           value={saleStatus}
           onChange={(e) => {
-            setPage(1);
+            moveToList({ page: 1, size }); // [수정]
             setSaleStatus(e.target.value);
           }}
           className="h-9 px-3 border border-line-soft rounded-lg text-sm"
@@ -233,7 +262,9 @@ const AdminProductListComponent = () => {
 
       <PageComponent
         serverData={serverData}
-        movePage={(pageParam) => setPage(pageParam.page)}
+        movePage={(pageParam) =>
+          moveToList({ page: pageParam.page, size: pageParam.size ?? size })
+        }
       />
     </AdminLayout>
   );

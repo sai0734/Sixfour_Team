@@ -52,7 +52,6 @@ const ReviewMediaThumb = ({ fileName, host, onClick }) => {
         onClick={onClick}
         className="relative w-16 h-16 rounded-lg overflow-hidden bg-black cursor-pointer"
       >
-        {/* controls 없이 정지 프레임만 - 클릭 전엔 재생 안 됨 */}
         <video
           className="w-full h-full object-cover"
           src={`${host}/api/product/view/${fileName}`}
@@ -87,7 +86,7 @@ const ReviewMediaThumb = ({ fileName, host, onClick }) => {
 // 확대 모달 - 여기서만 동영상이 재생됨(autoPlay)
 const MediaModal = ({ fileName, host, onClose }) => {
   const isVideo = isVideoFile(fileName);
-  const src = `${host}/api/product/view/${fileName}`; // 모달은 항상 원본(고화질) 사용
+  const src = `${host}/api/product/view/${fileName}`;
 
   return (
     <div
@@ -141,7 +140,6 @@ const validateFiles = (fileList) => {
   return null;
 };
 
-// 리뷰 작성/수정 공용 폼 (미리보기는 확대 없이 작은 썸네일만 — 작성 화면이라 모달 불필요)
 const ReviewForm = ({
   initialRating,
   initialContent,
@@ -296,7 +294,7 @@ const ReviewSectionComponent = ({
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyContent, setReplyContent] = useState("");
   const [editingReplyRno, setEditingReplyRno] = useState(null);
-  const [modalFile, setModalFile] = useState(null); // 확대 모달에 띄울 파일명
+  const [modalFile, setModalFile] = useState(null);
 
   useEffect(() => {
     fetchReviews();
@@ -312,12 +310,7 @@ const ReviewSectionComponent = ({
 
   const myReview = reviews.find((r) => checkIsMine(r.memberEmail));
 
-  const handleClickTopButton = () => {
-    if (myReview) {
-      setEditingRno(myReview.rno);
-      return;
-    }
-
+  const handleClickWriteReview = () => {
     if (!isLoggedIn) {
       alert("리뷰는 구매 회원만 작성이 가능합니다.");
       return;
@@ -409,12 +402,12 @@ const ReviewSectionComponent = ({
 
       <div className="flex justify-between items-center mb-6">
         <p className="text-sm text-ink-soft">총 {reviews.length}개의 리뷰</p>
-        {!showWriteForm && !editingRno && (
+        {!myReview && !showWriteForm && (
           <button
-            onClick={handleClickTopButton}
+            onClick={handleClickWriteReview}
             className="h-9 px-5 rounded-full bg-brand text-white text-xs font-medium"
           >
-            {myReview ? "내 리뷰 수정" : "리뷰 작성"}
+            리뷰 작성
           </button>
         )}
       </div>

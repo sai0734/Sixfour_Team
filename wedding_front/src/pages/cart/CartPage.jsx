@@ -118,7 +118,7 @@ const CartPage = () => {
       alert(
         "결제하려면 로그인이 필요합니다. 담아둔 장바구니는 로그인 후에도 그대로 유지됩니다.",
       );
-      moveToLogin();
+      moveToLogin("/cart");
       return;
     }
     if (selectedCinos.length === 0) {
