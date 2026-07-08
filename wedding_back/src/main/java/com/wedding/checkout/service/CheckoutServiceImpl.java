@@ -236,8 +236,18 @@ public class CheckoutServiceImpl implements CheckoutService {
                 .address(orders.getAddress())
                 .addressDetail(orders.getAddressDetail())
                 .orderStatus(orders.getOrderStatus())
+                .regDate(orders.getRegDate())
                 .items(items)
                 .build();
+    }
+
+    @Override
+    // 회원 본인 주문 목록 조회
+    public List<OrderDTO> listMyOrders(String memberEmail) {
+
+        return orderRepository.listByMember(memberEmail).stream().map(order -> toDTO(order))
+                .collect(Collectors.toList());
+
     }
 
 }

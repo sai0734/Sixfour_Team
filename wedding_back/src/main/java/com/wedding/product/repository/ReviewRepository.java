@@ -32,4 +32,9 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     // 리뷰 1개 조회 (상품 소속 검증 포함)
     @Query("select r from Review r where r.rno = :rno and r.product.pno = :pno")
     Optional<Review> findOneByProduct(@Param("rno") Long rno, @Param("pno") Long pno);
+
+    // 회원이 작성한 최상위 리뷰 목록(마이페이지 "내가 쓴 글" 용)
+    @EntityGraph(attributePaths = {"member", "product"})
+    @Query("select r from Reiver r where r.member.email = :memberEmail and r.review is null order by r.rno desc")
+    List<Review> listTopReviewsByMember(@Param("memberEmail") String memberEmail);
 }

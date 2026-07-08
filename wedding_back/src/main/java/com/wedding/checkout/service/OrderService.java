@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Transactional
-public interface AdminOrderService {
+public interface OrderService {
 
     // 관리자용 주문 리스트 조회
     PageResponseDTO<AdminOrderListDTO> listOrders(AdminOrderSearchDTO searchDTO);

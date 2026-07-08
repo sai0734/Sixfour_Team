@@ -65,8 +65,13 @@ const CheckoutSuccessPage = () => {
     );
   }
 
+  const productSubtotal = order.items.reduce(
+    (sum, item) => sum + item.price * item.qty,
+    0,
+  );
+  const shippingFee = order.shippingFee ?? order.totalPrice - productSubtotal;
+
   return (
-    // 신규 추가: BasicLayout으로 감싸서 상단 헤더가 보이게 함
     <BasicLayout showCart={false}>
       <div className="max-w-[600px] mx-auto px-6 py-20 text-center">
         <p className="text-brand-accent text-sm mb-2">결제가 완료되었습니다</p>
@@ -100,6 +105,20 @@ const CheckoutSuccessPage = () => {
                 <span>{(item.price * item.qty).toLocaleString()}원</span>
               </div>
             ))}
+
+            <div className="flex justify-between text-xs text-ink-faint">
+              <span>배송비</span>
+              <span>
+                {shippingFee === 0
+                  ? "무료"
+                  : `${shippingFee.toLocaleString()}원`}
+              </span>
+            </div>
+
+            <div className="flex justify-between text-sm font-medium text-ink border-t border-line mt-3 pt-3">
+              <span>합계</span>
+              <span>{order.totalPrice.toLocaleString()}원</span>
+            </div>
           </div>
         </div>
 
