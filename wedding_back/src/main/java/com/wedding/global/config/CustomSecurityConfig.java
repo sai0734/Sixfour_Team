@@ -33,15 +33,15 @@ import lombok.extern.log4j.Log4j2;
 @EnableMethodSecurity
 public class CustomSecurityConfig {
 
-    @Bean
+  @Bean
   public PasswordEncoder passwordEncoder(){
     return new BCryptPasswordEncoder();
   }
 
 
-@Bean
+  @Bean
   public SecurityFilterChain filterChain(HttpSecurity http, MemberRepository memberRepository, LoginFailRepository loginFailRepository, RedisTokenService redisTokenService, EmailVerifyRepository emailVerifyRepository) throws Exception {
-    
+
     log.info("---------------------security config---------------------------");
 
     http.cors(httpSecurityCorsConfigurer -> {
@@ -52,21 +52,21 @@ public class CustomSecurityConfig {
 
     http.csrf(config -> config.disable());
 
-        http.formLogin(config ->{
+    http.formLogin(config ->{
       config.loginPage("/api/auth/login");
-      config.successHandler(new APILoginSuccessHandler(loginFailRepository, redisTokenService));
-       config.failureHandler(new APILoginFailHandler(memberRepository, loginFailRepository, emailVerifyRepository));
+      config.successHandler(new APILoginSuccessHandler(loginFailRepository, redisTokenService, memberRepository));
+      config.failureHandler(new APILoginFailHandler(memberRepository, loginFailRepository, emailVerifyRepository));
     });
 
-      http.addFilterBefore(new JWTCheckFilter(redisTokenService), UsernamePasswordAuthenticationFilter.class); //JWT 체크
+    http.addFilterBefore(new JWTCheckFilter(redisTokenService, memberRepository), UsernamePasswordAuthenticationFilter.class); //JWT 체크
 
-        http.exceptionHandling(config -> {config.accessDeniedHandler(new CustomAccessDeniedHandler());
+    http.exceptionHandling(config -> {config.accessDeniedHandler(new CustomAccessDeniedHandler());
     });
     return http.build();
   }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+  @Bean
+  public CorsConfigurationSource corsConfigurationSource() {
 
     CorsConfiguration configuration = new CorsConfiguration();
 
@@ -80,5 +80,5 @@ public class CustomSecurityConfig {
 
     return source;
   }
-  
+
 }

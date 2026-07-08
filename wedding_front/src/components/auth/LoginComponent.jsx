@@ -38,17 +38,11 @@ const LoginComponent = () => {
             "로그인 5회 실패로 계정이 잠겼습니다. 비밀번호 재설정 페이지로 이동합니다.",
           );
           moveToPath("/auth/password-reset");
-        } else if (data.error === "ERROR_ACCOUNT_SUSPENDED") {
-          const untilMsg = data.suspendUntil
-            ? `(해제 예정: ${data.suspendUntil.slice(0, 16).replace("T", " ")})`
-            : "(영구 정지)";
-          alert(
-            `활동 정지된 계정입니다. ${untilMsg}\n사유: ${data.suspendReason || "관리자 문의"}`,
-          );
-        } else if (data.error === "ERROR_ACCOUNT_DORMANT") {
-          alert(
-            "장기간 로그인하지 않아 휴면 처리된 계정입니다. 계정 재활성화가 필요하니 관리자에게 문의해주세요.",
-          );
+        } else if (
+          data.error === "ERROR_ACCOUNT_SUSPENDED" ||
+          data.error === "ERROR_ACCOUNT_DORMANT"
+        ) {
+          alert("차단(정지·휴면)된 회원입니다. 관리자에게 문의해주세요.");
         } else if (data.error === "ERROR_EMAIL_NOT_VERIFIED") {
           alert(
             "전송된 이메일을 확인해주세요. 인증을 완료해야 로그인할 수 있어요.",

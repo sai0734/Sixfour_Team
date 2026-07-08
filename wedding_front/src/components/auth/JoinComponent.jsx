@@ -4,6 +4,7 @@ import {
   resendVerificationPost,
   checkEmailAvailable,
   checkNicknameAvailable,
+  checkPhoneAvailable,
 } from "../../api/authApi";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import AuthLayout from "./AuthLayout";
@@ -40,6 +41,7 @@ const JoinComponent = () => {
   const [pendingEmail, setPendingEmail] = useState(null);
   const [emailStatus, setEmailStatus] = useState(null);
   const [nicknameStatus, setNicknameStatus] = useState(null);
+  const [phoneStatus, setPhoneStatus] = useState(null);
   const [touched, setTouched] = useState({
     email: false,
     pw: false,
@@ -64,6 +66,7 @@ const JoinComponent = () => {
   const handleChangePhone = (e) => {
     joinParam.phone = formatPhoneNumber(e.target.value);
     setJoinParam({ ...joinParam });
+    setPhoneStatus(null);
   };
 
   const handleChange = (e) => {
@@ -125,6 +128,32 @@ const JoinComponent = () => {
       .catch((err) => {
         console.log(err);
         setNicknameStatus(null);
+      });
+  };
+
+  const handleBlurPhone = () => {
+    markTouched("phone");
+
+    if (!joinParam.phone) return;
+
+    if (!PHONE_REGEX.test(joinParam.phone)) {
+      setPhoneStatus("invalid");
+      return;
+    }
+
+    setPhoneStatus("checking");
+
+    checkPhoneAvailable(joinParam.phone)
+      .then((data) => {
+        if (data.blocked) {
+          setPhoneStatus("blocked");
+        } else {
+          setPhoneStatus(data.available ? "available" : "unavailable");
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        setPhoneStatus(null);
       });
   };
 
@@ -200,6 +229,18 @@ const JoinComponent = () => {
 
     if (!PHONE_REGEX.test(joinParam.phone)) {
       alert("올바른 휴대폰 번호 형식이 아닙니다. (예: 010-1234-5678)");
+      return;
+    }
+
+    if (phoneStatus === "unavailable") {
+      alert("이미 사용 중인 휴대폰 번호입니다.");
+      return;
+    }
+
+    if (phoneStatus === "blocked") {
+      alert(
+        "정지 또는 휴면 처리된 회원과 동일한 전화번호입니다. 관리자에게 문의해주세요.",
+      );
       return;
     }
 
@@ -326,14 +367,24 @@ const JoinComponent = () => {
       return (
         <div className={errMsgClass}>휴대폰 번호는 필수 입력 항목입니다.</div>
       );
-    if (touched.phone && joinParam.phone && !PHONE_REGEX.test(joinParam.phone))
+    if (phoneStatus === "invalid")
       return (
         <div className={errMsgClass}>
           올바른 휴대폰 번호 형식이 아니에요 (예: 010-1234-5678)
         </div>
       );
-    if (touched.phone && joinParam.phone && PHONE_REGEX.test(joinParam.phone))
+    if (phoneStatus === "checking")
+      return <div className={hintMsgClass}>확인 중...</div>;
+    if (phoneStatus === "available")
       return <div className={okMsgClass}>✓ 사용가능!</div>;
+    if (phoneStatus === "unavailable")
+      return <div className={errMsgClass}>이미 사용 중인 휴대폰 번호예요</div>;
+    if (phoneStatus === "blocked")
+      return (
+        <div className={errMsgClass}>
+          차단(정지·휴면)된 회원의 번호예요. 관리자에게 문의해주세요.
+        </div>
+      );
     return null;
   };
 
@@ -494,7 +545,7 @@ const JoinComponent = () => {
               placeholder="010-1234-5678"
               value={joinParam.phone}
               onChange={handleChangePhone}
-              onBlur={() => markTouched("phone")}
+              onBlur={handleBlurPhone}
             ></input>
             {renderPhoneMsg()}
           </div>

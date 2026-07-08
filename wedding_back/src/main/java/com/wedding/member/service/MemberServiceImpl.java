@@ -1,6 +1,7 @@
 package com.wedding.member.service;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -23,6 +24,7 @@ import com.wedding.member.domain.MemberRole;
 import com.wedding.member.domain.TermsAgree;
 import com.wedding.member.dto.JoinDTO;
 import com.wedding.member.dto.MemberDTO;
+import com.wedding.member.exception.MemberBlockedException;
 import com.wedding.member.dto.MemberModifyDTO;
 import com.wedding.member.dto.PasswordResetConfirmDTO;
 import com.wedding.member.dto.PasswordResetRequestDTO;
@@ -74,9 +76,32 @@ public class MemberServiceImpl implements MemberService {
 
     // 기존의 회원
     if(result.isPresent()){
-      ensureSocialAccount(result.get(), providerId);
 
-      MemberDTO memberDTO = entityToDTO(result.get());
+      Member member = result.get();
+
+      // 정지 기간이 지났으면 로그인 시도 시점에 자동으로 정상 상태로 되돌림
+      if ("BLACKLIST".equals(member.getStatus())
+              && member.getSuspendUntil() != null
+              && !member.getSuspendUntil().isAfter(LocalDateTime.now())) {
+        member.reactivate();
+        memberRepository.save(member);
+      }
+
+      if ("BLACKLIST".equals(member.getStatus())) {
+        throw new com.wedding.member.exception.MemberBlockedException(
+                "ERROR_ACCOUNT_SUSPENDED",
+                member.getSuspendReason(),
+                member.getSuspendUntil() == null ? null : member.getSuspendUntil().toString());
+      }
+
+      if ("DORMANT".equals(member.getStatus())) {
+        throw new com.wedding.member.exception.MemberBlockedException(
+                "ERROR_ACCOUNT_DORMANT", null, null);
+      }
+
+      ensureSocialAccount(member, providerId);
+
+      MemberDTO memberDTO = entityToDTO(member);
 
       return memberDTO;
     }
@@ -212,6 +237,22 @@ public class MemberServiceImpl implements MemberService {
   }
 
   @Override
+  public String getPhoneCheckStatus(String phone) {
+
+    List<MemberDetail> details = memberDetailRepository.findAllByPhone(phone);
+
+    if (details.isEmpty()) {
+      return "AVAILABLE";
+    }
+
+    boolean blocked = details.stream()
+            .map(MemberDetail::getMember)
+            .anyMatch(m -> "BLACKLIST".equals(m.getStatus()) || "DORMANT".equals(m.getStatus()));
+
+    return blocked ? "BLOCKED" : "UNAVAILABLE";
+  }
+
+  @Override
   public void join(JoinDTO joinDTO) {
 
     // 이메일 중복 체크
@@ -267,6 +308,17 @@ public class MemberServiceImpl implements MemberService {
     if (!socialCompleteDTO.getNickname().equals(member.getNickname())
             && memberRepository.existsByNickname(socialCompleteDTO.getNickname())) {
       throw new IllegalStateException("이미 사용 중인 닉네임입니다.");
+    }
+
+    // 전화번호 중복/차단 체크
+    String phoneStatus = getPhoneCheckStatus(socialCompleteDTO.getPhone());
+
+    if ("BLOCKED".equals(phoneStatus)) {
+      throw new IllegalStateException("정지 또는 휴면 처리된 회원과 동일한 전화번호입니다. 관리자에게 문의해주세요.");
+    }
+
+    if ("UNAVAILABLE".equals(phoneStatus)) {
+      throw new IllegalStateException("이미 사용 중인 휴대폰 번호입니다.");
     }
 
     member.changeNickname(socialCompleteDTO.getNickname());
@@ -332,6 +384,17 @@ public class MemberServiceImpl implements MemberService {
 
     try {
       JoinDTO joinDTO = objectMapper.readValue(emailVerify.getPayload(), JoinDTO.class);
+
+      // 그 사이에 같은 번호로 다른 회원이 먼저 가입을 완료했을 수 있으니 마지막에 한 번 더 확인
+      String phoneStatus = getPhoneCheckStatus(joinDTO.getPhone());
+
+      if ("BLOCKED".equals(phoneStatus)) {
+        return "PHONE_BLOCKED";
+      }
+
+      if ("UNAVAILABLE".equals(phoneStatus)) {
+        return "PHONE_DUPLICATE";
+      }
 
       // 1. Member 저장 (인증을 통과한 시점이므로 emailVerified = true로 바로 생성)
       Member member = Member.builder()
