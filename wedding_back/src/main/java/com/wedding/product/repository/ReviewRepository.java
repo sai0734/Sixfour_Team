@@ -35,6 +35,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     // 회원이 작성한 최상위 리뷰 목록(마이페이지 "내가 쓴 글" 용)
     @EntityGraph(attributePaths = {"member", "product"})
-    @Query("select r from Reiver r where r.member.email = :memberEmail and r.review is null order by r.rno desc")
+    @Query("select r from Review r where r.member.email = :memberEmail and r.review is null order by r.rno desc")
     List<Review> listTopReviewsByMember(@Param("memberEmail") String memberEmail);
 }
