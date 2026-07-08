@@ -295,7 +295,7 @@ const JoinComponent = () => {
     if (joinParam.pwCheck.length > 0 && joinParam.pw !== joinParam.pwCheck)
       return <div className={errMsgClass}>비밀번호가 서로 달라요</div>;
     if (joinParam.pwCheck.length > 0 && joinParam.pw === joinParam.pwCheck)
-      return <div className={okMsgClass}>✓ 확인!</div>;
+      return <div className={okMsgClass}>✓ 일치해요!</div>;
     return null;
   };
 

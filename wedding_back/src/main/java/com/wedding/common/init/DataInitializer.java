@@ -25,6 +25,8 @@ import com.wedding.company.repository.MakeupPackageRepository;
 import com.wedding.company.repository.StudioDetailRepository;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +36,7 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import com.wedding.product.domain.Product;
@@ -44,6 +47,9 @@ import com.wedding.checkout.domain.Orders;
 import com.wedding.checkout.domain.OrderItem;
 import com.wedding.checkout.repository.OrderRepository;
 import com.wedding.member.domain.Member;
+import com.wedding.member.domain.MemberDetail;
+import com.wedding.member.domain.MemberRole;
+import com.wedding.member.repository.MemberDetailRepository;
 import com.wedding.member.repository.MemberRepository;
 
 @Component
@@ -64,6 +70,8 @@ public class DataInitializer implements ApplicationRunner {
   private final ProductOptionRepository productOptionRepository;
   private final OrderRepository orderRepository;
   private final MemberRepository memberRepository;
+  private final MemberDetailRepository memberDetailRepository;
+  private final PasswordEncoder passwordEncoder;
   private final JdbcTemplate jdbcTemplate;
 
   @Override
@@ -81,6 +89,14 @@ public class DataInitializer implements ApplicationRunner {
       log.info("===== Dummy Orders seeding start =====");
       insertDummyOrders();
       log.info("===== Dummy Orders seeding complete =====");
+    }
+
+    // Member 더미데이터도 company 데이터 유무와 무관하게 독립적으로 체크
+    // (실계정과 안 겹치도록, 더미 세트의 첫 번째 이메일 존재 여부로 판단)
+    if (!memberRepository.existsById("user1@naver.com")) {
+      log.info("===== Member JSON dummy data initialization start =====");
+      insertMembers();
+      log.info("===== Member JSON dummy data initialization complete =====");
     }
 
     if (companyRepository.count() == 0) {
@@ -151,10 +167,10 @@ public class DataInitializer implements ApplicationRunner {
           continue;
         }
         MakeupPackage makeupPackage = MakeupPackage.builder()
-            .company(company)
-            .packageType(normalizeMakeupPackageType(pkg.get("packageType")))
-            .discountRate(toBigDecimal(pkg.get("discountRate")))
-            .build();
+                .company(company)
+                .packageType(normalizeMakeupPackageType(pkg.get("packageType")))
+                .discountRate(toBigDecimal(pkg.get("discountRate")))
+                .build();
         makeupPackageRepository.save(makeupPackage);
       }
     }
@@ -204,6 +220,18 @@ public class DataInitializer implements ApplicationRunner {
   private void insertDummyOrders() {
 
     List<Member> members = memberRepository.findAll();
+
+    if (members.isEmpty()) {
+      log.info("회원이 없어 더미 주문 생성을 건너뜁니다.");
+      return;
+    }
+
+    createDummyOrdersForMembers(members, 3);
+  }
+
+  // 주어진 회원들에게 상품 productCount개씩 "구매완료" 주문을 만들어줌 (리뷰 테스트용)
+  private void createDummyOrdersForMembers(List<Member> members, int productCount) {
+
     List<Product> products = productRepository.findAll();
 
     if (members.isEmpty() || products.isEmpty()) {
@@ -211,10 +239,10 @@ public class DataInitializer implements ApplicationRunner {
       return;
     }
 
-    int productCount = Math.min(3, products.size());
+    int count = Math.min(productCount, products.size());
 
     for (Member member : members) {
-      for (int i = 0; i < productCount; i++) {
+      for (int i = 0; i < count; i++) {
         Product product = products.get(i);
 
         Orders orders = Orders.builder()
@@ -241,7 +269,73 @@ public class DataInitializer implements ApplicationRunner {
       }
     }
 
-    log.info("Inserted dummy orders for {} members x {} products.", members.size(), productCount);
+    log.info("Inserted dummy orders for {} members x {} products.", members.size(), count);
+  }
+
+  // 회원 더미데이터 삽입 (MemberDetail 포함) + 그 중 절반은 상품 2개씩 구매한 것으로 처리
+  private void insertMembers() throws Exception {
+
+    List<Map<String, Object>> list = readJson("data/member.json");
+
+    List<Member> insertedMembers = new ArrayList<>();
+
+    for (Map<String, Object> m : list) {
+
+      String email = (String) m.get("email");
+
+      // 혹시 이미 있는 이메일(테스트 계정 등)이면 건드리지 않고 넘어감
+      if (memberRepository.existsById(email)) {
+        continue;
+      }
+
+      Member member = Member.builder()
+              .email(email)
+              .pw(passwordEncoder.encode("1111"))   // 더미 계정 공통 비밀번호
+              .nickname((String) m.get("nickname"))
+              .social(Boolean.TRUE.equals(m.get("social")))
+              .status((String) m.getOrDefault("status", "ACTIVE"))
+              .emailVerified(Boolean.TRUE.equals(m.get("emailVerified")))
+              .suspendReason((String) m.get("suspendReason"))
+              .suspendUntil(parseDateTime((String) m.get("suspendUntil")))
+              .lastLoginAt(parseDateTime((String) m.get("lastLoginAt")))
+              .build();
+
+      List<String> roleNames = castList(m.get("roleNames"));
+
+      if (roleNames != null && roleNames.contains("ADMIN")) {
+        member.addRole(MemberRole.ADMIN);
+      } else {
+        member.addRole(MemberRole.USER);
+      }
+
+      memberRepository.save(member);
+
+      MemberDetail detail = MemberDetail.builder()
+              .member(member)
+              .name((String) m.get("name"))
+              .phone((String) m.get("phone"))
+              .build();
+
+      memberDetailRepository.save(detail);
+
+      insertedMembers.add(member);
+    }
+
+    log.info("Inserted {} dummy members from JSON (password: 1111).", insertedMembers.size());
+
+    // 100명 중 절반(앞쪽 50명)만 상품 2개씩 구매완료 처리 -> 리뷰 테스트용
+    if (!insertedMembers.isEmpty()) {
+      int half = insertedMembers.size() / 2;
+      List<Member> orderTargets = insertedMembers.subList(0, half);
+
+      log.info("===== Dummy orders for {} newly seeded members (2 products each) start =====", orderTargets.size());
+      createDummyOrdersForMembers(orderTargets, 2);
+      log.info("===== Dummy orders for newly seeded members complete =====");
+    }
+  }
+
+  private LocalDateTime parseDateTime(String value) {
+    return (value == null || value.isBlank()) ? null : LocalDateTime.parse(value);
   }
 
   private void insertCompanies() throws Exception {
@@ -249,26 +343,26 @@ public class DataInitializer implements ApplicationRunner {
 
     for (Map<String, Object> m : list) {
       Company company = Company.builder()
-          .cmno(toLongObject(m.get("cmno")))
-          .category(enumValue(CompanyCategory.class, m.get("category"), CompanyCategory.HALL))
-          .name((String) m.get("name"))
-          .ceoName((String) m.get("ceoName"))
-          .phone((String) m.get("phone"))
-          .address((String) m.get("address"))
-          .latitude(toDoubleObject(m.get("latitude")))
-          .longitude(toDoubleObject(m.get("longitude")))
-          .description((String) m.get("description"))
-          .priceAvg(toBigDecimal(m.get("priceAvg")))
-          .delFlag(toBoolean(m.get("delFlag")))
-          .build();
+              .cmno(toLongObject(m.get("cmno")))
+              .category(enumValue(CompanyCategory.class, m.get("category"), CompanyCategory.HALL))
+              .name((String) m.get("name"))
+              .ceoName((String) m.get("ceoName"))
+              .phone((String) m.get("phone"))
+              .address((String) m.get("address"))
+              .latitude(toDoubleObject(m.get("latitude")))
+              .longitude(toDoubleObject(m.get("longitude")))
+              .description((String) m.get("description"))
+              .priceAvg(toBigDecimal(m.get("priceAvg")))
+              .delFlag(toBoolean(m.get("delFlag")))
+              .build();
 
       List<Map<String, Object>> images = castList(m.get("imageList"));
       if (images != null) {
         images.stream()
-            .sorted(Comparator.comparingInt(img -> toInt(img.get("ord"))))
-            .map(img -> (String) img.get("fileName"))
-            .filter(fileName -> fileName != null && !fileName.isBlank())
-            .forEach(company::addImage);
+                .sorted(Comparator.comparingInt(img -> toInt(img.get("ord"))))
+                .map(img -> (String) img.get("fileName"))
+                .filter(fileName -> fileName != null && !fileName.isBlank())
+                .forEach(company::addImage);
       }
 
       companyRepository.save(company);
@@ -287,31 +381,31 @@ public class DataInitializer implements ApplicationRunner {
       }
 
       HallDetail detail = HallDetail.builder()
-          .company(company)
-          .hallName((String) m.get("hallName"))
-          .address((String) m.get("address"))
-          .latitude(toDoubleObject(m.get("latitude")))
-          .longitude(toDoubleObject(m.get("longitude")))
-          .phone((String) m.get("phone"))
-          .representative((String) m.get("representative"))
-          .hallType(enumValue(HallType.class, m.get("hallType"), HallType.GRAND))
-          .description((String) m.get("description"))
-          .imageUrl((String) m.get("imageUrl"))
-          .build();
+              .company(company)
+              .hallName((String) m.get("hallName"))
+              .address((String) m.get("address"))
+              .latitude(toDoubleObject(m.get("latitude")))
+              .longitude(toDoubleObject(m.get("longitude")))
+              .phone((String) m.get("phone"))
+              .representative((String) m.get("representative"))
+              .hallType(enumValue(HallType.class, m.get("hallType"), HallType.GRAND))
+              .description((String) m.get("description"))
+              .imageUrl((String) m.get("imageUrl"))
+              .build();
       hallDetailRepository.save(detail);
 
       List<Map<String, Object>> items = castList(m.get("hallItems"));
       if (items != null) {
         for (Map<String, Object> item : items) {
           HallItem hallItem = HallItem.builder()
-              .company(company)
-              .itemName((String) item.get("itemName"))
-              .price(toBigDecimal(item.get("price")))
-              .capacity(toIntegerObject(item.get("capacity")))
-              .imageUrl((String) item.get("imageUrl"))
-              .ord(toIntegerObject(item.get("ord")))
-              .mealType(enumValue(MealType.class, item.get("mealType"), MealType.BUFFET))
-              .build();
+                  .company(company)
+                  .itemName((String) item.get("itemName"))
+                  .price(toBigDecimal(item.get("price")))
+                  .capacity(toIntegerObject(item.get("capacity")))
+                  .imageUrl((String) item.get("imageUrl"))
+                  .ord(toIntegerObject(item.get("ord")))
+                  .mealType(enumValue(MealType.class, item.get("mealType"), MealType.BUFFET))
+                  .build();
           hallItemRepository.save(hallItem);
         }
       }
@@ -330,24 +424,24 @@ public class DataInitializer implements ApplicationRunner {
       }
 
       DressDetail detail = DressDetail.builder()
-          .company(company)
-          .sizeRange((String) m.get("sizeRange"))
-          .build();
+              .company(company)
+              .sizeRange((String) m.get("sizeRange"))
+              .build();
       dressDetailRepository.save(detail);
 
       List<Map<String, Object>> items = castList(m.get("dressItems"));
       if (items != null) {
         for (Map<String, Object> item : items) {
           DressItem dressItem = DressItem.builder()
-              .company(company)
-              .itemName((String) item.get("itemName"))
-              .price(toBigDecimal(item.get("price")))
-              .imageUrl((String) item.get("imageUrl"))
-              .ord(toIntegerObject(item.get("ord")))
-              .itemType(normalizeDressItemType(item.get("itemType")))
-              .styleTags((String) item.get("styleTags"))
-              .sizeRange((String) item.get("sizeRange"))
-              .build();
+                  .company(company)
+                  .itemName((String) item.get("itemName"))
+                  .price(toBigDecimal(item.get("price")))
+                  .imageUrl((String) item.get("imageUrl"))
+                  .ord(toIntegerObject(item.get("ord")))
+                  .itemType(normalizeDressItemType(item.get("itemType")))
+                  .styleTags((String) item.get("styleTags"))
+                  .sizeRange((String) item.get("sizeRange"))
+                  .build();
           dressItemRepository.save(dressItem);
         }
       }
@@ -368,9 +462,9 @@ public class DataInitializer implements ApplicationRunner {
       String themeTags = tags != null ? String.join(",", tags) : (String) m.getOrDefault("theme", "");
 
       StudioDetail detail = StudioDetail.builder()
-          .company(company)
-          .themeTags(themeTags)
-          .build();
+              .company(company)
+              .themeTags(themeTags)
+              .build();
       studioDetailRepository.save(detail);
     }
 
@@ -387,14 +481,14 @@ public class DataInitializer implements ApplicationRunner {
       }
 
       MakeupDetail detail = MakeupDetail.builder()
-          .company(company)
-          .includesHairService(toBoolean(m.get("includesHairService")))
-          .includesMakeupService(toBooleanDefault(m.get("includesMakeupService"), true))
-          .includesNailService(toBoolean(m.get("includesNailService")))
-          .hairPrice(toBigDecimalOrNull(m.get("hairPrice")))
-          .makeupPrice(toBigDecimalOrNull(m.get("makeupPrice")))
-          .nailPrice(toBigDecimalOrNull(m.get("nailPrice")))
-          .build();
+              .company(company)
+              .includesHairService(toBoolean(m.get("includesHairService")))
+              .includesMakeupService(toBooleanDefault(m.get("includesMakeupService"), true))
+              .includesNailService(toBoolean(m.get("includesNailService")))
+              .hairPrice(toBigDecimalOrNull(m.get("hairPrice")))
+              .makeupPrice(toBigDecimalOrNull(m.get("makeupPrice")))
+              .nailPrice(toBigDecimalOrNull(m.get("nailPrice")))
+              .build();
       makeupDetailRepository.save(detail);
 
       List<Map<String, Object>> packages = castList(m.get("packages"));
@@ -404,10 +498,10 @@ public class DataInitializer implements ApplicationRunner {
             continue;
           }
           MakeupPackage makeupPackage = MakeupPackage.builder()
-              .company(company)
-              .packageType(normalizeMakeupPackageType(pkg.get("packageType")))
-              .discountRate(toBigDecimal(pkg.get("discountRate")))
-              .build();
+                  .company(company)
+                  .packageType(normalizeMakeupPackageType(pkg.get("packageType")))
+                  .discountRate(toBigDecimal(pkg.get("discountRate")))
+                  .build();
           makeupPackageRepository.save(makeupPackage);
         }
       }
@@ -419,10 +513,10 @@ public class DataInitializer implements ApplicationRunner {
   private Company findCompany(Object cmno) {
     Long companyId = toLongObject(cmno);
     return companyRepository.findById(companyId)
-        .orElseGet(() -> {
-          log.warn("Skip detail data. Company not found for cmno={}", companyId);
-          return null;
-        });
+            .orElseGet(() -> {
+              log.warn("Skip detail data. Company not found for cmno={}", companyId);
+              return null;
+            });
   }
 
   private List<Map<String, Object>> readJson(String path) throws Exception {
