@@ -98,6 +98,17 @@ public class BoardServiceImpl implements BoardService {
     }
 
     @Override
+    public List<BoardDTO> listByMember(String memberEmail) {
+
+        List<Board> result =
+                boardRepository.findByMemberEmailAndDeletedFalseOrderByRegDateDesc(memberEmail);
+
+        return result.stream()
+                .map(board -> modelMapper.map(board, BoardDTO.class))
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public List<BoardDTO> listBest() {
 
         List<Board> result = boardRepository.findTop3ByDeletedFalseOrderByLikeCountDesc();

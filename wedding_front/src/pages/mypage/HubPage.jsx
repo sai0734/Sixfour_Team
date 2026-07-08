@@ -1,22 +1,24 @@
 import { useState } from "react";
-import PrepLayout from "../../layouts/PrepLayout";
+import MyPageLayout from "../../layouts/MyPageLayout";
 import PlanComponent from "../../components/weddingplan/PlanComponent";
 import WishTab from "../../components/companywish/WishTab";
 import ReservationTab from "../../components/reservation/ReservationTab";
 import PaymentTab from "../../components/mypage/PaymentTab";
+import MyPostsTab from "../../components/mypage/MyPostsTab";
 
 const TABS = [
   { key: "plan", label: "플랜", enabled: true },
   { key: "reservation", label: "예약 현황", enabled: true },
   { key: "payment", label: "결제 내역", enabled: true },
   { key: "wish", label: "찜 목록", enabled: true },
+  { key: "myposts", label: "내가 쓴 글", enabled: true },
 ];
 
 const HubPage = () => {
   const [activeTab, setActiveTab] = useState("plan");
 
   return (
-    <PrepLayout
+    <MyPageLayout
       eyebrow="MY WEDDING PAGE"
       title="마이페이지"
       subtitle="내 결혼 준비 현황을 한 곳에서"
@@ -55,7 +57,8 @@ const HubPage = () => {
       {activeTab === "reservation" && <ReservationTab />}
       {activeTab === "payment" && <PaymentTab />}
       {activeTab === "wish" && <WishTab />}
-    </PrepLayout>
+      {activeTab === "myposts" && <MyPostsTab />}
+    </MyPageLayout>
   );
 };
 

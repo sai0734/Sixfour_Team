@@ -20,6 +20,9 @@ public interface BoardService {
 
     List<BoardDTO> listByType(String boardType);
 
+    // 마이페이지 "내가 쓴 글" 목록
+    List<BoardDTO> listByMember(String memberEmail);
+
     List<BoardDTO> listBest();
 
 }

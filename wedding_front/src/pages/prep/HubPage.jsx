@@ -63,7 +63,15 @@ const HubPage = () => {
   const total = checklist.length;
   const percent = total === 0 ? 0 : Math.round((doneCount / total) * 100);
 
-  const totalBudget = budgetList.reduce((s, i) => s + (i.budgetAmount || 0), 0);
+  // 마이페이지 웨딩플랜에서 설정한 "총 예산"을 기준으로 삼는다.
+  // (전에는 이 값을 아예 안 읽고, 예산관리 항목들의 budgetAmount 합계만 썼기 때문에
+  //  마이페이지에서 총 예산을 설정해도 허브에는 반영되지 않았음)
+  // 아직 총 예산을 설정 안 했으면(0 또는 미설정) 예산관리 항목 합계로 대체 표시.
+  const itemizedBudget = budgetList.reduce(
+    (s, i) => s + (i.budgetAmount || 0),
+    0,
+  );
+  const totalBudget = plan?.totalBudget || itemizedBudget;
   const totalActual = budgetList.reduce((s, i) => s + (i.actualAmount || 0), 0);
   const remaining = totalBudget - totalActual;
 
@@ -131,6 +139,11 @@ const HubPage = () => {
             지출 {totalActual.toLocaleString()} / {totalBudget.toLocaleString()}
             원
           </p>
+          {!plan?.totalBudget && (
+            <p className="text-[10px] text-ink-faint mt-1">
+              마이페이지에서 총 예산을 설정하면 여기에 반영돼요
+            </p>
+          )}
         </Link>
       </div>
 
