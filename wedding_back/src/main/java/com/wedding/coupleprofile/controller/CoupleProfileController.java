@@ -1,8 +1,10 @@
 package com.wedding.coupleprofile.controller;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,8 +42,11 @@ public class CoupleProfileController {
         return service.listOthers(memberEmail);
     }
 
+    @PreAuthorize("hasAnyRole('USER')")
     @PostMapping("/")
-    public Map<String, Long> register(@RequestBody CoupleProfileDTO coupleProfileDTO) {
+    public Map<String, Long> register(@RequestBody CoupleProfileDTO coupleProfileDTO, Principal principal) {
+
+        coupleProfileDTO.setMemberEmail(principal.getName());
 
         log.info("CoupleProfileDTO: " + coupleProfileDTO);
 
@@ -50,26 +55,31 @@ public class CoupleProfileController {
         return Map.of("profileId", profileId);
     }
 
+    @PreAuthorize("hasAnyRole('USER')")
     @PutMapping("/{profileId}")
     public Map<String, String> modify(
             @PathVariable(name = "profileId") Long profileId,
-            @RequestBody CoupleProfileDTO coupleProfileDTO) {
+            @RequestBody CoupleProfileDTO coupleProfileDTO,
+            Principal principal) {
 
         coupleProfileDTO.setProfileId(profileId);
 
         log.info("Modify: " + coupleProfileDTO);
 
-        service.modify(coupleProfileDTO);
+        service.modify(coupleProfileDTO, principal.getName());
 
         return Map.of("RESULT", "SUCCESS");
     }
 
+    @PreAuthorize("hasAnyRole('USER')")
     @DeleteMapping("/{profileId}")
-    public Map<String, String> remove(@PathVariable(name = "profileId") Long profileId) {
+    public Map<String, String> remove(
+            @PathVariable(name = "profileId") Long profileId,
+            Principal principal) {
 
         log.info("Remove: " + profileId);
 
-        service.remove(profileId);
+        service.remove(profileId, principal.getName());
 
         return Map.of("RESULT", "SUCCESS");
     }

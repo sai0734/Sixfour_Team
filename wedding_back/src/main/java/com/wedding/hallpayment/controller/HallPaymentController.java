@@ -1,8 +1,10 @@
 package com.wedding.hallpayment.controller;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,8 +41,11 @@ public class HallPaymentController {
         return service.listByMember(memberEmail);
     }
 
+    @PreAuthorize("hasAnyRole('USER')")
     @PostMapping("/")
-    public Map<String, Long> register(@RequestBody HallPaymentDTO hallPaymentDTO) {
+    public Map<String, Long> register(@RequestBody HallPaymentDTO hallPaymentDTO, Principal principal) {
+
+        hallPaymentDTO.setMemberEmail(principal.getName());
 
         log.info("HallPaymentDTO: " + hallPaymentDTO);
 
@@ -49,26 +54,31 @@ public class HallPaymentController {
         return Map.of("paymentId", paymentId);
     }
 
+    @PreAuthorize("hasAnyRole('USER')")
     @PutMapping("/{paymentId}")
     public Map<String, String> modify(
             @PathVariable(name = "paymentId") Long paymentId,
-            @RequestBody HallPaymentDTO hallPaymentDTO) {
+            @RequestBody HallPaymentDTO hallPaymentDTO,
+            Principal principal) {
 
         hallPaymentDTO.setPaymentId(paymentId);
 
         log.info("Modify: " + hallPaymentDTO);
 
-        service.modify(hallPaymentDTO);
+        service.modify(hallPaymentDTO, principal.getName());
 
         return Map.of("RESULT", "SUCCESS");
     }
 
+    @PreAuthorize("hasAnyRole('USER')")
     @DeleteMapping("/{paymentId}")
-    public Map<String, String> remove(@PathVariable(name = "paymentId") Long paymentId) {
+    public Map<String, String> remove(
+            @PathVariable(name = "paymentId") Long paymentId,
+            Principal principal) {
 
         log.info("Remove: " + paymentId);
 
-        service.remove(paymentId);
+        service.remove(paymentId, principal.getName());
 
         return Map.of("RESULT", "SUCCESS");
     }

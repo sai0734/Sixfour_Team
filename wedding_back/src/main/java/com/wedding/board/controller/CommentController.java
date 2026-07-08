@@ -1,8 +1,11 @@
 package com.wedding.board.controller;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,8 +37,11 @@ public class CommentController {
         return service.listByBoard(boardId);
     }
 
+    @PreAuthorize("hasAnyRole('USER')")
     @PostMapping("/")
-    public Map<String, Long> register(@RequestBody CommentDTO commentDTO) {
+    public Map<String, Long> register(@RequestBody CommentDTO commentDTO, Principal principal) {
+
+        commentDTO.setMemberEmail(principal.getName());
 
         log.info("CommentDTO: " + commentDTO);
 
@@ -44,26 +50,35 @@ public class CommentController {
         return Map.of("commentId", commentId);
     }
 
+    @PreAuthorize("hasAnyRole('USER')")
     @PutMapping("/{commentId}")
     public Map<String, String> modify(
             @PathVariable(name = "commentId") Long commentId,
-            @RequestBody CommentDTO commentDTO) {
+            @RequestBody CommentDTO commentDTO,
+            Principal principal) {
 
         commentDTO.setCommentId(commentId);
 
         log.info("Modify: " + commentDTO);
 
-        service.modify(commentDTO);
+        service.modify(commentDTO, principal.getName());
 
         return Map.of("RESULT", "SUCCESS");
     }
 
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @DeleteMapping("/{commentId}")
-    public Map<String, String> remove(@PathVariable(name = "commentId") Long commentId) {
+    public Map<String, String> remove(
+            @PathVariable(name = "commentId") Long commentId,
+            Authentication authentication) {
 
         log.info("Remove(soft): " + commentId);
 
-        service.remove(commentId);
+        String email = authentication.getName();
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        service.remove(commentId, email, isAdmin);
 
         return Map.of("RESULT", "SUCCESS");
     }

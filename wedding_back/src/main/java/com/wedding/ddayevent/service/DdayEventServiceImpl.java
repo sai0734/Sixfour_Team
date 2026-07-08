@@ -36,11 +36,15 @@ public class DdayEventServiceImpl implements DdayEventService {
     }
 
     @Override
-    public void modify(DdayEventDTO ddayEventDTO) {
+    public void modify(DdayEventDTO ddayEventDTO, String requesterEmail) {
 
         Optional<DdayEvent> result = ddayEventRepository.findById(ddayEventDTO.getDdayId());
 
         DdayEvent ddayEvent = result.orElseThrow();
+
+        if (!ddayEvent.getMemberEmail().equals(requesterEmail)) {
+            throw new IllegalStateException("본인의 D-day 항목만 수정할 수 있습니다.");
+        }
 
         ddayEvent.changeTitle(ddayEventDTO.getTitle());
         ddayEvent.changeEventDate(ddayEventDTO.getEventDate());
@@ -50,7 +54,15 @@ public class DdayEventServiceImpl implements DdayEventService {
     }
 
     @Override
-    public void remove(Long ddayId) {
+    public void remove(Long ddayId, String requesterEmail) {
+
+        Optional<DdayEvent> result = ddayEventRepository.findById(ddayId);
+
+        DdayEvent ddayEvent = result.orElseThrow();
+
+        if (!ddayEvent.getMemberEmail().equals(requesterEmail)) {
+            throw new IllegalStateException("본인의 D-day 항목만 삭제할 수 있습니다.");
+        }
 
         ddayEventRepository.deleteById(ddayId);
     }

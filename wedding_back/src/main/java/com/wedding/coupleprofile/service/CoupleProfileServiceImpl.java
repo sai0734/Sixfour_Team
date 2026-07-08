@@ -54,12 +54,16 @@ public class CoupleProfileServiceImpl implements CoupleProfileService {
     }
 
     @Override
-    public void modify(CoupleProfileDTO coupleProfileDTO) {
+    public void modify(CoupleProfileDTO coupleProfileDTO, String requesterEmail) {
 
         Optional<CoupleProfile> result =
                 coupleProfileRepository.findById(coupleProfileDTO.getProfileId());
 
         CoupleProfile coupleProfile = result.orElseThrow();
+
+        if (!coupleProfile.getMemberEmail().equals(requesterEmail)) {
+            throw new IllegalStateException("본인의 커플 프로필만 수정할 수 있습니다.");
+        }
 
         coupleProfile.changeBudgetMin(coupleProfileDTO.getBudgetMin());
         coupleProfile.changeBudgetMax(coupleProfileDTO.getBudgetMax());
@@ -72,7 +76,15 @@ public class CoupleProfileServiceImpl implements CoupleProfileService {
     }
 
     @Override
-    public void remove(Long profileId) {
+    public void remove(Long profileId, String requesterEmail) {
+
+        Optional<CoupleProfile> result = coupleProfileRepository.findById(profileId);
+
+        CoupleProfile coupleProfile = result.orElseThrow();
+
+        if (!coupleProfile.getMemberEmail().equals(requesterEmail)) {
+            throw new IllegalStateException("본인의 커플 프로필만 삭제할 수 있습니다.");
+        }
 
         coupleProfileRepository.deleteById(profileId);
     }

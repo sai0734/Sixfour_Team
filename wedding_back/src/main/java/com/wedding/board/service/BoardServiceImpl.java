@@ -50,11 +50,15 @@ public class BoardServiceImpl implements BoardService {
     }
 
     @Override
-    public void modify(BoardDTO boardDTO) {
+    public void modify(BoardDTO boardDTO, String requesterEmail) {
 
         Optional<Board> result = boardRepository.findById(boardDTO.getBoardId());
 
         Board board = result.orElseThrow();
+
+        if (!board.getMemberEmail().equals(requesterEmail)) {
+            throw new IllegalStateException("본인이 작성한 글만 수정할 수 있습니다.");
+        }
 
         board.changeTitle(boardDTO.getTitle());
         board.changeContent(boardDTO.getContent());
@@ -65,11 +69,15 @@ public class BoardServiceImpl implements BoardService {
     }
 
     @Override
-    public void remove(Long boardId) {
+    public void remove(Long boardId, String requesterEmail, boolean isAdmin) {
 
         Optional<Board> result = boardRepository.findById(boardId);
 
         Board board = result.orElseThrow();
+
+        if (!isAdmin && !board.getMemberEmail().equals(requesterEmail)) {
+            throw new IllegalStateException("본인이 작성한 글만 삭제할 수 있습니다.");
+        }
 
         board.changeDeleted(true);
 

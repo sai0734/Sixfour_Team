@@ -61,11 +61,15 @@ public class WeddingPlanServiceImpl implements WeddingPlanService {
     }
 
     @Override
-    public void modify(WeddingPlanDTO weddingPlanDTO) {
+    public void modify(WeddingPlanDTO weddingPlanDTO, String requesterEmail) {
 
         Optional<WeddingPlan> result = weddingPlanRepository.findById(weddingPlanDTO.getWeddingPlanId());
 
         WeddingPlan weddingPlan = result.orElseThrow();
+
+        if (!weddingPlan.getMemberEmail().equals(requesterEmail)) {
+            throw new IllegalStateException("본인의 웨딩플랜만 수정할 수 있습니다.");
+        }
 
         weddingPlan.changeGroomName(weddingPlanDTO.getGroomName());
         weddingPlan.changeBrideName(weddingPlanDTO.getBrideName());
@@ -78,7 +82,15 @@ public class WeddingPlanServiceImpl implements WeddingPlanService {
     }
 
     @Override
-    public void remove(Long weddingPlanId) {
+    public void remove(Long weddingPlanId, String requesterEmail) {
+
+        Optional<WeddingPlan> result = weddingPlanRepository.findById(weddingPlanId);
+
+        WeddingPlan weddingPlan = result.orElseThrow();
+
+        if (!weddingPlan.getMemberEmail().equals(requesterEmail)) {
+            throw new IllegalStateException("본인의 웨딩플랜만 삭제할 수 있습니다.");
+        }
 
         weddingPlanRepository.deleteById(weddingPlanId);
     }

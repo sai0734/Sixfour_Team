@@ -1,8 +1,10 @@
 package com.wedding.ddayevent.controller;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,8 +34,11 @@ public class DdayEventController {
         return service.listByMember(memberEmail);
     }
 
+    @PreAuthorize("hasAnyRole('USER')")
     @PostMapping("/")
-    public Map<String, Long> register(@RequestBody DdayEventDTO ddayEventDTO) {
+    public Map<String, Long> register(@RequestBody DdayEventDTO ddayEventDTO, Principal principal) {
+
+        ddayEventDTO.setMemberEmail(principal.getName());
 
         log.info("DdayEventDTO: " + ddayEventDTO);
 
@@ -42,26 +47,31 @@ public class DdayEventController {
         return Map.of("ddayId", ddayId);
     }
 
+    @PreAuthorize("hasAnyRole('USER')")
     @PutMapping("/{ddayId}")
     public Map<String, String> modify(
             @PathVariable(name = "ddayId") Long ddayId,
-            @RequestBody DdayEventDTO ddayEventDTO) {
+            @RequestBody DdayEventDTO ddayEventDTO,
+            Principal principal) {
 
         ddayEventDTO.setDdayId(ddayId);
 
         log.info("Modify: " + ddayEventDTO);
 
-        service.modify(ddayEventDTO);
+        service.modify(ddayEventDTO, principal.getName());
 
         return Map.of("RESULT", "SUCCESS");
     }
 
+    @PreAuthorize("hasAnyRole('USER')")
     @DeleteMapping("/{ddayId}")
-    public Map<String, String> remove(@PathVariable(name = "ddayId") Long ddayId) {
+    public Map<String, String> remove(
+            @PathVariable(name = "ddayId") Long ddayId,
+            Principal principal) {
 
         log.info("Remove: " + ddayId);
 
-        service.remove(ddayId);
+        service.remove(ddayId, principal.getName());
 
         return Map.of("RESULT", "SUCCESS");
     }

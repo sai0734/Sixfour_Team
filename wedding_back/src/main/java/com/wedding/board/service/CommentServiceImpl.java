@@ -46,11 +46,15 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public void modify(CommentDTO commentDTO) {
+    public void modify(CommentDTO commentDTO, String requesterEmail) {
 
         Optional<Comment> result = commentRepository.findById(commentDTO.getCommentId());
 
         Comment comment = result.orElseThrow();
+
+        if (!comment.getMemberEmail().equals(requesterEmail)) {
+            throw new IllegalStateException("본인이 작성한 댓글만 수정할 수 있습니다.");
+        }
 
         comment.changeContent(commentDTO.getContent());
 
@@ -59,11 +63,15 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional
-    public void remove(Long commentId) {
+    public void remove(Long commentId, String requesterEmail, boolean isAdmin) {
 
         Optional<Comment> result = commentRepository.findById(commentId);
 
         Comment comment = result.orElseThrow();
+
+        if (!isAdmin && !comment.getMemberEmail().equals(requesterEmail)) {
+            throw new IllegalStateException("본인이 작성한 댓글만 삭제할 수 있습니다.");
+        }
 
         if (!comment.isDeleted()) {
             comment.changeDeleted(true);
