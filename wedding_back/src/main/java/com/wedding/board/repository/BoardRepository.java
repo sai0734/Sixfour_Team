@@ -14,6 +14,9 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
     // 타입별(자유/후기/Q&A) 최신순
     List<Board> findByBoardTypeAndDeletedFalseOrderByRegDateDesc(String boardType);
 
+    // 마이페이지 "내가 쓴 글" - 회원이 작성한 글 최신순 (삭제된 글 제외)
+    List<Board> findByMemberEmailAndDeletedFalseOrderByRegDateDesc(String memberEmail);
+
     // 베스트 게시글 (좋아요 많은 순 상위 3개) - 커뮤허브 "베스트 게시글" 섹션용
     List<Board> findTop3ByDeletedFalseOrderByLikeCountDesc();
 

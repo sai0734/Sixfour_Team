@@ -26,12 +26,35 @@ const DetailModal = ({
     listByBoard(board.boardId).then((data) => setImages(data));
   }, [board?.boardId, loginState.email]);
 
+  // ESC 키로 모달 닫기
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   if (!board) return null;
 
   const canHide = isOwner || isAdmin;
 
+  // 어두운 배경(오버레이) 클릭 시 닫기. 모달 내용 클릭은 버블링을 막아서
+  // 내용을 눌렀는데 닫히는 일이 없게 한다.
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
+    <div
+      className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4"
+      onClick={handleOverlayClick}
+    >
       <div className="bg-white rounded-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center gap-2 mb-3">
           <span className="text-[11px] bg-brand-light text-brand-accent px-2.5 py-1 rounded-full font-medium">

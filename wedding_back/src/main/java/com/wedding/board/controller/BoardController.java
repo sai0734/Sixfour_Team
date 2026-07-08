@@ -46,6 +46,14 @@ public class BoardController {
         return service.listBest();
     }
 
+    // 마이페이지 "내가 쓴 글" - 로그인 필수 (JWTCheckFilter에서 예외 처리 안 해둠)
+    // 예: GET /api/boards/member/test@test.com
+    @GetMapping("/member/{memberEmail}")
+    public List<BoardDTO> listByMember(@PathVariable(name = "memberEmail") String memberEmail) {
+
+        return service.listByMember(memberEmail);
+    }
+
     @GetMapping("/{boardId}")
     public BoardDTO get(@PathVariable(name = "boardId") Long boardId) {
 
