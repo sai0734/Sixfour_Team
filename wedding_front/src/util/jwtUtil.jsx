@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getCookie, setCookie } from "./cookieUtil";
+import { getCookie, setCookie, removeCookie } from "./cookieUtil";
 import { API_SERVER_HOST } from "../api/reservationApi";
 
 const jwtAxios = axios.create();
@@ -48,50 +48,75 @@ const requestFail = (err) => {
   return Promise.reject(err);
 };
 
+// 정지/휴면 등으로 강제 로그아웃 처리 (쿠키 삭제 + 안내 + 로그인 페이지로 이동)
+const forceLogout = (message) => {
+  removeCookie("auth");
+  alert(message);
+  window.location.href = "/auth/login";
+};
+
 //before return response
-const beforeRes = async (res) => {
+const beforeRes = (res) => {
   console.log("before return response...........");
-
   console.log(res);
-
-  //'ERROR_ACCESS_TOKEN'
-  const data = res.data;
-
-  if (data && data.error === "ERROR_ACCESS_TOKEN") {
-    const authCookieValue = getCookie("auth");
-
-    // 수정: 애초에 토큰이 없는 상태(비회원)에서 이 에러가 온 경우
-    // (예: 공개 API인데 서버가 무언가 다른 이유로 이 에러를 준 경우)
-    // 갱신 시도 자체가 무의미하므로 그대로 응답을 반환
-    if (!authCookieValue) {
-      return res;
-    }
-
-    const result = await refreshJWT(
-      authCookieValue.accessToken,
-      authCookieValue.refreshToken,
-    );
-    console.log("refreshJWT RESULT", result);
-
-    authCookieValue.accessToken = result.accessToken;
-    authCookieValue.refreshToken = result.refreshToken;
-
-    setCookie("auth", JSON.stringify(authCookieValue), 1);
-
-    //원래의 호출
-    const originalRequest = res.config;
-
-    originalRequest.headers.Authorization = `Bearer ${result.accessToken}`;
-
-    return await axios(originalRequest);
-  }
 
   return res;
 };
 
 //fail response
-const responseFail = (err) => {
+const responseFail = async (err) => {
   console.log("response fail error.............");
+
+  const data = err.response?.data;
+
+  // 정지/휴면 회원: accessToken 자체는 아직 안 만료됐어도 즉시 차단된 경우
+  if (data?.error === "ERROR_ACCOUNT_BLOCKED") {
+    forceLogout("차단(정지·휴면)된 회원입니다. 관리자에게 문의해주세요.");
+    return Promise.reject(err);
+  }
+
+  // accessToken 만료: refreshToken으로 자동 갱신 후 원래 요청 재시도
+  if (data?.error === "ERROR_ACCESS_TOKEN") {
+    const authCookieValue = getCookie("auth");
+
+    // 애초에 토큰이 없는 상태(비회원)에서 이 에러가 온 경우 - 갱신 시도 자체가 무의미
+    if (!authCookieValue) {
+      return Promise.reject(err);
+    }
+
+    try {
+      const result = await refreshJWT(
+        authCookieValue.accessToken,
+        authCookieValue.refreshToken,
+      );
+      console.log("refreshJWT RESULT", result);
+
+      authCookieValue.accessToken = result.accessToken;
+      authCookieValue.refreshToken = result.refreshToken;
+
+      setCookie("auth", JSON.stringify(authCookieValue), 1);
+
+      //원래의 호출
+      const originalRequest = err.response.config;
+
+      originalRequest.headers.Authorization = `Bearer ${result.accessToken}`;
+
+      return await axios(originalRequest);
+    } catch (refreshErr) {
+      const refreshErrData = refreshErr.response?.data;
+
+      // refresh 자체도 정지/휴면으로 거부된 경우
+      if (
+        refreshErrData?.error === "ERROR_ACCOUNT_SUSPENDED" ||
+        refreshErrData?.error === "ERROR_ACCOUNT_DORMANT"
+      ) {
+        forceLogout("차단(정지·휴면)된 회원입니다. 관리자에게 문의해주세요.");
+      }
+
+      return Promise.reject(refreshErr);
+    }
+  }
+
   return Promise.reject(err);
 };
 

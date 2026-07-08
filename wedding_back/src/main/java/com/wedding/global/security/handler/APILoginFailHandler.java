@@ -32,34 +32,47 @@ public class APILoginFailHandler implements AuthenticationFailureHandler{
     private final EmailVerifyRepository emailVerifyRepository;
 
     @Override
-    public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) 
-    throws IOException, ServletException{
+    public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception)
+            throws IOException, ServletException{
         log.info("Login fail...."+ exception);
 
         String email = request.getParameter("username");
         boolean locked = false;
         boolean pendingVerification = false;
+        boolean suspended = false;
+        boolean dormant = false;
         int failCount = 0;
+        String suspendReason = null;
+        String suspendUntil = null;
 
         if (email != null) {
             Optional<Member> memberOpt = memberRepository.findById(email);
 
             if (memberOpt.isPresent()) {
-                LoginFail loginFail = loginFailRepository.getByMemberEmail(email)
-                        .orElseGet(() -> LoginFail.builder().member(memberOpt.get()).build());
+                Member member = memberOpt.get();
 
-                if (!loginFail.isLocked()) {
-                    loginFail.increaseFail();
+                suspended = "BLACKLIST".equals(member.getStatus());
+                dormant = "DORMANT".equals(member.getStatus());
+                suspendReason = member.getSuspendReason();
+                suspendUntil = member.getSuspendUntil() != null ? member.getSuspendUntil().toString() : null;
 
-                    if (loginFail.getFailCount() >= MAX_FAIL_COUNT) {
-                        loginFail.lock();
+                if (!suspended && !dormant) {
+                    LoginFail loginFail = loginFailRepository.getByMemberEmail(email)
+                            .orElseGet(() -> LoginFail.builder().member(member).build());
+
+                    if (!loginFail.isLocked()) {
+                        loginFail.increaseFail();
+
+                        if (loginFail.getFailCount() >= MAX_FAIL_COUNT) {
+                            loginFail.lock();
+                        }
+
+                        loginFailRepository.save(loginFail);
                     }
 
-                    loginFailRepository.save(loginFail);
+                    locked = loginFail.isLocked();
+                    failCount = loginFail.getFailCount();
                 }
-
-                locked = loginFail.isLocked();
-                failCount = loginFail.getFailCount();
 
             } else {
                 // 아직 Member가 없는 경우: 이메일 인증 대기중인 가입 신청이 있는지 확인
@@ -74,6 +87,10 @@ public class APILoginFailHandler implements AuthenticationFailureHandler{
         String errorCode;
         if (locked) {
             errorCode = "ERROR_ACCOUNT_LOCKED";
+        } else if (suspended) {
+            errorCode = "ERROR_ACCOUNT_SUSPENDED";
+        } else if (dormant) {
+            errorCode = "ERROR_ACCOUNT_DORMANT";
         } else if (pendingVerification) {
             errorCode = "ERROR_EMAIL_NOT_VERIFIED";
         } else {
@@ -83,7 +100,9 @@ public class APILoginFailHandler implements AuthenticationFailureHandler{
         String jsonStr = gson.toJson(Map.of(
                 "error", errorCode,
                 "failCount", failCount,
-                "maxFailCount", MAX_FAIL_COUNT
+                "maxFailCount", MAX_FAIL_COUNT,
+                "suspendReason", suspendReason == null ? "" : suspendReason,
+                "suspendUntil", suspendUntil == null ? "" : suspendUntil
         ));
 
         response.setContentType("application/json");

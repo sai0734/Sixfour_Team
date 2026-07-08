@@ -56,6 +56,17 @@ public class JoinController {
     return Map.of("available", available);
   }
 
+  @GetMapping("/check-phone")
+  public Map<String, Boolean> checkPhone(@RequestParam String phone) {
+
+    String status = memberService.getPhoneCheckStatus(phone);
+
+    return Map.of(
+            "available", "AVAILABLE".equals(status),
+            "blocked", "BLOCKED".equals(status)
+    );
+  }
+
   // 이메일 인증 링크 클릭 시 진입하는 경로 (사용자가 메일 클라이언트에서 직접 클릭)
   @GetMapping("/verify-email")
   public ResponseEntity<String> verifyEmail(@RequestParam String token) {
@@ -78,17 +89,25 @@ public class JoinController {
         title = "인증 만료";
         message = "인증 링크가 만료되었습니다. 다시 시도해 주세요.";
         break;
+      case "PHONE_DUPLICATE":
+        title = "가입 실패";
+        message = "이미 사용 중인 휴대폰 번호입니다. 다른 번호로 다시 가입해 주세요.";
+        break;
+      case "PHONE_BLOCKED":
+        title = "가입 실패";
+        message = "정지 또는 휴면 처리된 회원과 동일한 휴대폰 번호입니다. 관리자에게 문의해주세요.";
+        break;
       default:
         title = "인증 실패";
         message = "유효하지 않은 인증 링크입니다.";
     }
 
     String html =
-        "<html><head><meta charset='UTF-8'></head>"
-      + "<body style='font-family:sans-serif; text-align:center; padding-top:80px;'>"
-      + "<h2>" + title + "</h2>"
-      + "<p>" + message + "</p>"
-      + "</body></html>";
+            "<html><head><meta charset='UTF-8'></head>"
+                    + "<body style='font-family:sans-serif; text-align:center; padding-top:80px;'>"
+                    + "<h2>" + title + "</h2>"
+                    + "<p>" + message + "</p>"
+                    + "</body></html>";
 
     return ResponseEntity.ok()
             .headers(new HttpHeaders() {{ setContentType(MediaType.TEXT_HTML); }})

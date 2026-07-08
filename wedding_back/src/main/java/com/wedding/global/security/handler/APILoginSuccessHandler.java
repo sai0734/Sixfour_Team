@@ -12,6 +12,7 @@ import com.wedding.member.dto.MemberDTO;
 import com.wedding.global.util.JWTUtil;
 import com.wedding.global.util.RedisTokenService;
 import com.wedding.member.repository.LoginFailRepository;
+import com.wedding.member.repository.MemberRepository;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,6 +26,7 @@ public class APILoginSuccessHandler implements AuthenticationSuccessHandler{
 
     private final LoginFailRepository loginFailRepository;
     private final RedisTokenService redisTokenService;
+    private final MemberRepository memberRepository;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication)
@@ -40,6 +42,13 @@ public class APILoginSuccessHandler implements AuthenticationSuccessHandler{
                 .ifPresent(loginFail -> {
                     loginFail.reset();
                     loginFailRepository.save(loginFail);
+                });
+
+        // 관리자 회원관리 - 최근 로그인 시각 갱신
+        memberRepository.findById(memberDTO.getEmail())
+                .ifPresent(member -> {
+                    member.touchLogin();
+                    memberRepository.save(member);
                 });
 
         Map<String, Object> claims  = memberDTO.getClaims();
