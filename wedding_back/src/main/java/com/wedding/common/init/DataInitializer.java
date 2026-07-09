@@ -2,6 +2,10 @@ package com.wedding.common.init;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wedding.board.domain.Board;
+import com.wedding.board.domain.Comment;
+import com.wedding.board.repository.BoardRepository;
+import com.wedding.board.repository.CommentRepository;
 import com.wedding.checkout.domain.OrderItem;
 import com.wedding.checkout.domain.Orders;
 import com.wedding.checkout.repository.OrderRepository;
@@ -27,9 +31,11 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.boot.ApplicationArguments;
@@ -59,12 +65,16 @@ public class DataInitializer implements ApplicationRunner {
   private final MemberDetailRepository memberDetailRepository;
   private final PasswordEncoder passwordEncoder;
   private final JdbcTemplate jdbcTemplate;
+  private final BoardRepository boardRepository;
+  private final CommentRepository commentRepository;
 
   // 애플리케이션 기동 시 더미 시드 진입점 (모든 시드: 해당 테이블 count == 0 일 때만)
   // 1) data/product.json         → tbl_product, tbl_product_option
   // 2) data/member.json          → tbl_member, tbl_member_detail
-  // 3) data/commerce_dummy.json  → tbl_orders, tbl_order_item, tbl_review, tbl_qna
-  // 4) data/makeup.json          → tbl_makeup_package (업체 DB 있을 때만)
+  // 3) data/board.json           → tbl_board (작성자는 ACTIVE 회원 순환 배정)
+  // 4) data/comment.json         → tbl_comment (작성자는 ACTIVE 회원 순환 배정, board 이후)
+  // 5) data/commerce_dummy.json  → tbl_orders, tbl_order_item, tbl_review, tbl_qna
+  // 6) data/makeup.json          → tbl_makeup_package (업체 DB 있을 때만)
   @Override
   @Transactional
   public void run(ApplicationArguments args) throws Exception {
@@ -79,6 +89,19 @@ public class DataInitializer implements ApplicationRunner {
       log.info("===== Member dummy seed start =====");
       insertMembers();
       log.info("===== Member dummy seed complete =====");
+    }
+
+    // 게시판/댓글은 반드시 회원 삽입 이후에 실행되어야 함 (작성자를 실제 회원으로 배정하므로)
+    if (boardRepository.count() == 0) {
+      log.info("===== Board dummy seed start =====");
+      insertBoards();
+      log.info("===== Board dummy seed complete =====");
+    }
+
+    if (commentRepository.count() == 0) {
+      log.info("===== Comment dummy seed start =====");
+      insertComments();
+      log.info("===== Comment dummy seed complete =====");
     }
 
     if (orderRepository.count() == 0) {
@@ -148,10 +171,10 @@ public class DataInitializer implements ApplicationRunner {
           continue;
         }
         MakeupPackage makeupPackage = MakeupPackage.builder()
-            .company(company)
-            .packageType(normalizeMakeupPackageType(pkg.get("packageType")))
-            .discountRate(toBigDecimal(pkg.get("discountRate")))
-            .build();
+                .company(company)
+                .packageType(normalizeMakeupPackageType(pkg.get("packageType")))
+                .discountRate(toBigDecimal(pkg.get("discountRate")))
+                .build();
         makeupPackageRepository.save(makeupPackage);
       }
     }
@@ -165,12 +188,12 @@ public class DataInitializer implements ApplicationRunner {
 
     for (Map<String, Object> m : list) {
       Product product = Product.builder()
-          .pname((String) m.get("pname"))
-          .price(toInt(m.get("price")))
-          .pdesc((String) m.get("pdesc"))
-          .category((String) m.get("category"))
-          .stockQty(toInt(m.get("stockQty")))
-          .build();
+              .pname((String) m.get("pname"))
+              .price(toInt(m.get("price")))
+              .pdesc((String) m.get("pdesc"))
+              .category((String) m.get("category"))
+              .stockQty(toInt(m.get("stockQty")))
+              .build();
 
       List<String> uploadFileNames = castList(m.get("uploadFileNames"));
       if (uploadFileNames != null) {
@@ -183,11 +206,11 @@ public class DataInitializer implements ApplicationRunner {
       if (options != null) {
         for (Map<String, Object> opt : options) {
           ProductOption productOption = ProductOption.builder()
-              .product(savedProduct)
-              .optionName((String) opt.get("optionName"))
-              .optionValue((String) opt.get("optionValue"))
-              .extraPrice(toInt(opt.get("extraPrice")))
-              .build();
+                  .product(savedProduct)
+                  .optionName((String) opt.get("optionName"))
+                  .optionValue((String) opt.get("optionValue"))
+                  .extraPrice(toInt(opt.get("extraPrice")))
+                  .build();
           productOptionRepository.save(productOption);
         }
       }
@@ -202,16 +225,16 @@ public class DataInitializer implements ApplicationRunner {
 
     for (Map<String, Object> m : list) {
       Member member = Member.builder()
-          .email((String) m.get("email"))
-          .pw(passwordEncoder.encode("1111"))
-          .nickname((String) m.get("nickname"))
-          .social(Boolean.TRUE.equals(m.get("social")))
-          .status((String) m.getOrDefault("status", "ACTIVE"))
-          .emailVerified(Boolean.TRUE.equals(m.get("emailVerified")))
-          .suspendReason((String) m.get("suspendReason"))
-          .suspendUntil(parseDateTime((String) m.get("suspendUntil")))
-          .lastLoginAt(parseDateTime((String) m.get("lastLoginAt")))
-          .build();
+              .email((String) m.get("email"))
+              .pw(passwordEncoder.encode("1111"))
+              .nickname((String) m.get("nickname"))
+              .social(Boolean.TRUE.equals(m.get("social")))
+              .status((String) m.getOrDefault("status", "ACTIVE"))
+              .emailVerified(Boolean.TRUE.equals(m.get("emailVerified")))
+              .suspendReason((String) m.get("suspendReason"))
+              .suspendUntil(parseDateTime((String) m.get("suspendUntil")))
+              .lastLoginAt(parseDateTime((String) m.get("lastLoginAt")))
+              .build();
 
       List<String> roleNames = castList(m.get("roleNames"));
       if (roleNames != null && roleNames.contains("ADMIN")) {
@@ -222,14 +245,120 @@ public class DataInitializer implements ApplicationRunner {
       memberRepository.save(member);
 
       MemberDetail detail = MemberDetail.builder()
-          .member(member)
-          .name((String) m.get("name"))
-          .phone((String) m.get("phone"))
-          .build();
+              .member(member)
+              .name((String) m.get("name"))
+              .phone((String) m.get("phone"))
+              .build();
       memberDetailRepository.save(detail);
     }
 
     log.info("Inserted {} members (password: 1111).", memberRepository.count());
+  }
+
+  // data/board.json → tbl_board. 작성자는 고정 가짜 이메일이 아니라 실제 ACTIVE 회원을 순환 배정
+  private void insertBoards() throws Exception {
+    List<Map<String, Object>> list = readJsonArray("data/board.json");
+
+    List<Member> authors = getActiveMembers();
+    if (authors.isEmpty()) {
+      log.warn("ACTIVE 상태 회원이 없어 게시판 더미 시드를 건너뜁니다.");
+      return;
+    }
+
+    List<Board> boards = new ArrayList<>();
+    int i = 0;
+
+    for (Map<String, Object> m : list) {
+      Member author = authors.get(i % authors.size());
+
+      int viewCount = 80 + (i * 37) % 900;
+      int likeCount = 5 + (i * 7) % 90;
+      long daysAgo = i % 45;
+      long hoursAgo = (i * 3) % 24;
+
+      boards.add(Board.builder()
+              .memberEmail(author.getEmail())
+              .nickname(author.getNickname())
+              .boardType((String) m.get("boardType"))
+              .category((String) m.get("category"))
+              .title((String) m.get("title"))
+              .content((String) m.get("content"))
+              .rating(toIntegerObject(m.get("rating")))
+              .viewCount(viewCount)
+              .likeCount(likeCount)
+              .regDate(LocalDateTime.now().minusDays(daysAgo).minusHours(hoursAgo))
+              .build());
+
+      i++;
+    }
+
+    boardRepository.saveAll(boards);
+
+    log.info("Inserted {} boards (authors: real ACTIVE members).", boards.size());
+  }
+
+  // data/comment.json → tbl_comment. board.json과 동일하게 ACTIVE 회원을 순환 배정 (offset 7)
+  private void insertComments() throws Exception {
+    List<Map<String, Object>> list = readJsonArray("data/comment.json");
+
+    List<Member> authors = getActiveMembers();
+    if (authors.isEmpty()) {
+      log.warn("ACTIVE 상태 회원이 없어 댓글 더미 시드를 건너뜁니다.");
+      return;
+    }
+
+    int i = 0;
+
+    for (Map<String, Object> m : list) {
+      String boardTitle = (String) m.get("boardTitle");
+      String content = (String) m.get("content");
+      String reply = (String) m.get("reply");
+
+      Long parentId = addComment(boardTitle, content, authors, i++, null);
+
+      if (reply != null && parentId != null) {
+        addComment(boardTitle, reply, authors, i++, parentId);
+      }
+    }
+
+    log.info("Inserted {} comments (authors: real ACTIVE members).", commentRepository.count());
+  }
+
+  // 댓글/대댓글 1건 저장 + 해당 게시글 commentCount 증가
+  private Long addComment(String boardTitle, String content, List<Member> authors, int i, Long parentId) {
+    Optional<Board> result = boardRepository.findFirstByTitle(boardTitle);
+
+    if (result.isEmpty()) {
+      log.warn("댓글 더미 대상 게시글을 못 찾음: {}", boardTitle);
+      return null;
+    }
+
+    Board board = result.get();
+
+    // 게시글 작성자 배정(offset 0)과 겹치지 않도록 offset 7
+    Member author = authors.get((i + 7) % authors.size());
+
+    Comment saved = commentRepository.save(Comment.builder()
+            .boardId(board.getBoardId())
+            .memberEmail(author.getEmail())
+            .nickname(author.getNickname())
+            .parentId(parentId)
+            .content(content)
+            .regDate(LocalDateTime.now().minusDays(i % 20).minusHours((i * 2) % 24))
+            .build());
+
+    board.increaseCommentCount();
+    boardRepository.save(board);
+
+    return saved.getCommentId();
+  }
+
+  // ACTIVE 상태 회원만 게시판/댓글 더미 작성자 후보로 사용 (정지·휴면 계정 제외)
+  private List<Member> getActiveMembers() {
+    return memberRepository.findAll().stream()
+            .filter(member -> "ACTIVE".equals(member.getStatus()))
+            .sorted(Comparator.comparing(Member::getEmail))
+            .toList();
   }
 
   // data/commerce_dummy.json → tbl_orders, tbl_order_item, tbl_review, tbl_qna
@@ -239,8 +368,8 @@ public class DataInitializer implements ApplicationRunner {
     @SuppressWarnings("unchecked")
     Map<String, Object> meta = (Map<String, Object>) root.get("meta");
     String adminEmail = meta != null && meta.get("adminEmail") != null
-        ? meta.get("adminEmail").toString()
-        : ADMIN_EMAIL;
+            ? meta.get("adminEmail").toString()
+            : ADMIN_EMAIL;
     Member admin = memberRepository.findById(adminEmail).orElse(null);
 
     Map<String, OrderItem> orderItemMap = new HashMap<>();
@@ -269,7 +398,7 @@ public class DataInitializer implements ApplicationRunner {
     refreshAllProductRatingStats(productRepository.findAll());
 
     log.info("Commerce dummy seeded. orders={}, reviews={}, qnas={}",
-        orderRepository.count(), reviewRepository.count(), qnaRepository.count());
+            orderRepository.count(), reviewRepository.count(), qnaRepository.count());
   }
 
   // commerce_dummy.json orders[] 1건 → tbl_orders, tbl_order_item 저장 및 OrderItem 맵 등록
@@ -283,11 +412,11 @@ public class DataInitializer implements ApplicationRunner {
 
     MemberDetail detail = memberDetailRepository.getByMemberEmail(memberEmail).orElse(null);
     String receiverName = o.containsKey("receiverName")
-        ? (String) o.get("receiverName")
-        : (detail != null ? detail.getName() : member.getNickname());
+            ? (String) o.get("receiverName")
+            : (detail != null ? detail.getName() : member.getNickname());
     String receiverPhone = o.containsKey("receiverPhone")
-        ? (String) o.get("receiverPhone")
-        : (detail != null ? detail.getPhone() : "010-0000-0000");
+            ? (String) o.get("receiverPhone")
+            : (detail != null ? detail.getPhone() : "010-0000-0000");
 
     List<Map<String, Object>> items = castList(o.get("items"));
     List<OrderItem> draftItems = new ArrayList<>();
@@ -303,11 +432,11 @@ public class DataInitializer implements ApplicationRunner {
         }
         int qty = toInt(item.get("qty"));
         draftItems.add(OrderItem.builder()
-            .product(product)
-            .pnameSnapshot(product.getPname())
-            .priceSnapshot(product.getPrice())
-            .qty(qty)
-            .build());
+                .product(product)
+                .pnameSnapshot(product.getPname())
+                .priceSnapshot(product.getPrice())
+                .qty(qty)
+                .build());
         totalPrice += product.getPrice() * qty;
       }
     }
@@ -318,21 +447,21 @@ public class DataInitializer implements ApplicationRunner {
     }
 
     int shippingFee = o.containsKey("shippingFee")
-        ? toInt(o.get("shippingFee"))
-        : (totalPrice >= 50000 ? 0 : 3000);
+            ? toInt(o.get("shippingFee"))
+            : (totalPrice >= 50000 ? 0 : 3000);
 
     Orders ordersEntity = Orders.builder()
-        .orderNumber((String) o.get("orderNumber"))
-        .member(member)
-        .totalPrice(totalPrice)
-        .shippingFee(shippingFee)
-        .receiverName(receiverName)
-        .receiverPhone(receiverPhone)
-        .zipcode((String) o.getOrDefault("zipcode", "06234"))
-        .address((String) o.getOrDefault("address", "서울특별시 강남구 테헤란로 123"))
-        .addressDetail((String) o.get("addressDetail"))
-        .orderStatus((String) o.get("orderStatus"))
-        .build();
+            .orderNumber((String) o.get("orderNumber"))
+            .member(member)
+            .totalPrice(totalPrice)
+            .shippingFee(shippingFee)
+            .receiverName(receiverName)
+            .receiverPhone(receiverPhone)
+            .zipcode((String) o.getOrDefault("zipcode", "06234"))
+            .address((String) o.getOrDefault("address", "서울특별시 강남구 테헤란로 123"))
+            .addressDetail((String) o.get("addressDetail"))
+            .orderStatus((String) o.get("orderStatus"))
+            .build();
 
     draftItems.forEach(ordersEntity::addOrderItem);
     Orders saved = orderRepository.save(ordersEntity);
@@ -352,24 +481,24 @@ public class DataInitializer implements ApplicationRunner {
     }
 
     Review review = Review.builder()
-        .product(orderItem.getProduct())
-        .member(orderItem.getOrders().getMember())
-        .orderItem(orderItem)
-        .rating(toIntegerObject(r.get("rating")))
-        .content((String) r.get("content"))
-        .build();
+            .product(orderItem.getProduct())
+            .member(orderItem.getOrders().getMember())
+            .orderItem(orderItem)
+            .rating(toIntegerObject(r.get("rating")))
+            .content((String) r.get("content"))
+            .build();
     Review saved = reviewRepository.save(review);
 
     String adminReply = (String) r.get("adminReply");
     if (admin != null && adminReply != null && !adminReply.isBlank()) {
       reviewRepository.save(Review.builder()
-          .product(orderItem.getProduct())
-          .member(admin)
-          .orderItem(orderItem)
-          .review(saved)
-          .rating(null)
-          .content(adminReply)
-          .build());
+              .product(orderItem.getProduct())
+              .member(admin)
+              .orderItem(orderItem)
+              .review(saved)
+              .rating(null)
+              .content(adminReply)
+              .build());
     }
   }
 
@@ -385,19 +514,19 @@ public class DataInitializer implements ApplicationRunner {
     }
 
     Qna question = qnaRepository.save(Qna.builder()
-        .product(product)
-        .member(member)
-        .content((String) q.get("content"))
-        .build());
+            .product(product)
+            .member(member)
+            .content((String) q.get("content"))
+            .build());
 
     String adminAnswer = (String) q.get("adminAnswer");
     if (admin != null && adminAnswer != null && !adminAnswer.isBlank()) {
       qnaRepository.save(Qna.builder()
-          .product(product)
-          .member(admin)
-          .qna(question)
-          .content(adminAnswer)
-          .build());
+              .product(product)
+              .member(admin)
+              .qna(question)
+              .content(adminAnswer)
+              .build());
     }
   }
 
@@ -426,10 +555,10 @@ public class DataInitializer implements ApplicationRunner {
   private Company findCompany(Object cmno) {
     Long companyId = toLongObject(cmno);
     return companyRepository.findById(companyId)
-        .orElseGet(() -> {
-          log.warn("Skip makeup package. Company not found for cmno={}", companyId);
-          return null;
-        });
+            .orElseGet(() -> {
+              log.warn("Skip makeup package. Company not found for cmno={}", companyId);
+              return null;
+            });
   }
 
   // classpath JSON 배열 읽기 (data/product.json, data/member.json, data/makeup.json)
