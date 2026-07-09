@@ -25,7 +25,7 @@ const useCustomMove = () => {
 
   const queryDefault = createSearchParams({ page, size }).toString();
 
-  const moveToList = (pageParam) => {
+  const moveToList = (pageParam, navOptions = {}) => {
     let queryStr = "";
 
     if (pageParam) {
@@ -40,11 +40,22 @@ const useCustomMove = () => {
       queryStr = queryDefault;
     }
 
-    navigate({
-      pathname: `../list`,
-      search: queryStr,
-    });
-    setRefresh(!refresh); //추가
+    navigate(
+      {
+        pathname: `../list`,
+        search: queryStr,
+      },
+      {
+        replace: navOptions.replace ?? false,
+        preventScrollReset: navOptions.preventScrollReset ?? false,
+      },
+    );
+
+    if (navOptions.skipRefresh) {
+      return;
+    }
+
+    setRefresh(!refresh);
   };
 
   const moveToModify = (num) => {

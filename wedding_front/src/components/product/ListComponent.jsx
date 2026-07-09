@@ -11,6 +11,7 @@ import FetchingModal from "../common/FetchingModal";
 import PageComponent from "../common/PageComponent";
 import ProductFilterSidebarComponent, {
   PRICE_BANDS,
+  RATING_OPTIONS,
 } from "./ProductFilterSidebarComponent";
 import ProductSortToolbarComponent from "./ProductSortToolbarComponent";
 import ProductGridComponent from "./ProductGridComponent";
@@ -45,7 +46,7 @@ const ListComponent = () => {
 
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedPriceBand, setSelectedPriceBand] = useState(null);
-  const [ratingFilterOn, setRatingFilterOn] = useState(false);
+  const [selectedRatingOption, setSelectedRatingOption] = useState(null); // [추가]
   const [keywordInput, setKeywordInput] = useState("");
   const [keyword, setKeyword] = useState("");
 
@@ -77,6 +78,11 @@ const ListComponent = () => {
     const priceBand =
       selectedPriceBand !== null ? PRICE_BANDS[selectedPriceBand] : null;
 
+    const ratingOption =
+      selectedRatingOption !== null
+        ? RATING_OPTIONS[selectedRatingOption]
+        : null;
+
     getList({
       page,
       size,
@@ -84,7 +90,7 @@ const ListComponent = () => {
       keyword,
       minPrice: priceBand?.minPrice,
       maxPrice: priceBand?.maxPrice,
-      minRating: ratingFilterOn ? 4.0 : null,
+      minRating: ratingOption?.minRating ?? null,
       sortType,
     })
       .then((data) => {
@@ -98,7 +104,7 @@ const ListComponent = () => {
     selectedCategories,
     keyword,
     selectedPriceBand,
-    ratingFilterOn,
+    selectedRatingOption,
     sortType,
     refresh,
   ]);
@@ -137,7 +143,7 @@ const ListComponent = () => {
     setKeyword("");
     setSelectedCategories([]);
     setSelectedPriceBand(null);
-    setRatingFilterOn(false);
+    setSelectedRatingOption(null);
     setSortType("popular");
     resetPageForFilter();
   };
@@ -157,10 +163,10 @@ const ListComponent = () => {
     setSelectedPriceBand((prev) => (prev === idx ? null : idx));
   };
 
-  const handleToggleRating = () => {
+  const handleToggleRatingOption = (idx) => {
     resetPageForFilter();
-    setRatingFilterOn((prev) => !prev);
-  };
+    setSelectedRatingOption((prev) => (prev === idx ? null : idx));
+  }; // [추가]
 
   const handleSearch = () => {
     resetPageForFilter();
@@ -220,8 +226,8 @@ const ListComponent = () => {
           onToggleCategory={handleToggleCategory}
           selectedPriceBand={selectedPriceBand}
           onTogglePriceBand={handleTogglePriceBand}
-          ratingFilterOn={ratingFilterOn}
-          onToggleRating={handleToggleRating}
+          selectedRatingOption={selectedRatingOption}
+          onToggleRatingOption={handleToggleRatingOption}
         />
 
         <section>

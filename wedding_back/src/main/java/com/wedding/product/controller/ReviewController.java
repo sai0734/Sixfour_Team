@@ -131,7 +131,7 @@ public class ReviewController {
     }
 
     // 회원 본인 리뷰 목록 (마이페이지용)
-    @PreAuthorize("hasAnyRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/reviews/my")
     public List<ReviewDTO> listMyReviews(Principal principal) {
 
