@@ -1,9 +1,11 @@
 import BasicMenu from "../components/menus/BasicMenu";
 import PrepSidebar from "./PrepSidebar";
+import ProfileCompleteGuard from "../components/common/ProfileCompleteGuard";
 
 const PrepLayout = ({ eyebrow, title, subtitle, children }) => {
   return (
     <>
+      <ProfileCompleteGuard />
       <BasicMenu />
 
       <div className="bg-cream min-h-screen">

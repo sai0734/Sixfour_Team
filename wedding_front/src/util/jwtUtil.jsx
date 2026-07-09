@@ -80,6 +80,13 @@ const responseFail = async (err) => {
     return Promise.reject(err);
   }
 
+  // 소셜 최초가입인데 추가정보를 아직 안 넣은 상태로 다른 API를 호출한 경우
+  // (정상적인 경우 화면단 가드가 먼저 막지만, 직접 API를 호출하는 등 우회 시도에 대한 최종 방어선)
+  if (data?.error === "ERROR_PROFILE_INCOMPLETE") {
+    window.location.href = "/auth/social-complete";
+    return Promise.reject(err);
+  }
+
   // accessToken 만료: refreshToken으로 자동 갱신 후 원래 요청 재시도
   if (data?.error === "ERROR_ACCESS_TOKEN") {
     const authCookieValue = getCookie("auth");

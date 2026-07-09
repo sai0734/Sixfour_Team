@@ -1,9 +1,11 @@
 import BasicMenu from "../components/menus/BasicMenu";
 import AdminSidebar from "./AdminSidebar";
+import ProfileCompleteGuard from "../components/common/ProfileCompleteGuard";
 
 const AdminLayout = ({ children }) => {
   return (
     <>
+      <ProfileCompleteGuard />
       <BasicMenu />
 
       <div className="bg-white min-h-screen">
