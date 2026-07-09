@@ -88,6 +88,16 @@ const MemberManageComponent = () => {
     setQueryParam((prev) => ({ ...prev, page: 1, keyword: keywordInput }));
   };
 
+  // 검색창을 완전히 지우면(빈 문자열) 검색 버튼 안 눌러도 바로 전체 목록으로 리셋
+  const handleKeywordChange = (e) => {
+    const value = e.target.value;
+    setKeywordInput(value);
+
+    if (value === "") {
+      setQueryParam((prev) => ({ ...prev, page: 1, keyword: "" }));
+    }
+  };
+
   const handleStatusFilter = (status) => {
     setQueryParam((prev) => ({ ...prev, page: 1, status }));
   };
@@ -185,7 +195,7 @@ const MemberManageComponent = () => {
           <input
             type="text"
             value={keywordInput}
-            onChange={(e) => setKeywordInput(e.target.value)}
+            onChange={handleKeywordChange}
             placeholder="닉네임 또는 이메일 검색"
             className="w-64 rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-400"
           />
