@@ -1,10 +1,12 @@
 import BasicMenu from "../components/menus/BasicMenu";
 import MyPageSidebar from "./MyPageSidebar";
+import ProfileCompleteGuard from "../components/common/ProfileCompleteGuard";
 
 // PrepLayout과 동일한 껍데기지만 사이드바만 마이페이지 전용으로 분리.
 const MyPageLayout = ({ eyebrow, title, subtitle, children }) => {
   return (
     <>
+      <ProfileCompleteGuard />
       <BasicMenu />
 
       <div className="bg-cream min-h-screen">
