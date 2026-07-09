@@ -100,7 +100,7 @@ const AdminDashboardComponent = () => {
         </div>
       ) : null}
 
-      <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Kpi label="전체 업체" value={`${stats.total}개`} desc="등록된 전체 업체" />
         <Kpi label="활성 업체" value={`${stats.active}개`} desc="삭제 처리 제외" tone="success" />
         <Kpi label="평균 가격" value={`${stats.averagePrice.toLocaleString()}원`} desc="가격 등록 업체 기준" tone="accent" />
@@ -112,7 +112,7 @@ const AdminDashboardComponent = () => {
         />
       </div>
 
-      <div className="mb-5 grid gap-4 lg:grid-cols-3">
+      <div className="mb-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Panel title="업체 유형 분포" badge="카테고리별">
           <div className="space-y-4">
             {Object.entries(categoryLabel).map(([category, label]) => {
@@ -158,7 +158,7 @@ const AdminDashboardComponent = () => {
         </Panel>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2">
         <Panel title="최근 등록 업체" badge="최신순 5개">
           <div className="space-y-3">
             {stats.newestCompanies.length ? (

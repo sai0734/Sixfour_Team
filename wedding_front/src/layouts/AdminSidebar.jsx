@@ -21,7 +21,7 @@ const AdminSidebar = () => {
   const location = useLocation();
 
   return (
-    <aside className="w-56 shrink-0 py-8 pr-6">
+    <aside className="hidden md:block w-56 shrink-0 py-8 pr-6">
       {MENU_GROUPS.map((group) => (
         <div key={group.label} className="mb-7">
           <p className="text-[11px] text-ink-faint tracking-wide mb-2 px-3">
