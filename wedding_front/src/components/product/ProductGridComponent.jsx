@@ -1,4 +1,3 @@
-// 상품 카드 그리드 + 찜(하트) 토글
 const ProductGridComponent = ({
   dtoList,
   host,
@@ -7,29 +6,31 @@ const ProductGridComponent = ({
   onClickCard,
 }) => {
   return (
-    <div className="grid grid-cols-4 gap-6">
+    <div className="grid grid-cols-2 gap-3.5 md:grid-cols-3 md:gap-5 lg:grid-cols-4 lg:gap-[22px]">
       {dtoList.map((product) => (
-        <div
+        <article
           key={product.pno}
-          className="cursor-pointer"
           onClick={() => onClickCard(product.pno)}
+          className="cursor-pointer overflow-hidden rounded-[18px] bg-[#FFFDF9] shadow-[0_8px_24px_-12px_rgba(58,54,47,0.15)] transition duration-250 hover:-translate-y-1.5 hover:shadow-[0_18px_40px_-12px_rgba(58,54,47,0.2)]"
         >
-          <div className="relative aspect-square rounded-2xl overflow-hidden bg-surface">
+          <div className="relative aspect-square overflow-hidden bg-[#F0EDE6]">
             <img
               alt={product.pname}
-              className="w-full h-full object-cover"
+              className="h-full w-full object-cover transition duration-300 hover:scale-[1.04]"
               src={`${host}/api/product/view/s_${product.uploadFileNames?.[0]}`}
             />
 
             <button
+              type="button"
               onClick={(e) => onClickWish(e, product.pno)}
-              className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-white/90 flex items-center justify-center"
+              aria-label="찜하기"
+              className="absolute right-2.5 top-2.5 flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#FFFDF9]/90 shadow-[0_4px_12px_rgba(58,54,47,0.12)] transition hover:scale-105"
             >
               <svg
                 viewBox="0 0 24 24"
-                className="w-3.5 h-3.5"
-                fill={wishedSet.has(product.pno) ? "#D4537E" : "none"}
-                stroke="#D4537E"
+                className="h-4 w-4"
+                fill={wishedSet.has(product.pno) ? "#C87070" : "none"}
+                stroke="#C87070"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -38,14 +39,20 @@ const ProductGridComponent = ({
               </svg>
             </button>
           </div>
-          <p className="text-sm mt-2.5">{product.pname}</p>
-          <p className="text-sm font-medium mt-0.5">
-            {product.price?.toLocaleString()}원
-          </p>
-          <p className="text-xs text-ink-faint flex items-center gap-1 mt-0.5">
-            ★ {product.ratingAvg?.toFixed(1)} ({product.reviewCount})
-          </p>
-        </div>
+
+          <div className="px-4 pb-[18px] pt-4">
+            <p className="mb-1.5 line-clamp-2 text-sm leading-snug text-[#3A362F]">
+              {product.pname}
+            </p>
+            <p className="mb-1 font-['Gowun_Batang'] text-[15px] text-[#3A362F]">
+              {product.price?.toLocaleString()}원
+            </p>
+            <p className="flex items-center gap-1 text-xs text-[#A8A090]">
+              <span className="text-[#C9A96A]">★</span>
+              {product.ratingAvg?.toFixed(1)} ({product.reviewCount})
+            </p>
+          </div>
+        </article>
       ))}
     </div>
   );

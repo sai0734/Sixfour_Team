@@ -15,7 +15,6 @@ import ProductFilterSidebarComponent, {
 } from "./ProductFilterSidebarComponent";
 import ProductSortToolbarComponent from "./ProductSortToolbarComponent";
 import ProductGridComponent from "./ProductGridComponent";
-
 import { API_SERVER_HOST } from "../../api/reservationApi";
 import useCustomLogin from "../../hooks/useCustomLogin";
 
@@ -36,24 +35,19 @@ const initState = {
 
 const ListComponent = () => {
   const { exceptionHandle, loginState } = useCustomLogin();
-
   const { page, size, refresh, moveToRead, moveToList } = useCustomMove();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
   const [serverData, setServerData] = useState(initState);
   const [categoryList, setCategoryList] = useState([]);
-
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedPriceBand, setSelectedPriceBand] = useState(null);
-  const [selectedRatingOption, setSelectedRatingOption] = useState(null); // [추가]
+  const [selectedRatingOption, setSelectedRatingOption] = useState(null);
   const [keywordInput, setKeywordInput] = useState("");
   const [keyword, setKeyword] = useState("");
-
   const [sortType, setSortType] = useState("popular");
-
   const [fetching, setFetching] = useState(false);
-
   const [wishedSet, setWishedSet] = useState(new Set());
 
   useEffect(() => {
@@ -77,7 +71,6 @@ const ListComponent = () => {
 
     const priceBand =
       selectedPriceBand !== null ? PRICE_BANDS[selectedPriceBand] : null;
-
     const ratingOption =
       selectedRatingOption !== null
         ? RATING_OPTIONS[selectedRatingOption]
@@ -131,10 +124,7 @@ const ListComponent = () => {
   }, [serverData.dtoList, loginState.email]);
 
   const resetPageForFilter = () => {
-    if (page === 1) {
-      return;
-    }
-
+    if (page === 1) return;
     moveToList({ page: 1, size }, { replace: true, preventScrollReset: true });
   };
 
@@ -166,7 +156,7 @@ const ListComponent = () => {
   const handleToggleRatingOption = (idx) => {
     resetPageForFilter();
     setSelectedRatingOption((prev) => (prev === idx ? null : idx));
-  }; // [추가]
+  };
 
   const handleSearch = () => {
     resetPageForFilter();
@@ -187,7 +177,6 @@ const ListComponent = () => {
     }
 
     const alreadyWished = wishedSet.has(pno);
-
     const action = alreadyWished ? deleteWish(pno) : postAdd(pno);
 
     action.then(() => {
@@ -204,22 +193,25 @@ const ListComponent = () => {
   };
 
   return (
-    <div className="bg-white">
-      {fetching ? <FetchingModal /> : <></>}
+    <div className="min-h-screen bg-[#FBF7F0] text-[#3A362F]">
+      {fetching ? <FetchingModal /> : null}
 
-      <section className="bg-brand-light py-14 px-6 text-center">
-        <p className="text-xs tracking-[0.15em] text-brand-accent mb-2">
-          GIFT SHOP
-        </p>
-        <p className="font-serif text-3xl text-brand-deep mb-2">
-          하객들에게 전하는 마음
-        </p>
-        <p className="text-sm text-brand-accent">
-          취향대로 고르고, 바로 주문할 수 있어요
-        </p>
+      <section className="bg-gradient-to-b from-[#EFE6D8] to-[#FBF7F0] px-5 py-10 text-center md:px-8 md:py-12 lg:px-[60px]">
+        <div className="mx-auto max-w-[720px]">
+          <span className="mb-4 inline-block -rotate-2 bg-[#E4C9B8] px-3.5 py-1 font-['Gaegu'] text-[13px] text-[#6B4A3A]">
+            03 — GIFT SHOP
+          </span>
+          <h1 className="mb-3.5 font-['Gowun_Batang'] text-[28px] leading-snug text-[#3A362F] md:text-4xl">
+            하객들에게 전하는 마음
+          </h1>
+          <p className="whitespace-pre-line text-[15px] leading-relaxed text-[#7A7364]">
+            캔들, 디퓨저, 수건 세트까지{"\n"}취향대로 고르고 바로 주문할 수
+            있어요
+          </p>
+        </div>
       </section>
 
-      <div className="max-w-[1140px] mx-auto px-6 py-10 grid grid-cols-[200px_1fr] gap-10">
+      <div className="mx-auto grid max-w-[1200px] grid-cols-1 items-start gap-7 px-5 py-8 md:px-8 lg:grid-cols-[240px_1fr] lg:gap-10 lg:px-[60px] lg:py-12">
         <ProductFilterSidebarComponent
           categoryList={categoryList}
           selectedCategories={selectedCategories}
@@ -230,7 +222,7 @@ const ListComponent = () => {
           onToggleRatingOption={handleToggleRatingOption}
         />
 
-        <section>
+        <section className="min-w-0">
           <ProductSortToolbarComponent
             totalCount={serverData.totalCount}
             sortType={sortType}
@@ -241,18 +233,20 @@ const ListComponent = () => {
           />
 
           {isEmptySearchResult ? (
-            <div className="flex flex-col items-center justify-center py-24 text-center">
-              <p className="text-base text-ink mb-2">
-                <span className="font-medium text-brand">"{keyword}"</span>
+            <div className="flex flex-col items-center justify-center rounded-[18px] bg-[#FFFDF9] px-6 py-24 text-center shadow-[0_8px_24px_-12px_rgba(58,54,47,0.15)]">
+              <p className="mb-2 text-base text-[#3A362F]">
+                <span className="font-['Gowun_Batang'] text-[#5C6B4F]">
+                  "{keyword}"
+                </span>{" "}
                 와(과) 일치하는 항목이 없습니다.
               </p>
-              <p className="text-sm text-ink-muted mb-8">
+              <p className="mb-7 text-sm text-[#7A7364]">
                 다른 검색어를 입력하거나 기본 목록으로 돌아가 보세요.
               </p>
               <button
                 type="button"
                 onClick={handleResetToDefaultList}
-                className="h-10 px-6 rounded-full border border-line text-sm text-ink hover:border-brand hover:text-brand transition-colors"
+                className="h-10 rounded-full border border-[#D5D0C6] px-6 text-sm text-[#3A362F] transition hover:border-[#7C8B6F] hover:text-[#5C6B4F]"
               >
                 기본 목록 가기
               </button>
