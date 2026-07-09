@@ -1,1089 +1,677 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-// MAIN EDIT: read login role to choose company list route.
 import { useSelector } from "react-redux";
 import BasicMenu from "../components/menus/BasicMenu";
 
-const heroSlides = [
+const slides = [
   {
     eyebrow: "WEDDING ALL IN ONE",
     title: "두 사람의 시작을\n가장 가까이에서",
     desc: "예식장을 고르는 순간부터 답례품을 고민하는 순간까지\n결혼이라는 가장 어려운 일을, 함께 준비합니다",
-    linkText: "",
-    linkTo: "",
-    imageType: "main",
+    cta: "우리 웨딩로그 시작하기 →",
+    linkTo: "#",
   },
   {
     eyebrow: "01 — AI WEDDING PLAN",
     title: "예산과 날짜만 알면\nAI가 웨딩플랜을 짜드려요",
-    desc: "예산, 날짜, 하객 수, 원하는 스타일을 입력하면\n일정과 예산 배분까지 자동으로 설계하고, 꼭 맞는 웨딩홀·스드메·예복까지 추천해드립니다",
-    linkText: "AI 웨딩플랜 만들어보기 →",
+    desc: "예산, 날짜, 하객 수, 원하는 스타일을 입력하면\n일정과 예산 배분까지 자동으로 설계해드립니다",
+    cta: "AI 웨딩플랜 만들어보기 →",
     linkTo: "#",
-    imageType: "plan",
   },
   {
     eyebrow: "02 — PREPARATION",
     title: "D-day까지 해야 할 일을\n하나씩 정리해드려요",
     desc: "예식까지 남은 시간을 기준으로\n체크리스트와 예산, 납부 일정을 자동으로 관리합니다",
-    linkText: "준비관리 둘러보기 →",
+    cta: "준비관리 둘러보기 →",
     linkTo: "/prep/hub",
-    imageType: "prep",
   },
   {
     eyebrow: "03 — GIFT SHOP",
     title: "하객들에게 전하는\n마음, 답례품 쇼핑몰",
     desc: "캔들, 디퓨저, 수건 세트까지\n취향대로 고르고 바로 주문할 수 있어요",
-    linkText: "답례품 구경하기 →",
-    linkTo: "/product/list",
-    imageType: "gift",
+    cta: "답례품 구경하기 →",
+    linkTo: "/product/",
   },
 ];
 
+const calcDday = (dateStr) => {
+  if (!dateStr) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(dateStr);
+  const diff = Math.ceil((target - today) / 86400000);
+  if (diff > 0) return `D-${diff}`;
+  if (diff === 0) return "D-DAY";
+  return `D+${Math.abs(diff)}`;
+};
+
 const MainPage = () => {
-  const [activeSlide, setActiveSlide] = useState(0);
-  const currentSlide = heroSlides[activeSlide];
-  // MAIN EDIT: admins use /admin/companies/list, normal users use /companies/list.
   const loginState = useSelector((state) => state.loginSlice);
-  const isAdmin = loginState.roleNames?.some((roleName) =>
-    ["ADMIN", "ROLE_ADMIN"].includes(roleName),
+  const isLoggedIn = !!loginState.email;
+  const isAdmin = loginState.roleNames?.some((r) =>
+    ["ADMIN", "ROLE_ADMIN"].includes(r)
   );
-  // 관리자 계정은 업체 둘러보기 버튼에서 관리자용 업체 관리 경로로 이동합니다.
   const companyListPath = isAdmin ? "/admin/companies/list" : "/companies/list";
 
+  const [activeSlide, setActiveSlide] = useState(0);
+  const current = slides[activeSlide];
+
+  const nickname = loginState.nickname || loginState.email?.split("@")[0] || "회원";
+  const dday = calcDday(loginState.weddingDate) ?? "D-???";
+
   useEffect(() => {
-    const delay = activeSlide === 0 ? 5000 : 3000;
+    const timer = setInterval(() => {
+      setActiveSlide((prev) => (prev + 1) % slides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
 
-    const timer = setTimeout(() => {
-      setActiveSlide((prev) => (prev + 1) % heroSlides.length);
-    }, delay);
-
-    return () => clearTimeout(timer);
-  }, [activeSlide]);
+  const goSlide = (idx) => setActiveSlide(idx);
 
   return (
     <>
       <BasicMenu />
 
+      {/* ===== HERO ===== */}
       <section className="hero">
-        <svg
-          className="hero-bg"
-          viewBox="0 0 1440 900"
-          preserveAspectRatio="xMidYMid slice"
-        >
-          <defs>
-            <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#3A2436" />
-              <stop offset="45%" stopColor="#6B3F52" />
-              <stop offset="75%" stopColor="#C97D8E" />
-              <stop offset="100%" stopColor="#E8B8A8" />
-            </linearGradient>
-            <linearGradient id="floorGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#2A1B22" />
-              <stop offset="100%" stopColor="#1A1015" />
-            </linearGradient>
-            <radialGradient id="archGlow" cx="50%" cy="35%" r="55%">
-              <stop offset="0%" stopColor="#FFE3D0" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#FFE3D0" stopOpacity="0" />
-            </radialGradient>
-          </defs>
-          <rect x="0" y="0" width="1440" height="900" fill="url(#skyGrad)" />
-          <rect
-            x="0"
-            y="640"
-            width="1440"
-            height="260"
-            fill="url(#floorGrad)"
-          />
-          <ellipse cx="720" cy="430" rx="420" ry="380" fill="url(#archGlow)" />
-
-          <g opacity="0.5">
-            <line
-              x1="160"
-              y1="240"
-              x2="160"
-              y2="660"
-              stroke="#F4D9C8"
-              strokeWidth="2"
-            />
-            <line
-              x1="1280"
-              y1="240"
-              x2="1280"
-              y2="660"
-              stroke="#F4D9C8"
-              strokeWidth="2"
-            />
-            <circle cx="160" cy="240" r="5" fill="#FFE9B0" />
-            <circle cx="1280" cy="240" r="5" fill="#FFE9B0" />
-          </g>
-
-          <path
-            d="M520 660 V430 a200 200 0 0 1 400 0 V660"
-            fill="none"
-            stroke="#F7E7DC"
-            strokeWidth="6"
-            opacity="0.85"
-          />
-          <path
-            d="M540 660 V435 a180 180 0 0 1 360 0 V660"
-            fill="none"
-            stroke="#F7E7DC"
-            strokeWidth="2"
-            opacity="0.5"
-          />
-
-          <g opacity="0.9">
-            <path
-              d="M560 420 q40 -60 80 0"
-              stroke="#E7A0B0"
-              strokeWidth="3"
-              fill="none"
-            />
-            <path
-              d="M800 420 q40 -60 80 0"
-              stroke="#E7A0B0"
-              strokeWidth="3"
-              fill="none"
-            />
-            <circle cx="600" cy="400" r="6" fill="#F0C2CC" />
-            <circle cx="840" cy="400" r="6" fill="#F0C2CC" />
-          </g>
-
-          <g>
-            <ellipse cx="660" cy="560" rx="3" ry="40" fill="#2A1B22" />
-            <ellipse cx="660" cy="600" rx="34" ry="14" fill="#241620" />
-            <ellipse cx="780" cy="555" rx="3" ry="45" fill="#2A1B22" />
-            <ellipse cx="780" cy="600" rx="22" ry="40" fill="#241620" />
-          </g>
-
-          <g opacity="0.8">
-            <circle cx="300" cy="160" r="2" fill="#FFE9B0" />
-            <circle cx="380" cy="100" r="2.5" fill="#FFE9B0" />
-            <circle cx="1100" cy="130" r="2" fill="#FFE9B0" />
-            <circle cx="1180" cy="200" r="2.5" fill="#FFE9B0" />
-            <circle cx="220" cy="320" r="1.8" fill="#FFE9B0" />
-            <circle cx="1250" cy="350" r="1.8" fill="#FFE9B0" />
-          </g>
-
-          <rect
-            x="0"
-            y="0"
-            width="1440"
-            height="900"
-            fill="#000000"
-            opacity="0.18"
-          />
-        </svg>
-
-        <div
-          className={`hero-content hero-slider-content ${currentSlide.imageType !== "main" ? "has-visual" : ""}`}
-          key={activeSlide}
-        >
-          <div className="hero-slide-text">
-            <p className="hero-eyebrow serif">{currentSlide.eyebrow}</p>
-            <p className="hero-title serif">{currentSlide.title}</p>
-            <p className="hero-sub serif">{currentSlide.desc}</p>
-
-            {currentSlide.linkText && currentSlide.linkTo === "#" && (
-              <a href="#" className="hero-feature-link">
-                {currentSlide.linkText}
-              </a>
-            )}
-
-            {currentSlide.linkText && currentSlide.linkTo !== "#" && (
-              <Link to={currentSlide.linkTo} className="hero-feature-link">
-                {currentSlide.linkText}
-              </Link>
+        {/* 좌: 텍스트 슬라이드 */}
+        <div className="hero-copy">
+          <div className="hero-slide-content" key={activeSlide}>
+            <div className="hero-eyebrow">{current.eyebrow}</div>
+            <h1 style={{ whiteSpace: "pre-line" }}>{current.title}</h1>
+            <p style={{ whiteSpace: "pre-line" }}>{current.desc}</p>
+            {current.linkTo === "#" ? (
+              <a href="#" className="hero-cta-link">{current.cta}</a>
+            ) : (
+              <Link to={current.linkTo} className="hero-cta-link">{current.cta}</Link>
             )}
           </div>
+          <div className="hero-dots">
+            {slides.map((_, i) => (
+              <button
+                key={i}
+                className={`hero-dot${activeSlide === i ? " active" : ""}`}
+                onClick={() => goSlide(i)}
+                aria-label={`${i + 1}번 슬라이드`}
+              />
+            ))}
+          </div>
+        </div>
 
-          {currentSlide.imageType !== "main" && (
-            <div className={`hero-slide-image ${currentSlide.imageType}`}>
-              {currentSlide.imageType === "plan" && (
-                <svg viewBox="0 0 120 120" fill="none">
-                  <path
-                    d="M60 14l7.5 25.5L93 47l-25.5 7.5L60 80l-7.5-25.5L27 47l25.5-7.5L60 14z"
-                    fill="currentColor"
-                  />
-                  <path
-                    d="M91 72l4 13.5 13.5 4-13.5 4-4 13.5-4-13.5-13.5-4 13.5-4L91 72z"
-                    fill="currentColor"
-                    opacity="0.65"
-                  />
-                  <path
-                    d="M28 78h30M28 92h42"
-                    stroke="currentColor"
-                    strokeWidth="5"
-                    strokeLinecap="round"
-                    opacity="0.45"
-                  />
-                </svg>
-              )}
-
-              {currentSlide.imageType === "prep" && (
-                <svg viewBox="0 0 120 120" fill="none">
-                  <rect
-                    x="25"
-                    y="18"
-                    width="70"
-                    height="84"
-                    rx="10"
-                    stroke="currentColor"
-                    strokeWidth="6"
-                    opacity="0.55"
-                  />
-                  <path
-                    d="M42 43l8 8 17-19"
-                    stroke="currentColor"
-                    strokeWidth="7"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M42 68h38M42 84h28"
-                    stroke="currentColor"
-                    strokeWidth="6"
-                    strokeLinecap="round"
-                    opacity="0.5"
-                  />
-                </svg>
-              )}
-
-              {currentSlide.imageType === "gift" && (
-                <svg viewBox="0 0 120 120" fill="none">
-                  <rect
-                    x="26"
-                    y="48"
-                    width="68"
-                    height="48"
-                    rx="8"
-                    stroke="currentColor"
-                    strokeWidth="6"
-                  />
-                  <path
-                    d="M60 48v48M22 48h76"
-                    stroke="currentColor"
-                    strokeWidth="6"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M60 43c-8-24-34-17-23 0 6 9 23 5 23 5s17 4 23-5c11-17-15-24-23 0z"
-                    stroke="currentColor"
-                    strokeWidth="6"
-                    strokeLinejoin="round"
-                    opacity="0.7"
-                  />
-                </svg>
-              )}
+        {/* 우: 비로그인 → 폴라로이드 / 로그인 → 회원 위젯 */}
+        {!isLoggedIn ? (
+          <div className="polaroid-stack">
+            <div className="polaroid p1">
+              <div className="photo">
+                {/* 실사 교체: <img src="경로" alt="웨딩홀" /> */}
+                <div className="photo-placeholder">
+                  <span>💍</span>
+                  <span className="ph-label">Wedding Hall</span>
+                </div>
+              </div>
+              <div className="cap">웨딩홀 탐색 중 💍</div>
             </div>
-          )}
-        </div>
+            <div className="polaroid p2">
+              <div className="photo">
+                <div className="photo-placeholder">
+                  <span>👗</span>
+                  <span className="ph-label">Dress &amp; Studio</span>
+                </div>
+              </div>
+              <div className="cap">스드메 고르는 중 👗</div>
+            </div>
+            <div className="polaroid p3">
+              <div className="photo">
+                <div className="photo-placeholder">
+                  <span>🎁</span>
+                  <span className="ph-label">Gift Shop</span>
+                </div>
+              </div>
+              <div className="cap">답례품 구경 중 🎁</div>
+            </div>
+          </div>
+        ) : (
+          <div className="member-widget">
+            {/* D-day 노트 — 가장 뒤 (z-index 1) */}
+            <div className="w-card wc-dday">
+              <div className="dday-pin" />
+              <div className="dday-num">{dday}</div>
+              <div className="dday-note">{nickname} 님, 안녕하세요 🤍</div>
+              <hr className="dday-divider" />
+              <div className="dday-task">이번 주 할 일: 웨딩홀 상담 예약하고 예산표 정리하기!</div>
+            </div>
+            {/* 취향 폴라로이드 — 중간 (z-index 2) */}
+            <div className="w-card wc-taste">
+              <div className="taste-photo">
+                {/* 실사 교체: <img src={photoUrl} alt="우리 취향" /> */}
+              </div>
+              <div className="cap">우리 취향 저장 중 📌</div>
+            </div>
+            {/* AI 매칭 — 가장 앞 (z-index 3) */}
+            <div className="w-card wc-ai">
+              <div className="ai-label">
+                <div className="ai-dot" />
+                AI 매칭 진행중
+              </div>
+              <div className="ai-bars">
+                <div className="ai-bar-row">
+                  <span className="ai-bar-label">웨딩홀</span>
+                  <div className="ai-bar-track"><div className="ai-bar-fill bar-pink" /></div>
+                </div>
+                <div className="ai-bar-row">
+                  <span className="ai-bar-label">드레스</span>
+                  <div className="ai-bar-track"><div className="ai-bar-fill bar-coral" /></div>
+                </div>
+                <div className="ai-bar-row">
+                  <span className="ai-bar-label">스튜디오</span>
+                  <div className="ai-bar-track"><div className="ai-bar-fill bar-sage" /></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
 
-        <div className="hero-dots" aria-label="메인 슬라이드 선택">
-          {heroSlides.map((slide, index) => (
-            <button
-              key={slide.eyebrow}
-              type="button"
-              aria-label={`${index + 1}번 슬라이드 보기`}
-              className={activeSlide === index ? "active" : ""}
-              onClick={() => setActiveSlide(index)}
-            />
-          ))}
+      {/* ===== FEATURES ===== */}
+      <section className="features">
+        <div className="section-head">
+          <span className="tape">우리가 도와줄게요</span>
+          <h2>준비, 이렇게 함께해요</h2>
         </div>
-
-        <div className="scroll-indicator">
-          <span>SCROLL</span>
-          <div className="scroll-line"></div>
+        <div className="feat-row">
+          <div className="feat-card">
+            <div className="feat-icon">✨</div>
+            <h3>AI 웨딩플랜</h3>
+            <p>예산과 날짜만 알면 AI가 일정과 예산 배분까지 자동으로 설계해드려요. 웨딩홀부터 스드메까지 딱 맞는 업체까지 추천해줍니다</p>
+          </div>
+          <div className="feat-card">
+            <div className="feat-icon">📋</div>
+            <h3>준비관리</h3>
+            <p>D-day까지 해야 할 일을 체크리스트와 예산, 납부 일정으로 자동 정리해드려요. 중요한 날짜를 절대 놓치지 않도록 챙겨드립니다</p>
+          </div>
+          <div className="feat-card">
+            <div className="feat-icon">🎁</div>
+            <h3>답례품 쇼핑몰</h3>
+            <p>캔들, 디퓨저, 수건 세트까지 취향대로 골라 바로 주문하세요. 하객분들이 기억하는 특별한 답례품을 함께 골라드립니다</p>
+          </div>
         </div>
       </section>
 
-      <section className="about">
-        <p className="eyebrow" style={{ textAlign: "center" }}>
-          ABOUT US
-        </p>
-        <p className="about-text">
-          웨딩올인원은 업체 탐색부터 준비 일정 관리,
-          <br />
-          답례품 준비까지 결혼을 준비하는 모든 과정을 하나로 모았습니다
-        </p>
-        <div className="about-buttons">
-          {/* MAIN EDIT: company browse button follows companyListPath. */}
-          <Link to={companyListPath} className="btn btn-outline">
-            업체 둘러보기
-          </Link>
-          <a href="#" className="btn btn-brand">
-            지금 시작하기
-          </a>
+      {/* ===== TRUST ===== */}
+      <section className="trust">
+        <span className="tape">먼저 다녀간 커플들</span>
+        <h2>우리처럼, 함께 준비했어요</h2>
+        <div className="trust-stats">
+          <div>
+            <div className="stat-num">12,400<span style={{ fontSize: "22px" }}>+</span></div>
+            <div className="stat-label">함께한 커플</div>
+          </div>
+          <div>
+            <div className="stat-num">3,800<span style={{ fontSize: "22px" }}>+</span></div>
+            <div className="stat-label">실제 예약·계약 성사</div>
+          </div>
+          <div>
+            <div className="stat-num">4.8<span style={{ fontSize: "22px" }}>/5</span></div>
+            <div className="stat-label">이용자 평균 만족도</div>
+          </div>
         </div>
       </section>
-      <section className="trust-section">
-        <div className="trust-inner">
-          <div className="stats-grid">
-            <div>
-              <p className="stat-num">
-                12,400<span>명+</span>
-              </p>
-              <p className="stat-label">이번 달 AI 업체 추천을 받았어요</p>
+
+      {/* ===== REVIEWS ===== */}
+      <section className="reviews">
+        <div className="section-head">
+          <span className="tape">실제 후기</span>
+          <h2>먼저 준비한 분들의 이야기</h2>
+        </div>
+        <div className="review-grid">
+          <div className="review-card">
+            <div className="review-stars">
+              <span className="star">★</span><span className="star">★</span>
+              <span className="star">★</span><span className="star">★</span><span className="star">★</span>
             </div>
-            <div>
-              <p className="stat-num">
-                3,800<span>건+</span>
-              </p>
-              <p className="stat-label">실제 예약·계약으로 이어졌어요</p>
-            </div>
-            <div>
-              <p className="stat-num">
-                4.8<span>/5</span>
-              </p>
-              <p className="stat-label">이용자 평균 만족도 평점</p>
+            <p className="review-text">예산이랑 결혼식 날짜만 입력했는데 일정이랑 예산 배분까지 한 번에 짜주고, 딱 맞는 웨딩홀까지 추천해줬어요. 막막했던 시작이 훨씬 가벼워졌습니다.</p>
+            <div className="review-footer">
+              <div className="review-avatar">🌸</div>
+              <div className="review-author">김O진 님</div>
+              <span className="review-tag">웨딩홀 예약</span>
             </div>
           </div>
-
-          <div className="reviews-heading">
-            <p className="eyebrow">REAL REVIEWS</p>
-            <p>먼저 준비한 분들의 이야기</p>
+          <div className="review-card">
+            <div className="review-stars">
+              <span className="star">★</span><span className="star">★</span>
+              <span className="star">★</span><span className="star">★</span><span className="star">★</span>
+            </div>
+            <p className="review-text">체크리스트 덕분에 뭘 놓치고 있는지 한눈에 보여서 정말 든든했어요. D-day 기준으로 알림까지 와서 계약금 미납 같은 실수를 막을 수 있었어요.</p>
+            <div className="review-footer">
+              <div className="review-avatar">🌿</div>
+              <div className="review-author">박O영 님</div>
+              <span className="review-tag">준비관리 이용</span>
+            </div>
           </div>
-
-          <div className="review-grid">
-            <div className="review-card">
-              <div className="review-stars">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2.5l3 6.5 7 .8-5.2 4.8 1.4 7-6.2-3.6-6.2 3.6 1.4-7L2 9.8l7-.8z" />
-                </svg>
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2.5l3 6.5 7 .8-5.2 4.8 1.4 7-6.2-3.6-6.2 3.6 1.4-7L2 9.8l7-.8z" />
-                </svg>
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2.5l3 6.5 7 .8-5.2 4.8 1.4 7-6.2-3.6-6.2 3.6 1.4-7L2 9.8l7-.8z" />
-                </svg>
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2.5l3 6.5 7 .8-5.2 4.8 1.4 7-6.2-3.6-6.2 3.6 1.4-7L2 9.8l7-.8z" />
-                </svg>
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2.5l3 6.5 7 .8-5.2 4.8 1.4 7-6.2-3.6-6.2 3.6 1.4-7L2 9.8l7-.8z" />
-                </svg>
-              </div>
-              <p className="review-text">
-                예산이랑 결혼식 날짜만 입력했는데 일정이랑 예산 배분까지 한 번에
-                짜주고, 그 안에서 딱 맞는 웨딩홀까지 추천해줬어요. 막막했던
-                시작이 훨씬 가벼워졌습니다.
-              </p>
-              <p className="review-author">김O진 · 강남구 웨딩홀 예약</p>
+          <div className="review-card">
+            <div className="review-stars">
+              <span className="star">★</span><span className="star">★</span>
+              <span className="star">★</span><span className="star">★</span><span className="star">★</span>
             </div>
-            <div className="review-card">
-              <div className="review-stars">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2.5l3 6.5 7 .8-5.2 4.8 1.4 7-6.2-3.6-6.2 3.6 1.4-7L2 9.8l7-.8z" />
-                </svg>
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2.5l3 6.5 7 .8-5.2 4.8 1.4 7-6.2-3.6-6.2 3.6 1.4-7L2 9.8l7-.8z" />
-                </svg>
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2.5l3 6.5 7 .8-5.2 4.8 1.4 7-6.2-3.6-6.2 3.6 1.4-7L2 9.8l7-.8z" />
-                </svg>
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2.5l3 6.5 7 .8-5.2 4.8 1.4 7-6.2-3.6-6.2 3.6 1.4-7L2 9.8l7-.8z" />
-                </svg>
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2.5l3 6.5 7 .8-5.2 4.8 1.4 7-6.2-3.6-6.2 3.6 1.4-7L2 9.8l7-.8z" />
-                </svg>
-              </div>
-              <p className="review-text">
-                체크리스트 덕분에 뭘 놓치고 있는지 한눈에 보여서 정말
-                든든했어요. D-day 기준으로 알림까지 와서 계약금 미납 같은 실수를
-                막을 수 있었습니다.
-              </p>
-              <p className="review-author">박O영 · 준비관리 이용</p>
-            </div>
-            <div className="review-card">
-              <div className="review-stars">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2.5l3 6.5 7 .8-5.2 4.8 1.4 7-6.2-3.6-6.2 3.6 1.4-7L2 9.8l7-.8z" />
-                </svg>
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2.5l3 6.5 7 .8-5.2 4.8 1.4 7-6.2-3.6-6.2 3.6 1.4-7L2 9.8l7-.8z" />
-                </svg>
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2.5l3 6.5 7 .8-5.2 4.8 1.4 7-6.2-3.6-6.2 3.6 1.4-7L2 9.8l7-.8z" />
-                </svg>
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2.5l3 6.5 7 .8-5.2 4.8 1.4 7-6.2-3.6-6.2 3.6 1.4-7L2 9.8l7-.8z" />
-                </svg>
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2.5l3 6.5 7 .8-5.2 4.8 1.4 7-6.2-3.6-6.2 3.6 1.4-7L2 9.8l7-.8z" />
-                </svg>
-              </div>
-              <p className="review-text">
-                답례품 고르는 것도 일이었는데 종류가 많고 후기도 자세해서 고민
-                없이 골랐어요. 하객분들 반응도 좋았고 주문부터 배송까지
-                빨랐습니다.
-              </p>
-              <p className="review-author">이O희 · 답례품 쇼핑몰 이용</p>
+            <p className="review-text">답례품 고르는 것도 일이었는데 종류가 많고 후기도 자세해서 고민 없이 골랐어요. 하객분들 반응도 너무 좋았고 배송까지 빨랐습니다.</p>
+            <div className="review-footer">
+              <div className="review-avatar">🕊️</div>
+              <div className="review-author">이O희 님</div>
+              <span className="review-tag">답례품 쇼핑몰</span>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="cta-section">
-        <p className="cta-title">지금, 결혼 준비를 시작해보세요</p>
-        <p className="cta-sub">가입은 3초, 준비는 훨씬 가벼워집니다</p>
-        <p className="cta-benefit">지금 가입하면 AI 업체 추천 1회 무료</p>
-        <a
-          href="#"
-          className="btn btn-brand"
-          style={{ height: "48px", padding: "0 36px", fontSize: "14px" }}
-        >
-          무료로 시작하기
-        </a>
-      </section>
-
+      {/* ===== FOOTER ===== */}
       <footer>
         <div className="footer-inner">
           <div className="footer-top">
-            <div className="footer-logo">
-              <p>웨딩올인원</p>
-              <p>wedding all in one</p>
+            <div>
+              <div className="footer-logo">🤍 웨딩올인원</div>
+              <p className="footer-desc">결혼 준비의 모든 순간을<br />함께하겠습니다.<br /><br />wedding all in one</p>
             </div>
-            <div className="footer-links">
-              <a href="#">회사소개</a>
-              <a href="#">이용약관</a>
-              <a href="#">개인정보처리방침</a>
+            <div className="footer-nav-cols">
+              <div className="footer-nav-group">
+                <h4>서비스</h4>
+                <ul>
+                  <li><Link to={companyListPath}>업체 둘러보기</Link></li>
+                  <li><a href="#">AI 웨딩플랜</a></li>
+                  <li><Link to="/prep/hub">준비관리</Link></li>
+                  <li><Link to="/product/">답례품 쇼핑몰</Link></li>
+                </ul>
+              </div>
+              <div className="footer-nav-group">
+                <h4>커뮤니티</h4>
+                <ul>
+                  <li><Link to="/board/list">자유게시판</Link></li>
+                  <li><a href="#">웨딩 후기</a></li>
+                  <li><a href="#">Q&amp;A</a></li>
+                </ul>
+              </div>
+              <div className="footer-nav-group">
+                <h4>회사</h4>
+                <ul>
+                  <li><a href="#">회사소개</a></li>
+                  <li><a href="#">이용약관</a></li>
+                  <li><a href="#">개인정보처리방침</a></li>
+                  <li><a href="#">고객센터</a></li>
+                </ul>
+              </div>
+            </div>
+            <div className="footer-sns">
+              <p>우리를 팔로우해요</p>
+              <div className="sns-row">
+                <a href="#" className="sns-btn" aria-label="인스타그램">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="0.8" fill="currentColor" />
+                  </svg>
+                </a>
+                <a href="#" className="sns-btn" aria-label="유튜브">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="5" width="20" height="14" rx="3" /><path d="M10 9l5 3-5 3V9z" fill="currentColor" stroke="none" />
+                  </svg>
+                </a>
+                <a href="#" className="sns-btn" aria-label="카카오">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 3C6.5 3 2 6.7 2 11.3c0 2.9 1.8 5.5 4.6 7L5 21l4.4-2.3c.8.2 1.7.3 2.6.3 5.5 0 10-3.7 10-8.3S17.5 3 12 3z" />
+                  </svg>
+                </a>
+                <a href="#" className="sns-btn" aria-label="블로그">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 7h13v8a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V7z" /><path d="M17 8h2a2 2 0 0 1 0 4h-2" />
+                  </svg>
+                </a>
+              </div>
             </div>
           </div>
-
-          <div className="footer-info">
-            <p>
-              (주)웨딩올인원&nbsp; 서울특별시 강남구 테헤란로 123 올인원빌딩 5층
-            </p>
-            <p>
-              5F Allinone Bldg, 123 Teheran-ro, Gangnam, Seoul, Republic of
-              Korea&nbsp; 사업자등록번호 261-81-00000&nbsp; 대표전화
-              1588-0000&nbsp; 팩스 02-000-0000
-            </p>
+          <div className="footer-bottom">
+            <div className="footer-info">
+              <span>(주)웨딩올인원</span><span>대표 홍길동</span><span>사업자등록번호 261-81-00000</span><br />
+              <span>서울특별시 강남구 테헤란로 123 올인원빌딩 5층</span><span>대표전화 1588-0000</span><span>이메일 hello@weddingooi.com</span>
+            </div>
+            <div className="footer-copy">© 2026 웨딩올인원. All rights reserved.</div>
           </div>
-
-          <div className="footer-sns">
-            <a href="#" className="sns-icon">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M4 8h13v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z" />
-                <path d="M17 9h2a2.5 2.5 0 0 1 0 5h-2" />
-              </svg>
-            </a>
-            <a href="#" className="sns-icon">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <rect x="3" y="3" width="18" height="18" rx="5" />
-                <circle cx="12" cy="12" r="3.5" />
-                <circle cx="17.2" cy="6.8" r="0.6" fill="currentColor" />
-              </svg>
-            </a>
-            <a href="#" className="sns-icon">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <rect x="2.5" y="6" width="19" height="12" rx="3" />
-                <path
-                  d="M10.5 9.5v5l4.5-2.5z"
-                  fill="currentColor"
-                  stroke="none"
-                />
-              </svg>
-            </a>
-            <a href="#" className="sns-icon">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M4 5h16v11H9l-4 4z" />
-                <path d="M8 9h8M8 12h5" />
-              </svg>
-            </a>
-          </div>
-
-          <p className="footer-copy">© 2026 웨딩올인원. All rights reserved.</p>
         </div>
       </footer>
 
       <style>{`
+        /* ===== HERO ===== */
+        .hero {
+          padding: 130px 60px 110px;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 60px;
+          align-items: center;
+          max-width: 1340px;
+          margin: 0 auto;
+          min-height: 100vh;
+        }
+        @keyframes heroFadeUp {
+          from { opacity: 0; transform: translateY(16px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .hero-slide-content { animation: heroFadeUp 0.6s ease forwards; }
+        .hero-eyebrow {
+          display: inline-block;
+          font-family: 'Gaegu', cursive;
+          font-size: 13px;
+          color: #8A8070;
+          letter-spacing: 0.12em;
+          margin-bottom: 20px;
+        }
+        .hero-copy h1 {
+          font-family: 'Gowun Batang', serif;
+          font-size: 46px;
+          line-height: 1.45;
+          color: #3A362F;
+          margin-bottom: 22px;
+        }
+        .hero-copy p {
+          font-size: 15px;
+          color: #7A7364;
+          margin-bottom: 36px;
+          line-height: 1.85;
+        }
+        .hero-cta-link {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: #7C8B6F;
+          color: #FBF7F0;
+          padding: 14px 28px;
+          border-radius: 100px;
+          text-decoration: none;
+          font-size: 14px;
+          transition: background 0.2s, transform 0.2s;
+          box-shadow: 0 6px 20px rgba(92,107,79,0.28);
+        }
+        .hero-cta-link:hover { background: #5C6B4F; transform: translateY(-2px); }
+        .hero-dots {
+          display: flex;
+          gap: 8px;
+          margin-top: 36px;
+          align-items: center;
+        }
+        .hero-dot {
+          height: 7px;
+          border-radius: 100px;
+          border: none;
+          cursor: pointer;
+          transition: width 0.3s ease, background 0.3s ease;
+          background: rgba(58,54,47,0.2);
+          width: 7px;
+          padding: 0;
+        }
+        .hero-dot.active { width: 24px; background: #7C8B6F; }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: -apple-system, "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
-    color: #3D3D3A;
-    background: #ffffff;
-    font-size: 14px;
-    line-height: 1.5;
-  }
-  a { text-decoration: none; color: inherit; }
-  .serif { font-family: Georgia, "Noto Serif KR", serif; }
+        /* ===== 폴라로이드 스택 (1.3x) ===== */
+        .polaroid-stack {
+          position: relative;
+          height: 703px;
+          width: 100%;
+        }
+        .polaroid {
+          position: absolute;
+          width: 384px;
+          background: #FFFDF9;
+          padding: 20px 20px 70px;
+          box-shadow: 0 24px 52px -10px rgba(58,54,47,0.28);
+          border-radius: 2px;
+          cursor: pointer;
+          transition: transform 0.38s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.38s ease;
+        }
+        .polaroid:hover { box-shadow: 0 40px 80px -8px rgba(58,54,47,0.36); z-index: 10 !important; }
+        .polaroid::before {
+          content: '';
+          position: absolute;
+          top: -12px; left: 50%;
+          transform: translateX(-50%);
+          width: 62px; height: 22px;
+          background: rgba(220,208,190,0.65);
+          border-radius: 2px;
+        }
+        .polaroid .photo {
+          height: 296px;
+          border-radius: 1px;
+          overflow: hidden;
+          position: relative;
+        }
+        .polaroid .photo img { width: 100%; height: 100%; object-fit: cover; filter: saturate(0.85) brightness(0.97); }
+        .polaroid .photo::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to bottom, rgba(255,240,220,0.18), rgba(200,180,160,0.08));
+          mix-blend-mode: multiply;
+          pointer-events: none;
+        }
+        .polaroid .cap {
+          font-family: 'Gaegu', cursive;
+          font-size: 19px;
+          text-align: center;
+          margin-top: 16px;
+          color: #4A4638;
+          letter-spacing: 0.02em;
+        }
+        .p1 { top: 12px; left: 0px;   transform: rotate(-7deg);  z-index: 3; }
+        .p1:hover { transform: rotate(-3deg) translateY(-22px) scale(1.04); }
+        .p1 .photo { background: linear-gradient(145deg,#E8D4C0 0%,#D4B8A0 40%,#C09E84 70%,#B08870 100%); }
+        .p2 { top: 90px; left: 240px; transform: rotate(5deg);   z-index: 2; }
+        .p2:hover { transform: rotate(1deg) translateY(-22px) scale(1.04); }
+        .p2 .photo { background: linear-gradient(145deg,#D4DEC8 0%,#B8C8A4 40%,#9AAE84 70%,#849A6E 100%); }
+        .p3 { top: 290px; left: 90px; transform: rotate(-2.5deg); z-index: 1; }
+        .p3:hover { transform: rotate(0.5deg) translateY(-22px) scale(1.04); }
+        .p3 .photo { background: linear-gradient(145deg,#E4C8C0 0%,#CCB0A8 40%,#B89890 70%,#A08070 100%); }
+        .photo-placeholder {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+        }
+        .photo-placeholder span:first-child { font-size: 40px; }
+        .ph-label {
+          font-family: 'Gowun Batang', serif;
+          font-size: 12px;
+          color: rgba(58,54,47,0.45);
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+        }
 
-  /* ===== 공통 유틸 ===== */
-  .container {
-    max-width: 1140px;
-    margin: 0 auto;
-    padding: 0 24px;
-  }
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: 44px;
-    padding: 0 28px;
-    border-radius: 999px;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    border: none;
-  }
-  .btn-outline {
-    border: 1px solid #D9D7CD;
-    background: #fff;
-    color: #3D3D3A;
-  }
-  .btn-outline:hover { background: #F7F6F3; }
-  .btn-brand {
-    background: #D4537E;
-    color: #fff;
-  }
-  .btn-brand:hover { background: #B8436A; }
+        /* ===== 회원 대시보드 위젯 (1.2x) ===== */
+        .member-widget { position: relative; height: 650px; width: 100%; }
+        .w-card {
+          position: absolute;
+          border-radius: 16px;
+          background: #FFFDF9;
+          box-shadow: 0 16px 40px -10px rgba(58,54,47,0.22);
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .w-card:hover { transform: translateY(-8px); box-shadow: 0 30px 60px -10px rgba(58,54,47,0.28); z-index: 10 !important; }
+        /* D-day 카드 — z-index 1 (가장 뒤) */
+        .wc-dday {
+          top: 0; left: 0;
+          width: 334px;
+          padding: 34px 31px 31px;
+          transform: rotate(-5deg);
+          z-index: 1;
+          border-radius: 4px;
+          background: #FFFEF8;
+          box-shadow: 0 14px 38px -8px rgba(58,54,47,0.2);
+        }
+        .wc-dday:hover { transform: rotate(-2deg) translateY(-10px); }
+        .dday-pin { width: 18px; height: 18px; background: #C87070; border-radius: 50%; margin: 0 auto 22px; box-shadow: 0 2px 8px rgba(200,112,112,0.5); }
+        .dday-num { font-family: 'Gowun Batang', serif; font-size: 48px; color: #3A362F; font-weight: 700; line-height: 1; margin-bottom: 14px; }
+        .dday-note { font-family: 'Gaegu', cursive; font-size: 18px; color: #6A6458; line-height: 1.7; }
+        .dday-divider { border: none; border-top: 1px dashed #E0D8CC; margin: 19px 0; }
+        .dday-task { font-size: 14px; color: #A8A090; line-height: 1.6; }
+        /* 취향 폴라로이드 — z-index 2 (중간) */
+        .wc-taste {
+          top: 20px; right: 0;
+          width: 312px;
+          padding: 17px 17px 62px;
+          transform: rotate(4deg);
+          z-index: 2;
+          border-radius: 2px;
+          background: #FFFDF9;
+        }
+        .wc-taste:hover { transform: rotate(1deg) translateY(-10px); }
+        .wc-taste::before { content: ''; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 55px; height: 19px; background: rgba(216,204,188,0.65); border-radius: 2px; }
+        .taste-photo { height: 246px; border-radius: 1px; background: linear-gradient(145deg,#E8D4C0 0%,#C8B4A0 35%,#B09888 60%,#D4C4B0 100%); position: relative; overflow: hidden; }
+        .taste-photo img { width: 100%; height: 100%; object-fit: cover; filter: saturate(0.8) brightness(0.95); }
+        .taste-photo::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom,rgba(255,240,220,0.15),rgba(180,160,140,0.1)); mix-blend-mode: multiply; }
+        .wc-taste .cap { font-family: 'Gaegu', cursive; font-size: 17px; text-align: center; margin-top: 16px; color: #5A5448; }
+        /* AI 매칭 카드 — z-index 3 (가장 앞) */
+        .wc-ai { top: 380px; left: 20px; width: 432px; padding: 26px 29px; transform: rotate(-1.5deg); z-index: 3; }
+        .wc-ai:hover { transform: rotate(0deg) translateY(-8px); }
+        .ai-label { display: flex; align-items: center; gap: 8px; font-size: 15px; color: #7A7364; margin-bottom: 22px; font-weight: 500; }
+        .ai-dot { width: 9px; height: 9px; border-radius: 50%; background: #7C8B6F; animation: pulse 1.8s ease-in-out infinite; flex-shrink: 0; }
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+        .ai-bars { display: flex; flex-direction: column; gap: 14px; }
+        .ai-bar-row { display: flex; align-items: center; gap: 14px; }
+        .ai-bar-label { font-size: 14px; color: #A8A090; width: 60px; flex-shrink: 0; }
+        .ai-bar-track { flex: 1; height: 10px; background: #F0EDE6; border-radius: 100px; overflow: hidden; }
+        .ai-bar-fill { height: 100%; border-radius: 100px; transition: width 1.2s ease; }
+        .bar-pink  { background: linear-gradient(to right,#E8A8B8,#D48898); width: 72%; }
+        .bar-coral { background: linear-gradient(to right,#E8B898,#D49878); width: 55%; }
+        .bar-sage  { background: linear-gradient(to right,#A8C498,#88A878); width: 40%; }
 
-  .eyebrow {
-    font-size: 12px;
-    letter-spacing: 0.15em;
-    color: #993556;
-    margin-bottom: 12px;
-  }
+        /* ===== FEATURES ===== */
+        .features { padding: 80px 60px 100px; max-width: 1180px; margin: 0 auto; }
+        .section-head { margin-bottom: 52px; }
+        .section-head .tape { display: inline-block; background: #D9E2CB; color: #4F5F3E; font-family: 'Gaegu', cursive; font-size: 13px; padding: 4px 14px; transform: rotate(-2deg); margin-bottom: 14px; }
+        .section-head h2 { font-family: 'Gowun Batang', serif; font-size: 30px; color: #3A362F; }
+        .feat-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
+        .feat-card { background: #FFFDF9; border-radius: 18px; padding: 36px 28px; box-shadow: 0 8px 24px -12px rgba(58,54,47,0.15); transition: transform 0.25s ease, box-shadow 0.25s ease; position: relative; overflow: hidden; }
+        .feat-card::before { content: ''; position: absolute; bottom: 0; right: 0; width: 80px; height: 80px; border-radius: 50%; opacity: 0.12; transition: transform 0.3s ease; }
+        .feat-card:nth-child(1)::before { background: #E4C9B8; transform: translate(20px,20px); }
+        .feat-card:nth-child(2)::before { background: #B8C7A3; transform: translate(20px,20px); }
+        .feat-card:nth-child(3)::before { background: #D4B8A0; transform: translate(20px,20px); }
+        .feat-card:hover { transform: translateY(-6px); box-shadow: 0 18px 40px -12px rgba(58,54,47,0.2); }
+        .feat-card:hover::before { transform: translate(10px,10px) scale(1.3); }
+        .feat-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 20px; }
+        .feat-card:nth-child(1) .feat-icon { background: #F0D9C8; }
+        .feat-card:nth-child(2) .feat-icon { background: #D9E2CB; }
+        .feat-card:nth-child(3) .feat-icon { background: #E8D4C3; }
+        .feat-card h3 { font-family: 'Gowun Batang', serif; font-size: 19px; margin-bottom: 12px; }
+        .feat-card p { font-size: 13.5px; color: #7A7364; line-height: 1.7; }
 
-  /* ===== 히어로 ===== */
-  .hero {
-    position: relative;
-    width: 100%;
-    height: 100vh;
-    min-height: 680px;
-    overflow: hidden;
-  }
-  .hero-bg {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    width: 100%;
-    height: 100%;
-  }
-  .hero-content {
-    position: relative;
-    z-index: 10;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 0 24px;
-  }
-  .hero-slider-content {
-    max-width: 1120px;
-    margin: 0 auto;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 44px;
-    animation: heroFade 0.65s ease;
-  }
-  .hero-slide-text {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  .hero-slider-content.has-visual {
-    grid-template-columns: minmax(0, 1fr) minmax(320px, 460px);
-    text-align: left;
-  }
-  .hero-slider-content.has-visual .hero-slide-text {
-    align-items: flex-start;
-  }
-  .hero-slider-content.has-visual .hero-sub {
-    max-width: 560px;
-  }
-  .hero-feature-link {
-    margin-top: 28px;
-    display: inline-flex;
-    align-items: center;
-    height: 46px;
-    padding: 0 24px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.16);
-    border: 1px solid rgba(255, 255, 255, 0.38);
-    color: #fff;
-    font-size: 14px;
-    font-weight: 600;
-    backdrop-filter: blur(8px);
-  }
-  .hero-feature-link:hover {
-    background: rgba(255, 255, 255, 0.24);
-  }
-  .hero-slide-image {
-    width: 100%;
-    aspect-ratio: 4 / 3;
-    border-radius: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: rgba(255,255,255,0.9);
-    border: 1px solid rgba(255,255,255,0.26);
-    box-shadow: 0 28px 80px rgba(0,0,0,0.24);
-    backdrop-filter: blur(8px);
-  }
-  .hero-slide-image.plan { background: linear-gradient(135deg, rgba(212,83,126,0.72), rgba(251,234,240,0.28)); }
-  .hero-slide-image.prep { background: linear-gradient(135deg, rgba(15,110,86,0.72), rgba(225,245,238,0.28)); }
-  .hero-slide-image.gift { background: linear-gradient(135deg, rgba(133,79,11,0.72), rgba(250,238,218,0.30)); }
-  .hero-slide-image svg {
-    width: 42%;
-    min-width: 140px;
-    max-width: 220px;
-  }
-  .hero-dots {
-    position: absolute;
-    z-index: 12;
-    left: 50%;
-    bottom: 104px;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .hero-dots button {
-    width: 9px;
-    height: 9px;
-    border-radius: 999px;
-    border: 1px solid rgba(255,255,255,0.75);
-    background: rgba(255,255,255,0.2);
-    cursor: pointer;
-    transition: width 0.25s ease, background 0.25s ease;
-  }
-  .hero-dots button.active {
-    width: 28px;
-    background: #fff;
-  }
-  @keyframes heroFade {
-    from { opacity: 0; transform: translateY(18px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .hero-eyebrow {
-    font-size: 13px;
-    letter-spacing: 0.2em;
-    color: rgba(255,255,255,0.8);
-    margin-bottom: 20px;
-  }
-  .hero-title {
-    font-size: 52px;
-    color: #fff;
-    line-height: 1.25;
-    margin-bottom: 24px;
-    white-space: pre-line;
-  }
-  .hero-sub {
-    font-size: 14px;
-    color: rgba(255,255,255,0.75);
-    line-height: 1.7;
-    max-width: 440px;
-    font-style: italic;
-    white-space: pre-line;
-  }
-  .scroll-indicator {
-    position: absolute;
-    bottom: 40px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 10;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-  }
-  .scroll-indicator span {
-    font-size: 11px;
-    color: rgba(255,255,255,0.6);
-    letter-spacing: 0.05em;
-  }
-  .scroll-line {
-    width: 1px;
-    height: 32px;
-    background: rgba(255,255,255,0.4);
-  }
+        /* ===== TRUST ===== */
+        .trust { background: #EFE6D8; padding: 80px 60px; text-align: center; }
+        .trust .tape { display: inline-block; background: #FFFDF9; color: #7A7364; font-family: 'Gaegu', cursive; font-size: 13px; padding: 4px 14px; transform: rotate(1deg); margin-bottom: 16px; }
+        .trust h2 { font-family: 'Gowun Batang', serif; font-size: 28px; margin-bottom: 48px; }
+        .trust-stats { display: flex; justify-content: center; gap: 72px; }
+        .stat-num { font-family: 'Gowun Batang', serif; font-size: 38px; color: #5C6B4F; }
+        .stat-label { font-size: 13px; color: #8A8373; margin-top: 8px; }
 
-  @media (max-width: 900px) {
-    .hero-slider-content.has-visual {
-      grid-template-columns: 1fr;
-      text-align: center;
-    }
-    .hero-slider-content.has-visual .hero-slide-text {
-      align-items: center;
-    }
-    .hero-slide-image {
-      max-width: 420px;
-      margin: 0 auto;
-    }
-    .hero-title {
-      font-size: 40px;
-    }
-  }
+        /* ===== REVIEWS ===== */
+        .reviews { padding: 100px 60px; max-width: 1200px; margin: 0 auto; }
+        .reviews .section-head .tape { background: #E4C9B8; color: #6B4A3A; }
+        .review-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
+        .review-card { background: #FFFDF9; border-radius: 2px; padding: 28px 24px 24px; box-shadow: 0 8px 24px -10px rgba(58,54,47,0.18); position: relative; transition: transform 0.25s ease, box-shadow 0.25s ease; }
+        .review-card:hover { transform: translateY(-5px) rotate(0.3deg); box-shadow: 0 20px 40px -10px rgba(58,54,47,0.22); }
+        .review-card::before { content: ''; position: absolute; top: -9px; left: 28px; width: 44px; height: 16px; border-radius: 2px; }
+        .review-card:nth-child(1)::before { background: rgba(228,201,184,0.7); transform: rotate(-2deg); }
+        .review-card:nth-child(2)::before { background: rgba(217,226,203,0.7); transform: rotate(1.5deg); }
+        .review-card:nth-child(3)::before { background: rgba(232,212,195,0.7); transform: rotate(-1deg); }
+        .review-stars { display: flex; gap: 3px; margin-bottom: 14px; }
+        .star { color: #C9A96A; font-size: 16px; }
+        .review-text { font-size: 13.5px; color: #4A4638; line-height: 1.8; margin-bottom: 18px; font-style: italic; position: relative; padding-left: 14px; }
+        .review-text::before { content: '"'; position: absolute; left: 0; top: -2px; font-family: 'Gowun Batang', serif; font-size: 28px; color: #C9A96A; line-height: 1; }
+        .review-footer { display: flex; align-items: center; gap: 10px; padding-top: 14px; border-top: 1px dashed #E0D8CC; }
+        .review-avatar { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+        .review-card:nth-child(1) .review-avatar { background: #F0D9C8; }
+        .review-card:nth-child(2) .review-avatar { background: #D9E2CB; }
+        .review-card:nth-child(3) .review-avatar { background: #E8D4C3; }
+        .review-author { font-family: 'Gaegu', cursive; font-size: 14px; color: #5C6B4F; }
+        .review-tag { margin-left: auto; font-size: 11px; color: #A8A090; background: #F2EDE6; padding: 2px 8px; border-radius: 100px; }
 
-  @media (max-width: 640px) {
-    .hero {
-      min-height: 720px;
-    }
-    .hero-title {
-      font-size: 34px;
-    }
-    .hero-slide-image {
-      max-width: 300px;
-    }
-    .hero-dots {
-      bottom: 92px;
-    }
-  }
+        /* ===== FOOTER ===== */
+        footer { background: #2E2B25; color: #A8A090; padding: 56px 60px 36px; }
+        .footer-inner { max-width: 1180px; margin: 0 auto; }
+        .footer-top { display: grid; grid-template-columns: 240px 1fr auto; gap: 48px; align-items: flex-start; padding-bottom: 36px; border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 28px; }
+        .footer-logo { font-family: 'Gowun Batang', serif; font-size: 20px; color: #EDE8DF; margin-bottom: 10px; }
+        .footer-desc { font-size: 12.5px; color: #7A7668; line-height: 1.7; }
+        .footer-nav-group h4 { font-size: 11px; letter-spacing: 0.12em; color: #6B6860; text-transform: uppercase; margin-bottom: 14px; }
+        .footer-nav-group ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+        .footer-nav-group a { font-size: 13px; color: #8A8278; text-decoration: none; transition: color 0.2s; }
+        .footer-nav-group a:hover { color: #EDE8DF; }
+        .footer-nav-cols { display: flex; gap: 48px; }
+        .footer-sns { display: flex; flex-direction: column; gap: 12px; align-items: flex-end; }
+        .footer-sns p { font-family: 'Gaegu', cursive; font-size: 14px; color: #5C6B4F; margin-bottom: 4px; }
+        .sns-row { display: flex; gap: 10px; }
+        .sns-btn { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; color: #7A7668; text-decoration: none; transition: background 0.2s, color 0.2s; }
+        .sns-btn:hover { background: #7C8B6F; color: #FBF7F0; }
+        .footer-bottom { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; }
+        .footer-info { font-size: 12px; color: #5C5A54; line-height: 1.8; }
+        .footer-info span { margin-right: 12px; }
+        .footer-copy { font-size: 11.5px; color: #4A4840; white-space: nowrap; }
 
-  /* ===== About ===== */
-  .about {
-    padding: 96px 24px;
-    text-align: center;
-    max-width: 720px;
-    margin: 0 auto;
-  }
-  .about-text {
-    font-size: 22px;
-    line-height: 1.6;
-    color: #3D3D3A;
-    margin-bottom: 32px;
-  }
-  .about-buttons {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-  }
-
-  /* ===== 기능 소개 섹션 (01/02/03) ===== */
-  .feature-section {
-    padding: 40px 0;
-  }
-  .feature-section.alt {
-    background: #F7F6F3;
-  }
-  .feature-grid {
-    max-width: 1140px;
-    margin: 0 auto;
-    padding: 0 24px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    align-items: center;
-    min-height: 420px;
-    gap: 24px;
-  }
-  .feature-grid.reverse .feature-text { order: 2; }
-  .feature-grid.reverse .feature-image { order: 1; }
-  .feature-text { padding: 0 16px; }
-  .feature-title {
-    font-size: 26px;
-    font-weight: 500;
-    line-height: 1.4;
-    margin-bottom: 16px;
-  }
-  .feature-desc {
-    font-size: 14px;
-    color: #73726C;
-    line-height: 1.7;
-    margin-bottom: 24px;
-  }
-  .feature-link {
-    font-size: 13px;
-    color: #993556;
-    border-bottom: 1px solid #993556;
-    padding-bottom: 2px;
-  }
-  .feature-image {
-    aspect-ratio: 4 / 3;
-    border-radius: 16px;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .feature-image svg { width: 64px; height: 64px; }
-
-  /* ===== 신뢰 섹션 ===== */
-  .trust-section {
-    padding: 80px 24px;
-  }
-  .trust-inner {
-    max-width: 1140px;
-    margin: 0 auto;
-  }
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-    text-align: center;
-    margin-bottom: 64px;
-  }
-  .stat-num {
-    font-size: 36px;
-    font-weight: 600;
-    color: #4B1528;
-    margin-bottom: 4px;
-  }
-  .stat-num span { font-size: 20px; }
-  .stat-label {
-    font-size: 13px;
-    color: #73726C;
-  }
-  .reviews-heading {
-    text-align: center;
-    margin-bottom: 48px;
-  }
-  .reviews-heading .eyebrow { text-align: center; margin-bottom: 12px; }
-  .reviews-heading p {
-    font-size: 22px;
-    font-weight: 500;
-  }
-  .review-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-  }
-  .review-card {
-    background: #fff;
-    border: 1px solid #E5E3DC;
-    border-radius: 16px;
-    padding: 24px;
-  }
-  .review-stars {
-    display: flex;
-    gap: 2px;
-    margin-bottom: 12px;
-  }
-  .review-stars svg { width: 14px; height: 14px; color: #EF9F27; }
-  .review-text {
-    font-size: 13px;
-    color: #3D3D3A;
-    line-height: 1.7;
-    margin-bottom: 16px;
-  }
-  .review-author {
-    font-size: 12px;
-    color: #A8A6A0;
-  }
-
-  /* ===== CTA ===== */
-  .cta-section {
-    background: #FBEAF0;
-    padding: 80px 24px;
-    text-align: center;
-  }
-  .cta-title {
-    font-size: 22px;
-    font-weight: 500;
-    color: #4B1528;
-    margin-bottom: 12px;
-  }
-  .cta-sub {
-    font-size: 14px;
-    color: #993556;
-    margin-bottom: 4px;
-  }
-  .cta-benefit {
-    font-size: 12px;
-    color: #993556;
-    margin-bottom: 32px;
-  }
-
-  /* ===== 푸터 ===== */
-  footer {
-    background: #fff;
-    border-top: 1px solid #E5E3DC;
-    padding: 48px 32px 32px;
-  }
-  .footer-inner {
-    max-width: 1100px;
-    margin: 0 auto;
-  }
-  .footer-top {
-    display: flex;
-    align-items: flex-start;
-    gap: 48px;
-    margin-bottom: 28px;
-  }
-  .footer-logo p:first-child {
-    font-size: 20px;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-  }
-  .footer-logo p:last-child {
-    font-size: 11px;
-    color: #A8A6A0;
-    font-style: italic;
-    margin-top: -2px;
-  }
-  .footer-links {
-    display: flex;
-    align-items: center;
-    gap: 28px;
-    font-size: 13px;
-    color: #5F5E5A;
-    margin-top: 6px;
-  }
-  .footer-links a:hover { color: #3D3D3A; }
-  .footer-info {
-    font-size: 12px;
-    color: #A8A6A0;
-    line-height: 1.7;
-    margin-bottom: 24px;
-  }
-  .footer-sns {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 24px;
-  }
-  .sns-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: #3D3D3A;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .sns-icon:hover { background: #D4537E; }
-  .sns-icon svg { width: 16px; height: 16px; }
-  .footer-copy {
-    font-size: 11px;
-    color: #C9C6BA;
-  }
-
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1100px) {
+          .hero { padding: 120px 32px 80px; gap: 40px; }
+          .hero-copy h1 { font-size: 38px; }
+          .polaroid { width: 320px; }
+          .polaroid .photo { height: 245px; }
+          .polaroid-stack { height: 590px; }
+          .member-widget { height: 590px; }
+          .p2 { left: 200px; }
+          .p3 { top: 260px; left: 75px; }
+          .features, .reviews { padding: 80px 32px; }
+          .trust { padding: 60px 32px; }
+          footer { padding: 48px 32px 28px; }
+          .footer-top { grid-template-columns: 200px 1fr; }
+          .footer-sns { display: none; }
+        }
+        @media (max-width: 768px) {
+          .hero {
+            grid-template-columns: 1fr;
+            padding: 84px 20px 60px;
+            text-align: center;
+            min-height: auto;
+            gap: 48px;
+          }
+          .hero-copy h1 { font-size: 30px; }
+          .hero-copy p  { font-size: 14px; }
+          .hero-dots { justify-content: center; }
+          .polaroid-stack {
+            height: 400px;
+            width: 340px;
+            margin: 0 auto;
+          }
+          .member-widget {
+            height: 560px;
+            width: 380px;
+            margin: 0 auto;
+          }
+          .polaroid { width: 200px; padding: 12px 12px 44px; }
+          .polaroid .photo { height: 155px; }
+          .polaroid .cap { font-size: 14px; }
+          .p1 { top: 10px;  left: 0px;   }
+          .p2 { top: 60px;  left: 135px; }
+          .p3 { top: 175px; left: 60px;  }
+          .wc-dday  { width: 210px; }
+          .wc-dday .dday-num { font-size: 34px; }
+          .wc-dday .dday-note { font-size: 13px; }
+          .wc-taste { width: 200px; right: 0; }
+          .wc-taste .taste-photo { height: 155px; }
+          .wc-ai    { width: 320px; left: 10px; top: 310px; }
+          .feat-row  { grid-template-columns: 1fr; }
+          .trust-stats { gap: 36px; flex-wrap: wrap; justify-content: center; }
+          .review-grid { grid-template-columns: 1fr; }
+          .features, .reviews { padding: 60px 20px; }
+          .trust { padding: 60px 20px; }
+          footer { padding: 40px 20px 24px; }
+          .footer-top { grid-template-columns: 1fr; gap: 32px; }
+          .footer-nav-cols { flex-wrap: wrap; gap: 28px; }
+          .footer-bottom { flex-direction: column; align-items: flex-start; gap: 10px; }
+        }
       `}</style>
     </>
   );
 };
-
-const FeatureSection = ({ feature }) => (
-  <section
-    id={
-      feature.eyebrow.includes("GIFT")
-        ? "gift"
-        : feature.eyebrow.includes("AI")
-          ? "plan"
-          : undefined
-    }
-    className={`py-10 ${feature.reverse ? "bg-[#f7f6f3]" : "bg-white"}`}
-  >
-    <div
-      className={`mx-auto grid max-w-6xl items-center gap-6 px-6 md:grid-cols-2 ${feature.reverse ? "md:[&>*:first-child]:order-2" : ""}`}
-    >
-      <div className="px-4">
-        <p className="mb-3 text-xs tracking-[0.18em] text-[#993556]">
-          {feature.eyebrow}
-        </p>
-        <h2 className="whitespace-pre-line text-2xl font-medium leading-9">
-          {feature.title}
-        </h2>
-        <p className="mt-4 text-sm leading-7 text-[#73726c]">{feature.desc}</p>
-        <a
-          href="#"
-          className="mt-6 inline-block border-b border-[#993556] pb-1 text-sm text-[#993556]"
-        >
-          {feature.link} →
-        </a>
-      </div>
-      <div
-        className={`flex aspect-[4/3] items-center justify-center rounded-2xl bg-gradient-to-br ${feature.tone}`}
-      >
-        <span className="text-7xl opacity-40">{feature.icon}</span>
-      </div>
-    </div>
-  </section>
-);
-
-const Stat = ({ value, unit, label }) => (
-  <div>
-    <p className="mb-1 text-4xl font-semibold text-[#4b1528]">
-      {value}
-      <span className="text-xl">{unit}</span>
-    </p>
-    <p className="text-sm text-[#73726c]">{label}</p>
-  </div>
-);
-
-const HeroBackground = () => (
-  <svg
-    className="absolute inset-0 h-full w-full"
-    viewBox="0 0 1440 900"
-    preserveAspectRatio="xMidYMid slice"
-  >
-    <defs>
-      <linearGradient id="mainSkyGrad" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stopColor="#3A2436" />
-        <stop offset="45%" stopColor="#6B3F52" />
-        <stop offset="75%" stopColor="#C97D8E" />
-        <stop offset="100%" stopColor="#E8B8A8" />
-      </linearGradient>
-      <linearGradient id="mainFloorGrad" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stopColor="#2A1B22" />
-        <stop offset="100%" stopColor="#1A1015" />
-      </linearGradient>
-      <radialGradient id="mainArchGlow" cx="50%" cy="35%" r="55%">
-        <stop offset="0%" stopColor="#FFE3D0" stopOpacity="0.9" />
-        <stop offset="100%" stopColor="#FFE3D0" stopOpacity="0" />
-      </radialGradient>
-    </defs>
-    <rect width="1440" height="900" fill="url(#mainSkyGrad)" />
-    <rect x="0" y="640" width="1440" height="260" fill="url(#mainFloorGrad)" />
-    <ellipse cx="720" cy="430" rx="420" ry="380" fill="url(#mainArchGlow)" />
-    <path
-      d="M520 660 V430 a200 200 0 0 1 400 0 V660"
-      fill="none"
-      stroke="#F7E7DC"
-      strokeWidth="6"
-      opacity="0.85"
-    />
-    <path
-      d="M540 660 V435 a180 180 0 0 1 360 0 V660"
-      fill="none"
-      stroke="#F7E7DC"
-      strokeWidth="2"
-      opacity="0.5"
-    />
-    <g opacity="0.8">
-      <circle cx="300" cy="160" r="2" fill="#FFE9B0" />
-      <circle cx="380" cy="100" r="2.5" fill="#FFE9B0" />
-      <circle cx="1100" cy="130" r="2" fill="#FFE9B0" />
-      <circle cx="1180" cy="200" r="2.5" fill="#FFE9B0" />
-      <circle cx="220" cy="320" r="1.8" fill="#FFE9B0" />
-      <circle cx="1250" cy="350" r="1.8" fill="#FFE9B0" />
-    </g>
-    <rect width="1440" height="900" fill="#000000" opacity="0.18" />
-  </svg>
-);
 
 export default MainPage;
