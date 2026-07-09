@@ -6,7 +6,6 @@ const SORT_OPTIONS = [
   { key: "reviews", label: "리뷰많은순" },
 ];
 
-// 상품 목록 페이지의 상단 툴바 (전체개수 + 정렬탭 + 검색창)
 const ProductSortToolbarComponent = ({
   totalCount,
   sortType,
@@ -16,38 +15,46 @@ const ProductSortToolbarComponent = ({
   onSearch,
 }) => {
   return (
-    <div className="flex items-center justify-between mb-5 gap-4">
-      <p className="text-ink-muted text-sm">
-        전체 <b className="text-ink font-medium">{totalCount}</b>개 상품
+    <div className="mb-7 flex flex-wrap items-start justify-between gap-5">
+      <p className="pt-1.5 text-sm text-[#7A7364]">
+        전체{" "}
+        <b className="font-['Gowun_Batang'] font-bold text-[#3A362F]">
+          {totalCount}
+        </b>
+        개 상품
       </p>
 
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-4 text-sm text-ink-muted">
+      <div className="flex w-full min-w-[280px] flex-1 flex-col items-end gap-3.5">
+        <div className="flex flex-wrap justify-end gap-2">
           {SORT_OPTIONS.map((opt) => (
-            <span
+            <button
               key={opt.key}
+              type="button"
               onClick={() => onChangeSort(opt.key)}
-              className={`cursor-pointer ${
-                sortType === opt.key ? "text-ink font-medium" : ""
+              className={`rounded-full border px-3.5 py-1.5 text-[13px] transition ${
+                sortType === opt.key
+                  ? "border-[#7C8B6F] bg-[#7C8B6F] text-[#FBF7F0]"
+                  : "border-[#E0D8CC] bg-[#FFFDF9] text-[#7A7364] hover:border-[#7C8B6F] hover:text-[#5C6B4F]"
               }`}
             >
               {opt.label}
-            </span>
+            </button>
           ))}
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex w-full gap-2 sm:w-auto">
           <input
             type="text"
             value={keywordInput}
             onChange={(e) => onChangeKeywordInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && onSearch()}
             placeholder="상품명, 설명 검색"
-            className="h-9 px-4 rounded-full border border-line text-sm w-56 focus:outline-none focus:border-brand"
+            className="h-[38px] w-full flex-1 rounded-full border border-[#E0D8CC] bg-[#FFFDF9] px-4 text-[13px] text-[#3A362F] outline-none focus:border-[#7C8B6F] sm:w-[220px] sm:flex-none"
           />
           <button
+            type="button"
             onClick={onSearch}
-            className="h-9 px-5 rounded-full bg-brand text-white text-sm font-medium hover:bg-brand-dark"
+            className="h-[38px] shrink-0 rounded-full bg-[#7C8B6F] px-[18px] text-[13px] text-[#FBF7F0] transition hover:bg-[#5C6B4F]"
           >
             검색
           </button>
