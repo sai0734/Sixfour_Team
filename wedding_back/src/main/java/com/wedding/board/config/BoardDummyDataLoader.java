@@ -10,14 +10,12 @@ import org.springframework.stereotype.Component;
 
 import com.wedding.board.domain.Board;
 import com.wedding.board.repository.BoardRepository;
-import com.wedding.board.repository.CommentRepository;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.transaction.annotation.Transactional;
 
 // 실제 회원 계정과 무관한 표시용 닉네임으로 채워진 더미 게시글.
-// 서버 부팅 시 한 번만 실행되고, 이미 있으면 건너뜀(전용 memberEmail로 판별).
+// tbl_board count == 0 일 때만 1회 삽입.
 // @Order(1): CommentDummyDataLoader(@Order(2))보다 반드시 먼저 실행되어야 함
 @Component
 @Order(1)
@@ -26,8 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class BoardDummyDataLoader implements CommandLineRunner {
 
     private final BoardRepository boardRepository;
-
-    private final CommentRepository commentRepository;
 
     private static final String DUMMY_EMAIL = "dummy-board@wedding.local";
 
@@ -44,10 +40,9 @@ public class BoardDummyDataLoader implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
 
-        if (boardRepository.countByMemberEmail(DUMMY_EMAIL) > 0) {
-            log.info("기존 게시판 더미데이터 삭제 후 다시 로딩.........");
-            commentRepository.deleteByMemberEmail("dummy-comment@wedding.local");
-            boardRepository.deleteByMemberEmail(DUMMY_EMAIL);
+        if (boardRepository.count() > 0) {
+            log.info("게시판 더미데이터 이미 존재, 로딩 생략");
+            return;
         }
 
         log.info("게시판 더미데이터 100개 로딩 시작.........");

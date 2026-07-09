@@ -16,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.transaction.annotation.Transactional;
 
-// 게시글 더미데이터(BoardDummyDataLoader) 이후에 실행되어야 하므로 @Order로 순서 보장
+// 게시글 더미데이터(BoardDummyDataLoader) 이후 실행. tbl_comment count == 0 일 때만 1회 삽입.
 @Component
 @Order(2)
 @RequiredArgsConstructor
@@ -40,9 +40,9 @@ public class CommentDummyDataLoader implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
 
-        if (commentRepository.countByMemberEmail(DUMMY_EMAIL) > 0) {
-            log.info("기존 댓글 더미데이터 삭제 후 다시 로딩.........");
-            commentRepository.deleteByMemberEmail(DUMMY_EMAIL);
+        if (commentRepository.count() > 0) {
+            log.info("댓글 더미데이터 이미 존재, 로딩 생략");
+            return;
         }
 
         log.info("댓글 더미데이터 로딩 시작.........");
