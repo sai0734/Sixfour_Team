@@ -62,7 +62,7 @@ public class CheckoutController {
     }
 
     // 회원 본인 주문 목록(마이페이지 결제 내역용)
-    @PreAuthorize("hasAnyRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/api/my-order")
     public List<OrderDTO> myOrders(Principal principal) {
 

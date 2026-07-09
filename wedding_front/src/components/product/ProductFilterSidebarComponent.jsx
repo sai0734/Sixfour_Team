@@ -1,18 +1,25 @@
+const RATING_OPTIONS = [
+  { label: "★★★★★", minRating: 5.0 },
+  { label: "★★★★☆ 이상", minRating: 4.0 },
+  { label: "★★★☆☆ 이상", minRating: 3.0 },
+  { label: "★★☆☆☆ 이상", minRating: 2.0 },
+  { label: "★☆☆☆☆ 이상", minRating: 1.0 },
+];
+
 const PRICE_BANDS = [
   { label: "1만원 이하", minPrice: null, maxPrice: 10000 },
   { label: "1~3만원", minPrice: 10000, maxPrice: 30000 },
   { label: "3만원 이상", minPrice: 30000, maxPrice: null },
 ];
 
-// 상품 목록 페이지의 좌측 필터 사이드바 (카테고리+가격대+평점)
 const ProductFilterSidebarComponent = ({
   categoryList,
   selectedCategories,
   onToggleCategory,
   selectedPriceBand,
   onTogglePriceBand,
-  ratingFilterOn,
-  onToggleRating,
+  selectedRatingOption,
+  onToggleRatingOption,
 }) => {
   return (
     <aside>
@@ -58,19 +65,26 @@ const ProductFilterSidebarComponent = ({
 
       <div className="mb-7">
         <p className="text-sm font-medium mb-3">평점</p>
-        <label className="flex items-center gap-1 text-sm text-ink-soft cursor-pointer">
-          <input
-            type="checkbox"
-            checked={ratingFilterOn}
-            onChange={onToggleRating}
-            className="accent-brand"
-          />
-          ★ 4점 이상
-        </label>
+        <div className="flex flex-col gap-2.5 text-sm text-ink-soft">
+          {RATING_OPTIONS.map((option, idx) => (
+            <label
+              key={option.label}
+              className="flex items-center gap-2 cursor-pointer hover:text-ink"
+            >
+              <input
+                type="checkbox"
+                checked={selectedRatingOption === idx}
+                onChange={() => onToggleRatingOption(idx)}
+                className="accent-brand"
+              />
+              {option.label}
+            </label>
+          ))}
+        </div>
       </div>
     </aside>
   );
 };
 
-export { PRICE_BANDS };
+export { PRICE_BANDS, RATING_OPTIONS };
 export default ProductFilterSidebarComponent;
