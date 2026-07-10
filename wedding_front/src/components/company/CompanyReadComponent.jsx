@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { deleteOne, getCompanyImageUrl, getOne, updateMakeupDetail, updateDressDetail, uploadCompanyImages } from "../../api/companyApi";
@@ -82,6 +82,30 @@ const CompanyReadComponent = () => {
     ? "/admin/companies"
     : "/companies";
 
+  // ── 스크롤 & 탭 ──
+  const [activeSection, setActiveSection] = useState("intro");
+  const [headerHeight, setHeaderHeight] = useState(64);
+  const sectionRefs = useRef({});
+
+  useEffect(() => {
+    const el = document.getElementById("mainNav");
+    if (!el) return;
+    const update = () => setHeaderHeight(el.getBoundingClientRect().height);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const scrollToSection = (key) => {
+    setActiveSection(key);
+    const el = sectionRefs.current[key];
+    if (el) {
+      const top = el.getBoundingClientRect().top + window.scrollY - (headerHeight + 8);
+      window.scrollTo({ top, behavior: "smooth" });
+    }
+  };
+
   useEffect(() => {
     setFetching(true);
     getOne(cmno)
@@ -144,109 +168,193 @@ const CompanyReadComponent = () => {
     thumbnailImageClassByCategory[category] || "h-28 w-full";
 
   return (
-    <section className="mx-auto max-w-5xl p-3 sm:p-4 text-slate-800">
+    <div className="bg-white text-ink pb-16">
       {fetching ? <FetchingModal /> : null}
 
-      {/* 헤더 — 모바일: 세로 스택 */}
-      <div className="mb-5">
-        <button
-          className="mb-3 rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
-          type="button"
-          onClick={() => navigate(`${companyPathPrefix}/list${listSearch}`)}
-        >
-          ← 목록으로
-        </button>
+      {/* ── 브레드크럼 ── */}
+      <p className="mb-5 text-xs text-ink-faint">
+        {companyPathPrefix === "/admin/companies" ? "관리자" : "홀/스드메"}
+        {" > "}
+        {categoryLabel[company.category] || company.category || "업체"}
+        {" > "}
+        <span className="text-ink-soft">{company.name}</span>
+      </p>
 
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-semibold leading-tight">{company.name}</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              {categoryLabel[company.category] || company.category}
-            </p>
+      {/* ── 메인 그리드: 갤러리 + 정보 패널 ── */}
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[420px_1fr] lg:gap-12">
+
+        {/* 이미지 갤러리 */}
+        <div>
+          {mainImage ? (
+            <img
+              className={`${getDetailImageClass(company.category)} w-full object-cover rounded-2xl`}
+              src={getCompanyImageUrl(mainImage)}
+              alt={company.name}
+            />
+          ) : (
+            <div className="flex h-48 sm:h-72 items-center justify-center rounded-2xl bg-blush-50 text-ink-muted text-sm">
+              대표 이미지가 없습니다.
+            </div>
+          )}
+          {(company.uploadFileNames || []).length > 1 && (
+            <div className="mt-2.5 grid grid-cols-3 gap-2">
+              {(company.uploadFileNames || []).slice(1, 7).map((fileName) => (
+                <img
+                  key={fileName}
+                  className={`${getThumbnailImageClass(company.category)} w-full object-cover rounded-xl`}
+                  src={getCompanyImageUrl(fileName, true)}
+                  alt={company.name}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* 정보 패널 */}
+        <div className="flex flex-col">
+          {/* 카테고리 태그 */}
+          <span className="inline-block -rotate-2 bg-blush-100 px-3 py-1 mb-3 font-['Gaegu'] text-[13px] text-brand-deep w-fit">
+            {categoryLabel[company.category] || company.category}
+          </span>
+
+          {/* 업체명 */}
+          <p className="font-['Gowun_Batang'] text-2xl sm:text-3xl mb-4 leading-snug">
+            {company.name || "업체명 로딩 중..."}
+          </p>
+
+          {/* 기본 정보 */}
+          <div className="space-y-2.5 border-t border-line pt-4 mb-5 text-sm text-ink-muted">
+            {company.address && (
+              <div className="flex gap-2 items-start">
+                <span className="shrink-0 mt-0.5">📍</span>
+                <span className="leading-relaxed">{company.address}</span>
+              </div>
+            )}
+            {company.phone && (
+              <div className="flex gap-2">
+                <span className="shrink-0">📞</span>
+                <span>{company.phone}</span>
+              </div>
+            )}
+            {company.ceoName && (
+              <div className="flex gap-2">
+                <span className="shrink-0">👤</span>
+                <span>대표 {company.ceoName}</span>
+              </div>
+            )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="rounded-full bg-blue-50 px-3 py-1 text-xs sm:text-sm font-medium text-blue-700">
-              #{company.cmno}
-            </div>
-            {canManageCompany ? (
+          {/* 가격 */}
+          {company.priceAvg ? (
+            <p className="text-2xl font-medium mb-5">
+              {Number(company.priceAvg).toLocaleString()}원~
+            </p>
+          ) : <div className="mb-5" />}
+
+          {/* 액션 버튼 */}
+          <div className="flex gap-2.5 flex-wrap">
+            <button
+              className="w-[46px] h-[46px] shrink-0 border border-line bg-white rounded-full flex items-center justify-center text-brand text-lg transition hover:bg-blush-50"
+              type="button"
+              title="찜하기"
+            >
+              ♡
+            </button>
+            <button
+              className="flex-1 min-w-[100px] h-[46px] rounded-full border border-line bg-white text-sm font-medium transition hover:border-brand hover:text-brand"
+              type="button"
+            >
+              예약 문의
+            </button>
+            {canManageCompany && (
               <>
                 <button
-                  className="rounded-md border border-blue-200 px-3 py-1.5 text-sm text-blue-700 hover:bg-blue-50"
+                  className="h-[46px] px-4 rounded-full border border-brand text-brand text-sm font-medium transition hover:bg-brand hover:text-white"
                   type="button"
-                  onClick={() =>
-                    navigate({
-                      pathname: `${companyPathPrefix}/modify/${company.cmno}`,
-                    })
-                  }
+                  onClick={() => navigate({ pathname: `${companyPathPrefix}/modify/${company.cmno}` })}
                 >
                   수정
                 </button>
                 <button
-                  className="rounded-md border border-red-200 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50"
+                  className="h-[46px] px-4 rounded-full border border-red-300 text-red-500 text-sm font-medium transition hover:bg-red-50"
                   type="button"
                   onClick={handleDelete}
                 >
                   삭제
                 </button>
               </>
-            ) : null}
+            )}
           </div>
-        </div>
-      </div>
 
-      <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-          {mainImage ? (
-            <img
-              className={`${getDetailImageClass(company.category)} object-contain bg-white`}
-              src={getCompanyImageUrl(mainImage)}
-              alt={company.name}
-            />
-          ) : (
-            <div className="flex h-48 sm:h-80 items-center justify-center bg-slate-100 text-slate-400 text-sm">
-              대표 이미지가 없습니다.
-            </div>
+          {canManageCompany && (
+            <p className="mt-3 text-xs text-ink-faint">업체 번호 #{company.cmno}</p>
           )}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-2 sm:p-3">
-            {(company.uploadFileNames || []).slice(1, 7).map((fileName) => (
-              <img
-                key={fileName}
-                className={`${getThumbnailImageClass(company.category)} rounded-md object-contain bg-white`}
-                src={getCompanyImageUrl(fileName, true)}
-                alt={company.name}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div className="rounded-lg border border-slate-200 bg-white p-5">
-          <h3 className="mb-4 text-base font-semibold">업체 정보</h3>
-          <InfoRow label="대표자" value={company.ceoName || "-"} />
-          <InfoRow label="연락처" value={company.phone || "-"} />
-          <InfoRow label="주소" value={company.address || "-"} />
-          <InfoRow
-            label="평균 가격"
-            value={
-              company.priceAvg
-                ? `${Number(company.priceAvg).toLocaleString()}원`
-                : "-"
-            }
-          />
-          <InfoRow label="위도" value={company.latitude ?? "-"} />
-          <InfoRow label="경도" value={company.longitude ?? "-"} />
         </div>
       </div>
 
-      <div className="mt-5 rounded-lg border border-slate-200 bg-white p-5">
-        <h3 className="mb-3 text-base font-semibold">업체 소개</h3>
-        <p className="whitespace-pre-wrap text-sm leading-6 text-slate-600">
+      {/* ── 탭 네비게이션 ── */}
+      <div
+        className="sticky z-10 bg-white border-b border-line mt-10"
+        style={{ top: `${headerHeight}px` }}
+      >
+        <div className="flex gap-5 md:gap-7 text-sm overflow-x-auto">
+          {[
+            { key: "intro", label: "업체 소개" },
+            ...(company.category
+              ? [{ key: "detail", label: categoryLabel[company.category] || "상세 정보" }]
+              : []),
+          ].map((tab) => (
+            <span
+              key={tab.key}
+              onClick={() => scrollToSection(tab.key)}
+              className={`py-3.5 cursor-pointer border-b-2 whitespace-nowrap transition ${
+                activeSection === tab.key
+                  ? "text-ink font-medium border-brand"
+                  : "text-ink-faint border-transparent hover:text-ink-soft"
+              }`}
+            >
+              {tab.label}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* ── 업체 소개 섹션 ── */}
+      <div
+        ref={(el) => (sectionRefs.current.intro = el)}
+        className="py-8 md:py-10 border-b border-line"
+      >
+        <p className="text-sm font-medium mb-4">업체 소개</p>
+        <p className="whitespace-pre-wrap text-sm leading-7 text-ink-muted">
           {company.description || "등록된 소개가 없습니다."}
         </p>
+        {(company.latitude || company.longitude) && (
+          <div className="mt-6 flex flex-wrap gap-4 text-xs text-ink-faint border-t border-line pt-4">
+            {company.latitude && <span>위도 {company.latitude}</span>}
+            {company.longitude && <span>경도 {company.longitude}</span>}
+          </div>
+        )}
       </div>
 
-      <CategoryDetail company={company} canManageCompany={canManageCompany} onRefresh={handleRefresh} />
-    </section>
+      {/* ── 카테고리 상세 섹션 ── */}
+      <div ref={(el) => (sectionRefs.current.detail = el)} className="py-6 md:py-8">
+        <CategoryDetail
+          company={company}
+          canManageCompany={canManageCompany}
+          onRefresh={handleRefresh}
+        />
+      </div>
+
+      {/* ── 목록으로 ── */}
+      <div className="flex justify-end pt-4">
+        <button
+          onClick={() => navigate(`${companyPathPrefix}/list${listSearch}`)}
+          className="h-11 px-6 rounded-full border border-line bg-white text-sm transition hover:border-brand hover:text-brand"
+        >
+          목록으로
+        </button>
+      </div>
+    </div>
   );
 };
 

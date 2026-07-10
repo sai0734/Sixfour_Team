@@ -6,6 +6,7 @@ import FetchingModal from "../common/FetchingModal";
 import PageComponent from "../common/PageComponent";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import useCustomMove from "../../hooks/useCustomMove";
+import TapeLabel from "../common/TapeLabel";
 
 const initState = {
   dtoList: [],
@@ -147,87 +148,129 @@ const CompanyListComponent = () => {
     }
   };
 
+  const CATEGORY_OPTIONS = [
+    { value: "", label: "전체" },
+    { value: "HALL", label: "웨딩홀" },
+    { value: "DRESS", label: "드레스" },
+    { value: "MAKEUP", label: "메이크업" },
+    { value: "STUDIO", label: "스튜디오" },
+  ];
+
+  const SORT_OPTIONS = [
+    { value: "latest", label: "최신순" },
+    { value: "name", label: "이름순" },
+    { value: "price", label: "가격순" },
+  ];
+
   return (
-    <section className="mx-auto max-w-6xl p-4 text-slate-800">
+    <section className="bg-white text-ink">
       {fetching ? <FetchingModal /> : null}
 
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-lg sm:text-xl font-semibold">
-            {canManageCompany ? "업체 관리" : "업체 리스트"}
-          </h2>
-        </div>
-        {canManageCompany ? (
-          <button
-            type="button"
-            className="inline-flex h-10 items-center gap-2 rounded-md border border-blue-600 bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700"
-            onClick={() => navigate({ pathname: `${companyPathPrefix}/add` })}
-          >
-            <span className="text-lg leading-none">+</span>
-            업체 등록
-          </button>
-        ) : null}
+      {/* ── 헤더 배너 (준비관리 스타일) ── */}
+      <div className="mb-6 rounded-2xl bg-gradient-to-b from-brand-light to-white px-4 py-6 text-center relative">
+        <TapeLabel className="mb-3">
+          {canManageCompany ? "ADMIN — MANAGEMENT" : "WEDDING COMPANY"}
+        </TapeLabel>
+        <h1 className="mt-4 font-['Gowun_Batang'] text-xl sm:text-2xl text-ink">
+          {canManageCompany ? "업체 관리" : "업체 리스트"}
+        </h1>
+        <p className="mt-1.5 text-xs sm:text-sm text-ink-muted">
+          {canManageCompany
+            ? "등록된 업체 정보를 관리하고 모니터링하세요"
+            : "원하는 조건의 웨딩 업체를 찾아보세요"}
+        </p>
+        {canManageCompany && (
+          <div className="mt-4 flex justify-center">
+            <button
+              type="button"
+              className="inline-flex h-9 items-center gap-1.5 rounded-full bg-brand px-4 text-sm font-medium text-white transition hover:bg-brand-dark"
+              onClick={() => navigate({ pathname: `${companyPathPrefix}/add` })}
+            >
+              <span className="text-base leading-none">+</span>
+              업체 등록
+            </button>
+          </div>
+        )}
       </div>
 
-      {canManageCompany ? (
+      {/* ── 통계 카드 (관리자) 대시보드 페이지랑 겹치는거 같아서 우선 빼는걸로 수정함 ──
+      {canManageCompany && (
         <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
           <StatCard label="전체 업체" value={stats.total} />
           <StatCard label="활성 업체" value={stats.active} tone="success" />
           <StatCard label="승인 대기" value={stats.pending} tone="warning" />
-          <StatCard
-            label="이번 달 신규"
-            value={stats.newThisMonth}
-            tone="accent"
-          />
+          <StatCard label="이번 달 신규" value={stats.newThisMonth} tone="accent" />
         </div>
-      ) : null}
+      )} */}
 
-      {/* 필터 바 */}
-      <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-        {/* 검색 입력 — 항상 풀 너비 */}
-        <input
-          className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 sm:flex-1 sm:min-w-[160px]"
-          type="text"
-          placeholder="업체명, 주소, 연락처로 검색"
-          value={filters.keyword}
-          onChange={(e) =>
-            setFilters((prev) => ({ ...prev, keyword: e.target.value }))
-          }
-          onKeyDown={(e) => e.key === "Enter" && setFilters((prev) => ({ ...prev }))}
-        />
-        {/* 셀렉트 2개 — 모바일 50/50, 데스크톱 자동 */}
+      {/* ── 필터 바 ── */}
+      <div className="mb-6 space-y-3">
+        {/* 검색 */}
         <div className="flex gap-2">
-          <select
-            className="h-10 flex-1 rounded-md border border-slate-300 bg-white px-2 text-sm sm:flex-none sm:w-36"
-            value={filters.category}
-            onChange={(e) =>
-              setFilters((prev) => ({ ...prev, category: e.target.value }))
-            }
+          <input
+            className="h-[38px] flex-1 rounded-full border border-line bg-white px-4 text-[13px] text-ink outline-none transition focus:border-brand"
+            type="text"
+            placeholder="업체명, 주소, 연락처로 검색"
+            value={filters.keyword}
+            onChange={(e) => setFilters((prev) => ({ ...prev, keyword: e.target.value }))}
+            onKeyDown={(e) => {
+              if (e.key === "Enter")
+                setFilters((prev) => ({ ...prev, keyword: e.target.value }));
+            }}
+          />
+          <button
+            type="button"
+            className="h-[38px] shrink-0 rounded-full bg-brand px-[18px] text-[13px] text-white transition hover:bg-brand-dark"
+            onClick={() => setFilters((prev) => ({ ...prev }))}
           >
-            <option value="">유형 전체</option>
-            <option value="HALL">웨딩홀</option>
-            <option value="DRESS">드레스</option>
-            <option value="MAKEUP">메이크업</option>
-            <option value="STUDIO">스튜디오</option>
-          </select>
-          <select
-            className="h-10 flex-1 rounded-md border border-slate-300 bg-white px-2 text-sm sm:flex-none sm:w-32"
-            value={filters.sort}
-            onChange={(e) =>
-              setFilters((prev) => ({ ...prev, sort: e.target.value }))
-            }
-          >
-            <option value="latest">최신순</option>
-            <option value="name">이름순</option>
-            <option value="price">가격순</option>
-          </select>
+            검색
+          </button>
+        </div>
+
+        {/* 카테고리 + 정렬 필터 */}
+        <div className="flex flex-wrap items-center justify-between gap-y-2">
+          {/* 카테고리 pill */}
+          <div className="flex flex-wrap gap-1.5">
+            {CATEGORY_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setFilters((prev) => ({ ...prev, category: opt.value }))}
+                className={`rounded-full border px-3.5 py-1.5 text-[13px] transition ${
+                  filters.category === opt.value
+                    ? "border-brand bg-brand text-white"
+                    : "border-line bg-white text-ink-muted hover:border-brand hover:text-brand-deep"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
+          {/* 정렬 pill */}
+          <div className="flex flex-wrap gap-1.5">
+            {SORT_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setFilters((prev) => ({ ...prev, sort: opt.value }))}
+                className={`rounded-full border px-3.5 py-1.5 text-[13px] transition ${
+                  filters.sort === opt.value
+                    ? "border-brand bg-brand text-white"
+                    : "border-line bg-white text-ink-muted hover:border-brand hover:text-brand-deep"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* 모바일: 카드 / 데스크톱: 테이블 */}
+      {/* ── 모바일: 카드 뷰 ── */}
       <div className="block md:hidden space-y-3">
         {serverData.dtoList.length === 0 && (
-          <div className="rounded-lg border border-slate-200 bg-white py-12 text-center text-sm text-slate-400">
+          <div className="rounded-2xl border border-line bg-white py-12 text-center text-sm text-ink-muted">
             {filters.keyword || filters.category
               ? `"${filters.keyword || categoryLabel[filters.category]}" 에 해당하는 업체가 없습니다.`
               : "등록된 업체가 없습니다."}
@@ -236,38 +279,37 @@ const CompanyListComponent = () => {
         {serverData.dtoList.map((company) => (
           <div
             key={company.cmno}
-            className="rounded-lg border border-slate-200 bg-white p-4 active:bg-slate-50 cursor-pointer"
+            className="rounded-2xl border border-line bg-white p-4 cursor-pointer transition hover:border-brand hover:shadow-sm active:bg-blush-50"
             onClick={() => moveToCompanyRead(company.cmno)}
           >
             <div className="flex items-center gap-3 mb-3">
-              <div className="h-14 w-20 overflow-hidden rounded-md bg-white shrink-0">
+              <div className="h-14 w-20 overflow-hidden rounded-xl bg-blush-50 shrink-0">
                 <CompanyThumb company={company} />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="font-semibold text-slate-900 truncate">{company.name}</div>
-                <div className="text-xs text-slate-500 mt-0.5">업체 번호 {company.cmno}</div>
-                <span className={`mt-1 inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${categoryBadge[company.category] || "border-slate-200 bg-slate-50 text-slate-600"}`}>
+                <div className="font-semibold text-ink truncate">{company.name}</div>
+                <div className="text-xs text-ink-faint mt-0.5">업체 번호 {company.cmno}</div>
+                <span className={`mt-1 inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${categoryBadge[company.category] || "border-line bg-blush-50 text-ink-muted"}`}>
                   {categoryLabel[company.category] || company.category}
                 </span>
               </div>
             </div>
-            <div className="text-xs text-slate-500 mb-2 truncate">{company.address}</div>
+            <div className="text-xs text-ink-muted mb-2 truncate">{company.address}</div>
             <div className="flex items-center justify-between">
-              <div className="text-sm font-medium text-slate-700">
+              <div className="text-sm font-medium text-ink">
                 {company.priceAvg ? `${Number(company.priceAvg).toLocaleString()}원` : "-"}
               </div>
-              {/* 관리자 버튼 — 이벤트 버블링 방지 */}
               {canManageCompany && (
                 <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                   <button
-                    className="h-8 rounded-md border border-blue-200 px-3 text-xs text-blue-700 hover:bg-blue-50"
+                    className="h-8 rounded-full border border-line px-3 text-xs text-ink-muted transition hover:border-brand hover:text-brand-deep"
                     type="button"
                     onClick={() => navigate({ pathname: `${companyPathPrefix}/modify/${company.cmno}` })}
                   >
                     수정
                   </button>
                   <button
-                    className="h-8 rounded-md border border-red-200 px-3 text-xs text-red-700 hover:bg-red-50"
+                    className="h-8 rounded-full border border-red-200 px-3 text-xs text-red-500 transition hover:bg-red-50"
                     type="button"
                     onClick={() => handleDelete(company.cmno, company.name)}
                   >
@@ -280,22 +322,23 @@ const CompanyListComponent = () => {
         ))}
       </div>
 
-      <div className="hidden md:block overflow-x-auto rounded-lg border border-slate-200 bg-white">
+      {/* ── 데스크톱: 테이블 뷰 ── */}
+      <div className="hidden md:block rounded-2xl border border-line bg-white shadow-[0_2px_12px_-4px_rgba(58,54,47,0.08)]">
         <table className="w-full border-collapse text-left text-sm">
-          <thead className="bg-slate-50 text-xs font-medium uppercase text-slate-500">
+          <thead className="bg-blush-50 text-sm font-semibold text-ink-muted whitespace-nowrap">
             <tr>
-              <th className="px-4 py-3">업체명</th>
-              <th className="px-4 py-3">유형</th>
-              <th className="px-4 py-3">주소</th>
-              <th className="px-4 py-3">연락처</th>
-              <th className="px-4 py-3">평균 가격</th>
-              <th className="px-4 py-3 text-right">관리</th>
+              <th className="px-4 py-4">업체명</th>
+              <th className="px-4 py-4">유형</th>
+              <th className="px-4 py-4 w-full">주소</th>
+              <th className="px-4 py-4">연락처</th>
+              <th className="px-4 py-4">평균 가격</th>
+              <th className="px-4 py-4 text-right">관리</th>
             </tr>
           </thead>
           <tbody>
             {serverData.dtoList.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-sm text-slate-400">
+                <td colSpan={6} className="px-4 py-12 text-center text-sm text-ink-muted">
                   {filters.keyword || filters.category
                     ? `"${filters.keyword || categoryLabel[filters.category]}" 에 해당하는 업체가 없습니다.`
                     : "등록된 업체가 없습니다."}
@@ -305,56 +348,64 @@ const CompanyListComponent = () => {
             {serverData.dtoList.map((company) => (
               <tr
                 key={company.cmno}
-                className="border-t border-slate-100 hover:bg-slate-50"
+                className="border-t border-line transition hover:bg-blush-50"
               >
-                <td className="px-4 py-3">
+                {/* 업체명 */}
+                <td className="px-4 py-4">
                   <div className="flex items-center gap-3">
-                    <div className="h-14 w-20 overflow-hidden rounded-md bg-white shrink-0">
+                    <div className="h-[52px] w-[72px] overflow-hidden rounded-lg bg-blush-50 shrink-0">
                       <CompanyThumb company={company} />
                     </div>
                     <div>
-                      <div className="font-semibold text-slate-900">{company.name}</div>
-                      <div className="text-xs text-slate-500">업체 번호 {company.cmno}</div>
+                      <div className="font-semibold text-ink text-sm leading-tight whitespace-nowrap">{company.name}</div>
+                      <div className="text-xs text-ink-faint whitespace-nowrap">#{company.cmno}</div>
                     </div>
                   </div>
                 </td>
-                <td className="px-4 py-3">
-                  <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${categoryBadge[company.category] || "border-slate-200 bg-slate-50 text-slate-600"}`}>
+                {/* 유형 */}
+                <td className="px-4 py-4 whitespace-nowrap">
+                  <span className={`inline-flex rounded-full border px-3 py-1 text-sm font-medium ${categoryBadge[company.category] || "border-line bg-blush-50 text-ink-muted"}`}>
                     {categoryLabel[company.category] || company.category}
                   </span>
                 </td>
-                <td className="max-w-56 px-4 py-3 text-slate-600">{company.address}</td>
-                <td className="px-4 py-3 text-slate-600">{company.phone || "-"}</td>
-                <td className="px-4 py-3 font-medium">
-                  {company.priceAvg ? Number(company.priceAvg).toLocaleString() : "-"}원
+                {/* 주소 — 남은 공간 전부 차지, 길면 말줄임 */}
+                <td className="px-4 py-4 text-sm text-ink-muted w-full">
+                  <div className="truncate" title={company.address}>{company.address}</div>
                 </td>
-                <td className="px-4 py-3">
-                  <div className="flex justify-end gap-2">
+                {/* 연락처 */}
+                <td className="px-4 py-4 text-sm text-ink-muted whitespace-nowrap">{company.phone || "-"}</td>
+                {/* 가격 */}
+                <td className="px-4 py-4 text-sm font-medium text-ink whitespace-nowrap">
+                  {company.priceAvg ? `${Number(company.priceAvg).toLocaleString()}원` : "-"}
+                </td>
+                {/* 관리 버튼 */}
+                <td className="px-4 py-4">
+                  <div className="flex justify-end gap-1.5 whitespace-nowrap">
                     <button
-                      className="h-8 rounded-md border border-slate-200 px-3 text-xs hover:bg-slate-100"
+                      className="h-8 rounded-full border border-line px-3.5 text-xs text-ink transition hover:border-brand hover:text-brand-deep"
                       type="button"
                       onClick={() => moveToCompanyRead(company.cmno)}
                     >
                       보기
                     </button>
-                    {canManageCompany ? (
+                    {canManageCompany && (
                       <>
                         <button
-                          className="h-8 rounded-md border border-blue-200 px-3 text-xs text-blue-700 hover:bg-blue-50"
+                          className="h-8 rounded-full border border-line px-3.5 text-xs text-ink-muted transition hover:border-brand hover:text-brand-deep"
                           type="button"
                           onClick={() => navigate({ pathname: `${companyPathPrefix}/modify/${company.cmno}` })}
                         >
                           수정
                         </button>
                         <button
-                          className="h-8 rounded-md border border-red-200 px-3 text-xs text-red-700 hover:bg-red-50"
+                          className="h-8 rounded-full border border-red-200 px-3.5 text-xs text-red-500 transition hover:bg-red-50"
                           type="button"
                           onClick={() => handleDelete(company.cmno, company.name)}
                         >
                           삭제
                         </button>
                       </>
-                    ) : null}
+                    )}
                   </div>
                 </td>
               </tr>
@@ -396,15 +447,15 @@ const CompanyThumb = ({ company }) => {
 
 const StatCard = ({ label, value, tone = "default" }) => {
   const toneClass = {
-    default: "text-slate-900",
+    default: "text-ink",
     success: "text-emerald-600",
     warning: "text-amber-600",
-    accent: "text-blue-600",
+    accent: "text-brand",
   }[tone];
 
   return (
-    <div className="rounded-lg bg-slate-50 p-3 sm:p-4">
-      <div className="mb-1 text-xs text-slate-500 truncate">{label}</div>
+    <div className="rounded-2xl border border-line bg-white p-3 sm:p-4">
+      <div className="mb-1 text-xs text-ink-muted truncate">{label}</div>
       <div className={`text-xl sm:text-2xl font-semibold ${toneClass}`}>{value}</div>
     </div>
   );
