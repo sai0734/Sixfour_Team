@@ -53,12 +53,17 @@ public class APILoginSuccessHandler implements AuthenticationSuccessHandler{
 
         Map<String, Object> claims  = memberDTO.getClaims();
 
-
-        String accessToken = JWTUtil.generateToken(claims, 60 * 24);
-        String refreshToken = JWTUtil.generateToken(claims,60*24*2);
-
-        // 로그인 유지("rememberMe") 체크 여부 - 프론트에서 넘겨주면 30일, 아니면 7일 TTL
+        // 로그인 유지("rememberMe") 체크 여부 - 30일이면 refreshToken 자체도 30일짜리로,
+        // 아니면 7일짜리로 발급 (Redis TTL이랑 반드시 같은 기간으로 맞춰야 함 - 안 그러면
+        // Redis엔 30일 남았는데 토큰 자체는 먼저 만료돼서 refresh가 무의미해짐)
         boolean rememberMe = "true".equals(request.getParameter("rememberMe"));
+        int refreshMinutes = rememberMe ? JWTUtil.REFRESH_TOKEN_MINUTES_REMEMBER : JWTUtil.REFRESH_TOKEN_MINUTES_DEFAULT;
+
+        claims.put("rememberMe", rememberMe);
+
+        String accessToken = JWTUtil.generateToken(claims, JWTUtil.ACCESS_TOKEN_MINUTES);
+        String refreshToken = JWTUtil.generateToken(claims, refreshMinutes);
+
         redisTokenService.saveRefreshToken(memberDTO.getEmail(), refreshToken, rememberMe);
 
         claims.put("accessToken", accessToken);

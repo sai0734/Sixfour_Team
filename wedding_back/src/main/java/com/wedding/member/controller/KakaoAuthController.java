@@ -36,8 +36,11 @@ public class KakaoAuthController {
         if ("READY".equals(result.status())) {
             MemberDTO memberDTO = result.memberDTO();
             Map<String, Object> claims = memberDTO.getClaims();
-            String jwtAccessToken = JWTUtil.generateToken(claims, 60 * 24);
-            String jwtRefreshToken = JWTUtil.generateToken(claims, 60*24*2);
+            // 카카오 로그인은 "로그인 유지" 체크박스가 따로 없어서 항상 7일(미유지)로 취급
+            // (Redis TTL 7일이랑 실제 토큰 만료시간을 반드시 맞춰야 함)
+            claims.put("rememberMe", false);
+            String jwtAccessToken = JWTUtil.generateToken(claims, JWTUtil.ACCESS_TOKEN_MINUTES);
+            String jwtRefreshToken = JWTUtil.generateToken(claims, JWTUtil.REFRESH_TOKEN_MINUTES_DEFAULT);
             redisTokenService.saveRefreshToken(memberDTO.getEmail(), jwtRefreshToken, false);
             claims.put("accessToken", jwtAccessToken);
             claims.put("refreshToken", jwtRefreshToken);

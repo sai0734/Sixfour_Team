@@ -184,8 +184,11 @@ public class MemberServiceImpl implements MemberService {
     MemberDTO memberDTO = entityToDTO(member);
     Map<String, Object> resultClaims = memberDTO.getClaims();
 
-    String jwtAccessToken = JWTUtil.generateToken(resultClaims, 60 * 24);
-    String jwtRefreshToken = JWTUtil.generateToken(resultClaims, 60 * 24 * 2);
+    // 카카오 연동 로그인도 "로그인 유지" 개념이 없어 항상 7일(미유지)로 취급
+    resultClaims.put("rememberMe", false);
+
+    String jwtAccessToken = JWTUtil.generateToken(resultClaims, JWTUtil.ACCESS_TOKEN_MINUTES);
+    String jwtRefreshToken = JWTUtil.generateToken(resultClaims, JWTUtil.REFRESH_TOKEN_MINUTES_DEFAULT);
 
     redisTokenService.saveRefreshToken(email, jwtRefreshToken, false);
 
@@ -283,8 +286,11 @@ public class MemberServiceImpl implements MemberService {
     MemberDTO memberDTO = entityToDTO(member);
     Map<String, Object> resultClaims = memberDTO.getClaims();
 
-    String jwtAccessToken = JWTUtil.generateToken(resultClaims, 60 * 24);
-    String jwtRefreshToken = JWTUtil.generateToken(resultClaims, 60 * 24 * 2);
+    // 카카오 신규가입도 "로그인 유지" 개념이 없어 항상 7일(미유지)로 취급
+    resultClaims.put("rememberMe", false);
+
+    String jwtAccessToken = JWTUtil.generateToken(resultClaims, JWTUtil.ACCESS_TOKEN_MINUTES);
+    String jwtRefreshToken = JWTUtil.generateToken(resultClaims, JWTUtil.REFRESH_TOKEN_MINUTES_DEFAULT);
 
     redisTokenService.saveRefreshToken(email, jwtRefreshToken, false);
 
