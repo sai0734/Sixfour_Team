@@ -3,6 +3,7 @@ import BasicMenu from "../../components/menus/BasicMenu";
 import BoardTopTabs from "../../components/board/BoardTopTabs";
 import BoardFilterSidebar from "../../components/board/BoardFilterSidebar";
 import FaqItem from "../../components/faq/FaqItem";
+import TapeLabel from "../../components/common/TapeLabel";
 import { getList } from "../../api/faqApi";
 
 // 실제 카테고리 값이 아니라, "좋아요(도움됐어요) 많은 순 10개"를 보여주는 특수 탭.
@@ -67,9 +68,9 @@ const FaqPage = () => {
 
       <div className="bg-cream min-h-screen">
         <section className="text-center pt-12 pb-6 bg-brand-light">
-          <p className="text-xs tracking-[0.15em] text-brand-accent mb-2.5">
+          <TapeLabel tone="white" className="mb-3">
             FREQUENTLY ASKED QUESTIONS
-          </p>
+          </TapeLabel>
           <p className="font-serif text-3xl text-brand-deep mb-2">
             자주 묻는 질문
           </p>

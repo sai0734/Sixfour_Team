@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import PrepLayout from "../../layouts/PrepLayout";
+import TapeLabel from "../../components/common/TapeLabel";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import { getListByMember as getChecklist } from "../../api/checklistApi";
 import { getListByMember as getBudget } from "../../api/budgetApi";
@@ -94,6 +95,8 @@ const HubPage = () => {
       title="준비 관리"
       subtitle="한눈에 보는 우리 결혼 준비 현황"
     >
+      <TapeLabel className="mb-4">오늘의 준비 현황</TapeLabel>
+
       <div className="grid grid-cols-3 gap-4 mb-4">
         <Link
           to="/prep/dday"
@@ -148,6 +151,10 @@ const HubPage = () => {
           )}
         </Link>
       </div>
+
+      <TapeLabel className="mb-4" rotate="right">
+        더 챙겨볼 것들
+      </TapeLabel>
 
       <div className="grid grid-cols-2 gap-4">
         <Link

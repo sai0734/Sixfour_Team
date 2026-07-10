@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import BasicMenu from "../../components/menus/BasicMenu";
 import BoardTopTabs from "../../components/board/BoardTopTabs";
 import BoardFilterSidebar from "../../components/board/BoardFilterSidebar";
+import TapeLabel from "../../components/common/TapeLabel";
 import SearchSortBar from "../../components/board/SearchSortBar";
 import PostCard from "../../components/board/PostCard";
 import BoardFormModal from "../../components/board/BoardFormModal";
@@ -185,9 +186,9 @@ const ReviewBoardPage = () => {
 
       <div className="bg-cream min-h-screen">
         <section className="text-center pt-12 pb-6 bg-brand-light">
-          <p className="text-xs tracking-[0.15em] text-brand-accent mb-2.5">
+          <TapeLabel tone="white" className="mb-3">
             REVIEW BOARD
-          </p>
+          </TapeLabel>
           <p className="font-serif text-3xl text-brand-deep mb-2">후기게시판</p>
           <p className="text-sm text-brand-accent">
             먼저 경험한 예비 부부들의 솔직한 후기
