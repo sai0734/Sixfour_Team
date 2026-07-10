@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { getListByMember, postAdd, deleteOne } from "../../api/companywishApi";
 import {
   getListByMember as getProductWishList,
@@ -15,8 +16,21 @@ const SUB_TABS = [
 
 const WishTab = () => {
   const { loginState } = useCustomLogin();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [subTab, setSubTab] = useState("company");
+  // 답례품 상세로 갔다가 뒤로가기 눌러도 "찜 목록 > 답례품 찜"으로 돌아오도록
+  // 서브탭 상태를 URL(?wsub=)에 둠
+  const subTab = searchParams.get("wsub") === "product" ? "product" : "company";
+  const setSubTab = (key) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set("wsub", key);
+        return next;
+      },
+      { replace: true },
+    );
+  };
 
   const [wishList, setWishList] = useState([]);
   const [refresh, setRefresh] = useState(false);
@@ -161,7 +175,10 @@ const WishTab = () => {
                 key={item.wno}
                 className="bg-white rounded-2xl border border-line p-5"
               >
-                <div className="aspect-square rounded-xl bg-surface overflow-hidden mb-3">
+                <Link
+                  to={`/product/read/${item.pno}`}
+                  className="block aspect-square rounded-xl bg-surface overflow-hidden mb-3"
+                >
                   {item.thumbnail && (
                     <img
                       src={`${API_SERVER_HOST}/api/product/view/s_${item.thumbnail}`}
@@ -169,11 +186,14 @@ const WishTab = () => {
                       className="w-full h-full object-cover"
                     />
                   )}
-                </div>
+                </Link>
 
-                <p className="text-sm font-medium text-ink mb-1 truncate">
+                <Link
+                  to={`/product/read/${item.pno}`}
+                  className="text-sm font-medium text-ink mb-1 truncate block hover:text-brand hover:underline"
+                >
                   {item.pname}
-                </p>
+                </Link>
                 <p className="text-xs text-ink-muted mb-4">
                   {Number(item.price).toLocaleString()}원
                 </p>
