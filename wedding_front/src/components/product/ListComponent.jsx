@@ -9,6 +9,7 @@ import { postAdd, deleteWish, isWished } from "../../api/wishApi";
 import useCustomMove from "../../hooks/useCustomMove";
 import FetchingModal from "../common/FetchingModal";
 import PageComponent from "../common/PageComponent";
+import ShopTapeLabel from "./ShopTapeLabel";
 import ProductFilterSidebarComponent, {
   PRICE_BANDS,
   RATING_OPTIONS,
@@ -20,6 +21,8 @@ import { API_SERVER_HOST } from "../../api/reservationApi";
 import useCustomLogin from "../../hooks/useCustomLogin";
 
 const host = API_SERVER_HOST;
+
+const PRODUCT_LIST_PAGE_SIZE = 12;
 
 const initState = {
   dtoList: [],
@@ -36,9 +39,11 @@ const initState = {
 
 const ListComponent = () => {
   const { exceptionHandle, loginState } = useCustomLogin();
-  const { page, size, refresh, moveToRead, moveToList } = useCustomMove();
+  const { page, refresh, moveToRead, moveToList } = useCustomMove();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+
+  const pageSize = Number(searchParams.get("size")) || PRODUCT_LIST_PAGE_SIZE;
 
   const [serverData, setServerData] = useState(initState);
   const [categoryList, setCategoryList] = useState([]);
@@ -57,16 +62,22 @@ const ListComponent = () => {
   }, []);
 
   useEffect(() => {
-    if (!searchParams.get("page")) {
+    const currentPage = searchParams.get("page");
+    const currentSize = Number(searchParams.get("size"));
+
+    if (!currentPage || currentSize !== PRODUCT_LIST_PAGE_SIZE) {
       navigate(
         {
           pathname: "/product/list",
-          search: createSearchParams({ page: 1, size }).toString(),
+          search: createSearchParams({
+            page: currentPage || 1,
+            size: PRODUCT_LIST_PAGE_SIZE,
+          }).toString(),
         },
         { replace: true },
       );
     }
-  }, [navigate, searchParams, size]);
+  }, [navigate, searchParams]);
 
   useEffect(() => {
     setFetching(true);
@@ -80,7 +91,7 @@ const ListComponent = () => {
 
     getList({
       page,
-      size,
+      size: pageSize,
       categories: selectedCategories,
       keyword,
       minPrice: priceBand?.minPrice,
@@ -95,7 +106,7 @@ const ListComponent = () => {
       .catch((err) => exceptionHandle(err));
   }, [
     page,
-    size,
+    pageSize,
     selectedCategories,
     keyword,
     selectedPriceBand,
@@ -127,7 +138,10 @@ const ListComponent = () => {
 
   const resetPageForFilter = () => {
     if (page === 1) return;
-    moveToList({ page: 1, size }, { replace: true, preventScrollReset: true });
+    moveToList(
+      { page: 1, size: pageSize },
+      { replace: true, preventScrollReset: true },
+    );
   };
 
   const handleResetToDefaultList = () => {
@@ -203,15 +217,20 @@ const ListComponent = () => {
     <div className="-mx-5 -mb-10 min-h-[calc(100vh-6rem)] bg-cream px-5 text-ink">
       {fetching ? <FetchingModal /> : null}
 
-      <section className="-mx-5 -mt-12 bg-gradient-to-b from-brand-light to-cream px-5 pb-8 pt-12 text-center md:pb-12">
-        <div className="mx-auto max-w-[720px]">
-          <span className="mb-3 inline-block -rotate-2 bg-blush-100 px-3.5 py-1 font-['Gaegu'] text-[13px] text-brand-deep md:mb-4">
+      <section
+        className="-mx-5 -mt-12 pb-10 pt-16 md:pb-12 text-center bg-cover bg-center relative"
+        style={{ backgroundImage: "url('/shop-hero.jpg')" }}
+      >
+        <div className="absolute inset-0 bg-black/45" />
+
+        <div className="relative z-10 mx-auto max-w-[720px] px-5">
+          <ShopTapeLabel tone="white" className="mb-5">
             03 — GIFT SHOP
-          </span>
-          <h1 className="mb-2.5 font-['Gowun_Batang'] text-2xl leading-snug text-ink md:mb-3.5 md:text-4xl">
+          </ShopTapeLabel>
+          <h1 className="mb-2.5 font-['Gowun_Batang'] text-2xl leading-snug text-white md:mb-3.5 md:text-4xl">
             하객들에게 전하는 마음
           </h1>
-          <p className="whitespace-pre-line text-sm leading-relaxed text-ink-muted md:text-[15px]">
+          <p className="whitespace-pre-line text-sm leading-relaxed text-white/85 md:text-[15px]">
             캔들, 디퓨저, 수건 세트까지{"\n"}취향대로 고르고 바로 주문할 수
             있어요
           </p>
@@ -304,7 +323,7 @@ const ListComponent = () => {
                 movePage={(pageParam) =>
                   moveToList({
                     page: pageParam.page,
-                    size: pageParam.size ?? size,
+                    size: pageParam.size ?? pageSize,
                   })
                 }
               />

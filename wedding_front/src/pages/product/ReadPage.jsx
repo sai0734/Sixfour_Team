@@ -4,11 +4,7 @@ import ReadComponent from "../../components/product/ReadComponent";
 const ReadPage = () => {
   const { pno } = useParams();
 
-  return (
-    <div className="p-4 w-full bg-white">
-      <ReadComponent pno={pno}></ReadComponent>
-    </div>
-  );
+  return <ReadComponent pno={pno}></ReadComponent>;
 };
 
 export default ReadPage;

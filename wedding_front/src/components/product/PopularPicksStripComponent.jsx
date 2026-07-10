@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getList } from "../../api/productApi";
 import { API_SERVER_HOST } from "../../api/reservationApi";
+import ShopTapeLabel from "./ShopTapeLabel";
 
 const host = API_SERVER_HOST;
 
@@ -20,9 +21,7 @@ const PopularPicksStripComponent = ({ onClickCard }) => {
   return (
     <section className="mb-8 md:mb-10">
       <div className="mb-4 flex flex-wrap items-center gap-3 md:mb-5">
-        <span className="inline-block -rotate-2 bg-blush-100 px-3.5 py-1 font-['Gaegu'] text-[13px] text-brand-deep">
-          요즘 인기있는 답례품
-        </span>
+        <ShopTapeLabel>요즘 인기있는 답례품</ShopTapeLabel>
         <p className="text-xs text-ink-faint">
           하객들이 가장 많이 선택한 답례품이에요
         </p>

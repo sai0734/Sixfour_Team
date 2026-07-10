@@ -1,11 +1,14 @@
-const RATING_OPTIONS = [
+import ShopTapeLabel from "./ShopTapeLabel";
+
+export const RATING_OPTIONS = [
+  { label: "★★★★★", minRating: 5.0 },
   { label: "★★★★☆ 이상", minRating: 4.0 },
   { label: "★★★☆☆ 이상", minRating: 3.0 },
   { label: "★★☆☆☆ 이상", minRating: 2.0 },
   { label: "★☆☆☆☆ 이상", minRating: 1.0 },
 ];
 
-const PRICE_BANDS = [
+export const PRICE_BANDS = [
   { label: "1만원 이하", minPrice: null, maxPrice: 10000 },
   { label: "1~3만원", minPrice: 10000, maxPrice: 30000 },
   { label: "3만원 이상", minPrice: 30000, maxPrice: null },
@@ -23,12 +26,10 @@ const ProductFilterSidebarComponent = ({
   return (
     <aside className="mt-3 rounded-[18px] bg-white p-5 shadow-[0_8px_24px_-12px_rgba(58,54,47,0.15)] lg:sticky lg:top-[100px] lg:mt-0 lg:p-6">
       <div className="mb-7">
-        <span className="mb-3 inline-block -rotate-2 bg-lavender-light px-3.5 py-1 font-['Gaegu'] text-[13px] text-lavender-dark">
-          필터
-        </span>
-        <h2 className="font-['Gowun_Batang'] text-[22px] text-ink">골라보기</h2>
+        <ShopTapeLabel className="mb-3">골라보기</ShopTapeLabel>
       </div>
 
+      {/* 카테고리 필터 */}
       <div className="mb-6">
         <p className="mb-3 text-[13px] font-medium text-brand-deep">카테고리</p>
         <div className="flex flex-col gap-2.5">
@@ -49,6 +50,7 @@ const ProductFilterSidebarComponent = ({
         </div>
       </div>
 
+      {/* 가격대 필터 */}
       <div className="mb-6">
         <p className="mb-3 text-[13px] font-medium text-brand-deep">가격대</p>
         <div className="flex flex-col gap-2.5">
@@ -69,6 +71,7 @@ const ProductFilterSidebarComponent = ({
         </div>
       </div>
 
+      {/* 평점 필터 */}
       <div>
         <p className="mb-3 text-[13px] font-medium text-brand-deep">평점</p>
         <div className="flex flex-col gap-2.5">
@@ -92,5 +95,4 @@ const ProductFilterSidebarComponent = ({
   );
 };
 
-export { PRICE_BANDS, RATING_OPTIONS };
 export default ProductFilterSidebarComponent;

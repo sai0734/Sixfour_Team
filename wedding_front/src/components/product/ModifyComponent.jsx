@@ -26,7 +26,7 @@ const initState = {
   uploadFileNames: [],
 };
 
-const emptyNewOption = { optionName: "", optionValue: "", extraPrice: 0 };
+const emptyNewOption = { optionName: "", optionValue: "", extraPrice: "" };
 
 const ModifyComponent = ({ pno }) => {
   const [product, setProduct] = useState(initState);
@@ -109,7 +109,20 @@ const ModifyComponent = ({ pno }) => {
     });
   };
 
-  // ── 옵션 관리 ──────────────────────────────
+  const handleChangeNewExtraPrice = (value) => {
+    setNewOption({
+      ...newOption,
+      extraPrice: value.replace(/[^0-9]/g, ""),
+    });
+  };
+
+  const handleChangeEditingExtraPrice = (value) => {
+    setEditingOption({
+      ...editingOption,
+      extraPrice: value.replace(/[^0-9]/g, ""),
+    });
+  };
+
   const handleAddOption = () => {
     if (!newOption.optionName.trim() || !newOption.optionValue.trim()) {
       alert("옵션명과 옵션값을 입력해주세요.");
@@ -157,7 +170,6 @@ const ModifyComponent = ({ pno }) => {
           상품 수정 <span className="text-ink-faint text-base">#{pno}</span>
         </p>
 
-        {/* 기본 정보 카드 */}
         <div className="bg-white rounded-2xl p-6 shadow-[0_8px_24px_-12px_rgba(58,54,47,0.15)] mb-6">
           <p className="text-sm font-medium mb-4">기본 정보</p>
 
@@ -252,7 +264,6 @@ const ModifyComponent = ({ pno }) => {
           </div>
         </div>
 
-        {/* 이미지 카드 */}
         <div className="bg-white rounded-2xl p-6 shadow-[0_8px_24px_-12px_rgba(58,54,47,0.15)] mb-6">
           <p className="text-sm font-medium mb-4">상품 이미지</p>
 
@@ -288,7 +299,6 @@ const ModifyComponent = ({ pno }) => {
           />
         </div>
 
-        {/* 옵션 관리 카드 */}
         <div className="bg-white rounded-2xl p-6 shadow-[0_8px_24px_-12px_rgba(58,54,47,0.15)] mb-6">
           <p className="text-sm font-medium mb-4">옵션 관리</p>
 
@@ -323,13 +333,11 @@ const ModifyComponent = ({ pno }) => {
                       className="h-9 px-2.5 border border-line-soft rounded-md text-xs flex-1 min-w-[100px]"
                     />
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       value={editingOption.extraPrice}
                       onChange={(e) =>
-                        setEditingOption({
-                          ...editingOption,
-                          extraPrice: e.target.value,
-                        })
+                        handleChangeEditingExtraPrice(e.target.value)
                       }
                       placeholder="추가금액"
                       className="h-9 px-2.5 border border-line-soft rounded-md text-xs w-24"
@@ -365,7 +373,10 @@ const ModifyComponent = ({ pno }) => {
                       <button
                         onClick={() => {
                           setEditingPono(opt.pono);
-                          setEditingOption({ ...opt });
+                          setEditingOption({
+                            ...opt,
+                            extraPrice: String(opt.extraPrice ?? ""),
+                          });
                         }}
                         className="text-xs text-ink-faint underline"
                       >
@@ -402,11 +413,10 @@ const ModifyComponent = ({ pno }) => {
               className="h-9 px-2.5 border border-line-soft rounded-md text-xs flex-1 min-w-[120px]"
             />
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
               value={newOption.extraPrice}
-              onChange={(e) =>
-                setNewOption({ ...newOption, extraPrice: e.target.value })
-              }
+              onChange={(e) => handleChangeNewExtraPrice(e.target.value)}
               placeholder="추가금액"
               className="h-9 px-2.5 border border-line-soft rounded-md text-xs w-24"
             />
@@ -414,7 +424,7 @@ const ModifyComponent = ({ pno }) => {
               onClick={handleAddOption}
               className="h-9 px-4 rounded-full bg-lavender-dark text-white text-xs"
             >
-              옵션 추가
+              가격 추가
             </button>
           </div>
         </div>

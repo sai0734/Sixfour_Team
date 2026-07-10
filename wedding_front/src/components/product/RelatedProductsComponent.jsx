@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getList } from "../../api/productApi";
+import ShopTapeLabel from "./ShopTapeLabel";
 
 const RelatedProductsComponent = ({
   currentPno,
@@ -29,9 +30,9 @@ const RelatedProductsComponent = ({
 
   return (
     <div className="max-w-[1320px] mx-auto px-6 pb-16">
-      <span className="inline-block -rotate-1 bg-lavender-light px-3 py-1 mb-4 font-['Gaegu'] text-[13px] text-lavender-dark">
+      <ShopTapeLabel tone="lavender" rotate={-1} className="mb-4">
         이런 상품은 어떠세요?
-      </span>
+      </ShopTapeLabel>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
         {related.map((product) => (

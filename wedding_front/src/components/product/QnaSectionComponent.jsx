@@ -7,6 +7,7 @@ import {
   putQnaReply,
   deleteQna,
 } from "../../api/qnaApi";
+import ShopTapeLabel from "./ShopTapeLabel";
 
 const QnaForm = ({ initialContent, onCancel, onSubmit, submitLabel }) => {
   const [content, setContent] = useState(initialContent ?? "");
@@ -140,9 +141,9 @@ const QnaSectionComponent = ({ pno, isLoggedIn, isAdmin, myEmail }) => {
   return (
     <div>
       <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
-        <span className="inline-block -rotate-1 bg-lavender-light px-3 py-1 font-['Gaegu'] text-[13px] text-lavender-dark">
+        <ShopTapeLabel tone="lavender">
           궁금한 점 물어보기 {qnaList.length}건
-        </span>
+        </ShopTapeLabel>
         {!showWriteForm && (
           <button
             onClick={handleClickWrite}

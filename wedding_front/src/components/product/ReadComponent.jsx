@@ -7,6 +7,7 @@ import useCustomMove from "../../hooks/useCustomMove";
 import FetchingModal from "../common/FetchingModal";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import useCustomCart from "../../hooks/useCustomCart";
+import ShopTapeLabel from "./ShopTapeLabel";
 import ProductGalleryComponent from "./ProductGalleryComponent";
 import ProductDetailInfoComponent from "./ProductDetailInfoComponent";
 import ReviewSectionComponent from "./ReviewSectionComponent";
@@ -24,6 +25,8 @@ const initState = {
 };
 
 const host = API_SERVER_HOST;
+
+const PRODUCT_LIST_PAGE_SIZE = 12;
 
 const SECTIONS = [
   { key: "desc", label: "상세정보" },
@@ -60,7 +63,7 @@ const ReadComponent = ({ pno }) => {
     return () => observer.disconnect();
   }, []);
 
-  const { moveToList, moveToModify } = useCustomMove();
+  const { page, moveToList, moveToModify } = useCustomMove();
   const { changeCart } = useCustomCart();
   const { loginState } = useCustomLogin();
   const navigate = useNavigate();
@@ -169,6 +172,10 @@ const ReadComponent = ({ pno }) => {
     }
   };
 
+  const handleClickGoList = () => {
+    moveToList({ page, size: PRODUCT_LIST_PAGE_SIZE });
+  };
+
   return (
     <div className="-mx-5 -mb-10 -mt-12 min-h-[calc(100vh-6rem)] bg-cream pt-16 text-ink">
       {fetching ? <FetchingModal /> : <></>}
@@ -186,11 +193,9 @@ const ReadComponent = ({ pno }) => {
         />
 
         <div>
-          <span className="inline-block -rotate-2 bg-blush-100 px-3 py-1 mb-3 font-['Gaegu'] text-[13px] text-brand-deep">
-            {product.category}
-          </span>
+          <ShopTapeLabel className="mb-3">{product.category}</ShopTapeLabel>
 
-          <p className="font-['Gowun_Batang'] text-2xl mb-1.5">
+          <p className="font-['Gowun_Batang'] text-2xl mb-1.5 mt-1">
             {product.pname}
           </p>
 
@@ -326,9 +331,6 @@ const ReadComponent = ({ pno }) => {
           ref={(el) => (sectionRefs.current.review = el)}
           className="py-8 md:py-10 border-b border-line"
         >
-          <p className="text-sm font-medium mb-4">
-            리뷰 ({product.reviewCount || 0})
-          </p>
           <ReviewSectionComponent
             pno={pno}
             host={host}
@@ -343,7 +345,6 @@ const ReadComponent = ({ pno }) => {
           ref={(el) => (sectionRefs.current.qna = el)}
           className="py-8 md:py-10 border-b border-line"
         >
-          <p className="text-sm font-medium mb-4">Q&A</p>
           <QnaSectionComponent
             pno={pno}
             isLoggedIn={!!loginState.email}
@@ -370,7 +371,7 @@ const ReadComponent = ({ pno }) => {
 
       <div className="max-w-[1320px] mx-auto px-6 pb-16 flex justify-end">
         <button
-          onClick={moveToList}
+          onClick={handleClickGoList}
           className="h-11 px-6 rounded-full border border-line-soft text-sm"
         >
           목록으로

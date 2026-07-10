@@ -32,7 +32,7 @@ const ProductGridComponent = ({
             />
 
             {CATEGORY_TAG[product.category] && (
-              <span className="absolute bottom-0 left-0 right-0 bg-brand-deep/90 px-3 py-1.5 text-center font-['Gaegu'] text-[13px] font-medium text-white shadow-[0_-2px_8px_rgba(58,54,47,0.15)]">
+              <span className="absolute bottom-0 left-0 right-0 bg-brand-deep/90 px-3 py-1.5 text-center font-['Gaegu'] text-[15px] font-medium text-white shadow-[0_-2px_8px_rgba(58,54,47,0.15)]">
                 {CATEGORY_TAG[product.category]}
               </span>
             )}

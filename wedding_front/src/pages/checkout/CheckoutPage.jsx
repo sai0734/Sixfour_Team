@@ -284,11 +284,18 @@ const CheckoutPage = () => {
           </div>
 
           <button
+            type="button"
             onClick={handleClickPay}
             disabled={submitting}
-            className="w-full h-12 rounded-full bg-brand text-white text-sm font-medium disabled:opacity-50"
+            className="group relative w-full h-12 overflow-hidden rounded-full bg-brand text-sm font-medium text-white transition-all duration-200 ease-out hover:-translate-y-0.5 hover:bg-brand-deep hover:shadow-[0_10px_28px_-10px_rgba(198,112,112,0.55)] active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:bg-brand disabled:hover:shadow-none"
           >
-            {submitting ? "처리 중..." : "결제하기"}
+            <span className="relative z-10">
+              {submitting ? "처리 중..." : "결제하기"}
+            </span>
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-500 ease-out group-hover:translate-x-full"
+            />
           </button>
         </div>
       </div>

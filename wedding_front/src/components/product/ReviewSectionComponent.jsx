@@ -8,6 +8,7 @@ import {
   putReply,
   deleteReview,
 } from "../../api/reviewApi";
+import ShopTapeLabel from "./ShopTapeLabel";
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 const MAX_VIDEO_SIZE = 50 * 1024 * 1024;
@@ -402,9 +403,7 @@ const ReviewSectionComponent = ({
       )}
 
       <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
-        <span className="inline-block -rotate-1 bg-blush-100 px-3 py-1 font-['Gaegu'] text-[13px] text-brand-deep">
-          하객들의 솔직한 후기 {reviews.length}개
-        </span>
+        <ShopTapeLabel>하객들의 솔직한 후기 {reviews.length}개</ShopTapeLabel>
         {!myReview && !showWriteForm && (
           <button
             onClick={handleClickWriteReview}
