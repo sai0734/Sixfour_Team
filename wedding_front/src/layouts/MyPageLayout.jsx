@@ -1,6 +1,8 @@
 import BasicMenu from "../components/menus/BasicMenu";
 import MyPageSidebar from "./MyPageSidebar";
 import ProfileCompleteGuard from "../components/common/ProfileCompleteGuard";
+import TapeLabel from "../components/common/TapeLabel";
+import MyPageHeaderArt from "../components/common/MyPageHeaderArt";
 
 // PrepLayout과 동일한 껍데기지만 사이드바만 마이페이지 전용으로 분리.
 const MyPageLayout = ({ eyebrow, title, subtitle, children }) => {
@@ -11,11 +13,12 @@ const MyPageLayout = ({ eyebrow, title, subtitle, children }) => {
 
         <div className="bg-cream min-h-screen">
           {(eyebrow || title) && (
-            <section className="text-center pt-12 pb-6 bg-brand-light">
+            <section className="text-center pt-28 pb-8 bg-brand-light">
+              <MyPageHeaderArt className="w-28 h-20 mx-auto mb-1" />
               {eyebrow && (
-                <p className="text-xs tracking-[0.15em] text-brand-accent mb-2.5">
+                <TapeLabel tone="white" className="mb-4">
                   {eyebrow}
-                </p>
+                </TapeLabel>
               )}
               {title && (
                 <p className="font-serif text-3xl text-brand-deep mb-2">

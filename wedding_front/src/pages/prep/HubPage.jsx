@@ -95,7 +95,7 @@ const HubPage = () => {
       title="준비 관리"
       subtitle="한눈에 보는 우리 결혼 준비 현황"
     >
-      <TapeLabel className="mb-4">오늘의 준비 현황</TapeLabel>
+      <TapeLabel className="mb-5">오늘의 준비 현황</TapeLabel>
 
       <div className="grid grid-cols-3 gap-4 mb-4">
         <Link
@@ -152,7 +152,7 @@ const HubPage = () => {
         </Link>
       </div>
 
-      <TapeLabel className="mb-4" rotate="right">
+      <TapeLabel className="mb-5" rotate={3}>
         더 챙겨볼 것들
       </TapeLabel>
 

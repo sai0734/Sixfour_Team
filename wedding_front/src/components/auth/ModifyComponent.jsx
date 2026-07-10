@@ -73,7 +73,12 @@ const ModifyComponent = () => {
 
       {/* 기본 정보 */}
       <div className="bg-white rounded-2xl shadow-[0_8px_24px_-14px_rgba(58,54,47,0.18)] p-6 mb-4">
-        <TapeLabel className="mb-4">기본 정보</TapeLabel>
+        <div className="flex items-center justify-between mb-4">
+          <TapeLabel>기본 정보</TapeLabel>
+          <span className="w-10 h-10 rounded-full bg-brand-light text-brand-accent font-serif text-sm flex items-center justify-center">
+            {auth.nickname?.[0] || "🙂"}
+          </span>
+        </div>
 
         <label className="block text-xs font-medium text-ink-muted mb-1.5">
           이메일
@@ -100,7 +105,7 @@ const ModifyComponent = () => {
 
       {/* 비밀번호 변경 */}
       <div className="bg-white rounded-2xl shadow-[0_8px_24px_-14px_rgba(58,54,47,0.18)] p-6 mb-4">
-        <TapeLabel className="mb-4" rotate="right">
+        <TapeLabel className="mb-4" rotate={3}>
           비밀번호 변경
         </TapeLabel>
 
@@ -141,7 +146,10 @@ const ModifyComponent = () => {
         에서 하실 수 있어요.
       </p>
 
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between">
+        <span className="font-hand text-sm text-ink-faint -rotate-2">
+          언제든 다시 바꿀 수 있어요 :)
+        </span>
         <button
           type="button"
           onClick={handleClickModify}

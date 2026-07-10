@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import BasicMenu from "../../components/menus/BasicMenu";
 import BoardTopTabs from "../../components/board/BoardTopTabs";
 import TapeLabel from "../../components/common/TapeLabel";
+import CommunityHeaderArt from "../../components/common/CommunityHeaderArt";
 import BoardFilterSidebar from "../../components/board/BoardFilterSidebar";
 import SearchSortBar from "../../components/board/SearchSortBar";
 import PostCard from "../../components/board/PostCard";
@@ -174,7 +175,8 @@ const FreeBoardPage = () => {
       <BasicMenu />
 
       <div className="bg-cream min-h-screen">
-        <section className="text-center pt-12 pb-6 bg-brand-light">
+        <section className="text-center pt-28 pb-6 bg-brand-light">
+          <CommunityHeaderArt className="w-28 h-20 mx-auto mb-1" />
           <TapeLabel tone="white" className="mb-3">
             FREE BOARD
           </TapeLabel>
