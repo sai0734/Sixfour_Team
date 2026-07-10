@@ -10,10 +10,25 @@ import com.wedding.checkout.domain.OrderItem;
 import com.wedding.checkout.domain.Orders;
 import com.wedding.checkout.repository.OrderRepository;
 import com.wedding.company.domain.Company;
+import com.wedding.company.domain.DressDetail;
+import com.wedding.company.domain.DressItem;
+import com.wedding.company.domain.DressItemType;
+import com.wedding.company.domain.HallDetail;
+import com.wedding.company.domain.HallItem;
+import com.wedding.company.domain.HallType;
+import com.wedding.company.domain.MakeupDetail;
 import com.wedding.company.domain.MakeupPackage;
 import com.wedding.company.domain.MakeupPackageType;
+import com.wedding.company.domain.MealType;
+import com.wedding.company.domain.StudioDetail;
 import com.wedding.company.repository.CompanyRepository;
+import com.wedding.company.repository.DressDetailRepository;
+import com.wedding.company.repository.DressItemRepository;
+import com.wedding.company.repository.HallDetailRepository;
+import com.wedding.company.repository.HallItemRepository;
+import com.wedding.company.repository.MakeupDetailRepository;
 import com.wedding.company.repository.MakeupPackageRepository;
+import com.wedding.company.repository.StudioDetailRepository;
 import com.wedding.member.domain.Member;
 import com.wedding.member.domain.MemberDetail;
 import com.wedding.member.domain.MemberRole;
@@ -55,6 +70,12 @@ public class DataInitializer implements ApplicationRunner {
 
   private final CompanyRepository companyRepository;
   private final MakeupPackageRepository makeupPackageRepository;
+  private final HallDetailRepository hallDetailRepository;
+  private final HallItemRepository hallItemRepository;
+  private final DressDetailRepository dressDetailRepository;
+  private final DressItemRepository dressItemRepository;
+  private final StudioDetailRepository studioDetailRepository;
+  private final MakeupDetailRepository makeupDetailRepository;
   private final ObjectMapper objectMapper;
   private final ProductRepository productRepository;
   private final ProductOptionRepository productOptionRepository;
@@ -110,7 +131,19 @@ public class DataInitializer implements ApplicationRunner {
       log.info("===== Commerce dummy seed complete =====");
     }
 
-    if (companyRepository.count() > 0) {
+    if (companyRepository.count() == 0) {
+      log.info("===== Company dummy seed start =====");
+      Map<Long, Company> companyMap = insertCompanies();
+      log.info("===== Company dummy seed complete. count={} =====", companyRepository.count());
+      if (!companyMap.isEmpty()) {
+        log.info("===== Company detail dummy seed start =====");
+        insertHallDetails(companyMap);
+        insertDressDetails(companyMap);
+        insertStudioDetails(companyMap);
+        insertMakeupDetails(companyMap);
+        log.info("===== Company detail dummy seed complete =====");
+      }
+    } else {
       relaxLegacyDetailColumns();
       if (makeupPackageRepository.count() == 0) {
         log.info("===== Makeup package dummy seed start =====");
@@ -151,7 +184,186 @@ public class DataInitializer implements ApplicationRunner {
     log.info("Relaxed legacy column {}.{} to nullable.", tableName, columnName);
   }
 
-  // data/makeup.json (packages) + DB tbl_company → tbl_makeup_package 할인 패키지
+  // data/company.json → tbl_company + tbl_company_image. 반환: jsonCmno → 저장된 Company 맵
+  private Map<Long, Company> insertCompanies() throws Exception {
+    List<Map<String, Object>> list = readJsonArray("data/company.json");
+    Map<Long, Company> companyMap = new HashMap<>();
+
+    for (Map<String, Object> m : list) {
+      Long jsonCmno = toLongObject(m.get("cmno"));
+
+      Company company = Company.builder()
+          .category(enumValue(com.wedding.company.domain.CompanyCategory.class, m.get("category"), null))
+          .name((String) m.get("name"))
+          .ceoName((String) m.get("ceoName"))
+          .phone((String) m.get("phone"))
+          .address((String) m.get("address"))
+          .latitude(toDouble(m.get("latitude")))
+          .longitude(toDouble(m.get("longitude")))
+          .description((String) m.get("description"))
+          .priceAvg(toBigDecimal(m.get("priceAvg")))
+          .build();
+
+      List<Map<String, Object>> imageList = castList(m.get("imageList"));
+      if (imageList != null) {
+        for (Map<String, Object> img : imageList) {
+          company.addImage((String) img.get("fileName"));
+        }
+      }
+
+      Company saved = companyRepository.save(company);
+      if (jsonCmno != null) {
+        companyMap.put(jsonCmno, saved);
+      }
+    }
+
+    return companyMap;
+  }
+
+  // data/hall.json → tbl_hall_detail + tbl_hall_item
+  private void insertHallDetails(Map<Long, Company> companyMap) throws Exception {
+    List<Map<String, Object>> list = readJsonArray("data/hall.json");
+
+    for (Map<String, Object> m : list) {
+      Company company = companyMap.get(toLongObject(m.get("cmno")));
+      if (company == null) {
+        log.warn("Skip hall detail. Company not found for cmno={}", m.get("cmno"));
+        continue;
+      }
+
+      hallDetailRepository.save(HallDetail.builder()
+          .company(company)
+          .hallName((String) m.get("hallName"))
+          .address((String) m.get("address"))
+          .latitude(toDouble(m.get("latitude")))
+          .longitude(toDouble(m.get("longitude")))
+          .phone((String) m.get("phone"))
+          .representative((String) m.get("representative"))
+          .hallType(enumValue(HallType.class, m.get("hallType"), null))
+          .description((String) m.get("description"))
+          .imageUrl((String) m.get("imageUrl"))
+          .build());
+
+      List<Map<String, Object>> items = castList(m.get("hallItems"));
+      if (items != null) {
+        for (Map<String, Object> item : items) {
+          hallItemRepository.save(HallItem.builder()
+              .company(company)
+              .itemName((String) item.get("itemName"))
+              .price(toBigDecimal(item.get("price")))
+              .capacity(toIntegerObject(item.get("capacity")))
+              .imageUrl((String) item.get("imageUrl"))
+              .ord(toIntegerObject(item.get("ord")))
+              .mealType(enumValue(MealType.class, item.get("mealType"), null))
+              .build());
+        }
+      }
+    }
+
+    log.info("Inserted {} hall details, {} hall items.", hallDetailRepository.count(), hallItemRepository.count());
+  }
+
+  // data/dress.json → tbl_dress_detail + tbl_dress_item
+  private void insertDressDetails(Map<Long, Company> companyMap) throws Exception {
+    List<Map<String, Object>> list = readJsonArray("data/dress.json");
+
+    for (Map<String, Object> m : list) {
+      Company company = companyMap.get(toLongObject(m.get("cmno")));
+      if (company == null) {
+        log.warn("Skip dress detail. Company not found for cmno={}", m.get("cmno"));
+        continue;
+      }
+
+      dressDetailRepository.save(DressDetail.builder()
+          .company(company)
+          .sizeRange((String) m.get("sizeRange"))
+          .build());
+
+      List<Map<String, Object>> items = castList(m.get("dressItems"));
+      if (items != null) {
+        for (Map<String, Object> item : items) {
+          dressItemRepository.save(DressItem.builder()
+              .company(company)
+              .itemName((String) item.get("itemName"))
+              .price(toBigDecimal(item.get("price")))
+              .imageUrl((String) item.get("imageUrl"))
+              .ord(toIntegerObject(item.get("ord")))
+              .itemType(enumValue(DressItemType.class, item.get("itemType"), null))
+              .styleTags((String) item.get("styleTags"))
+              .sizeRange((String) item.get("sizeRange"))
+              .build());
+        }
+      }
+    }
+
+    log.info("Inserted {} dress details, {} dress items.", dressDetailRepository.count(), dressItemRepository.count());
+  }
+
+  // data/studio.json → tbl_studio_detail
+  private void insertStudioDetails(Map<Long, Company> companyMap) throws Exception {
+    List<Map<String, Object>> list = readJsonArray("data/studio.json");
+
+    for (Map<String, Object> m : list) {
+      Company company = companyMap.get(toLongObject(m.get("cmno")));
+      if (company == null) {
+        log.warn("Skip studio detail. Company not found for cmno={}", m.get("cmno"));
+        continue;
+      }
+
+      List<String> themeTagList = castList(m.get("themeTags"));
+      String themeTags = themeTagList != null
+          ? String.join(",", themeTagList)
+          : (String) m.get("themeTags");
+
+      studioDetailRepository.save(StudioDetail.builder()
+          .company(company)
+          .themeTags(themeTags)
+          .build());
+    }
+
+    log.info("Inserted {} studio details.", studioDetailRepository.count());
+  }
+
+  // data/makeup.json → tbl_makeup_detail + tbl_makeup_package (신규 DB용)
+  private void insertMakeupDetails(Map<Long, Company> companyMap) throws Exception {
+    List<Map<String, Object>> list = readJsonArray("data/makeup.json");
+
+    for (Map<String, Object> m : list) {
+      Company company = companyMap.get(toLongObject(m.get("cmno")));
+      if (company == null) {
+        log.warn("Skip makeup detail. Company not found for cmno={}", m.get("cmno"));
+        continue;
+      }
+
+      MakeupDetail detail = MakeupDetail.builder().company(company).build();
+      detail.change(
+          Boolean.TRUE.equals(m.get("includesHairService")),
+          Boolean.TRUE.equals(m.get("includesMakeupService")),
+          Boolean.TRUE.equals(m.get("includesNailService")),
+          toBigDecimalNullable(m.get("hairPrice")),
+          toBigDecimalNullable(m.get("makeupPrice")),
+          toBigDecimalNullable(m.get("nailPrice"))
+      );
+      makeupDetailRepository.save(detail);
+
+      List<Map<String, Object>> packages = castList(m.get("packages"));
+      if (packages != null) {
+        for (Map<String, Object> pkg : packages) {
+          if (pkg == null) continue;
+          makeupPackageRepository.save(MakeupPackage.builder()
+              .company(company)
+              .packageType(normalizeMakeupPackageType(pkg.get("packageType")))
+              .discountRate(toBigDecimal(pkg.get("discountRate")))
+              .build());
+        }
+      }
+    }
+
+    log.info("Inserted {} makeup details, {} makeup packages.",
+        makeupDetailRepository.count(), makeupPackageRepository.count());
+  }
+
+
   private void insertMakeupDiscountPackages() throws Exception {
     List<Map<String, Object>> list = readJsonArray("data/makeup.json");
 
@@ -651,5 +863,20 @@ public class DataInitializer implements ApplicationRunner {
       return BigDecimal.ZERO;
     }
     return new BigDecimal(value.toString());
+  }
+
+  // JSON 숫자 → BigDecimal 변환 (null 허용 - 메이크업 가격 등)
+  private BigDecimal toBigDecimalNullable(Object value) {
+    if (value == null) {
+      return null;
+    }
+    return new BigDecimal(value.toString());
+  }
+
+  // JSON 숫자 → Double 변환 (위도/경도)
+  private Double toDouble(Object value) {
+    if (value == null) return null;
+    if (value instanceof Number number) return number.doubleValue();
+    return Double.parseDouble(value.toString());
   }
 }
