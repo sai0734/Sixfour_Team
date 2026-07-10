@@ -1,16 +1,16 @@
+import MyPageLayout from "../../layouts/MyPageLayout";
 import ModifyComponent from "../../components/auth/ModifyComponent";
-import BasicLayout from "../../layouts/BasicLayout";
 
-const ModfyPage = () => {
+const ModifyPage = () => {
   return (
-    <BasicLayout>
-      <div className=" text-3xl">Auth Modify Page</div>
-
-      <div className="bg-white w-full mt-4 p-2">
-        <ModifyComponent></ModifyComponent>
-      </div>
-    </BasicLayout>
+    <MyPageLayout
+      eyebrow="ACCOUNT"
+      title="회원정보 수정"
+      subtitle="닉네임과 비밀번호를 관리해요"
+    >
+      <ModifyComponent />
+    </MyPageLayout>
   );
 };
 
-export default ModfyPage;
+export default ModifyPage;
