@@ -1,5 +1,11 @@
 import { BOARD_TYPE_LABELS } from "./BoardFormModal";
 
+// MemberManageComponent.jsx의 formatDate와 동일한 컨벤션
+const formatDate = (value) => {
+  if (!value) return "";
+  return String(value).slice(0, 16).replace("T", " ");
+};
+
 const PostCard = ({ post, onClick, showTypeBadge = false }) => {
   return (
     <div
@@ -27,7 +33,11 @@ const PostCard = ({ post, onClick, showTypeBadge = false }) => {
       <p className="text-sm font-medium text-ink mb-2">{post.title}</p>
 
       <div className="flex items-center justify-between text-xs text-ink-faint">
-        <span>{post.nickname || post.memberEmail}</span>
+        <div className="flex items-center gap-2">
+          <span>{post.nickname || post.memberEmail}</span>
+          <span>·</span>
+          <span>{formatDate(post.regDate)}</span>
+        </div>
         <div className="flex items-center gap-3">
           <span>♡ {post.likeCount}</span>
           <span>💬 {post.commentCount}</span>

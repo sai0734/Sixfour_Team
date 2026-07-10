@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import MyPageLayout from "../../layouts/MyPageLayout";
 import PlanComponent from "../../components/weddingplan/PlanComponent";
@@ -18,16 +17,28 @@ const TABS = [
 ];
 
 const HubPage = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  // 예: /mypage?tab=account 로 들어오면 "계정 설정" 탭이 바로 열림
-  // (탭 목록에 없는 값이 오면 무시하고 기본값인 "plan"으로)
+  // 탭 상태를 리액트 state가 아니라 URL(?tab=)에 직접 둠.
+  // 그래야 결제내역 -> 상품 상세로 이동했다가 "뒤로가기" 눌렀을 때
+  // 브라우저 히스토리에 남은 이 URL을 그대로 읽어서 있던 탭으로 복원됨.
   const requestedTab = searchParams.get("tab");
-  const initialTab = TABS.some((tab) => tab.key === requestedTab)
+  const activeTab = TABS.some((tab) => tab.key === requestedTab)
     ? requestedTab
     : "plan";
 
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const handleTabClick = (key) => {
+    // replace: 탭 클릭마다 히스토리를 쌓지 않음 (그래야 뒤로가기 한 번에
+    // 마이페이지 밖으로 바로 나가지, 탭 전환 기록을 하나씩 되짚지 않음)
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set("tab", key);
+        return next;
+      },
+      { replace: true },
+    );
+  };
 
   return (
     <MyPageLayout
@@ -52,7 +63,7 @@ const HubPage = () => {
           return (
             <span
               key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => handleTabClick(tab.key)}
               className={`pb-3 border-b cursor-pointer ${
                 activeTab === tab.key
                   ? "text-brand border-brand"
