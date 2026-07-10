@@ -7,6 +7,8 @@ public enum MakeupPackageType {
   MAKEUP,
   NAIL,
   HAIR_MAKEUP,
+  HAIR_NAIL,
+  MAKEUP_NAIL,
   FULL;
 
   /**
@@ -22,6 +24,8 @@ public enum MakeupPackageType {
       case "HAIR_ONLY", "HAIR" -> HAIR;
       case "MAKEUP_ONLY", "MAKEUP" -> MAKEUP;
       case "NAIL" -> NAIL;
+      case "HAIR_NAIL" -> HAIR_NAIL;
+      case "MAKEUP_NAIL" -> MAKEUP_NAIL;
       default -> MakeupPackageType.valueOf(value);
     };
   }
