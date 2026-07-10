@@ -15,6 +15,7 @@ import com.wedding.member.domain.Member;
 import com.wedding.member.dto.MemberDTO;
 import com.wedding.global.util.JWTUtil;
 import com.wedding.global.util.RedisTokenService;
+import com.wedding.member.repository.MemberDetailRepository;
 import com.wedding.member.repository.MemberRepository;
 
 import jakarta.servlet.FilterChain;
@@ -30,6 +31,7 @@ public class JWTCheckFilter extends OncePerRequestFilter{
 
     private final RedisTokenService redisTokenService;
     private final MemberRepository memberRepository;
+    private final MemberDetailRepository memberDetailRepository;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException{
@@ -155,6 +157,20 @@ public class JWTCheckFilter extends OncePerRequestFilter{
                     sendBlockedResponse(response, status);
                     return;
                 }
+
+                // 소셜(카카오) 최초가입 후 추가정보(이름/전화/주소/약관동의)를 아직 안 넣은 상태면,
+                // 그 추가정보를 제출하는 API 자체는 당연히 허용하고 그 외 모든 API는 차단
+                String path = request.getRequestURI();
+                boolean isSocialCompleteRequest = "/api/member/social-complete".equals(path);
+
+                if (memberOpt.get().isSocial() && !isSocialCompleteRequest) {
+                    boolean hasProfile = memberDetailRepository.getByMemberEmail(email).isPresent();
+
+                    if (!hasProfile) {
+                        sendIncompleteProfileResponse(response);
+                        return;
+                    }
+                }
             }
 
             MemberDTO memberDTO = new MemberDTO(email, pw, nickname, social.booleanValue(), roleNames);
@@ -200,6 +216,20 @@ public class JWTCheckFilter extends OncePerRequestFilter{
 
         Gson gson = new Gson();
         String msg = gson.toJson(Map.of("error", errorCode));
+
+        response.setContentType("application/json");
+        PrintWriter printWriter = response.getWriter();
+        printWriter.println(msg);
+        printWriter.close();
+    }
+
+    // 소셜 최초가입인데 추가정보(SocialCompletePage) 입력을 안 끝낸 상태로 다른 API를 호출할 때 쓰는 응답
+    private void sendIncompleteProfileResponse(HttpServletResponse response) throws IOException {
+
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+
+        Gson gson = new Gson();
+        String msg = gson.toJson(Map.of("error", "ERROR_PROFILE_INCOMPLETE"));
 
         response.setContentType("application/json");
         PrintWriter printWriter = response.getWriter();
