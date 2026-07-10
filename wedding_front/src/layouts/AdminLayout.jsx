@@ -14,9 +14,9 @@ const AdminLayout = ({ children }) => {
       <>
         <BasicMenu />
         <div className="bg-white min-h-screen">
-          <div className="max-w-[1200px] mx-auto px-3 sm:px-6 pt-16 sm:pt-20 flex">
+          <div className="max-w-[1600px] mx-auto px-3 sm:px-6 pt-16 sm:pt-20 flex">
             {isAdmin && <AdminSidebar />}
-            <main className="flex-1 py-4 sm:py-8 min-w-0 overflow-hidden">{children}</main>
+            <main className="flex-1 py-4 sm:py-8 min-w-0 overflow-x-hidden">{children}</main>
           </div>
         </div>
       </>
