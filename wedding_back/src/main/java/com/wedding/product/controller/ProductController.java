@@ -121,10 +121,7 @@ public class ProductController {
 
         log.info("ProductController_remove 실행~~~~~~~~");
 
-        List<String> oldFileNames = productService.getProductOne(pno).getUploadFileNames();
-
         productService.productRemove(pno);
-        customFileUtil.deleteFiles(oldFileNames);
 
         return Map.of("RESULT", "SUCCESS");
 

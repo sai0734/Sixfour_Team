@@ -22,6 +22,8 @@ import useCustomLogin from "../../hooks/useCustomLogin";
 
 const host = API_SERVER_HOST;
 
+const PRODUCT_LIST_PAGE_SIZE = 12;
+
 const initState = {
   dtoList: [],
   pageNumList: [],
@@ -37,9 +39,11 @@ const initState = {
 
 const ListComponent = () => {
   const { exceptionHandle, loginState } = useCustomLogin();
-  const { page, size, refresh, moveToRead, moveToList } = useCustomMove();
+  const { page, refresh, moveToRead, moveToList } = useCustomMove();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+
+  const pageSize = Number(searchParams.get("size")) || PRODUCT_LIST_PAGE_SIZE;
 
   const [serverData, setServerData] = useState(initState);
   const [categoryList, setCategoryList] = useState([]);
@@ -58,16 +62,22 @@ const ListComponent = () => {
   }, []);
 
   useEffect(() => {
-    if (!searchParams.get("page")) {
+    const currentPage = searchParams.get("page");
+    const currentSize = Number(searchParams.get("size"));
+
+    if (!currentPage || currentSize !== PRODUCT_LIST_PAGE_SIZE) {
       navigate(
         {
           pathname: "/product/list",
-          search: createSearchParams({ page: 1, size }).toString(),
+          search: createSearchParams({
+            page: currentPage || 1,
+            size: PRODUCT_LIST_PAGE_SIZE,
+          }).toString(),
         },
         { replace: true },
       );
     }
-  }, [navigate, searchParams, size]);
+  }, [navigate, searchParams]);
 
   useEffect(() => {
     setFetching(true);
@@ -81,7 +91,7 @@ const ListComponent = () => {
 
     getList({
       page,
-      size,
+      size: pageSize,
       categories: selectedCategories,
       keyword,
       minPrice: priceBand?.minPrice,
@@ -96,7 +106,7 @@ const ListComponent = () => {
       .catch((err) => exceptionHandle(err));
   }, [
     page,
-    size,
+    pageSize,
     selectedCategories,
     keyword,
     selectedPriceBand,
@@ -128,7 +138,10 @@ const ListComponent = () => {
 
   const resetPageForFilter = () => {
     if (page === 1) return;
-    moveToList({ page: 1, size }, { replace: true, preventScrollReset: true });
+    moveToList(
+      { page: 1, size: pageSize },
+      { replace: true, preventScrollReset: true },
+    );
   };
 
   const handleResetToDefaultList = () => {
@@ -310,7 +323,7 @@ const ListComponent = () => {
                 movePage={(pageParam) =>
                   moveToList({
                     page: pageParam.page,
-                    size: pageParam.size ?? size,
+                    size: pageParam.size ?? pageSize,
                   })
                 }
               />

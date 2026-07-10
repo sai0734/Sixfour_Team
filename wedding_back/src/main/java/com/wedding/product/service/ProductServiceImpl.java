@@ -208,6 +208,7 @@ public class ProductServiceImpl implements ProductService {
         product.changeDesc(productDTO.getPdesc());
         product.changeCategory(productDTO.getCategory());
         product.changeStockQty(productDTO.getStockQty());
+        product.changeDel(productDTO.isDelFlag());
 
         Product productResult = productRepository.save(product);
 

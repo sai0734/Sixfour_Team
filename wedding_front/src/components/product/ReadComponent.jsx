@@ -26,6 +26,8 @@ const initState = {
 
 const host = API_SERVER_HOST;
 
+const PRODUCT_LIST_PAGE_SIZE = 12;
+
 const SECTIONS = [
   { key: "desc", label: "상세정보" },
   { key: "review", label: "리뷰" },
@@ -61,7 +63,7 @@ const ReadComponent = ({ pno }) => {
     return () => observer.disconnect();
   }, []);
 
-  const { moveToList, moveToModify } = useCustomMove();
+  const { page, moveToList, moveToModify } = useCustomMove();
   const { changeCart } = useCustomCart();
   const { loginState } = useCustomLogin();
   const navigate = useNavigate();
@@ -168,6 +170,10 @@ const ReadComponent = ({ pno }) => {
         el.getBoundingClientRect().top + window.scrollY - (headerHeight + 50);
       window.scrollTo({ top, behavior: "smooth" });
     }
+  };
+
+  const handleClickGoList = () => {
+    moveToList({ page, size: PRODUCT_LIST_PAGE_SIZE });
   };
 
   return (
@@ -325,9 +331,6 @@ const ReadComponent = ({ pno }) => {
           ref={(el) => (sectionRefs.current.review = el)}
           className="py-8 md:py-10 border-b border-line"
         >
-          <p className="text-sm font-medium mb-4">
-            리뷰 ({product.reviewCount || 0})
-          </p>
           <ReviewSectionComponent
             pno={pno}
             host={host}
@@ -342,7 +345,6 @@ const ReadComponent = ({ pno }) => {
           ref={(el) => (sectionRefs.current.qna = el)}
           className="py-8 md:py-10 border-b border-line"
         >
-          <p className="text-sm font-medium mb-4">Q&A</p>
           <QnaSectionComponent
             pno={pno}
             isLoggedIn={!!loginState.email}
@@ -369,7 +371,7 @@ const ReadComponent = ({ pno }) => {
 
       <div className="max-w-[1320px] mx-auto px-6 pb-16 flex justify-end">
         <button
-          onClick={moveToList}
+          onClick={handleClickGoList}
           className="h-11 px-6 rounded-full border border-line-soft text-sm"
         >
           목록으로

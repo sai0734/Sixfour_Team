@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { postAdd, getCategories } from "../../api/productApi";
+import { postAdd, getCategories, postOption } from "../../api/productApi";
 import FetchingModal from "../common/FetchingModal";
 import useCustomMove from "../../hooks/useCustomMove";
 
@@ -11,14 +11,19 @@ const initState = {
   pdesc: "",
 };
 
+const emptyNewOption = { optionName: "", optionValue: "", extraPrice: "" };
+
 const AddComponent = () => {
   const [product, setProduct] = useState({ ...initState });
   const [categoryList, setCategoryList] = useState([]);
   const [previews, setPreviews] = useState([]);
   const uploadRef = useRef();
 
+  const [pendingOptions, setPendingOptions] = useState([]);
+  const [newOption, setNewOption] = useState({ ...emptyNewOption });
+
   const [fetching, setFetching] = useState(false);
-  const { moveToModify, moveToList } = useCustomMove();
+  const { moveToList } = useCustomMove();
 
   useEffect(() => {
     getCategories().then((data) => setCategoryList(data));
@@ -28,13 +33,41 @@ const AddComponent = () => {
     setProduct({ ...product, [e.target.name]: e.target.value });
   };
 
-  // 선택한 이미지 파일들을 즉시 미리보기로 보여줌
   const handleChangeFiles = (e) => {
     const files = Array.from(e.target.files);
     setPreviews(files.map((file) => URL.createObjectURL(file)));
   };
 
-  const handleClickAdd = () => {
+  const handleChangeExtraPrice = (value) => {
+    setNewOption({
+      ...newOption,
+      extraPrice: value.replace(/[^0-9]/g, ""),
+    });
+  };
+
+  const handleAddPendingOption = () => {
+    if (!newOption.optionName.trim() || !newOption.optionValue.trim()) {
+      alert("옵션명과 옵션값을 입력해주세요.");
+      return;
+    }
+
+    setPendingOptions((prev) => [
+      ...prev,
+      {
+        tempId: Date.now(),
+        optionName: newOption.optionName.trim(),
+        optionValue: newOption.optionValue.trim(),
+        extraPrice: newOption.extraPrice,
+      },
+    ]);
+    setNewOption({ ...emptyNewOption });
+  };
+
+  const handleRemovePendingOption = (tempId) => {
+    setPendingOptions((prev) => prev.filter((opt) => opt.tempId !== tempId));
+  };
+
+  const handleClickAdd = async () => {
     if (!product.pname.trim()) {
       alert("상품명을 입력해주세요.");
       return;
@@ -59,21 +92,34 @@ const AddComponent = () => {
 
     setFetching(true);
 
-    postAdd(formData)
-      .then((data) => {
-        setFetching(false);
-        alert(
-          "상품이 등록되었습니다. 이어서 옵션을 추가하려면 수정 페이지로 이동합니다.",
+    try {
+      const data = await postAdd(formData);
+      const pno = data.result;
+
+      if (pendingOptions.length > 0) {
+        await Promise.all(
+          pendingOptions.map((opt) =>
+            postOption(pno, {
+              optionName: opt.optionName,
+              optionValue: opt.optionValue,
+              extraPrice: Number(opt.extraPrice) || 0,
+            }),
+          ),
         );
-        // 옵션은 pno가 있어야 등록 가능해서(백엔드 /{pno}/options 구조),
-        // 등록 직후 바로 수정페이지로 보내서 옵션까지 이어서 넣을 수 있게 함
-        moveToModify(data.result);
-      })
-      .catch((err) => {
-        setFetching(false);
-        alert("상품 등록에 실패했습니다.");
-        console.error(err);
-      });
+      }
+
+      alert(
+        pendingOptions.length > 0
+          ? "상품과 옵션이 등록되었습니다."
+          : "상품이 등록되었습니다.",
+      );
+      moveToList({ page: 1 });
+    } catch (err) {
+      alert("상품 등록에 실패했습니다.");
+      console.error(err);
+    } finally {
+      setFetching(false);
+    }
   };
 
   return (
@@ -86,7 +132,6 @@ const AddComponent = () => {
         </span>
         <p className="font-['Gowun_Batang'] text-2xl mb-8">상품 등록</p>
 
-        {/* 기본 정보 카드 */}
         <div className="bg-white rounded-2xl p-6 shadow-[0_8px_24px_-12px_rgba(58,54,47,0.15)] mb-6">
           <p className="text-sm font-medium mb-4">기본 정보</p>
 
@@ -171,7 +216,6 @@ const AddComponent = () => {
           </div>
         </div>
 
-        {/* 이미지 카드 */}
         <div className="bg-white rounded-2xl p-6 shadow-[0_8px_24px_-12px_rgba(58,54,47,0.15)] mb-6">
           <p className="text-sm font-medium mb-4">상품 이미지</p>
           <input
@@ -201,10 +245,72 @@ const AddComponent = () => {
           )}
         </div>
 
-        {/* 옵션 안내 */}
-        <div className="bg-lavender-light/40 rounded-2xl p-4 mb-6 text-xs text-lavender-dark">
-          💡 포장/색상 같은 옵션은 상품을 먼저 등록한 뒤, 이어지는 수정
-          페이지에서 추가할 수 있어요.
+        <div className="bg-white rounded-2xl p-6 shadow-[0_8px_24px_-12px_rgba(58,54,47,0.15)] mb-6">
+          <p className="text-sm font-medium mb-4">옵션 관리</p>
+
+          {pendingOptions.length > 0 && (
+            <div className="flex flex-col gap-2 mb-4">
+              {pendingOptions.map((opt) => (
+                <div
+                  key={opt.tempId}
+                  className="flex flex-wrap gap-3 items-center justify-between border border-line rounded-lg p-3 text-sm"
+                >
+                  <div className="flex gap-3">
+                    <span className="text-ink-soft">{opt.optionName}</span>
+                    <span>{opt.optionValue}</span>
+                    {Number(opt.extraPrice) > 0 && (
+                      <span className="text-brand-deep">
+                        +{Number(opt.extraPrice).toLocaleString()}원
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRemovePendingOption(opt.tempId)}
+                    className="text-xs text-ink-faint underline"
+                  >
+                    삭제
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="flex flex-wrap gap-2 items-center bg-cream/60 border border-dashed border-line rounded-lg p-3">
+            <input
+              type="text"
+              value={newOption.optionName}
+              onChange={(e) =>
+                setNewOption({ ...newOption, optionName: e.target.value })
+              }
+              placeholder="옵션명 (예: 포장)"
+              className="h-9 px-2.5 border border-line-soft rounded-md text-xs w-28"
+            />
+            <input
+              type="text"
+              value={newOption.optionValue}
+              onChange={(e) =>
+                setNewOption({ ...newOption, optionValue: e.target.value })
+              }
+              placeholder="옵션값 (예: 고급포장)"
+              className="h-9 px-2.5 border border-line-soft rounded-md text-xs flex-1 min-w-[120px]"
+            />
+            <input
+              type="text"
+              inputMode="numeric"
+              value={newOption.extraPrice}
+              onChange={(e) => handleChangeExtraPrice(e.target.value)}
+              placeholder="추가금액"
+              className="h-9 px-2.5 border border-line-soft rounded-md text-xs w-24"
+            />
+            <button
+              type="button"
+              onClick={handleAddPendingOption}
+              className="h-9 px-4 rounded-full bg-lavender-dark text-white text-xs"
+            >
+              가격 추가
+            </button>
+          </div>
         </div>
 
         <div className="flex justify-end gap-2">
