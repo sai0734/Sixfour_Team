@@ -143,9 +143,11 @@ export const getDummyList = async (pageParam = {}) => {
   list = sortCompanies(list, sort);
 
   const totalCount = list.length;
-  const start = (page - 1) * size;
-  const dtoList = list.slice(start, start + size);
   const totalPage = Math.max(1, Math.ceil(totalCount / size));
+  // 필터 변경으로 page가 유효 범위를 초과하면 마지막 페이지로 클램핑
+  const safePage = Math.min(Math.max(1, page), totalPage);
+  const start = (safePage - 1) * size;
+  const dtoList = list.slice(start, start + size);
   const pageNumList = Array.from({ length: totalPage }, (_, index) => index + 1);
 
   return {

@@ -367,20 +367,31 @@ const MemberManageComponent = () => {
               className="mb-3 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-400"
             />
 
-            <label className="mb-1 block text-xs font-medium text-slate-600">
-              정지 기간(일)
+            <label className="mb-1.5 block text-xs font-medium text-slate-600">
+              정지 기간
             </label>
-            <input
-              type="number"
-              min="0"
-              value={suspendDays}
-              onChange={(e) => setSuspendDays(e.target.value)}
-              placeholder="비워두면 영구 정지"
-              className="mb-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-400"
-            />
-            <p className="mb-4 text-xs text-slate-400">
-              비워두거나 0을 입력하면 영구 정지로 처리돼요.
-            </p>
+            <div className="mb-4 flex flex-wrap gap-1.5">
+              {[
+                { label: "1일", value: "1" },
+                { label: "7일", value: "7" },
+                { label: "30일", value: "30" },
+                { label: "365일", value: "365" },
+                { label: "영구", value: "" },
+              ].map((preset) => (
+                <button
+                  key={preset.label}
+                  type="button"
+                  onClick={() => setSuspendDays(preset.value)}
+                  className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition ${
+                    suspendDays === preset.value
+                      ? "bg-red-600 text-white"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
 
             <div className="flex justify-end gap-2">
               <button
