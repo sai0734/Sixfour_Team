@@ -128,11 +128,44 @@ const ProductPaymentTab = () => {
               })}
             </div>
 
-            <div className="flex items-center justify-end pt-3 border-t border-line-soft">
-              <span className="text-sm font-medium text-ink">
-                총 {order.totalPrice?.toLocaleString()}원
-              </span>
-            </div>
+            {(() => {
+              // 배송비는 서버 값(shippingFee/totalPrice)을 안 믿고, 상품 금액
+              // 합계를 기준으로 여기서 직접 계산해서 보여줌 (3만원 미만이면 3천원)
+              const itemsSubtotal =
+                order.items?.reduce(
+                  (sum, item) => sum + item.price * item.qty,
+                  0,
+                ) || 0;
+              const shippingFee = itemsSubtotal < 30000 ? 3000 : 0;
+              const finalTotal = itemsSubtotal + shippingFee;
+
+              return (
+                <div className="flex flex-col gap-1 pt-3 border-t border-line-soft">
+                  <div className="flex items-center justify-between text-xs text-ink-faint">
+                    <span>상품 금액</span>
+                    <span>{itemsSubtotal.toLocaleString()}원</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-ink-faint">
+                    <span>배송비</span>
+                    <span>
+                      {shippingFee > 0
+                        ? `${shippingFee.toLocaleString()}원`
+                        : "무료배송"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-xs text-ink-faint">
+                      {shippingFee > 0
+                        ? "3만원 미만 주문은 배송비가 붙어요"
+                        : "3만원 이상 주문은 무료배송이에요"}
+                    </span>
+                    <span className="text-sm font-medium text-ink">
+                      총 {finalTotal.toLocaleString()}원
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         );
       })}

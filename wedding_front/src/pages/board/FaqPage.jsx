@@ -4,7 +4,6 @@ import BoardTopTabs from "../../components/board/BoardTopTabs";
 import BoardFilterSidebar from "../../components/board/BoardFilterSidebar";
 import FaqItem from "../../components/faq/FaqItem";
 import TapeLabel from "../../components/common/TapeLabel";
-import CommunityHeaderArt from "../../components/common/CommunityHeaderArt";
 import { getList } from "../../api/faqApi";
 
 // 실제 카테고리 값이 아니라, "좋아요(도움됐어요) 많은 순 10개"를 보여주는 특수 탭.
@@ -67,25 +66,32 @@ const FaqPage = () => {
     <>
       <BasicMenu />
 
-      <div className="bg-cream min-h-screen">
-        <section className="text-center pt-28 pb-6 bg-brand-light">
-          <CommunityHeaderArt className="w-28 h-20 mx-auto mb-1" />
-          <TapeLabel tone="white" className="mb-3">
-            FREQUENTLY ASKED QUESTIONS
-          </TapeLabel>
-          <p className="font-serif text-3xl text-brand-deep mb-2">
-            자주 묻는 질문
-          </p>
-          <p className="text-sm text-brand-accent">
-            궁금한 점을 먼저 확인해보세요
-          </p>
+      <div className="min-h-screen bg-[#FBF7F0]">
+        <section
+          className="relative bg-cover bg-center px-5 pt-24 pb-8 text-center md:px-8 md:pt-28 md:pb-10 lg:px-[60px]"
+          // TODO: FAQ 전용 사진 준비되면 /faq-hero.jpg 같은 걸로 교체
+          style={{ backgroundImage: "url('/prep-hero.jpg')" }}
+        >
+          <div className="absolute inset-0 bg-black/45" />
+
+          <div className="relative z-10">
+            <TapeLabel tone="white" className="mb-3">
+              FREQUENTLY ASKED QUESTIONS
+            </TapeLabel>
+            <p className="mb-2 font-['Gowun_Batang'] text-2xl text-white md:text-3xl">
+              자주 묻는 질문
+            </p>
+            <p className="text-sm text-white/85">
+              궁금한 점을 먼저 확인해보세요
+            </p>
+          </div>
         </section>
 
-        <div className="max-w-[1140px] mx-auto px-6 pt-6">
+        <div className="mx-auto max-w-[1140px] px-5 pt-6 md:px-8 lg:px-6">
           <BoardTopTabs active="FAQ" />
         </div>
 
-        <div className="max-w-[1140px] mx-auto px-6 flex">
+        <div className="mx-auto grid max-w-[1140px] grid-cols-1 items-start gap-6 px-5 py-6 md:px-8 lg:grid-cols-[240px_1fr] lg:gap-8 lg:px-6 lg:py-8">
           <BoardFilterSidebar
             groups={[
               {
@@ -98,7 +104,7 @@ const FaqPage = () => {
             ]}
           />
 
-          <main className="flex-1 py-8 min-w-0 pb-20">
+          <main className="min-w-0 pb-20">
             <p className="text-sm text-ink-muted mb-1">
               {categoryFilter} · {faqs.length}건
             </p>

@@ -90,7 +90,7 @@ const HallPaymentTab = () => {
 
   return (
     <div>
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 gap-4 mb-6 sm:grid-cols-2">
         <div className="bg-white rounded-2xl border border-line p-5">
           <p className="text-xs text-ink-muted mb-1">총 납부 예정액</p>
           <p className="text-xl font-medium text-ink">

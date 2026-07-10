@@ -18,10 +18,17 @@ const MyPageSidebar = () => {
   const location = useLocation();
 
   return (
-    <aside className="w-56 shrink-0 py-8 pr-6">
+    <aside className="w-full py-4 lg:w-60 lg:shrink-0 lg:py-8 lg:pr-6">
       {MENU_GROUPS.map((group) => (
-        <div key={group.label} className="mb-7">
-          <p className="text-[11px] text-ink-faint tracking-wide mb-2 px-3">
+        <div
+          key={group.label}
+          className="rounded-2xl bg-white p-4"
+          style={{ boxShadow: "0 8px 24px -14px rgba(58,54,47,0.25)" }}
+        >
+          <p
+            className="mb-3 px-3 text-xs font-bold tracking-wide"
+            style={{ color: "#C06080" }}
+          >
             {group.label}
           </p>
           <nav className="flex flex-col gap-1">
@@ -32,11 +39,23 @@ const MyPageSidebar = () => {
                 <Link
                   key={item.name}
                   to={item.path}
-                  className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                  className="flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium transition-colors"
+                  style={
                     isActive
-                      ? "bg-brand-light text-brand-accent font-medium"
-                      : "text-ink-soft hover:bg-cream"
-                  }`}
+                      ? {
+                          background: "#C06080",
+                          color: "#FFFFFF",
+                          boxShadow: "0 4px 12px -4px rgba(192,96,128,0.6)",
+                        }
+                      : { color: "#4A3F38" }
+                  }
+                  onMouseEnter={(e) => {
+                    if (!isActive) e.currentTarget.style.background = "#FFE2E2";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive)
+                      e.currentTarget.style.background = "transparent";
+                  }}
                 >
                   {item.name}
                 </Link>

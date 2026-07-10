@@ -132,7 +132,7 @@ const PlanComponent = () => {
 
       {showForm ? (
         <>
-          <div className="grid grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             {fields.map((f) => (
               <label
                 key={f.name}
@@ -178,7 +178,7 @@ const PlanComponent = () => {
         </>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-y-5 gap-x-8">
+          <div className="grid grid-cols-1 gap-y-5 gap-x-8 sm:grid-cols-2">
             {fields.map((f) => (
               <div key={f.name}>
                 <p className="text-xs text-ink-muted mb-1">{f.label}</p>

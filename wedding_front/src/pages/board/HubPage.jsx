@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import BasicMenu from "../../components/menus/BasicMenu";
 import BoardTopTabs from "../../components/board/BoardTopTabs";
+import TapeLabel from "../../components/common/TapeLabel";
 import PostCard from "../../components/board/PostCard";
 import BoardFormModal, {
   BOARD_TYPE_LABELS,
@@ -193,26 +194,35 @@ const HubPage = () => {
       <BasicMenu />
 
       <div className="bg-cream min-h-screen">
-        <section className="text-center pt-14 pb-7 bg-brand-light">
-          <p className="text-xs tracking-[0.15em] text-brand-accent mb-2.5">
-            WEDDING COMMUNITY
-          </p>
-          <p className="font-serif text-3xl text-brand-deep mb-2">
-            웨딩 커뮤니티
-          </p>
-          <p className="text-sm text-brand-accent">
-            예비 부부들의 생생한 후기와 정보를 나눠요
-          </p>
+        <section
+          className="relative bg-cover bg-center px-5 pt-24 pb-8 text-center md:px-8 md:pt-28 md:pb-10 lg:px-[60px]"
+          // TODO: 커뮤니티 허브 전용 사진 준비되면 /community-hub-hero.jpg 같은 걸로 교체
+          // (지금은 준비관리에 넣은 사진을 그대로 임시로 재사용)
+          style={{ backgroundImage: "url('/prep-hero.jpg')" }}
+        >
+          <div className="absolute inset-0 bg-black/45" />
+
+          <div className="relative z-10">
+            <TapeLabel tone="white" className="mb-3">
+              WEDDING COMMUNITY
+            </TapeLabel>
+            <p className="mb-2 font-['Gowun_Batang'] text-2xl text-white md:text-3xl">
+              웨딩 커뮤니티
+            </p>
+            <p className="text-sm text-white/85">
+              예비 부부들의 생생한 후기와 정보를 나눠요
+            </p>
+          </div>
         </section>
 
-        <div className="max-w-[1140px] mx-auto px-6 pt-6">
-          <div className="flex items-center justify-between">
+        <div className="mx-auto max-w-[1140px] px-5 pt-6 md:px-8 lg:px-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <BoardTopTabs active="ALL" />
 
             <button
               type="button"
               onClick={() => setModalOpen(true)}
-              className="h-10 px-5 rounded-full bg-brand text-white text-sm font-medium hover:bg-brand-dark mb-3 shrink-0"
+              className="h-10 px-5 rounded-full bg-brand text-white text-sm font-medium hover:bg-brand-dark mb-3 shrink-0 self-start sm:self-auto"
             >
               + 글쓰기
             </button>
@@ -225,7 +235,7 @@ const HubPage = () => {
                 <p className="text-sm font-medium text-ink mb-3">
                   🔥 베스트 게시글
                 </p>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                   {bestPosts.map((post, idx) => (
                     <div
                       key={post.boardId}

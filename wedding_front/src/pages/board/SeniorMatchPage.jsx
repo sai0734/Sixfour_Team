@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import BasicMenu from "../../components/menus/BasicMenu";
 import BoardTopTabs from "../../components/board/BoardTopTabs";
 import BoardFilterSidebar from "../../components/board/BoardFilterSidebar";
+import TapeLabel from "../../components/common/TapeLabel";
 import CoupleProfileFormModal, {
   REGION_OPTIONS,
   STYLE_OPTIONS,
@@ -141,24 +142,32 @@ const SeniorMatchPage = () => {
     <>
       <BasicMenu />
 
-      <div className="bg-cream min-h-screen">
-        <section className="text-center pt-12 pb-6 bg-brand-light">
-          <p className="text-xs tracking-[0.15em] text-brand-accent mb-2.5">
-            SENIOR COUPLE MATCHING
-          </p>
-          <p className="font-serif text-3xl text-brand-deep mb-2">
-            선배 부부 매칭
-          </p>
-          <p className="text-sm text-brand-accent">
-            비슷한 조건의 선배 부부에게 노하우를 물어보세요
-          </p>
+      <div className="min-h-screen bg-[#FBF7F0]">
+        <section
+          className="relative bg-cover bg-center px-5 pt-24 pb-8 text-center md:px-8 md:pt-28 md:pb-10 lg:px-[60px]"
+          // TODO: 선배부부매칭 전용 사진 준비되면 /senior-match-hero.jpg 같은 걸로 교체
+          style={{ backgroundImage: "url('/prep-hero.jpg')" }}
+        >
+          <div className="absolute inset-0 bg-black/45" />
+
+          <div className="relative z-10">
+            <TapeLabel tone="white" className="mb-3">
+              SENIOR COUPLE MATCHING
+            </TapeLabel>
+            <p className="mb-2 font-['Gowun_Batang'] text-2xl text-white md:text-3xl">
+              선배 부부 매칭
+            </p>
+            <p className="text-sm text-white/85">
+              비슷한 조건의 선배 부부에게 노하우를 물어보세요
+            </p>
+          </div>
         </section>
 
-        <div className="max-w-[1140px] mx-auto px-6 pt-6">
+        <div className="mx-auto max-w-[1140px] px-5 pt-6 md:px-8 lg:px-6">
           <BoardTopTabs active="SENIOR" />
         </div>
 
-        <div className="max-w-[1140px] mx-auto px-6 flex">
+        <div className="mx-auto grid max-w-[1140px] grid-cols-1 items-start gap-6 px-5 py-6 md:px-8 lg:grid-cols-[240px_1fr] lg:gap-8 lg:px-6 lg:py-8">
           <BoardFilterSidebar
             groups={[
               {
@@ -191,8 +200,8 @@ const SeniorMatchPage = () => {
             ]}
           />
 
-          <main className="flex-1 py-8 min-w-0 pb-20">
-            <div className="flex items-center justify-between mb-2">
+          <main className="min-w-0 pb-20">
+            <div className="flex flex-col gap-3 mb-2 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-ink-muted">
                 비슷한 조건의 선배 부부 {visibleProfiles.length}명을 찾았어요
               </p>
@@ -226,14 +235,14 @@ const SeniorMatchPage = () => {
             </div>
 
             {profileLoaded && !myProfile && (
-              <div className="bg-brand-light rounded-2xl p-4 mb-6 flex items-center justify-between">
+              <div className="bg-brand-light rounded-2xl p-4 mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-xs text-brand-accent">
                   내 프로필을 등록하면 매칭도를 확인할 수 있어요.
                 </p>
                 <button
                   type="button"
                   onClick={() => setFormMode("add")}
-                  className="h-8 px-4 rounded-full bg-brand text-white text-xs font-medium hover:bg-brand-dark shrink-0 ml-4"
+                  className="h-8 px-4 rounded-full bg-brand text-white text-xs font-medium hover:bg-brand-dark shrink-0 self-start sm:ml-4 sm:self-auto"
                 >
                   프로필 등록하기
                 </button>
@@ -258,7 +267,7 @@ const SeniorMatchPage = () => {
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {visibleProfiles.map((p) => {
                 const initials = p.memberEmail?.[0]?.toUpperCase() || "?";
 
