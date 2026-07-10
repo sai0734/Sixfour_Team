@@ -15,6 +15,7 @@ import ProductFilterSidebarComponent, {
 } from "./ProductFilterSidebarComponent";
 import ProductSortToolbarComponent from "./ProductSortToolbarComponent";
 import ProductGridComponent from "./ProductGridComponent";
+import PopularPicksStripComponent from "./PopularPicksStripComponent";
 import { API_SERVER_HOST } from "../../api/reservationApi";
 import useCustomLogin from "../../hooks/useCustomLogin";
 
@@ -49,6 +50,7 @@ const ListComponent = () => {
   const [sortType, setSortType] = useState("popular");
   const [fetching, setFetching] = useState(false);
   const [wishedSet, setWishedSet] = useState(new Set());
+  const [showMobileFilter, setShowMobileFilter] = useState(false);
 
   useEffect(() => {
     getCategories().then((data) => setCategoryList(data));
@@ -192,35 +194,73 @@ const ListComponent = () => {
     });
   };
 
+  const activeFilterCount =
+    selectedCategories.length +
+    (selectedPriceBand !== null ? 1 : 0) +
+    (selectedRatingOption !== null ? 1 : 0);
+
   return (
-    <div className="min-h-screen bg-[#FBF7F0] text-[#3A362F]">
+    <div className="-mx-5 -mb-10 min-h-[calc(100vh-6rem)] bg-cream px-5 text-ink">
       {fetching ? <FetchingModal /> : null}
 
-      <section className="bg-gradient-to-b from-[#EFE6D8] to-[#FBF7F0] px-5 py-10 text-center md:px-8 md:py-12 lg:px-[60px]">
+      <section className="-mx-5 -mt-12 bg-gradient-to-b from-brand-light to-cream px-5 pb-8 pt-12 text-center md:pb-12">
         <div className="mx-auto max-w-[720px]">
-          <span className="mb-4 inline-block -rotate-2 bg-[#E4C9B8] px-3.5 py-1 font-['Gaegu'] text-[13px] text-[#6B4A3A]">
+          <span className="mb-3 inline-block -rotate-2 bg-blush-100 px-3.5 py-1 font-['Gaegu'] text-[13px] text-brand-deep md:mb-4">
             03 — GIFT SHOP
           </span>
-          <h1 className="mb-3.5 font-['Gowun_Batang'] text-[28px] leading-snug text-[#3A362F] md:text-4xl">
+          <h1 className="mb-2.5 font-['Gowun_Batang'] text-2xl leading-snug text-ink md:mb-3.5 md:text-4xl">
             하객들에게 전하는 마음
           </h1>
-          <p className="whitespace-pre-line text-[15px] leading-relaxed text-[#7A7364]">
+          <p className="whitespace-pre-line text-sm leading-relaxed text-ink-muted md:text-[15px]">
             캔들, 디퓨저, 수건 세트까지{"\n"}취향대로 고르고 바로 주문할 수
             있어요
           </p>
         </div>
       </section>
 
-      <div className="mx-auto grid max-w-[1200px] grid-cols-1 items-start gap-7 px-5 py-8 md:px-8 lg:grid-cols-[240px_1fr] lg:gap-10 lg:px-[60px] lg:py-12">
-        <ProductFilterSidebarComponent
-          categoryList={categoryList}
-          selectedCategories={selectedCategories}
-          onToggleCategory={handleToggleCategory}
-          selectedPriceBand={selectedPriceBand}
-          onTogglePriceBand={handleTogglePriceBand}
-          selectedRatingOption={selectedRatingOption}
-          onToggleRatingOption={handleToggleRatingOption}
-        />
+      <div className="mx-auto max-w-[1200px] pt-6 md:pt-8">
+        <PopularPicksStripComponent onClickCard={moveToRead} />
+      </div>
+
+      <div className="mx-auto grid max-w-[1200px] grid-cols-1 items-start gap-5 py-6 pb-16 lg:grid-cols-[240px_1fr] lg:gap-10 lg:py-12 lg:pb-20">
+        <button
+          type="button"
+          onClick={() => setShowMobileFilter((v) => !v)}
+          className="flex items-center justify-between rounded-full border border-line bg-white px-5 py-3 text-sm text-ink lg:hidden"
+        >
+          <span className="flex items-center gap-2">
+            <svg
+              viewBox="0 0 24 24"
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M4 6h16M7 12h10M10 18h4" />
+            </svg>
+            필터 / 골라보기
+            {activeFilterCount > 0 && (
+              <span className="rounded-full bg-brand px-2 py-0.5 text-[11px] text-white">
+                {activeFilterCount}
+              </span>
+            )}
+          </span>
+          <span>{showMobileFilter ? "접기 ▲" : "펼치기 ▼"}</span>
+        </button>
+
+        <div className={`${showMobileFilter ? "block" : "hidden"} lg:block`}>
+          <ProductFilterSidebarComponent
+            categoryList={categoryList}
+            selectedCategories={selectedCategories}
+            onToggleCategory={handleToggleCategory}
+            selectedPriceBand={selectedPriceBand}
+            onTogglePriceBand={handleTogglePriceBand}
+            selectedRatingOption={selectedRatingOption}
+            onToggleRatingOption={handleToggleRatingOption}
+          />
+        </div>
 
         <section className="min-w-0">
           <ProductSortToolbarComponent
@@ -233,20 +273,18 @@ const ListComponent = () => {
           />
 
           {isEmptySearchResult ? (
-            <div className="flex flex-col items-center justify-center rounded-[18px] bg-[#FFFDF9] px-6 py-24 text-center shadow-[0_8px_24px_-12px_rgba(58,54,47,0.15)]">
-              <p className="mb-2 text-base text-[#3A362F]">
-                <span className="font-['Gowun_Batang'] text-[#5C6B4F]">
-                  "{keyword}"
-                </span>{" "}
-                와(과) 일치하는 항목이 없습니다.
+            <div className="flex flex-col items-center justify-center rounded-[18px] bg-white px-6 py-16 text-center shadow-[0_8px_24px_-12px_rgba(58,54,47,0.15)] md:py-24">
+              <p className="mb-2 font-['Gaegu'] text-lg text-ink">
+                <span className="text-brand-deep">"{keyword}"</span> 에 딱 맞는
+                답례품을 아직 못 찾았어요 🤍
               </p>
-              <p className="mb-7 text-sm text-[#7A7364]">
+              <p className="mb-7 text-sm text-ink-muted">
                 다른 검색어를 입력하거나 기본 목록으로 돌아가 보세요.
               </p>
               <button
                 type="button"
                 onClick={handleResetToDefaultList}
-                className="h-10 rounded-full border border-[#D5D0C6] px-6 text-sm text-[#3A362F] transition hover:border-[#7C8B6F] hover:text-[#5C6B4F]"
+                className="h-10 rounded-full border border-line px-6 text-sm text-ink transition hover:border-brand hover:text-brand-deep"
               >
                 기본 목록 가기
               </button>

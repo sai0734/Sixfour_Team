@@ -9,9 +9,8 @@ import {
   deleteReview,
 } from "../../api/reviewApi";
 
-// 파일 타입별 최대 용량
-const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
-const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+const MAX_VIDEO_SIZE = 50 * 1024 * 1024;
 
 const VIDEO_EXTENSIONS = ["mp4", "webm", "mov", "avi", "mkv"];
 const isVideoFile = (fileName) => {
@@ -23,8 +22,10 @@ const isGifFile = (fileName) => {
   return fileName?.split(".").pop()?.toLowerCase() === "gif";
 };
 
+const AVATAR_BG = ["bg-brand-light", "bg-lavender-light", "bg-blush-100"];
+
 const StarDisplay = ({ rating }) => (
-  <span className="text-brand-accent text-xs">
+  <span className="text-[#C9A96A] text-xs">
     {"★".repeat(rating || 0)}
     <span className="text-line-soft">{"★".repeat(5 - (rating || 0))}</span>
   </span>
@@ -36,7 +37,7 @@ const StarPicker = ({ value, onChange }) => (
       <span
         key={n}
         onClick={() => onChange(n)}
-        className={n <= value ? "text-brand-accent" : "text-line-soft"}
+        className={n <= value ? "text-[#C9A96A]" : "text-line-soft"}
       >
         ★
       </span>
@@ -44,7 +45,6 @@ const StarPicker = ({ value, onChange }) => (
   </div>
 );
 
-// 작은 썸네일 (클릭하면 onClick으로 모달을 열도록 위임)
 const ReviewMediaThumb = ({ fileName, host, onClick }) => {
   if (isVideoFile(fileName)) {
     return (
@@ -83,7 +83,6 @@ const ReviewMediaThumb = ({ fileName, host, onClick }) => {
   );
 };
 
-// 확대 모달 - 여기서만 동영상이 재생됨(autoPlay)
 const MediaModal = ({ fileName, host, onClose }) => {
   const isVideo = isVideoFile(fileName);
   const src = `${host}/api/product/view/${fileName}`;
@@ -178,7 +177,7 @@ const ReviewForm = ({
   };
 
   return (
-    <div className="border border-line rounded-2xl p-5 mb-8">
+    <div className="bg-white rounded-2xl p-5 mb-6 shadow-[0_8px_24px_-12px_rgba(58,54,47,0.15)]">
       <p className="text-xs text-ink-soft mb-2">별점</p>
       <StarPicker value={rating} onChange={setRating} />
 
@@ -227,7 +226,7 @@ const ReviewForm = ({
         className="text-xs"
       />
 
-      <div className="flex justify-end gap-2 mt-4">
+      <div className="flex flex-wrap justify-end gap-2 mt-4">
         <button
           onClick={onCancel}
           className="h-9 px-5 rounded-full border border-line-soft text-xs"
@@ -257,25 +256,27 @@ const ReplyEditForm = ({ initialContent, onCancel, onSubmit }) => {
   };
 
   return (
-    <div className="flex gap-2">
+    <div className="flex flex-col sm:flex-row gap-2">
       <input
         type="text"
         value={content}
         onChange={(e) => setContent(e.target.value)}
         className="flex-1 border border-line-soft rounded-full px-4 py-1.5 text-xs focus:outline-none focus:border-brand"
       />
-      <button
-        onClick={onCancel}
-        className="text-xs px-4 rounded-full border border-line-soft"
-      >
-        취소
-      </button>
-      <button
-        onClick={handleSubmit}
-        className="text-xs px-4 rounded-full bg-brand text-white"
-      >
-        수정 완료
-      </button>
+      <div className="flex gap-2 justify-end">
+        <button
+          onClick={onCancel}
+          className="text-xs px-4 rounded-full border border-line-soft h-7"
+        >
+          취소
+        </button>
+        <button
+          onClick={handleSubmit}
+          className="text-xs px-4 rounded-full bg-brand text-white h-7"
+        >
+          수정 완료
+        </button>
+      </div>
     </div>
   );
 };
@@ -400,8 +401,10 @@ const ReviewSectionComponent = ({
         />
       )}
 
-      <div className="flex justify-between items-center mb-6">
-        <p className="text-sm text-ink-soft">총 {reviews.length}개의 리뷰</p>
+      <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
+        <span className="inline-block -rotate-1 bg-blush-100 px-3 py-1 font-['Gaegu'] text-[13px] text-brand-deep">
+          하객들의 솔직한 후기 {reviews.length}개
+        </span>
         {!myReview && !showWriteForm && (
           <button
             onClick={handleClickWriteReview}
@@ -422,152 +425,157 @@ const ReviewSectionComponent = ({
       )}
 
       {reviews.length === 0 ? (
-        <div className="py-16 text-center text-ink-faint text-sm">
-          아직 작성된 리뷰가 없습니다.
+        <div className="py-16 text-center font-['Gaegu'] text-base text-ink-faint">
+          아직 리뷰가 없어요. 첫 후기의 주인공이 되어보세요 🤍
         </div>
       ) : (
-        <div className="flex flex-col gap-6">
-          {reviews.map((review) => {
+        <div className="flex flex-col gap-4">
+          {reviews.map((review, idx) => {
             const reviewIsMine = checkIsMine(review.memberEmail);
 
-            return (
-              <div key={review.rno} className="border-b border-line pb-6">
-                {editingRno === review.rno ? (
-                  <ReviewForm
-                    initialRating={review.rating}
-                    initialContent={review.content}
-                    initialFiles={review.uploadFileNames}
-                    host={host}
-                    onCancel={() => setEditingRno(null)}
-                    onSubmit={(payload) =>
-                      handleSubmitEditReview(review.rno, payload)
-                    }
-                    submitLabel="수정 완료"
-                  />
-                ) : (
-                  <>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <StarDisplay rating={review.rating} />
-                        <p className="text-sm mt-1">{review.nickname}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs text-ink-faint">
-                          {review.regDate?.slice(0, 10)}
-                        </p>
-                        {reviewIsMine && (
-                          <button
-                            onClick={() => setEditingRno(review.rno)}
-                            className="text-xs text-ink-faint underline mt-1 mr-2"
-                          >
-                            수정
-                          </button>
-                        )}
-                        {(reviewIsMine || isAdmin) && (
-                          <button
-                            onClick={() => handleDeleteReview(review.rno)}
-                            className="text-xs text-ink-faint underline mt-1"
-                          >
-                            삭제
-                          </button>
-                        )}
-                      </div>
+            return editingRno === review.rno ? (
+              <ReviewForm
+                key={review.rno}
+                initialRating={review.rating}
+                initialContent={review.content}
+                initialFiles={review.uploadFileNames}
+                host={host}
+                onCancel={() => setEditingRno(null)}
+                onSubmit={(payload) =>
+                  handleSubmitEditReview(review.rno, payload)
+                }
+                submitLabel="수정 완료"
+              />
+            ) : (
+              <div
+                key={review.rno}
+                className="bg-white rounded-2xl p-5 shadow-[0_6px_18px_-10px_rgba(58,54,47,0.18)]"
+              >
+                <div className="flex flex-wrap justify-between items-start gap-2">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`w-9 h-9 shrink-0 rounded-full flex items-center justify-center font-['Gaegu'] text-sm text-ink-soft ${AVATAR_BG[idx % AVATAR_BG.length]}`}
+                    >
+                      {review.nickname?.[0] ?? "?"}
                     </div>
-
-                    <p className="text-sm text-ink-soft mt-2">
-                      {review.content}
+                    <div>
+                      <StarDisplay rating={review.rating} />
+                      <p className="text-sm mt-0.5 font-['Gaegu']">
+                        {review.nickname}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-ink-faint">
+                      {review.regDate?.slice(0, 10)}
                     </p>
-
-                    {review.uploadFileNames?.length > 0 && (
-                      <div className="flex gap-2 mt-3 flex-wrap">
-                        {review.uploadFileNames.map((file, i) => (
-                          <ReviewMediaThumb
-                            key={i}
-                            fileName={file}
-                            host={host}
-                            onClick={() => setModalFile(file)}
-                          />
-                        ))}
-                      </div>
-                    )}
-
-                    {review.replies?.map((reply) => (
-                      <div
-                        key={reply.rno}
-                        className="bg-cream rounded-xl p-4 mt-3 ml-4"
+                    {reviewIsMine && (
+                      <button
+                        onClick={() => setEditingRno(review.rno)}
+                        className="text-xs text-ink-faint underline mt-1 mr-2"
                       >
-                        {editingReplyRno === reply.rno ? (
-                          <ReplyEditForm
-                            initialContent={reply.content}
-                            onCancel={() => setEditingReplyRno(null)}
-                            onSubmit={(content) =>
-                              handleSubmitEditReply(reply.rno, content)
-                            }
-                          />
-                        ) : (
-                          <>
-                            <div className="flex justify-between items-start">
-                              <p className="text-xs font-medium text-brand-accent">
-                                답변
-                              </p>
-                              {isAdmin && (
-                                <div className="flex gap-2">
-                                  <button
-                                    onClick={() =>
-                                      setEditingReplyRno(reply.rno)
-                                    }
-                                    className="text-xs text-ink-faint underline"
-                                  >
-                                    수정
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      handleDeleteReview(reply.rno)
-                                    }
-                                    className="text-xs text-ink-faint underline"
-                                  >
-                                    삭제
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                            <p className="text-sm text-ink-soft mt-1">
-                              {reply.content}
-                            </p>
-                          </>
-                        )}
-                      </div>
-                    ))}
-
-                    {isAdmin && review.replies?.length === 0 && (
-                      <div className="ml-4 mt-3">
-                        {replyingTo === review.rno ? (
-                          <div className="flex gap-2">
-                            <input
-                              type="text"
-                              value={replyContent}
-                              onChange={(e) => setReplyContent(e.target.value)}
-                              placeholder="답변을 입력하세요"
-                              className="flex-1 border border-line-soft rounded-full px-4 py-1.5 text-xs focus:outline-none focus:border-brand"
-                            />
-                            <button
-                              onClick={() => handleSubmitReply(review.rno)}
-                              className="text-xs px-4 rounded-full bg-brand text-white"
-                            >
-                              등록
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => setReplyingTo(review.rno)}
-                            className="text-xs text-brand-accent underline"
-                          >
-                            답변 달기
-                          </button>
-                        )}
-                      </div>
+                        수정
+                      </button>
                     )}
-                  </>
+                    {(reviewIsMine || isAdmin) && (
+                      <button
+                        onClick={() => handleDeleteReview(review.rno)}
+                        className="text-xs text-ink-faint underline mt-1"
+                      >
+                        삭제
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <p className="text-sm text-ink-soft mt-3 pl-12">
+                  {review.content}
+                </p>
+
+                {review.uploadFileNames?.length > 0 && (
+                  <div className="flex gap-2 mt-3 pl-12 flex-wrap">
+                    {review.uploadFileNames.map((file, i) => (
+                      <ReviewMediaThumb
+                        key={i}
+                        fileName={file}
+                        host={host}
+                        onClick={() => setModalFile(file)}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {review.replies?.map((reply) => (
+                  <div
+                    key={reply.rno}
+                    className="bg-cream rounded-xl p-4 mt-3 ml-6 md:ml-12"
+                  >
+                    {editingReplyRno === reply.rno ? (
+                      <ReplyEditForm
+                        initialContent={reply.content}
+                        onCancel={() => setEditingReplyRno(null)}
+                        onSubmit={(content) =>
+                          handleSubmitEditReply(reply.rno, content)
+                        }
+                      />
+                    ) : (
+                      <>
+                        <div className="flex flex-wrap justify-between items-start gap-2">
+                          <span className="inline-block bg-brand-deep/90 text-white text-[11px] px-2 py-0.5 rounded-full">
+                            답변
+                          </span>
+                          {isAdmin && (
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => setEditingReplyRno(reply.rno)}
+                                className="text-xs text-ink-faint underline"
+                              >
+                                수정
+                              </button>
+                              <button
+                                onClick={() => handleDeleteReview(reply.rno)}
+                                className="text-xs text-ink-faint underline"
+                              >
+                                삭제
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-sm text-ink-soft mt-1.5">
+                          {reply.content}
+                        </p>
+                      </>
+                    )}
+                  </div>
+                ))}
+
+                {isAdmin && review.replies?.length === 0 && (
+                  <div className="ml-6 md:ml-12 mt-3">
+                    {replyingTo === review.rno ? (
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <input
+                          type="text"
+                          value={replyContent}
+                          onChange={(e) => setReplyContent(e.target.value)}
+                          placeholder="답변을 입력하세요"
+                          className="flex-1 border border-line-soft rounded-full px-4 py-1.5 text-xs focus:outline-none focus:border-brand"
+                        />
+                        <button
+                          onClick={() => handleSubmitReply(review.rno)}
+                          className="text-xs px-4 py-1.5 rounded-full bg-brand text-white self-end sm:self-auto"
+                        >
+                          등록
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setReplyingTo(review.rno)}
+                        className="text-xs text-brand-deep underline"
+                      >
+                        답변 달기
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             );

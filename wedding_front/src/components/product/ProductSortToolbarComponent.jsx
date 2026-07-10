@@ -16,11 +16,9 @@ const ProductSortToolbarComponent = ({
 }) => {
   return (
     <div className="mb-7 flex flex-wrap items-start justify-between gap-5">
-      <p className="pt-1.5 text-sm text-[#7A7364]">
+      <p className="pt-1.5 text-sm text-ink-muted">
         전체{" "}
-        <b className="font-['Gowun_Batang'] font-bold text-[#3A362F]">
-          {totalCount}
-        </b>
+        <b className="font-['Gowun_Batang'] font-bold text-ink">{totalCount}</b>
         개 상품
       </p>
 
@@ -33,8 +31,8 @@ const ProductSortToolbarComponent = ({
               onClick={() => onChangeSort(opt.key)}
               className={`rounded-full border px-3.5 py-1.5 text-[13px] transition ${
                 sortType === opt.key
-                  ? "border-[#7C8B6F] bg-[#7C8B6F] text-[#FBF7F0]"
-                  : "border-[#E0D8CC] bg-[#FFFDF9] text-[#7A7364] hover:border-[#7C8B6F] hover:text-[#5C6B4F]"
+                  ? "border-brand bg-brand text-white"
+                  : "border-line bg-white text-ink-muted hover:border-brand hover:text-brand-deep"
               }`}
             >
               {opt.label}
@@ -49,12 +47,12 @@ const ProductSortToolbarComponent = ({
             onChange={(e) => onChangeKeywordInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && onSearch()}
             placeholder="상품명, 설명 검색"
-            className="h-[38px] w-full flex-1 rounded-full border border-[#E0D8CC] bg-[#FFFDF9] px-4 text-[13px] text-[#3A362F] outline-none focus:border-[#7C8B6F] sm:w-[220px] sm:flex-none"
+            className="h-[38px] w-full flex-1 rounded-full border border-line bg-white px-4 text-[13px] text-ink outline-none focus:border-brand sm:w-[220px] sm:flex-none"
           />
           <button
             type="button"
             onClick={onSearch}
-            className="h-[38px] shrink-0 rounded-full bg-[#7C8B6F] px-[18px] text-[13px] text-[#FBF7F0] transition hover:bg-[#5C6B4F]"
+            className="h-[38px] shrink-0 rounded-full bg-brand px-[18px] text-[13px] text-white transition hover:bg-brand-dark"
           >
             검색
           </button>
