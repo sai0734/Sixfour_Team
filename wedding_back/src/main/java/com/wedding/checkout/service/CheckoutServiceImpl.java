@@ -237,6 +237,7 @@ public class CheckoutServiceImpl implements CheckoutService {
                 .addressDetail(orders.getAddressDetail())
                 .orderStatus(orders.getOrderStatus())
                 .regDate(orders.getRegDate())
+                .trackingNo(orders.getTrackingNo()) // 재원 추가 - 배송 조회
                 .items(items)
                 .build();
     }

@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { getMyOrders } from "../../api/checkoutApi";
 import { getOne as getProduct } from "../../api/productApi";
 import { API_SERVER_HOST } from "../../api/reservationApi";
+import OrderTrackingModal from "./OrderTrackingModal";
+import ExchangeReturnModal from "./ExchangeReturnModal";
 
 // 주문 상태값 -> 표시 라벨/색상. MailServiceImpl의 한글 매핑과 동일한 값 기준.
 const STATUS_LABELS = {
@@ -25,6 +27,8 @@ const ProductPaymentTab = () => {
   const [loading, setLoading] = useState(true);
   // pno -> thumbnail 파일명 캐시 (OrderItemDTO에 썸네일이 없어서 상품 상세를 따로 조회)
   const [thumbnails, setThumbnails] = useState({});
+  const [trackingOrder, setTrackingOrder] = useState(null);
+  const [exchangeOrder, setExchangeOrder] = useState(null);
 
   useEffect(() => {
     getMyOrders()
@@ -166,9 +170,48 @@ const ProductPaymentTab = () => {
                 </div>
               );
             })()}
+
+            <div className="flex gap-2 mt-3 pt-3 border-t border-line-soft">
+              {(order.orderStatus === "SHIPPING" ||
+                order.orderStatus === "DELIVERED") && (
+                <button
+                  type="button"
+                  onClick={() => setTrackingOrder(order)}
+                  className="flex-1 h-9 rounded-full border border-line-soft text-xs text-ink-soft hover:bg-cream"
+                >
+                  배송조회
+                </button>
+              )}
+              {order.orderStatus === "DELIVERED" && (
+                <button
+                  type="button"
+                  onClick={() => setExchangeOrder(order)}
+                  className="flex-1 h-9 rounded-full border border-line-soft text-xs text-ink-soft hover:bg-cream"
+                >
+                  교환/반품 신청
+                </button>
+              )}
+            </div>
           </div>
         );
       })}
+
+      {trackingOrder && (
+        <OrderTrackingModal
+          order={trackingOrder}
+          onClose={() => setTrackingOrder(null)}
+        />
+      )}
+
+      {exchangeOrder && (
+        <ExchangeReturnModal
+          order={exchangeOrder}
+          onClose={() => setExchangeOrder(null)}
+          onSubmitted={() =>
+            alert("교환/반품 신청이 접수됐어요. 처리 결과를 안내드릴게요.")
+          }
+        />
+      )}
     </div>
   );
 };
