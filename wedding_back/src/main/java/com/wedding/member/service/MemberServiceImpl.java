@@ -401,7 +401,19 @@ public class MemberServiceImpl implements MemberService {
 
     Member member = result.orElseThrow();
 
-    member.changePw(passwordEncoder.encode(memberModifyDTO.getPw()));
+    // 비밀번호란을 안 건드렸으면(빈 값) 절대 덮어쓰지 않음
+    // (예전엔 무조건 암호화해서 저장해버려서, 닉네임만 바꿔도 실제 비밀번호가
+    //  빈 문자열로 조용히 날아가는 심각한 버그가 있었음)
+    if (memberModifyDTO.getPw() != null && !memberModifyDTO.getPw().isBlank()) {
+      member.changePw(passwordEncoder.encode(memberModifyDTO.getPw()));
+
+      // 카카오로만 가입해서 social=true였던 회원이 여기서 처음 진짜 비밀번호를
+      // 설정하면, 그 순간부터는 일반가입 회원과 동일하게 취급해야 함
+      // (안 그러면 나중에 연동 해제 시 "먼저 비밀번호부터 설정하라"는 체크에
+      //  영원히 걸림 - 비밀번호를 설정했는데도 여전히 "모를 것"으로 오판됨)
+      member.changeSocial(false);
+    }
+
     member.changeNickname(memberModifyDTO.getNickname());
 
     memberRepository.save(member);
