@@ -40,6 +40,21 @@ export const socialCompletePost = async (socialCompleteParam) => {
   return res.data;
 };
 
+// pendingToken을 들고 카카오 가입을 최종 완료. 아직 로그인 전 상태라 jwtAxios가 아니라 그냥 axios로 호출
+// (성공하면 응답에 accessToken/refreshToken이 담겨오는데, 이때부터가 진짜 로그인 시작 시점)
+export const completeKakaoSignupPost = async (payload) => {
+  const res = await axios.put(`${host}/kakao/complete`, payload);
+
+  return res.data;
+};
+
+// CONFIRM_LINK 상태에서 "연동할게요"를 선택했을 때 - 로그인 전 상태라 그냥 axios로 호출
+export const confirmKakaoLinkPost = async (confirmToken) => {
+  const res = await axios.put(`${host}/kakao/confirm-link`, { confirmToken });
+
+  return res.data;
+};
+
 export const passwordResetRequestPost = async (email) => {
   const res = await axios.post(`${host}/password-reset/request`, { email });
 
