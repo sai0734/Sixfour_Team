@@ -1,11 +1,11 @@
-import { useSearchParams } from "react-router-dom";
+import { useState } from "react";
+import { useSearchParams, Navigate } from "react-router-dom";
 import MyPageLayout from "../../layouts/MyPageLayout";
 import PlanComponent from "../../components/weddingplan/PlanComponent";
 import WishTab from "../../components/companywish/WishTab";
 import ReservationTab from "../../components/reservation/ReservationTab";
 import PaymentTab from "../../components/mypage/PaymentTab";
 import MyPostsTab from "../../components/mypage/MyPostsTab";
-import AccountSettingsTab from "../../components/mypage/AccountSettingsTab";
 
 const TABS = [
   { key: "plan", label: "플랜", enabled: true },
@@ -13,32 +13,23 @@ const TABS = [
   { key: "payment", label: "결제 내역", enabled: true },
   { key: "wish", label: "찜 목록", enabled: true },
   { key: "myposts", label: "내가 쓴 글", enabled: true },
-  { key: "account", label: "계정 설정", enabled: true },
 ];
 
 const HubPage = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
 
-  // 탭 상태를 리액트 state가 아니라 URL(?tab=)에 직접 둠.
-  // 그래야 결제내역 -> 상품 상세로 이동했다가 "뒤로가기" 눌렀을 때
-  // 브라우저 히스토리에 남은 이 URL을 그대로 읽어서 있던 탭으로 복원됨.
   const requestedTab = searchParams.get("tab");
-  const activeTab = TABS.some((tab) => tab.key === requestedTab)
+  const initialTab = TABS.some((tab) => tab.key === requestedTab)
     ? requestedTab
     : "plan";
 
-  const handleTabClick = (key) => {
-    // replace: 탭 클릭마다 히스토리를 쌓지 않음 (그래야 뒤로가기 한 번에
-    // 마이페이지 밖으로 바로 나가지, 탭 전환 기록을 하나씩 되짚지 않음)
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev);
-        next.set("tab", key);
-        return next;
-      },
-      { replace: true },
-    );
-  };
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  // "계정 설정" 탭은 회원정보수정(/auth/modify)으로 통합됨 -
+  // 옛날 링크(?tab=account)로 들어오는 경우를 위해 그쪽으로 보내줌
+  if (requestedTab === "account") {
+    return <Navigate replace to="/auth/modify" />;
+  }
 
   return (
     <MyPageLayout
@@ -63,7 +54,7 @@ const HubPage = () => {
           return (
             <span
               key={tab.key}
-              onClick={() => handleTabClick(tab.key)}
+              onClick={() => setActiveTab(tab.key)}
               className={`pb-3 border-b cursor-pointer ${
                 activeTab === tab.key
                   ? "text-brand border-brand"
@@ -81,7 +72,6 @@ const HubPage = () => {
       {activeTab === "payment" && <PaymentTab />}
       {activeTab === "wish" && <WishTab />}
       {activeTab === "myposts" && <MyPostsTab />}
-      {activeTab === "account" && <AccountSettingsTab />}
     </MyPageLayout>
   );
 };

@@ -29,13 +29,13 @@ const KakaoRedirectPage = () => {
         linkKakaoAccountPost(loginState.email, accessToken)
           .then(() => {
             alert("카카오 계정이 연동되었습니다.");
-            navigate("/mypage?tab=account", { replace: true });
+            navigate("/auth/modify", { replace: true });
           })
           .catch((err) => {
             console.error(err);
             const msg = err.response?.data?.msg;
             alert(msg || "연동 중 오류가 발생했습니다.");
-            navigate("/mypage?tab=account", { replace: true });
+            navigate("/auth/modify", { replace: true });
           });
         return;
       }
@@ -110,13 +110,11 @@ const KakaoRedirectPage = () => {
   return (
     <div className="flex min-h-[60vh] w-full flex-col items-center justify-center gap-4">
       <div
-        className="h-10 w-10 animate-spin rounded-full border-4 border-blush-200 border-t-brand-deep"
+        className="h-10 w-10 animate-spin rounded-full border-4 border-rose-200 border-t-rose-500"
         role="status"
         aria-label="로그인 처리 중"
       ></div>
-      <p className="text-sm text-ink-muted font-body">
-        카카오 로그인 처리 중이에요...
-      </p>
+      <p className="text-sm text-plum-500">카카오 로그인 처리 중이에요...</p>
     </div>
   );
 };
