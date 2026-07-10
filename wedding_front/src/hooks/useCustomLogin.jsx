@@ -41,16 +41,36 @@ const useCustomLogin = () => {
   };
 
   const moveToLogin = (returnPath) => {
-    if (returnPath) {
+    if (returnPath && typeof returnPath === "string") {
       sessionStorage.setItem(LOGIN_REDIRECT_KEY, returnPath);
+    } else if (returnPath) {
+      // 문자열이 아닌 값(객체 등)이 실수로 들어온 경우 - 저장하면 "[object Object]"처럼
+      // 의미 없는 문자열로 저장되어 나중에 엉뚱한 경로로 리다이렉트되므로 아예 무시
+      console.warn(
+        "moveToLogin: returnPath는 문자열이어야 합니다.",
+        returnPath,
+      );
     }
     navigate(
       { pathname: "/auth/login" },
-      { replace: true, state: returnPath ? { from: returnPath } : undefined },
+      {
+        replace: true,
+        state:
+          returnPath && typeof returnPath === "string"
+            ? { from: returnPath }
+            : undefined,
+      },
     );
   };
   const getLoginRedirectPath = () => {
-    return sessionStorage.getItem(LOGIN_REDIRECT_KEY);
+    const path = sessionStorage.getItem(LOGIN_REDIRECT_KEY);
+
+    // 혹시 예전에 잘못 저장된("[object Object]" 같은) 값이 남아있으면 무시
+    if (!path || !path.startsWith("/")) {
+      return null;
+    }
+
+    return path;
   };
   const clearLoginRedirectPath = () => {
     sessionStorage.removeItem(LOGIN_REDIRECT_KEY);

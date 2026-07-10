@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { useSelector } from "react-redux";
+import { useLocation } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import {
-  socialCompletePost,
+  completeKakaoSignupPost,
   checkNicknameAvailable,
   checkPhoneAvailable,
 } from "../../api/authApi";
+import { login } from "../../slices/loginSlice";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import AuthLayout from "./AuthLayout";
 
@@ -30,18 +32,55 @@ const errMsgClass = "text-rose-600 text-xs mt-1";
 const PHONE_REGEX = /^01[0-9]-?\d{3,4}-?\d{4}$/;
 
 const SocialCompleteComponent = () => {
+  const location = useLocation();
+  const dispatch = useDispatch();
+  const { moveToPath } = useCustomLogin();
+
+  // 카카오 로그인 직후 KakaoRedirectPage가 navigate()로 들려준 값.
+  // 아직 로그인 전 상태라 Redux(loginSlice)에는 아무것도 없고, 이 라우터 state가 유일한 신원 증명 수단임
+  const pendingToken = location.state?.pendingToken;
+  const kakaoEmail = location.state?.kakaoEmail;
+
   const [completeParam, setCompleteParam] = useState({ ...initState });
   const [nicknameStatus, setNicknameStatus] = useState(null);
   const [phoneStatus, setPhoneStatus] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   const [touched, setTouched] = useState({
     nickname: false,
     name: false,
     phone: false,
     address: false,
   });
-  const loginInfo = useSelector((state) => state.loginSlice);
 
-  const { moveToPath } = useCustomLogin();
+  // pendingToken 없이 이 화면에 바로 들어온 경우(새로고침으로 state 유실 등) - 진행 불가
+  if (!pendingToken) {
+    return (
+      <AuthLayout
+        eyebrow="세션 만료"
+        title={
+          <>
+            다시
+            <br />
+            시도해 주세요
+          </>
+        }
+        subtitle="카카오 로그인 정보를 찾을 수 없어요"
+      >
+        <div className="max-w-sm w-full mx-auto text-center">
+          <p className="text-plum-500 text-sm mb-8">
+            새로고침 등으로 인증 정보가 사라졌어요. 카카오 로그인을 다시 시도해
+            주세요.
+          </p>
+          <button
+            className="w-full py-3 rounded-xl bg-rose-gradient text-white font-semibold shadow-lg shadow-rose-200 hover:shadow-rose-300 hover:-translate-y-0.5 transition-all"
+            onClick={() => moveToPath("/auth/login")}
+          >
+            로그인 화면으로
+          </button>
+        </div>
+      </AuthLayout>
+    );
+  }
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -195,16 +234,22 @@ const SocialCompleteComponent = () => {
       return;
     }
 
-    const socialCompleteParam = {
-      email: loginInfo.email,
+    const payload = {
+      pendingToken,
       ...completeParam,
       birthDate: completeParam.birthDate || null,
     };
 
-    socialCompletePost(socialCompleteParam)
+    setSubmitting(true);
+
+    completeKakaoSignupPost(payload)
       .then((data) => {
         console.log(data);
-        alert("추가정보 입력이 완료되었습니다.");
+
+        // 이 응답에 처음으로 accessToken/refreshToken이 들어있음 - 여기서 비로소 로그인 처리
+        dispatch(login(data));
+
+        alert("가입이 완료되었습니다.");
         moveToPath("/");
       })
       .catch((err) => {
@@ -213,7 +258,8 @@ const SocialCompleteComponent = () => {
         const msg = err.response?.data?.msg;
 
         alert(msg || "처리 중 오류가 발생했습니다.");
-      });
+      })
+      .finally(() => setSubmitting(false));
   };
 
   const renderNicknameMsg = () => {
@@ -284,7 +330,7 @@ const SocialCompleteComponent = () => {
       footer={
         <div className="bg-white/15 rounded-xl p-4">
           <div className="text-sm font-semibold mb-1">카카오 계정 연동됨</div>
-          <div className="text-xs text-white/80">{loginInfo.email}</div>
+          <div className="text-xs text-white/80">{kakaoEmail}</div>
           <div className="text-xs mt-1">✓ 인증 완료</div>
         </div>
       }
@@ -436,10 +482,11 @@ const SocialCompleteComponent = () => {
         </div>
 
         <button
-          className="w-full py-3 rounded-xl bg-rose-gradient text-white font-semibold shadow-lg shadow-rose-200 hover:shadow-rose-300 hover:-translate-y-0.5 transition-all"
+          disabled={submitting}
+          className="w-full py-3 rounded-xl bg-rose-gradient text-white font-semibold shadow-lg shadow-rose-200 hover:shadow-rose-300 hover:-translate-y-0.5 transition-all disabled:opacity-50"
           onClick={handleClickComplete}
         >
-          가입 완료하기
+          {submitting ? "처리 중..." : "가입 완료하기"}
         </button>
       </div>
     </AuthLayout>

@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { getAccessToken, getAuthWithAccessToken } from "../../api/kakaoAuthApi";
-import { linkKakaoAccountPost } from "../../api/authApi";
+import { linkKakaoAccountPost, confirmKakaoLinkPost } from "../../api/authApi";
 import { login } from "../../slices/loginSlice";
 import { useDispatch, useSelector } from "react-redux";
 import useCustomLogin from "../../hooks/useCustomLogin";
@@ -45,13 +45,47 @@ const KakaoRedirectPage = () => {
           console.log("------------------");
           console.log(authInfo);
 
-          dispatch(login(authInfo));
-
-          if (authInfo && authInfo.social && !authInfo.profileComplete) {
-            moveToPath("/auth/social-complete");
-          } else {
-            moveToPath("/");
+          if (authInfo?.status === "PENDING_SIGNUP") {
+            // 아직 가입이 완료되지 않음(신규 또는 중단된 가입) - 로그인 상태로 만들지 않고
+            // pendingToken만 들려서 추가정보 입력 화면으로 보냄
+            navigate("/auth/social-complete", {
+              replace: true,
+              state: {
+                pendingToken: authInfo.pendingToken,
+                kakaoEmail: authInfo.kakaoEmail,
+              },
+            });
+            return;
           }
+
+          if (authInfo?.status === "CONFIRM_LINK") {
+            // 연동 기록은 없지만 이메일이 같은 기존 회원을 찾음 - 조용히 자동 로그인시키지 않고 먼저 확인
+            const confirmed = window.confirm(
+              `이미 ${authInfo.kakaoEmail}(으)로 가입된 계정이 있어요. 이 계정과 카카오 연동을 진행할까요?`,
+            );
+
+            if (!confirmed) {
+              moveToPath("/auth/login");
+              return;
+            }
+
+            confirmKakaoLinkPost(authInfo.confirmToken)
+              .then((data) => {
+                dispatch(login(data));
+                moveToPath("/");
+              })
+              .catch((err) => {
+                console.error(err);
+                const msg = err.response?.data?.msg;
+                alert(msg || "연동 확인 중 오류가 발생했습니다.");
+                moveToPath("/auth/login");
+              });
+            return;
+          }
+
+          // READY
+          dispatch(login(authInfo));
+          moveToPath("/");
         })
         .catch((err) => {
           console.error(err);
@@ -74,9 +108,13 @@ const KakaoRedirectPage = () => {
     });
   }, [authCode]);
   return (
-    <div>
-      <div>Kakao Login Redirect</div>
-      <div>{authCode}</div>
+    <div className="flex min-h-[60vh] w-full flex-col items-center justify-center gap-4">
+      <div
+        className="h-10 w-10 animate-spin rounded-full border-4 border-rose-200 border-t-rose-500"
+        role="status"
+        aria-label="로그인 처리 중"
+      ></div>
+      <p className="text-sm text-plum-500">카카오 로그인 처리 중이에요...</p>
     </div>
   );
 };

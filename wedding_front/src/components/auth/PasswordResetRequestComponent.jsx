@@ -58,7 +58,7 @@ const PasswordResetRequestComponent = () => {
 
             <button
               className="w-full py-3 rounded-xl bg-rose-gradient text-white font-semibold shadow-lg shadow-rose-200 hover:shadow-rose-300 hover:-translate-y-0.5 transition-all mb-3"
-              onClick={moveToLogin}
+              onClick={() => moveToLogin()}
             >
               로그인 화면으로
             </button>

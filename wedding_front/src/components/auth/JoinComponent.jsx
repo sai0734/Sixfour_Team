@@ -423,7 +423,7 @@ const JoinComponent = () => {
 
           <button
             className="w-full py-3 rounded-xl bg-rose-gradient text-white font-semibold shadow-lg shadow-rose-200 hover:shadow-rose-300 hover:-translate-y-0.5 transition-all mb-3"
-            onClick={moveToLogin}
+            onClick={() => moveToLogin()}
           >
             로그인 화면으로
           </button>
@@ -657,7 +657,7 @@ const JoinComponent = () => {
           이미 계정이 있으신가요?{" "}
           <button
             className="text-rose-600 font-semibold hover:text-rose-700"
-            onClick={moveToLogin}
+            onClick={() => moveToLogin()}
           >
             로그인
           </button>
