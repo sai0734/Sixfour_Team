@@ -146,7 +146,7 @@ const BasicMenu = () => {
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
           font-family: 'Noto Sans KR', -apple-system, sans-serif;
-          background: #FBF7F0;
+          background: #FBF7F7;
           color: #3A362F;
           line-height: 1.6;
           overflow-x: hidden;
@@ -165,14 +165,14 @@ const BasicMenu = () => {
           transition: background 0.3s ease, box-shadow 0.3s ease;
         }
         #mainNav.scrolled {
-          background: rgba(251,247,240,0.96);
+          background: rgba(255,247,247,0.96);
           backdrop-filter: blur(12px);
-          box-shadow: 0 1px 0 rgba(58,54,47,0.08);
+          box-shadow: 0 1px 0 rgba(245,203,203,0.3);
         }
         .logo {
           font-family: 'Gowun Batang', serif;
-          font-size: 18px;
-          color: #5C6B4F;
+          font-size: 23px;
+          color: #C06080;
           display: flex;
           align-items: center;
           gap: 7px;
@@ -188,23 +188,24 @@ const BasicMenu = () => {
           border: none;
           cursor: pointer;
           padding: 4px;
-          color: #5C6B4F;
+          color: #C06080;
           align-items: center;
           justify-content: center;
           border-radius: 6px;
           transition: background 0.2s;
         }
-        .hamburger-btn:hover { background: rgba(92,107,79,0.1); }
+        .hamburger-btn:hover { background: rgba(245,203,203,0.2); }
 
-        /* 데스크톱 네비 링크 */
+        /* 데스크톱 네비 링크 — flex 중앙 정렬 (absolute 제거) */
         #mainNav .navlinks {
           display: flex;
-          gap: 30px;
-          font-size: 13.5px;
+          gap: 28px;
+          font-size: 17.5px;
           list-style: none;
-          position: absolute;
-          left: 50%;
-          transform: translateX(-50%);
+          flex: 1;
+          justify-content: center;
+          min-width: 0;
+          overflow: hidden;
         }
         #mainNav .navlinks a {
           text-decoration: none;
@@ -213,43 +214,52 @@ const BasicMenu = () => {
           position: relative;
           padding-bottom: 3px;
           white-space: nowrap;
+          font-weight: 400;
         }
         #mainNav .navlinks a::after {
           content: '';
           position: absolute;
           left: 0; bottom: 0;
           width: 0; height: 1px;
-          background: #7C8B6F;
+          background: #F5CBCB;
           transition: width 0.2s;
         }
-        #mainNav .navlinks a:hover { color: #5C6B4F; }
+        #mainNav .navlinks a:hover { color: #C06080; }
         #mainNav .navlinks a:hover::after { width: 100%; }
-        #mainNav .navlinks a.active { color: #5C6B4F; }
+        #mainNav .navlinks a.active { color: #C06080; }
         #mainNav .navlinks a.active::after { width: 100%; }
 
         /* 우측 버튼 */
         .nav-right {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 8px;
           flex-shrink: 0;
         }
         .nav-signup {
           font-size: 13px;
-          color: #7A7364;
+          color: #3A362F;
           text-decoration: none;
-          padding: 8px 16px;
+          padding: 8px 18px;
           border-radius: 100px;
-          border: 1px solid #D5D0C6;
-          transition: border-color 0.2s, color 0.2s;
+          background: #fff;
+          border: none;
+          font-weight: 400;
+          white-space: nowrap;
+          display: inline-flex;
+          align-items: center;
+          cursor: pointer;
+          transition: background 0.2s, box-shadow 0.2s;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-        .nav-signup:hover { border-color: #A8A090; color: #3A362F; }
+        .nav-signup:hover { background: #F5F5F5; box-shadow: 0 3px 12px rgba(0,0,0,0.15); }
         .nav-btn {
-          background: #7C8B6F;
-          color: #FBF7F0;
+          background: #3A362F;
+          color: #FBF7F7;
           padding: 8px 18px;
           border-radius: 100px;
           font-size: 13px;
+          font-weight: 400;
           text-decoration: none;
           border: none;
           cursor: pointer;
@@ -259,25 +269,36 @@ const BasicMenu = () => {
           display: inline-flex;
           align-items: center;
         }
-        .nav-btn:hover { background: #5C6B4F; }
+        .nav-btn:hover { background: #5A5650; }
         .nav-mypage {
           font-size: 13px;
-          color: #5C6B4F;
+          color: #3A362F;
           text-decoration: none;
-          font-weight: 500;
+          padding: 8px 18px;
+          border-radius: 100px;
+          background: #fff;
+          border: none;
+          font-weight: 400;
+          white-space: nowrap;
+          display: inline-flex;
+          align-items: center;
+          cursor: pointer;
+          transition: background 0.2s, box-shadow 0.2s;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
+        .nav-mypage:hover { background: #F5F5F5; box-shadow: 0 3px 12px rgba(0,0,0,0.15); }
         .nav-cart {
           display: flex;
           align-items: center;
           justify-content: center;
           width: 36px; height: 36px;
-          color: #7A7364;
+          color: #3A362F;
           text-decoration: none;
           border-radius: 50%;
           transition: background 0.2s, color 0.2s;
           position: relative;
         }
-        .nav-cart:hover { background: rgba(92,107,79,0.08); color: #5C6B4F; }
+        .nav-cart:hover { background: rgba(58,54,47,0.08); color: #3A362F; }
         .cart-badge {
           position: absolute;
           top: 2px; right: 2px;
@@ -299,11 +320,11 @@ const BasicMenu = () => {
           position: fixed;
           top: 0; left: 0; right: 0;
           z-index: 299;
-          background: rgba(251,247,240,0.98);
+          background: rgba(255,247,247,0.98);
           backdrop-filter: blur(14px);
           padding: 88px 28px 36px;
-          box-shadow: 0 8px 32px rgba(58,54,47,0.12);
-          border-bottom: 1px solid #E8E2D8;
+          box-shadow: 0 8px 32px rgba(245,203,203,0.3);
+          border-bottom: 1px solid #F0DEDE;
         }
         .mobile-menu.open { display: block; }
         .mobile-menu ul {
@@ -320,22 +341,32 @@ const BasicMenu = () => {
           color: #3A362F;
           text-decoration: none;
           padding: 11px 4px;
-          border-bottom: 1px solid #EDE8DF;
+          border-bottom: 1px solid #F0DEDE;
           transition: color 0.2s, padding-left 0.2s;
           letter-spacing: 0.02em;
+          font-weight: 400;
         }
-        .mobile-menu ul a:hover { color: #5C6B4F; padding-left: 8px; }
+        .mobile-menu ul a:hover { color: #C06080; padding-left: 8px; }
 
         /* ===== 반응형 ===== */
         @media (max-width: 1100px) {
           #mainNav { padding: 18px 32px; }
+          #mainNav .navlinks { gap: 20px; font-size: 16px; }
+        }
+        @media (max-width: 960px) {
+          #mainNav .navlinks { gap: 12px; font-size: 14.5px; }
+          .nav-signup { padding: 7px 12px; font-size: 12px; }
+          .nav-btn { padding: 7px 14px; font-size: 12px; }
+        }
+        @media (max-width: 820px) {
+          /* 이 구간에서 navlinks 숨기고 햄버거로 전환 */
+          #mainNav .navlinks { display: none !important; }
+          .hamburger-btn { display: flex; }
+          .logo-heart { display: none; }
+          #mainNav { padding: 16px 24px; }
         }
         @media (max-width: 768px) {
-          #mainNav .navlinks { display: none !important; }
-          .logo-heart { display: none; }
-          .hamburger-btn { display: flex; }
           #mainNav { padding: 16px 20px; }
-          .nav-signup { display: flex; padding: 7px 12px; font-size: 12px; }
         }
       `}</style>
     </>
