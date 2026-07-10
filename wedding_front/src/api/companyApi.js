@@ -1,4 +1,4 @@
-﻿import jwtAxios from "../util/jwtUtil";
+import jwtAxios from "../util/jwtUtil";
 import axios from "axios";
 import { API_SERVER_HOST } from "./reservationApi";
 
@@ -25,14 +25,17 @@ export const getList = async (pageParam = {}) => {
 };
 
 export const getOne = async (cmno) => {
+  // DB 우선 — 실제 cmno 기준으로 저장/수정 가능
   try {
-    return await getDummyOne(cmno);
+    const res = await axios.get(`${host}/${cmno}`);
+    return { ...normalizeCompany(res.data), _isDummyOnly: false };
   } catch (err) {
-    console.warn("Company dummy read API failed. Try DB company read.", err);
+    console.warn("DB company read failed. Fallback to dummy data.", err);
   }
 
-  const res = await axios.get(`${host}/${cmno}`);
-  return normalizeCompany(res.data);
+  // DB에 없을 경우 더미 폴백 (_isDummyOnly: true → 수정 버튼 숨김)
+  const data = await getDummyOne(cmno);
+  return { ...data, _isDummyOnly: true };
 };
 
 export const postAdd = async (company) => {
@@ -47,6 +50,22 @@ export const putOne = async (cmno, company) => {
 
 export const deleteOne = async (cmno) => {
   const res = await jwtAxios.delete(`${host}/${cmno}`);
+  return res.data;
+};
+
+export const updateMakeupDetail = async (cmno, data) => {
+  const res = await jwtAxios.put(
+    `${API_SERVER_HOST}/api/companies/makeup/${cmno}`,
+    data
+  );
+  return res.data;
+};
+
+export const updateDressDetail = async (cmno, data) => {
+  const res = await jwtAxios.put(
+    `${API_SERVER_HOST}/api/companies/dresses/${cmno}`,
+    data
+  );
   return res.data;
 };
 
