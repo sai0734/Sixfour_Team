@@ -1,0 +1,85 @@
+package com.wedding.global.config;
+
+import java.util.Arrays;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import com.wedding.global.security.filter.JWTCheckFilter;
+import com.wedding.global.security.handler.APILoginFailHandler;
+import com.wedding.global.security.handler.APILoginSuccessHandler;
+import com.wedding.global.security.handler.CustomAccessDeniedHandler;
+import com.wedding.global.util.RedisTokenService;
+import com.wedding.member.repository.EmailVerifyRepository;
+import com.wedding.member.repository.LoginFailRepository;
+import com.wedding.member.repository.MemberDetailRepository;
+import com.wedding.member.repository.MemberRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
+
+@Configuration
+@Log4j2
+@RequiredArgsConstructor
+@EnableMethodSecurity
+public class CustomSecurityConfig {
+
+  @Bean
+  public PasswordEncoder passwordEncoder(){
+    return new BCryptPasswordEncoder();
+  }
+
+
+  @Bean
+  public SecurityFilterChain filterChain(HttpSecurity http, MemberRepository memberRepository, MemberDetailRepository memberDetailRepository, LoginFailRepository loginFailRepository, RedisTokenService redisTokenService, EmailVerifyRepository emailVerifyRepository) throws Exception {
+
+    log.info("---------------------security config---------------------------");
+
+    http.cors(httpSecurityCorsConfigurer -> {
+      httpSecurityCorsConfigurer.configurationSource(corsConfigurationSource());
+    });
+
+    http.sessionManagement(sessionConfig ->  sessionConfig.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+
+    http.csrf(config -> config.disable());
+
+    http.formLogin(config ->{
+      config.loginPage("/api/auth/login");
+      config.successHandler(new APILoginSuccessHandler(loginFailRepository, redisTokenService, memberRepository));
+      config.failureHandler(new APILoginFailHandler(memberRepository, loginFailRepository, emailVerifyRepository));
+    });
+
+    http.addFilterBefore(new JWTCheckFilter(redisTokenService, memberRepository, memberDetailRepository), UsernamePasswordAuthenticationFilter.class); //JWT 체크
+
+    http.exceptionHandling(config -> {config.accessDeniedHandler(new CustomAccessDeniedHandler());
+    });
+    return http.build();
+  }
+
+  @Bean
+  public CorsConfigurationSource corsConfigurationSource() {
+
+    CorsConfiguration configuration = new CorsConfiguration();
+
+    configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+    configuration.setAllowedMethods(Arrays.asList("HEAD", "GET", "POST", "PUT", "DELETE", "OPTIONS"));
+    configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type"));
+    configuration.setAllowCredentials(true);
+
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", configuration);
+
+    return source;
+  }
+
+}

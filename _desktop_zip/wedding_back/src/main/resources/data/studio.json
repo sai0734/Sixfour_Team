@@ -1,0 +1,272 @@
+[
+  {
+    "cmno": 21,
+    "sno": 1,
+    "name": "스튜디오 바시움",
+    "type": "스튜디오",
+    "theme": "인물중심",
+    "priceRange": "150~250만원",
+    "address": "서울특별시 강남구 논현동 56-5",
+    "lat": 37.5175,
+    "lng": 127.0277,
+    "phone": "02-6204-7070",
+    "description": "심플하고 세련된 인물 중심 스튜디오. 별·달·블라인드 창가 세트 등 다양한 배경 보유. 오래 두고 봐도 질리지 않는 사진 지향.",
+    "owner": "미확인",
+    "rating": 4.8,
+    "image": "studio1.jpg",
+    "images": [
+      "studio1.jpg",
+      "studio2.jpg"
+    ],
+    "uploadFileNames": [
+      "studio1.jpg",
+      "studio2.jpg"
+    ],
+    "themeTags": [
+      "인물중심"
+    ]
+  },
+  {
+    "cmno": 22,
+    "sno": 2,
+    "name": "아우라 스튜디오",
+    "type": "스튜디오",
+    "theme": "클래식/럭셔리",
+    "priceRange": "200~350만원",
+    "address": "서울특별시 강남구 논현동",
+    "lat": 37.5135,
+    "lng": 127.0255,
+    "phone": "02-547-4569",
+    "description": "고급스럽고 따뜻한 무드의 연예인 화보 스타일 스튜디오. 클래식하고 럭셔리한 분위기 연출에 특화.",
+    "owner": "미확인",
+    "rating": 4.7,
+    "image": "studio3.jpg",
+    "images": [
+      "studio3.jpg",
+      "studio4.jpg"
+    ],
+    "uploadFileNames": [
+      "studio3.jpg",
+      "studio4.jpg"
+    ],
+    "themeTags": [
+      "클래식/럭셔리"
+    ]
+  },
+  {
+    "cmno": 23,
+    "sno": 3,
+    "name": "원규스튜디오 (WONKYU+)",
+    "type": "스튜디오",
+    "theme": "트렌디/MZ",
+    "priceRange": "300만원~",
+    "address": "서울특별시 강남구 청담동",
+    "lat": 37.5227,
+    "lng": 127.0459,
+    "phone": "02-516-8824",
+    "description": "웨딩스냅의 전설로 불리는 스튜디오. 국내·해외 촬영 모두 가능하며 세련되고 트렌디한 스타일로 유명.",
+    "owner": "원규",
+    "rating": 4.9,
+    "image": "studio5.jpg",
+    "images": [
+      "studio5.jpg",
+      "studio6.jpg"
+    ],
+    "uploadFileNames": [
+      "studio5.jpg",
+      "studio6.jpg"
+    ],
+    "themeTags": [
+      "트렌디/MZ"
+    ]
+  },
+  {
+    "cmno": 24,
+    "sno": 4,
+    "name": "루나스튜디오",
+    "type": "스튜디오",
+    "theme": "내추럴/감성",
+    "priceRange": "150~200만원",
+    "address": "서울특별시 강남구 청담동",
+    "lat": 37.5228,
+    "lng": 127.0428,
+    "phone": "02-545-5411",
+    "description": "자연광을 활용한 감성적인 연출. 빈티지하고 부드러운 느낌을 원하는 커플에게 추천. 피부 톤 화사하게 표현.",
+    "owner": "미확인",
+    "rating": 4.6,
+    "image": "studio7.jpg",
+    "images": [
+      "studio7.jpg",
+      "studio8.jpg"
+    ],
+    "uploadFileNames": [
+      "studio7.jpg",
+      "studio8.jpg"
+    ],
+    "themeTags": [
+      "내추럴/감성"
+    ]
+  },
+  {
+    "cmno": 25,
+    "sno": 5,
+    "name": "스위트메리 스튜디오",
+    "type": "스튜디오",
+    "theme": "클래식/럭셔리",
+    "priceRange": "160~210만원",
+    "address": "서울특별시 강남구 논현동",
+    "lat": 37.5148,
+    "lng": 127.0248,
+    "phone": "02-546-1379",
+    "description": "클래식하고 우아한 분위기 연출. 화려한 드레스를 돋보이게 해주는 배경이 많아 만족도 높음.",
+    "owner": "미확인",
+    "rating": 4.5,
+    "image": "studio9.jpg",
+    "images": [
+      "studio9.jpg",
+      "studio10.jpg"
+    ],
+    "uploadFileNames": [
+      "studio9.jpg",
+      "studio10.jpg"
+    ],
+    "themeTags": [
+      "클래식/럭셔리"
+    ]
+  },
+  {
+    "cmno": 26,
+    "sno": 6,
+    "name": "더브라이드 스튜디오",
+    "type": "스튜디오",
+    "theme": "유럽풍/로맨틱",
+    "priceRange": "170~250만원",
+    "address": "서울특별시 용산구 한남동",
+    "lat": 37.5346,
+    "lng": 127.0043,
+    "phone": "070-7702-8871",
+    "description": "영화 속 한 장면 같은 로맨틱한 분위기 연출. 신부님들의 감성을 자극하는 아름다운 컨셉 보유.",
+    "owner": "미확인",
+    "rating": 4.6,
+    "image": "studio11.jpg",
+    "images": [
+      "studio11.jpg",
+      "studio12.jpg"
+    ],
+    "uploadFileNames": [
+      "studio11.jpg",
+      "studio12.jpg"
+    ],
+    "themeTags": [
+      "유럽풍/로맨틱"
+    ]
+  },
+  {
+    "cmno": 27,
+    "sno": 7,
+    "name": "모노그램 스튜디오",
+    "type": "스튜디오",
+    "theme": "모던/미니멀",
+    "priceRange": "140~190만원",
+    "address": "서울특별시 마포구",
+    "lat": 37.5501,
+    "lng": 126.9145,
+    "phone": "02-2644-2440",
+    "description": "미니멀하고 깔끔한 스타일 특화. 모던하고 세련된 현대적 감각의 웨딩사진. 촬영 편의성 높음.",
+    "owner": "미확인",
+    "rating": 4.4,
+    "image": "studio13.jpg",
+    "images": [
+      "studio13.jpg",
+      "studio14.jpg"
+    ],
+    "uploadFileNames": [
+      "studio13.jpg",
+      "studio14.jpg"
+    ],
+    "themeTags": [
+      "모던/미니멀"
+    ]
+  },
+  {
+    "cmno": 28,
+    "sno": 8,
+    "name": "어반스튜디오",
+    "type": "스튜디오",
+    "theme": "트렌디/MZ",
+    "priceRange": "180~230만원",
+    "address": "서울특별시 성동구 성수동2가 280",
+    "lat": 37.5447,
+    "lng": 127.056,
+    "phone": "070-4277-7577",
+    "description": "트렌디하고 유니크한 다양한 세트와 다채로운 배경 보유. 인스타 감성 MZ세대 커플에게 인기. 반려동물 촬영 가능.",
+    "owner": "미확인",
+    "rating": 4.7,
+    "image": "studio15.jpg",
+    "images": [
+      "studio15.jpg",
+      "studio16.jpg"
+    ],
+    "uploadFileNames": [
+      "studio15.jpg",
+      "studio16.jpg"
+    ],
+    "themeTags": [
+      "트렌디/MZ"
+    ]
+  },
+  {
+    "cmno": 29,
+    "sno": 9,
+    "name": "엘스튜디오 (L Studio)",
+    "type": "스튜디오",
+    "theme": "스몰웨딩",
+    "priceRange": "100~180만원",
+    "address": "경기도 고양시 일산",
+    "lat": 37.6584,
+    "lng": 126.832,
+    "phone": "031-000-0000",
+    "description": "일산 대표 웨딩스튜디오. 가족사진·리마인드웨딩·스몰웨딩 전문. 각종 예능·영화·드라마 세트장으로도 사용.",
+    "owner": "미확인",
+    "rating": 4.5,
+    "image": "studio17.jpg",
+    "images": [
+      "studio17.jpg",
+      "studio18.jpg"
+    ],
+    "uploadFileNames": [
+      "studio17.jpg",
+      "studio18.jpg"
+    ],
+    "themeTags": [
+      "스몰웨딩"
+    ]
+  },
+  {
+    "cmno": 30,
+    "sno": 10,
+    "name": "가우디웨딩",
+    "type": "스튜디오",
+    "theme": "야외/자연",
+    "priceRange": "120~200만원",
+    "address": "경기도 수원시 팔달구 경수대로 442 G타워5층",
+    "lat": 37.2636,
+    "lng": 127.0286,
+    "phone": "031-000-0000",
+    "description": "수원 대표 웨딩 전문 업체. 야외 자연 컨셉 촬영 특화. 대표 임우진. 경기 서남부권 커플에게 접근성 좋음.",
+    "owner": "임우진",
+    "rating": 4.3,
+    "image": "studio19.jpg",
+    "images": [
+      "studio19.jpg",
+      "studio20.jpg"
+    ],
+    "uploadFileNames": [
+      "studio19.jpg",
+      "studio20.jpg"
+    ],
+    "themeTags": [
+      "야외/자연"
+    ]
+  }
+]

@@ -1,0 +1,910 @@
+[
+  {
+    "cmno": 1,
+    "category": "DRESS",
+    "name": "라벤더드레스",
+    "ceoName": "한서윤",
+    "phone": "02-925-7741",
+    "address": "서울 동대문구 무학로 32 2층",
+    "latitude": 37.5671,
+    "longitude": 127.0303,
+    "description": "셀프웨딩과 스몰웨딩, 돌잔치 드레스를 합리적인 가격에 대여하는 동대문 소재 드레스샵입니다. 화동 드레스와 화동 슈트까지 폭넓게 갖추고 있어 가족 단위 대여 문의가 많습니다.",
+    "priceAvg": 104000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "dress_1_1.jpg",
+        "ord": 0
+      },
+      {
+        "fileName": "dress_1_2.jpg",
+        "ord": 1
+      }
+    ]
+  },
+  {
+    "cmno": 2,
+    "category": "DRESS",
+    "name": "릴리스 드레스룸",
+    "ceoName": "강지아",
+    "phone": "032-322-5180",
+    "address": "경기도 부천시 길주로 210 3층",
+    "latitude": 37.5029,
+    "longitude": 126.7659,
+    "description": "셀프웨딩과 파티 드레스를 중심으로 운영하는 부천 소재 드레스 전문점입니다. 브라이덜샤워, 만삭, 돌맘 원피스까지 대여와 구매를 함께 제공하며, 방문 피팅과 택배 피팅을 모두 운영합니다.",
+    "priceAvg": 101000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "dress_2_1.jpg",
+        "ord": 0
+      },
+      {
+        "fileName": "dress_2_2.jpg",
+        "ord": 1
+      }
+    ]
+  },
+  {
+    "cmno": 3,
+    "category": "DRESS",
+    "name": "오엘르 브라이덜",
+    "ceoName": "윤소영",
+    "phone": "02-3461-7720",
+    "address": "서울 강남구 논현로72길 18 대성빌딩 2층",
+    "latitude": 37.4935,
+    "longitude": 127.042,
+    "description": "본식 웨딩드레스를 전문으로 하는 강남 논현동 드레스샵입니다. 라인별 시즌 컬렉션을 운영하며 피팅 예약제로 운영되는 오프라인 쇼룸을 갖추고 있습니다.",
+    "priceAvg": 367000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "dress_3_1.jpg",
+        "ord": 0
+      },
+      {
+        "fileName": "dress_3_2.jpg",
+        "ord": 1
+      }
+    ]
+  },
+  {
+    "cmno": 4,
+    "category": "DRESS",
+    "name": "베일로즈",
+    "ceoName": "임다은",
+    "phone": "031-924-6618",
+    "address": "경기도 고양시 일산동구 중앙로 1275 4층",
+    "latitude": 37.6599,
+    "longitude": 126.7696,
+    "description": "셀프웨딩 촬영에 특화된 일산 소재 드레스 스타일링 전문점입니다. 드레스와 슈즈, 소품을 함께 대여하거나 구매할 수 있고, 촬영 콘셉트에 맞춘 스타일링 상담도 제공합니다.",
+    "priceAvg": 72000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "dress_4_1.jpg",
+        "ord": 0
+      },
+      {
+        "fileName": "dress_4_2.jpg",
+        "ord": 1
+      }
+    ]
+  },
+  {
+    "cmno": 5,
+    "category": "DRESS",
+    "name": "마리에 브라이드",
+    "ceoName": "정하늘",
+    "phone": "02-548-2231",
+    "address": "서울 강남구 선릉로 748 세영빌딩 2층",
+    "latitude": 37.5214,
+    "longitude": 127.0406,
+    "description": "본식과 셀프웨딩, 미니·앵클라인 드레스를 함께 다루는 강남 논현동 드레스샵입니다. 대여와 구매를 모두 지원하며 화요일부터 토요일까지 운영합니다.",
+    "priceAvg": 270000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "dress_5_1.jpg",
+        "ord": 0
+      },
+      {
+        "fileName": "dress_5_2.jpg",
+        "ord": 1
+      }
+    ]
+  },
+  {
+    "cmno": 6,
+    "category": "DRESS",
+    "name": "벨퐁 아틀리에",
+    "ceoName": "송미래",
+    "phone": "02-3445-9082",
+    "address": "서울 강남구 학동로 142 청솔빌딩 3층",
+    "latitude": 37.5124,
+    "longitude": 127.0266,
+    "description": "2009년 문을 연 디자이너 드레스샵으로, 보유 드레스의 70% 이상을 자체 제작합니다. 셀프웨딩과 2부 드레스, 돌잔치와 화동 의상까지 맞춤 제작과 대여를 함께 제공하며 연예인 협찬 사례도 다수 있습니다.",
+    "priceAvg": 244000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "dress_6_1.jpg",
+        "ord": 0
+      },
+      {
+        "fileName": "dress_6_2.jpg",
+        "ord": 1
+      }
+    ]
+  },
+  {
+    "cmno": 7,
+    "category": "DRESS",
+    "name": "끄레마 드레스",
+    "ceoName": "박서아",
+    "phone": "02-512-6604",
+    "address": "서울 강남구 논현동 253-11 2층",
+    "latitude": 37.5143,
+    "longitude": 37.5143,
+    "description": "드레스 대여와 파티 드레스, 합창단복, 턱시도, 맞춤 정장을 함께 제작하는 강남 논현동 드레스샵입니다. 피팅은 사전 예약제로 운영되며 기본 대여 기간은 2박 3일입니다.",
+    "priceAvg": 112000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "dress_7_1.jpg",
+        "ord": 0
+      },
+      {
+        "fileName": "dress_7_2.jpg",
+        "ord": 1
+      }
+    ]
+  },
+  {
+    "cmno": 8,
+    "category": "DRESS",
+    "name": "위시브라이드",
+    "ceoName": "최유나",
+    "phone": "02-558-3017",
+    "address": "서울 강남구 도곡로 408 미래빌딩 5층",
+    "latitude": 37.4967,
+    "longitude": 127.0553,
+    "description": "실크와 비즈 등 소재와 라인에 따라 다양한 드레스를 선보이는 자체 제작 디자이너 드레스샵입니다. 정교한 수작업 비즈 장식이 특징이며, 웨딩 박람회를 통한 상담 연계도 활발합니다.",
+    "priceAvg": 406000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "dress_8_1.jpg",
+        "ord": 0
+      },
+      {
+        "fileName": "dress_8_2.jpg",
+        "ord": 1
+      }
+    ]
+  },
+  {
+    "cmno": 9,
+    "category": "DRESS",
+    "name": "모니크 브라이덜",
+    "ceoName": "이채원",
+    "phone": "02-3445-7710",
+    "address": "서울 강남구 도산대로 318 4층",
+    "latitude": 37.522,
+    "longitude": 127.0363,
+    "description": "단정하고 화려하지 않은 디자인을 지향하는 미니멀 본식 웨딩드레스 브랜드입니다. 오프숄더와 심플한 실루엣을 중심으로 한 컬렉션을 운영합니다.",
+    "priceAvg": 319000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "dress_9_1.jpg",
+        "ord": 0
+      },
+      {
+        "fileName": "dress_9_2.jpg",
+        "ord": 1
+      }
+    ]
+  },
+  {
+    "cmno": 10,
+    "category": "DRESS",
+    "name": "에브와르 청담",
+    "ceoName": "장수민",
+    "phone": "02-545-9931",
+    "address": "서울 강남구 청담동 92-7 3층",
+    "latitude": 37.5241,
+    "longitude": 127.0435,
+    "description": "청담동에 위치한 프리미엄 디자이너 웨딩드레스 브랜드입니다. 유럽에서 수입한 실크 원단과 수작업 자수, 비즈 디테일을 사용하며 시즌별 컬렉션을 선보입니다.",
+    "priceAvg": 546000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "dress_10_1.jpg",
+        "ord": 0
+      },
+      {
+        "fileName": "dress_10_2.jpg",
+        "ord": 1
+      }
+    ]
+  },
+  {
+    "cmno": 11,
+    "category": "HALL",
+    "name": "더라움",
+    "ceoName": "박성찬",
+    "phone": "02-538-3366",
+    "address": "서울특별시 강남구 언주로 564",
+    "latitude": 37.5047,
+    "longitude": 127.0489,
+    "description": "유럽 고성 분위기의 바로크 양식 인테리어. 캐슬·가든·하우스웨딩 등 다양한 컨셉 웨딩 가능. 특급호텔 출신 쉐프와 전문 큐레이터 서비스 제공. 선정릉역 도보 6분, 주차 300대.",
+    "priceAvg": 15000000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "웨딩홀_더라움_마제스틱볼룸_main.jpg",
+        "ord": 0
+      },
+      {
+        "fileName": "웨딩홀_더라움_그라스가든_main.jpg",
+        "ord": 1
+      }
+    ]
+  },
+  {
+    "cmno": 12,
+    "category": "HALL",
+    "name": "그랜드 인터컨티넨탈",
+    "ceoName": "김현준",
+    "phone": "02-555-5656",
+    "address": "서울특별시 강남구 테헤란로 521",
+    "latitude": 37.5087,
+    "longitude": 127.0623,
+    "description": "강남 특1급 호텔 웨딩. 그랜드볼룸 최대 940명 수용. 코엑스 삼성역 도보 1분. 호텔급 코스 요리 제공.",
+    "priceAvg": 8000000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "웨딩홀_그랜드 인터컨티넨탈_그랜드볼룸_main.jpg",
+        "ord": 0
+      },
+      {
+        "fileName": "웨딩홀_그랜드 인터컨티넨탈_오키드볼룸_main.png",
+        "ord": 1
+      }
+    ]
+  },
+  {
+    "cmno": 13,
+    "category": "HALL",
+    "name": "르비르모어",
+    "ceoName": "정승석",
+    "phone": "02-501-7000",
+    "address": "서울특별시 강남구 테헤란로 406",
+    "latitude": 37.5,
+    "longitude": 127.0561,
+    "description": "로맨틱한 순백의 공간에서 우아하고 감각적인 웨딩 경험. 밝은홀·어두운홀 2가지 컨셉의 단독홀 운영. 90분 간격 프라이빗 예식. 선릉역 역세권.",
+    "priceAvg": 11000000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "웨딩홀_르비르모어_밝은홀_main.png",
+        "ord": 0
+      },
+      {
+        "fileName": "웨딩홀_르비르모어_어두운 홀_main.png",
+        "ord": 1
+      }
+    ]
+  },
+  {
+    "cmno": 14,
+    "category": "HALL",
+    "name": "아펠가모 선릉",
+    "ceoName": "이지수",
+    "phone": "02-515-7364",
+    "address": "서울특별시 강남구 압구정로 201",
+    "latitude": 37.5274,
+    "longitude": 127.0286,
+    "description": "작고 아담하지만 따뜻하고 아늑한 채플홀 특화. 단독홀로 신부대기실·홀·연회장 동선 편리. 음식 퀄리티로 정평. 주차 여유로움.",
+    "priceAvg": 12000000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "웨딩홀_아펠가모 선릉_채플홀_main.png",
+        "ord": 0
+      }
+    ]
+  },
+  {
+    "cmno": 15,
+    "category": "HALL",
+    "name": "그랜드힐 컨벤션",
+    "ceoName": "최병훈",
+    "phone": "02-2005-1010",
+    "address": "서울특별시 강남구 역삼동 679",
+    "latitude": 37.501,
+    "longitude": 127.0385,
+    "description": "언덕 위 웅장하고 트렌디한 모던 클래식 스타일. 8미터 높은 천고의 그랜드볼룸과 로맨틱한 사브리나홀 보유. 역삼역 인근.",
+    "priceAvg": 6000000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "웨딩홀_그랜드힐 컨벤션_그랜드볼룸_main.png",
+        "ord": 0
+      },
+      {
+        "fileName": "웨딩홀_그랜드힐 컨벤션_사브리나_main.png",
+        "ord": 1
+      }
+    ]
+  },
+  {
+    "cmno": 16,
+    "category": "HALL",
+    "name": "노블발렌티 대치",
+    "ceoName": "황민경",
+    "phone": "02-501-7000",
+    "address": "서울특별시 강남구 대치동 889-5",
+    "latitude": 37.4944,
+    "longitude": 127.0625,
+    "description": "도심 속 대저택 컨셉의 클래식 하우스웨딩. 2019년 강남 최초 오픈. 프라이빗 예식 특화. 메인볼룸·하우스홀·가든테라스 3개 홀 보유.",
+    "priceAvg": 7000000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "웨딩홀_노블 발렌티나 대치_메인볼룸_main.jpg",
+        "ord": 0
+      },
+      {
+        "fileName": "웨딩홀_노블 발렌티나 대치_하우스홀_main.jpg",
+        "ord": 1
+      }
+    ]
+  },
+  {
+    "cmno": 17,
+    "category": "HALL",
+    "name": "토브헤세드",
+    "ceoName": "장수현",
+    "phone": "02-3448-9066",
+    "address": "서울특별시 강남구 청담동 115-16",
+    "latitude": 37.524,
+    "longitude": 127.0455,
+    "description": "나만의 프라이빗 맞춤웨딩이 가능한 강남 고품격 하우스웨딩홀. 단독홀 운영. 소규모·야외 웨딩 특화. 청담동 위치.",
+    "priceAvg": 18000000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "웨딩홀_토브헤세드_플로렌스홀_main.png",
+        "ord": 0
+      }
+    ]
+  },
+  {
+    "cmno": 18,
+    "category": "HALL",
+    "name": "아르베",
+    "ceoName": "김태영",
+    "phone": "02-536-4000",
+    "address": "서울특별시 강남구 논현동 215",
+    "latitude": 37.5163,
+    "longitude": 127.0421,
+    "description": "꿈꾸던 웨딩을 위한 로맨틱한 베뉴. 루프탑홀 보유. 맛깔스러운 뷔페로 정평. 논현역 인근.",
+    "priceAvg": 7000000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "웨딩홀_아르베_루프탑홀_main.png",
+        "ord": 0
+      }
+    ]
+  },
+  {
+    "cmno": 19,
+    "category": "HALL",
+    "name": "소노펠리체 컨벤션",
+    "ceoName": "박지연",
+    "phone": "02-2222-7401",
+    "address": "서울특별시 강남구 삼성동 159-6",
+    "latitude": 37.5135,
+    "longitude": 127.0591,
+    "description": "높은 층고와 웅장한 로비. 신부대기실·홀·연회장 한 층 배치로 동선 편리. 코엑스 인근. 단독홀로 90분 간격 프라이빗 예식 진행.",
+    "priceAvg": 13000000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "웨딩홀_소노펠리체 컨벤션_다이아몬드홀_main.png",
+        "ord": 0
+      }
+    ]
+  },
+  {
+    "cmno": 20,
+    "category": "HALL",
+    "name": "더휴 웨딩홀",
+    "ceoName": "윤정민",
+    "phone": "02-6188-0188",
+    "address": "서울특별시 강남구 삼성동 141-26 EK타워",
+    "latitude": 37.5128,
+    "longitude": 127.0598,
+    "description": "삼성역 도보 5분. 모던한 인테리어의 소규모 특화 웨딩홀. 합리적인 가격대로 강남 위치 대비 접근성 우수.",
+    "priceAvg": 5000000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "웨딩홀_더휴 웨딩홀_스몰홀_main.png",
+        "ord": 0
+      }
+    ]
+  },
+  {
+    "cmno": 21,
+    "category": "STUDIO",
+    "name": "스튜디오 바시움",
+    "ceoName": "미확인",
+    "phone": "02-6204-7070",
+    "address": "서울특별시 강남구 논현동 56-5",
+    "latitude": 37.5175,
+    "longitude": 127.0277,
+    "description": "심플하고 세련된 인물 중심 스튜디오. 별·달·블라인드 창가 세트 등 다양한 배경 보유. 오래 두고 봐도 질리지 않는 사진 지향.",
+    "priceAvg": 1500000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "studio1.jpg",
+        "ord": 0
+      },
+      {
+        "fileName": "studio2.jpg",
+        "ord": 1
+      }
+    ]
+  },
+  {
+    "cmno": 22,
+    "category": "STUDIO",
+    "name": "아우라 스튜디오",
+    "ceoName": "미확인",
+    "phone": "02-547-4569",
+    "address": "서울특별시 강남구 논현동",
+    "latitude": 37.5135,
+    "longitude": 127.0255,
+    "description": "고급스럽고 따뜻한 무드의 연예인 화보 스타일 스튜디오. 클래식하고 럭셔리한 분위기 연출에 특화.",
+    "priceAvg": 2000000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "studio3.jpg",
+        "ord": 0
+      },
+      {
+        "fileName": "studio4.jpg",
+        "ord": 1
+      }
+    ]
+  },
+  {
+    "cmno": 23,
+    "category": "STUDIO",
+    "name": "원규스튜디오 (WONKYU+)",
+    "ceoName": "원규",
+    "phone": "02-516-8824",
+    "address": "서울특별시 강남구 청담동",
+    "latitude": 37.5227,
+    "longitude": 127.0459,
+    "description": "웨딩스냅의 전설로 불리는 스튜디오. 국내·해외 촬영 모두 가능하며 세련되고 트렌디한 스타일로 유명.",
+    "priceAvg": 3000000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "studio5.jpg",
+        "ord": 0
+      },
+      {
+        "fileName": "studio6.jpg",
+        "ord": 1
+      }
+    ]
+  },
+  {
+    "cmno": 24,
+    "category": "STUDIO",
+    "name": "루나스튜디오",
+    "ceoName": "미확인",
+    "phone": "02-545-5411",
+    "address": "서울특별시 강남구 청담동",
+    "latitude": 37.5228,
+    "longitude": 127.0428,
+    "description": "자연광을 활용한 감성적인 연출. 빈티지하고 부드러운 느낌을 원하는 커플에게 추천. 피부 톤 화사하게 표현.",
+    "priceAvg": 1500000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "studio7.jpg",
+        "ord": 0
+      },
+      {
+        "fileName": "studio8.jpg",
+        "ord": 1
+      }
+    ]
+  },
+  {
+    "cmno": 25,
+    "category": "STUDIO",
+    "name": "스위트메리 스튜디오",
+    "ceoName": "미확인",
+    "phone": "02-546-1379",
+    "address": "서울특별시 강남구 논현동",
+    "latitude": 37.5148,
+    "longitude": 127.0248,
+    "description": "클래식하고 우아한 분위기 연출. 화려한 드레스를 돋보이게 해주는 배경이 많아 만족도 높음.",
+    "priceAvg": 1600000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "studio9.jpg",
+        "ord": 0
+      },
+      {
+        "fileName": "studio10.jpg",
+        "ord": 1
+      }
+    ]
+  },
+  {
+    "cmno": 26,
+    "category": "STUDIO",
+    "name": "더브라이드 스튜디오",
+    "ceoName": "미확인",
+    "phone": "070-7702-8871",
+    "address": "서울특별시 용산구 한남동",
+    "latitude": 37.5346,
+    "longitude": 127.0043,
+    "description": "영화 속 한 장면 같은 로맨틱한 분위기 연출. 신부님들의 감성을 자극하는 아름다운 컨셉 보유.",
+    "priceAvg": 1700000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "studio11.jpg",
+        "ord": 0
+      },
+      {
+        "fileName": "studio12.jpg",
+        "ord": 1
+      }
+    ]
+  },
+  {
+    "cmno": 27,
+    "category": "STUDIO",
+    "name": "모노그램 스튜디오",
+    "ceoName": "미확인",
+    "phone": "02-2644-2440",
+    "address": "서울특별시 마포구",
+    "latitude": 37.5501,
+    "longitude": 126.9145,
+    "description": "미니멀하고 깔끔한 스타일 특화. 모던하고 세련된 현대적 감각의 웨딩사진. 촬영 편의성 높음.",
+    "priceAvg": 1400000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "studio13.jpg",
+        "ord": 0
+      },
+      {
+        "fileName": "studio14.jpg",
+        "ord": 1
+      }
+    ]
+  },
+  {
+    "cmno": 28,
+    "category": "STUDIO",
+    "name": "어반스튜디오",
+    "ceoName": "미확인",
+    "phone": "070-4277-7577",
+    "address": "서울특별시 성동구 성수동2가 280",
+    "latitude": 37.5447,
+    "longitude": 127.056,
+    "description": "트렌디하고 유니크한 다양한 세트와 다채로운 배경 보유. 인스타 감성 MZ세대 커플에게 인기. 반려동물 촬영 가능.",
+    "priceAvg": 1800000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "studio15.jpg",
+        "ord": 0
+      },
+      {
+        "fileName": "studio16.jpg",
+        "ord": 1
+      }
+    ]
+  },
+  {
+    "cmno": 29,
+    "category": "STUDIO",
+    "name": "엘스튜디오 (L Studio)",
+    "ceoName": "미확인",
+    "phone": "031-000-0000",
+    "address": "경기도 고양시 일산",
+    "latitude": 37.6584,
+    "longitude": 126.832,
+    "description": "일산 대표 웨딩스튜디오. 가족사진·리마인드웨딩·스몰웨딩 전문. 각종 예능·영화·드라마 세트장으로도 사용.",
+    "priceAvg": 1000000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "studio17.jpg",
+        "ord": 0
+      },
+      {
+        "fileName": "studio18.jpg",
+        "ord": 1
+      }
+    ]
+  },
+  {
+    "cmno": 30,
+    "category": "STUDIO",
+    "name": "가우디웨딩",
+    "ceoName": "임우진",
+    "phone": "031-000-0000",
+    "address": "경기도 수원시 팔달구 경수대로 442 G타워5층",
+    "latitude": 37.2636,
+    "longitude": 127.0286,
+    "description": "수원 대표 웨딩 전문 업체. 야외 자연 컨셉 촬영 특화. 대표 임우진. 경기 서남부권 커플에게 접근성 좋음.",
+    "priceAvg": 1200000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "studio19.jpg",
+        "ord": 0
+      },
+      {
+        "fileName": "studio20.jpg",
+        "ord": 1
+      }
+    ]
+  },
+  {
+    "cmno": 31,
+    "category": "MAKEUP",
+    "name": "라뷰 브라이덜 스튜디오",
+    "ceoName": "김서연",
+    "phone": "02-541-3872",
+    "address": "서울특별시 강남구 도산대로 415",
+    "latitude": 37.52783,
+    "longitude": 127.03952,
+    "description": "청담동 중심부에 위치한 프리미엄 신부 전문샵으로, 헤어 세팅부터 신부 메이크업, 네일아트까지 원스톱으로 완성할 수 있습니다.",
+    "priceAvg": 250000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "메이크업_메이크업1.png",
+        "ord": 0
+      },
+      {
+        "fileName": "헤어_헤어1.jpg",
+        "ord": 1
+      },
+      {
+        "fileName": "네일_네일1.png",
+        "ord": 2
+      }
+    ]
+  },
+  {
+    "cmno": 32,
+    "category": "MAKEUP",
+    "name": "블랑쉬 웨딩뷰티",
+    "ceoName": "이지원",
+    "phone": "02-3444-7125",
+    "address": "서울특별시 강남구 학동로 209",
+    "latitude": 37.51965,
+    "longitude": 127.03347,
+    "description": "내추럴하고 웨어러블한 신부 룩을 추구하는 헤어·메이크업 전문샵입니다. 네일 서비스는 제공하지 않습니다.",
+    "priceAvg": 280000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "메이크업_메이크업2.png",
+        "ord": 0
+      },
+      {
+        "fileName": "헤어_헤어2.jpg",
+        "ord": 1
+      }
+    ]
+  },
+  {
+    "cmno": 33,
+    "category": "MAKEUP",
+    "name": "엘르 브라이덜샵",
+    "ceoName": "박민지",
+    "phone": "02-511-9034",
+    "address": "서울특별시 서초구 반포대로 222",
+    "latitude": 37.50412,
+    "longitude": 126.99438,
+    "description": "서초구 반포동에 위치한 고급 신부 전문 뷰티샵으로, 헤어·메이크업·네일 모두 제공합니다.",
+    "priceAvg": 270000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "메이크업_메이크업3.png",
+        "ord": 0
+      },
+      {
+        "fileName": "헤어_헤어3.jpg",
+        "ord": 1
+      },
+      {
+        "fileName": "네일_네일3.png",
+        "ord": 2
+      }
+    ]
+  },
+  {
+    "cmno": 34,
+    "category": "MAKEUP",
+    "name": "마리에 웨딩뷰티",
+    "ceoName": "최유진",
+    "phone": "02-336-5547",
+    "address": "서울특별시 마포구 와우산로 94",
+    "latitude": 37.55431,
+    "longitude": 126.92387,
+    "description": "메이크업만 전문으로 운영하는 샵으로, 헤어 및 네일 서비스는 제공하지 않습니다.",
+    "priceAvg": 280000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "메이크업_메이크업4.png",
+        "ord": 0
+      }
+    ]
+  },
+  {
+    "cmno": 35,
+    "category": "MAKEUP",
+    "name": "벨르 브라이덜 뷰티",
+    "ceoName": "정수아",
+    "phone": "02-797-2381",
+    "address": "서울특별시 용산구 이태원로 177",
+    "latitude": 37.5346,
+    "longitude": 126.99351,
+    "description": "이태원 감성이 녹아든 유니크한 신부 뷰티샵으로, 헤어·메이크업·네일 풀 서비스를 제공합니다.",
+    "priceAvg": 240000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "메이크업_메이크업5.png",
+        "ord": 0
+      },
+      {
+        "fileName": "헤어_헤어5.png",
+        "ord": 1
+      },
+      {
+        "fileName": "네일_네일5.png",
+        "ord": 2
+      }
+    ]
+  },
+  {
+    "cmno": 36,
+    "category": "MAKEUP",
+    "name": "쁘띠 마리아쥬",
+    "ceoName": "한소희",
+    "phone": "02-742-6198",
+    "address": "서울특별시 종로구 삼청로 87",
+    "latitude": 37.58294,
+    "longitude": 126.98142,
+    "description": "삼청동 골목에 자리한 헤어 전문 웨딩 뷰티샵으로, 헤어 서비스만 제공합니다.",
+    "priceAvg": 290000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "헤어_헤어6.png",
+        "ord": 0
+      }
+    ]
+  },
+  {
+    "cmno": 37,
+    "category": "MAKEUP",
+    "name": "글로우 웨딩샵",
+    "ceoName": "윤채원",
+    "phone": "02-415-8823",
+    "address": "서울특별시 송파구 올림픽로 300",
+    "latitude": 37.5149,
+    "longitude": 127.10105,
+    "description": "메이크업과 네일 서비스를 함께 제공하는 뷰티샵으로, 헤어 서비스는 운영하지 않습니다.",
+    "priceAvg": 207500,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "메이크업_메이크업7.png",
+        "ord": 0
+      },
+      {
+        "fileName": "네일_네일7.png",
+        "ord": 1
+      }
+    ]
+  },
+  {
+    "cmno": 38,
+    "category": "MAKEUP",
+    "name": "로즈블룸 브라이덜",
+    "ceoName": "임하은",
+    "phone": "02-322-4417",
+    "address": "서울특별시 은평구 통일로 1050",
+    "latitude": 37.61875,
+    "longitude": 126.92138,
+    "description": "강북권 신부들을 위한 합리적인 가격의 웨딩 뷰티샵으로, 헤어·메이크업·네일을 한 번에 해결할 수 있습니다.",
+    "priceAvg": 196667,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "메이크업_메이크업8.png",
+        "ord": 0
+      },
+      {
+        "fileName": "헤어_헤어8.png",
+        "ord": 1
+      },
+      {
+        "fileName": "네일_네일8.png",
+        "ord": 2
+      }
+    ]
+  },
+  {
+    "cmno": 39,
+    "category": "MAKEUP",
+    "name": "오뜨 웨딩뷰티",
+    "ceoName": "신예린",
+    "phone": "02-445-7732",
+    "address": "서울특별시 강동구 천호대로 1033",
+    "latitude": 37.53821,
+    "longitude": 127.12476,
+    "description": "네일 서비스만 전문으로 운영하는 샵으로, 헤어 및 메이크업은 제공하지 않습니다.",
+    "priceAvg": 135000,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "네일_네일9.png",
+        "ord": 0
+      }
+    ]
+  },
+  {
+    "cmno": 40,
+    "category": "MAKEUP",
+    "name": "아뜰리에 웨딩",
+    "ceoName": "강보라",
+    "phone": "02-563-1190",
+    "address": "서울특별시 강남구 테헤란로 151",
+    "latitude": 37.50064,
+    "longitude": 127.03629,
+    "description": "테헤란로 중심부에 위치한 프리미엄 웨딩 뷰티샵으로, 헤어·메이크업·네일 전 서비스를 제공합니다.",
+    "priceAvg": 278333,
+    "delFlag": false,
+    "imageList": [
+      {
+        "fileName": "메이크업_메이크업10.png",
+        "ord": 0
+      },
+      {
+        "fileName": "헤어_헤어10.png",
+        "ord": 1
+      },
+      {
+        "fileName": "네일_네일10.png",
+        "ord": 2
+      }
+    ]
+  }
+]
