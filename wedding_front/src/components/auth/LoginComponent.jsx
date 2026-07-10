@@ -67,7 +67,12 @@ const LoginComponent = () => {
         const redirectPath =
           location.state?.from || getLoginRedirectPath() || null;
 
-        if (redirectPath) {
+        // location.state.from은 다른 화면에서 실수로 객체를 넘겼을 가능성을 배제할 수 없어서,
+        // "/"로 시작하는 문자열일 때만 실제 경로로 인정 (아니면 무시하고 기본 이동)
+        const isValidRedirect =
+          typeof redirectPath === "string" && redirectPath.startsWith("/");
+
+        if (isValidRedirect) {
           clearLoginRedirectPath();
           alert("로그인 성공");
           moveToPath(redirectPath);

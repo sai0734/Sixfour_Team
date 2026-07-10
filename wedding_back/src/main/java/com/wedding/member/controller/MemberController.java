@@ -4,7 +4,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,7 +14,6 @@ import jakarta.validation.Valid;
 
 import com.wedding.global.util.JWTUtil;
 import com.wedding.global.util.RedisTokenService;
-import com.wedding.member.dto.SocialCompleteDTO;
 import com.wedding.member.dto.SocialLinkDTO;
 import com.wedding.member.dto.WithdrawDTO;
 import com.wedding.member.service.MemberService;
@@ -34,18 +32,6 @@ public class MemberController {
 
   private final MemberService memberService;
   private final RedisTokenService redisTokenService;
-
-  // 소셜(카카오) 로그인으로 최초 가입된 회원의 추가정보(이름/전화/약관동의) 입력 완료 처리
-  // 이미 카카오 로그인 단계에서 JWT를 발급받은 상태이므로 이 경로는 로그인(JWT) 필수
-  @PutMapping("/social-complete")
-  public Map<String, String> completeSocialProfile(@Valid @RequestBody SocialCompleteDTO socialCompleteDTO) {
-
-    log.info("social profile complete request: " + socialCompleteDTO);
-
-    memberService.completeSocialProfile(socialCompleteDTO);
-
-    return Map.of("result", "success");
-  }
 
   // 회원탈퇴 - status를 WITHDRAWN으로 전환하고 개인정보 익명화 + 현재 세션 즉시 로그아웃
   @DeleteMapping("/withdraw")
