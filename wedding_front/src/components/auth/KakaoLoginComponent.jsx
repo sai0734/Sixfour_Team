@@ -7,7 +7,7 @@ const KakaoLoginComponent = () => {
   return (
     <Link
       to={link}
-      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#FEE500] text-[#3C1E1E] font-semibold hover:brightness-95 transition"
+      className="w-full flex items-center justify-center gap-2 py-3 rounded-full bg-[#FEE500] text-[#3C1E1E] font-semibold hover:brightness-95 transition font-body"
     >
       카카오로 로그인
     </Link>

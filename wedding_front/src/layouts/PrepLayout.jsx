@@ -1,39 +1,48 @@
 import BasicMenu from "../components/menus/BasicMenu";
 import PrepSidebar from "./PrepSidebar";
 import ProfileCompleteGuard from "../components/common/ProfileCompleteGuard";
+import TapeLabel from "../components/common/TapeLabel";
+import PrepHeaderArt from "../components/common/PrepHeaderArt";
 
 const PrepLayout = ({ eyebrow, title, subtitle, children }) => {
   return (
-    <>
-      <ProfileCompleteGuard />
-      <BasicMenu />
+    <ProfileCompleteGuard>
+      <>
+        <BasicMenu />
 
-      <div className="bg-cream min-h-screen">
-        {(eyebrow || title) && (
-          <section className="text-center pt-12 pb-6 bg-brand-light">
-            {eyebrow && (
-              <p className="text-xs tracking-[0.15em] text-brand-accent mb-2.5">
-                {eyebrow}
-              </p>
-            )}
-            {title && (
-              <p className="font-serif text-3xl text-brand-deep mb-2">
-                {title}
-              </p>
-            )}
-            {subtitle && (
-              <p className="text-sm text-brand-accent">{subtitle}</p>
-            )}
-          </section>
-        )}
+        <div className="bg-cream min-h-screen">
+          {(eyebrow || title) && (
+            <section
+              className="relative text-center pt-28 pb-10 bg-cover bg-center"
+              style={{ backgroundImage: "url('/prep-hero.jpg')" }}
+            >
+              {/* 사진 위에 어두운 막을 씌워서 흰 글씨가 잘 읽히게 */}
+              <div className="absolute inset-0 bg-black/45" />
 
-        <div className="max-w-[1140px] mx-auto px-6 flex">
-          <PrepSidebar />
+              <div className="relative z-10">
+                {eyebrow && (
+                  <TapeLabel tone="white" className="mb-4">
+                    {eyebrow}
+                  </TapeLabel>
+                )}
+                {title && (
+                  <p className="font-serif text-3xl text-white mb-2">{title}</p>
+                )}
+                {subtitle && (
+                  <p className="text-sm text-white/85">{subtitle}</p>
+                )}
+              </div>
+            </section>
+          )}
 
-          <main className="flex-1 py-8 min-w-0">{children}</main>
+          <div className="max-w-[1140px] mx-auto px-6 flex">
+            <PrepSidebar />
+
+            <main className="flex-1 py-8 min-w-0">{children}</main>
+          </div>
         </div>
-      </div>
-    </>
+      </>
+    </ProfileCompleteGuard>
   );
 };
 

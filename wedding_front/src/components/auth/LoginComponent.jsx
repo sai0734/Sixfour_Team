@@ -11,8 +11,8 @@ const initState = {
 };
 
 const inputClass =
-  "w-full px-4 py-3 rounded-xl border border-rose-100 bg-blush-50/40 text-plum-900 placeholder:text-plum-500/50 focus:border-rose-400 focus:ring-4 focus:ring-rose-100 outline-none transition";
-const labelClass = "block text-sm font-semibold text-plum-900/80 mb-1.5";
+  "w-full px-4 py-3 rounded-xl border border-line bg-white/70 text-ink placeholder:text-ink-faint focus:border-brand focus:ring-4 focus:ring-blush-100 outline-none transition font-body";
+const labelClass = "block text-sm font-semibold text-ink-soft mb-1.5 font-body";
 
 const LoginComponent = () => {
   const [loginParam, setLoginParam] = useState({ ...initState });
@@ -67,7 +67,12 @@ const LoginComponent = () => {
         const redirectPath =
           location.state?.from || getLoginRedirectPath() || null;
 
-        if (redirectPath) {
+        // location.state.from은 다른 화면에서 실수로 객체를 넘겼을 가능성을 배제할 수 없어서,
+        // "/"로 시작하는 문자열일 때만 실제 경로로 인정 (아니면 무시하고 기본 이동)
+        const isValidRedirect =
+          typeof redirectPath === "string" && redirectPath.startsWith("/");
+
+        if (isValidRedirect) {
           clearLoginRedirectPath();
           alert("로그인 성공");
           moveToPath(redirectPath);
@@ -102,10 +107,13 @@ const LoginComponent = () => {
         </>
       }
       subtitle="로그인하고 다양한 서비스를 이용해보세요"
+      stickerEmoji="🤍"
     >
       <div className="max-w-sm w-full mx-auto">
-        <h2 className="font-display text-2xl text-plum-900 mb-1">로그인</h2>
-        <p className="text-plum-500 text-sm mb-8">계정에 로그인하세요</p>
+        <h2 className="font-serifkr text-2xl text-ink mb-1">로그인</h2>
+        <p className="text-ink-muted text-sm mb-8 font-body">
+          계정에 로그인하세요
+        </p>
 
         <form onSubmit={handleClickLogin}>
           <div className="mb-4">
@@ -158,19 +166,19 @@ const LoginComponent = () => {
           )}
 
           <div className="flex items-center justify-between mb-6 mt-4">
-            <label className="flex items-center gap-2 text-sm text-plum-900/70">
+            <label className="flex items-center gap-2 text-sm text-ink-muted font-body">
               <input
                 type="checkbox"
                 name="rememberMe"
                 checked={loginParam.rememberMe}
                 onChange={handleChange}
-                className="accent-rose-500"
+                className="accent-brand-deep"
               />
               로그인 유지 (30일)
             </label>
             <button
               type="button"
-              className="text-sm text-rose-600 hover:text-rose-700 font-medium"
+              className="text-sm text-brand-deep hover:text-brand-dark font-medium font-body"
               onClick={() => moveToPath("/auth/password-reset")}
             >
               비밀번호 찾기
@@ -179,24 +187,24 @@ const LoginComponent = () => {
 
           <button
             type="submit"
-            className="w-full py-3 rounded-xl bg-rose-gradient text-white font-semibold shadow-lg shadow-rose-200 hover:shadow-rose-300 hover:-translate-y-0.5 transition-all"
+            className="w-full py-3 rounded-full bg-brand-gradient text-ink font-semibold shadow-lg shadow-blush-200/60 hover:shadow-blush-300/70 hover:-translate-y-0.5 transition-all font-body"
           >
             로그인
           </button>
         </form>
 
         <div className="flex items-center gap-3 my-6">
-          <div className="flex-1 h-px bg-plum-900/10"></div>
-          <span className="text-xs text-plum-500">또는</span>
-          <div className="flex-1 h-px bg-plum-900/10"></div>
+          <div className="flex-1 h-px bg-line"></div>
+          <span className="text-xs text-ink-faint font-handwrite">또는</span>
+          <div className="flex-1 h-px bg-line"></div>
         </div>
 
         <KakaoLoginComponent />
 
-        <div className="text-center mt-6 text-sm text-plum-500">
+        <div className="text-center mt-6 text-sm text-ink-muted font-body">
           계정이 없으신가요?{" "}
           <button
-            className="text-rose-600 font-semibold hover:text-rose-700"
+            className="text-brand-deep font-semibold hover:text-brand-dark"
             onClick={() => moveToPath("/auth/join")}
           >
             회원가입

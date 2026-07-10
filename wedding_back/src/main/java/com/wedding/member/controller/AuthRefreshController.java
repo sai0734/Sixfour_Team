@@ -98,13 +98,18 @@ public class AuthRefreshController {
             throw new CustomJWTException("INVALID_REFRESH");
         }
 
-        String newAccessToken = JWTUtil.generateToken(claims, 60 * 24);
+        String newAccessToken = JWTUtil.generateToken(claims, JWTUtil.ACCESS_TOKEN_MINUTES);
 
-        String newRefreshToken =  checkTime((Integer)claims.get("exp")) == true? JWTUtil.generateToken(claims, 60*24*2) : refreshToken;
+        // 원래 로그인할 때의 rememberMe 값을 그대로 이어받아서 재발급 (예전 발급된 토큰이라
+        // claims에 rememberMe가 아예 없을 수도 있으니 그 경우는 false로 취급)
+        boolean rememberMe = Boolean.TRUE.equals(claims.get("rememberMe"));
+        int refreshMinutes = rememberMe ? JWTUtil.REFRESH_TOKEN_MINUTES_REMEMBER : JWTUtil.REFRESH_TOKEN_MINUTES_DEFAULT;
 
-        // 토큰이 새로 발급됐다면 Redis 값도 갱신 (TTL은 기존 로그인 유지 여부를 알 수 없어 기본 7일로 재설정)
+        String newRefreshToken = checkTime((Integer)claims.get("exp")) == true? JWTUtil.generateToken(claims, refreshMinutes) : refreshToken;
+
+        // 토큰이 새로 발급됐다면 Redis 값도 갱신 (원래 rememberMe 값 그대로 TTL 재설정)
         if (!newRefreshToken.equals(refreshToken)) {
-            redisTokenService.saveRefreshToken(email, newRefreshToken, false);
+            redisTokenService.saveRefreshToken(email, newRefreshToken, rememberMe);
         }
 
         return Map.of("accessToken", newAccessToken, "refreshToken", newRefreshToken);

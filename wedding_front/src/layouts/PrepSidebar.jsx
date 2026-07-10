@@ -16,14 +16,24 @@ const MENU_GROUPS = [
   },
 ];
 
+// 색은 Tailwind 토큰(brand-light 등) 대신 메인페이지 .tape/.dday-pin과 같은
+// 확정값을 하드코딩함. 토큰 값이 실제로 반영 안 되는 문제가 반복돼서,
+// 사이드바만큼은 눈에 확실히 띄어야 하니 여기서 고정함.
 const PrepSidebar = () => {
   const location = useLocation();
 
   return (
-    <aside className="w-56 shrink-0 py-8 pr-6">
+    <aside className="w-60 shrink-0 py-8 pr-6">
       {MENU_GROUPS.map((group) => (
-        <div key={group.label} className="mb-7">
-          <p className="text-[11px] text-ink-faint tracking-wide mb-2 px-3">
+        <div
+          key={group.label}
+          className="bg-white rounded-2xl p-4"
+          style={{ boxShadow: "0 8px 24px -14px rgba(58,54,47,0.25)" }}
+        >
+          <p
+            className="text-xs font-bold tracking-wide mb-3 px-3"
+            style={{ color: "#C06080" }}
+          >
             {group.label}
           </p>
           <nav className="flex flex-col gap-1">
@@ -37,7 +47,8 @@ const PrepSidebar = () => {
                   <span
                     key={item.name}
                     title="준비 중인 기능입니다"
-                    className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-ink-faint cursor-not-allowed select-none"
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-full text-sm cursor-not-allowed select-none"
+                    style={{ color: "#C4BBAF" }}
                   >
                     {item.name}
                   </span>
@@ -48,11 +59,23 @@ const PrepSidebar = () => {
                 <Link
                   key={item.name}
                   to={item.path}
-                  className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-colors"
+                  style={
                     isActive
-                      ? "bg-brand-light text-brand-accent font-medium"
-                      : "text-ink-soft hover:bg-cream"
-                  }`}
+                      ? {
+                          background: "#C06080",
+                          color: "#FFFFFF",
+                          boxShadow: "0 4px 12px -4px rgba(192,96,128,0.6)",
+                        }
+                      : { color: "#4A3F38" }
+                  }
+                  onMouseEnter={(e) => {
+                    if (!isActive) e.currentTarget.style.background = "#FFE2E2";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive)
+                      e.currentTarget.style.background = "transparent";
+                  }}
                 >
                   {item.name}
                 </Link>
