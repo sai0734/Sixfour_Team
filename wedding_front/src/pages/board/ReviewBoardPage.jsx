@@ -3,7 +3,6 @@ import BasicMenu from "../../components/menus/BasicMenu";
 import BoardTopTabs from "../../components/board/BoardTopTabs";
 import BoardFilterSidebar from "../../components/board/BoardFilterSidebar";
 import TapeLabel from "../../components/common/TapeLabel";
-import CommunityHeaderArt from "../../components/common/CommunityHeaderArt";
 import SearchSortBar from "../../components/board/SearchSortBar";
 import PostCard from "../../components/board/PostCard";
 import BoardFormModal from "../../components/board/BoardFormModal";
@@ -185,23 +184,32 @@ const ReviewBoardPage = () => {
     <>
       <BasicMenu />
 
-      <div className="bg-cream min-h-screen">
-        <section className="text-center pt-28 pb-6 bg-brand-light">
-          <CommunityHeaderArt className="w-28 h-20 mx-auto mb-1" />
-          <TapeLabel tone="white" className="mb-3">
-            REVIEW BOARD
-          </TapeLabel>
-          <p className="font-serif text-3xl text-brand-deep mb-2">후기게시판</p>
-          <p className="text-sm text-brand-accent">
-            먼저 경험한 예비 부부들의 솔직한 후기
-          </p>
+      <div className="min-h-screen bg-[#FBF7F0]">
+        <section
+          className="relative bg-cover bg-center px-5 pt-24 pb-8 text-center md:px-8 md:pt-28 md:pb-10 lg:px-[60px]"
+          // TODO: 후기게시판 전용 사진 준비되면 /review-board-hero.jpg 같은 걸로 교체
+          style={{ backgroundImage: "url('/prep-hero.jpg')" }}
+        >
+          <div className="absolute inset-0 bg-black/45" />
+
+          <div className="relative z-10">
+            <TapeLabel tone="white" className="mb-3">
+              REVIEW BOARD
+            </TapeLabel>
+            <p className="mb-2 font-['Gowun_Batang'] text-2xl text-white md:text-3xl">
+              후기게시판
+            </p>
+            <p className="text-sm text-white/85">
+              먼저 경험한 예비 부부들의 솔직한 후기
+            </p>
+          </div>
         </section>
 
-        <div className="max-w-[1140px] mx-auto px-6 pt-6">
+        <div className="mx-auto max-w-[1140px] px-5 pt-6 md:px-8 lg:px-6">
           <BoardTopTabs active="REVIEW" />
         </div>
 
-        <div className="max-w-[1140px] mx-auto px-6 flex">
+        <div className="mx-auto grid max-w-[1140px] grid-cols-1 items-start gap-6 px-5 py-6 md:px-8 lg:grid-cols-[240px_1fr] lg:gap-8 lg:px-6 lg:py-8">
           <BoardFilterSidebar
             groups={[
               {
@@ -221,7 +229,7 @@ const ReviewBoardPage = () => {
             ]}
           />
 
-          <main className="flex-1 py-8 min-w-0">
+          <main className="min-w-0">
             <div className="flex items-center justify-between mb-4">
               <p className="text-sm text-ink-muted">
                 {activeCategory || "전체"}

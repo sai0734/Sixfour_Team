@@ -16,22 +16,19 @@ const MENU_GROUPS = [
   },
 ];
 
-// 색은 Tailwind 토큰(brand-light 등) 대신 메인페이지 .tape/.dday-pin과 같은
-// 확정값을 하드코딩함. 토큰 값이 실제로 반영 안 되는 문제가 반복돼서,
-// 사이드바만큼은 눈에 확실히 띄어야 하니 여기서 고정함.
 const PrepSidebar = () => {
   const location = useLocation();
 
   return (
-    <aside className="w-60 shrink-0 py-8 pr-6">
+    <aside className="w-full py-4 lg:w-60 lg:shrink-0 lg:py-8 lg:pr-6">
       {MENU_GROUPS.map((group) => (
         <div
           key={group.label}
-          className="bg-white rounded-2xl p-4"
+          className="rounded-2xl bg-white p-4"
           style={{ boxShadow: "0 8px 24px -14px rgba(58,54,47,0.25)" }}
         >
           <p
-            className="text-xs font-bold tracking-wide mb-3 px-3"
+            className="mb-3 px-3 text-xs font-bold tracking-wide"
             style={{ color: "#C06080" }}
           >
             {group.label}
@@ -47,7 +44,7 @@ const PrepSidebar = () => {
                   <span
                     key={item.name}
                     title="준비 중인 기능입니다"
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-full text-sm cursor-not-allowed select-none"
+                    className="flex items-center gap-2 rounded-full px-4 py-2.5 text-sm cursor-not-allowed select-none"
                     style={{ color: "#C4BBAF" }}
                   >
                     {item.name}
@@ -59,7 +56,7 @@ const PrepSidebar = () => {
                 <Link
                   key={item.name}
                   to={item.path}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-colors"
+                  className="flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium transition-colors"
                   style={
                     isActive
                       ? {

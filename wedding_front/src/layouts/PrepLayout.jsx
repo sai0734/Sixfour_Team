@@ -2,7 +2,6 @@ import BasicMenu from "../components/menus/BasicMenu";
 import PrepSidebar from "./PrepSidebar";
 import ProfileCompleteGuard from "../components/common/ProfileCompleteGuard";
 import TapeLabel from "../components/common/TapeLabel";
-import PrepHeaderArt from "../components/common/PrepHeaderArt";
 
 const PrepLayout = ({ eyebrow, title, subtitle, children }) => {
   return (
@@ -10,10 +9,10 @@ const PrepLayout = ({ eyebrow, title, subtitle, children }) => {
       <>
         <BasicMenu />
 
-        <div className="bg-cream min-h-screen">
+        <div className="min-h-screen bg-[#FBF7F0]">
           {(eyebrow || title) && (
             <section
-              className="relative text-center pt-28 pb-10 bg-cover bg-center"
+              className="relative bg-cover bg-center px-5 pt-24 pb-8 text-center md:px-8 md:pt-28 md:pb-10 lg:px-[60px]"
               style={{ backgroundImage: "url('/prep-hero.jpg')" }}
             >
               {/* 사진 위에 어두운 막을 씌워서 흰 글씨가 잘 읽히게 */}
@@ -26,7 +25,9 @@ const PrepLayout = ({ eyebrow, title, subtitle, children }) => {
                   </TapeLabel>
                 )}
                 {title && (
-                  <p className="font-serif text-3xl text-white mb-2">{title}</p>
+                  <p className="mb-2 font-['Gowun_Batang'] text-2xl text-white md:text-3xl">
+                    {title}
+                  </p>
                 )}
                 {subtitle && (
                   <p className="text-sm text-white/85">{subtitle}</p>
@@ -35,10 +36,10 @@ const PrepLayout = ({ eyebrow, title, subtitle, children }) => {
             </section>
           )}
 
-          <div className="max-w-[1140px] mx-auto px-6 flex">
+          <div className="mx-auto grid max-w-[1140px] grid-cols-1 items-start gap-6 px-5 py-6 md:px-8 lg:grid-cols-[240px_1fr] lg:gap-8 lg:px-6 lg:py-8">
             <PrepSidebar />
 
-            <main className="flex-1 py-8 min-w-0">{children}</main>
+            <main className="min-w-0">{children}</main>
           </div>
         </div>
       </>
