@@ -23,12 +23,14 @@ import com.wedding.member.domain.MemberDetail;
 import com.wedding.member.domain.MemberRole;
 import com.wedding.member.domain.TermsAgree;
 import com.wedding.member.dto.JoinDTO;
+import com.wedding.member.dto.KakaoAuthResultDTO;
+import com.wedding.member.dto.KakaoLinkConfirmDTO;
+import com.wedding.member.dto.KakaoSignupCompleteDTO;
 import com.wedding.member.dto.MemberDTO;
 import com.wedding.member.exception.MemberBlockedException;
 import com.wedding.member.dto.MemberModifyDTO;
 import com.wedding.member.dto.PasswordResetConfirmDTO;
 import com.wedding.member.dto.PasswordResetRequestDTO;
-import com.wedding.member.dto.SocialCompleteDTO;
 import com.wedding.member.repository.EmailVerifyRepository;
 import com.wedding.member.repository.LoginFailRepository;
 import com.wedding.member.repository.MemberDetailRepository;
@@ -36,6 +38,9 @@ import com.wedding.member.repository.MemberRepository;
 import com.wedding.member.repository.PasswordResetRepository;
 import com.wedding.member.repository.SocialAccountRepository;
 import com.wedding.member.repository.TermsAgreeRepository;
+import com.wedding.global.util.JWTUtil;
+import com.wedding.global.util.RedisTokenService;
+import com.wedding.global.util.CustomJWTException;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -62,9 +67,10 @@ public class MemberServiceImpl implements MemberService {
   private final MailService mailService;
   private final ObjectMapper objectMapper;
   private final PasswordEncoder passwordEncoder;
+  private final RedisTokenService redisTokenService;
 
   @Override
-  public MemberDTO getKakaoMember(String accessToken) {
+  public KakaoAuthResultDTO processKakaoAuth(String accessToken) {
 
     Map<String, String> kakaoInfo = getKakaoUserInfo(accessToken);
     String email = kakaoInfo.get("email");
@@ -72,56 +78,229 @@ public class MemberServiceImpl implements MemberService {
 
     log.info("email: " + email );
 
-    Optional<Member> result = memberRepository.findById(email);
+    // 1. 이미 연동(마이페이지 "연동하기")된 계정인지 providerId로 먼저 확인 -> 있으면 바로 로그인
+    Optional<SocialAccount> linkedAccount = socialAccountRepository.findByProviderAndProviderId("kakao", providerId);
 
-    // 기존의 회원
-    if(result.isPresent()){
+    if (linkedAccount.isPresent()) {
+      Member member = linkedAccount.get().getMember();
 
-      Member member = result.get();
-
-      // 정지 기간이 지났으면 로그인 시도 시점에 자동으로 정상 상태로 되돌림
-      if ("BLACKLIST".equals(member.getStatus())
-              && member.getSuspendUntil() != null
-              && !member.getSuspendUntil().isAfter(LocalDateTime.now())) {
-        member.reactivate();
-        memberRepository.save(member);
-      }
-
-      if ("BLACKLIST".equals(member.getStatus())) {
-        throw new com.wedding.member.exception.MemberBlockedException(
-                "ERROR_ACCOUNT_SUSPENDED",
-                member.getSuspendReason(),
-                member.getSuspendUntil() == null ? null : member.getSuspendUntil().toString());
-      }
-
-      if ("DORMANT".equals(member.getStatus())) {
-        throw new com.wedding.member.exception.MemberBlockedException(
-                "ERROR_ACCOUNT_DORMANT", null, null);
-      }
-
-      if ("WITHDRAWN".equals(member.getStatus())) {
-        throw new com.wedding.member.exception.MemberBlockedException(
-                "ERROR_ACCOUNT_WITHDRAWN", null, null);
-      }
+      checkBlockedStatus(member);
 
       ensureSocialAccount(member, providerId);
-
       MemberDTO memberDTO = entityToDTO(member);
-
-      return memberDTO;
+      return new KakaoAuthResultDTO("READY", memberDTO, null, null);
     }
 
-    // 회원이 아니었다면
-    // 닉네임은 '소셜회원'으로
-    // 패스워드는 임의로 생성
-    Member socialMember = makeSocialMember(email);
-    memberRepository.save(socialMember);
+    // 2. 연동 기록은 없지만, 카카오 계정 이메일과 같은 기존(가입완료) 회원이 있는지 확인.
+    //    이 경우 조용히 자동 연동/로그인시키지 않고, 먼저 사용자에게 "이 계정과 연동할까요?"를 물어봐야 함
+    Optional<Member> emailMatch = memberRepository.findById(email);
 
-    ensureSocialAccount(socialMember, providerId);
+    if (emailMatch.isPresent()) {
+      Member member = emailMatch.get();
 
-    MemberDTO memberDTO = entityToDTO(socialMember);
+      checkBlockedStatus(member);
 
-    return memberDTO;
+      boolean hasProfile = memberDetailRepository.getByMemberEmail(member.getEmail()).isPresent();
+
+      if (hasProfile) {
+        Map<String, Object> confirmClaims = Map.of(
+                "purpose", "KAKAO_EMAIL_MATCH_CONFIRM",
+                "kakaoEmail", email,
+                "providerId", providerId
+        );
+
+        String confirmToken = JWTUtil.generateToken(confirmClaims, 10); // 10분짜리 확인용 토큰
+
+        return new KakaoAuthResultDTO("CONFIRM_LINK", null, confirmToken, email);
+      }
+      // 프로필이 아직 없으면(예전에 시작만 하고 안 끝낸 레거시 row) 아래 "미완료" 분기로 흘러감
+    }
+
+    // 3. 신규 또는 미완료 회원 -> 아직 로그인시키지 않음(Member도 새로 안 만듦).
+    // 가입 마무리 화면(SocialCompletePage)에서 이 토큰을 들고 completeKakaoSignup을 호출해야
+    // 그때 비로소 Member/MemberDetail이 만들어지고 진짜 로그인 토큰이 발급됨
+    Map<String, Object> pendingClaims = Map.of(
+            "purpose", "KAKAO_PENDING_SIGNUP",
+            "kakaoEmail", email,
+            "providerId", providerId
+    );
+
+    String pendingToken = JWTUtil.generateToken(pendingClaims, 30); // 30분짜리 임시 토큰
+
+    return new KakaoAuthResultDTO("PENDING_SIGNUP", null, pendingToken, email);
+  }
+
+  // 정지/휴면/탈퇴 상태 체크 (정지기간 만료 시 자동 복귀 포함) - processKakaoAuth의 두 조회 분기에서 공통으로 씀
+  private void checkBlockedStatus(Member member) {
+
+    if ("BLACKLIST".equals(member.getStatus())
+            && member.getSuspendUntil() != null
+            && !member.getSuspendUntil().isAfter(LocalDateTime.now())) {
+      member.reactivate();
+      memberRepository.save(member);
+    }
+
+    if ("BLACKLIST".equals(member.getStatus())) {
+      throw new MemberBlockedException(
+              "ERROR_ACCOUNT_SUSPENDED",
+              member.getSuspendReason(),
+              member.getSuspendUntil() == null ? null : member.getSuspendUntil().toString());
+    }
+
+    if ("DORMANT".equals(member.getStatus())) {
+      throw new MemberBlockedException("ERROR_ACCOUNT_DORMANT", null, null);
+    }
+
+    if ("WITHDRAWN".equals(member.getStatus())) {
+      throw new MemberBlockedException("ERROR_ACCOUNT_WITHDRAWN", null, null);
+    }
+  }
+
+  @Override
+  public Map<String, Object> confirmKakaoEmailLink(KakaoLinkConfirmDTO dto) {
+
+    Map<String, Object> confirmClaims;
+
+    try {
+      confirmClaims = JWTUtil.validateToken(dto.getConfirmToken());
+    } catch (CustomJWTException e) {
+      throw new IllegalStateException("확인 세션이 만료되었습니다. 카카오 로그인을 다시 시도해주세요.");
+    }
+
+    if (!"KAKAO_EMAIL_MATCH_CONFIRM".equals(confirmClaims.get("purpose"))) {
+      throw new IllegalStateException("잘못된 요청입니다.");
+    }
+
+    String email = (String) confirmClaims.get("kakaoEmail");
+    String providerId = (String) confirmClaims.get("providerId");
+
+    Member member = memberRepository.findById(email).orElseThrow();
+
+    // 그 사이(최대 10분) 다른 경로로 이미 연동됐을 수 있으니 방어적으로 재확인
+    if (socialAccountRepository.findByProviderAndProviderId("kakao", providerId).isEmpty()) {
+      ensureSocialAccount(member, providerId);
+    }
+
+    MemberDTO memberDTO = entityToDTO(member);
+    Map<String, Object> resultClaims = memberDTO.getClaims();
+
+    // 카카오 연동 로그인도 "로그인 유지" 개념이 없어 항상 7일(미유지)로 취급
+    resultClaims.put("rememberMe", false);
+
+    String jwtAccessToken = JWTUtil.generateToken(resultClaims, JWTUtil.ACCESS_TOKEN_MINUTES);
+    String jwtRefreshToken = JWTUtil.generateToken(resultClaims, JWTUtil.REFRESH_TOKEN_MINUTES_DEFAULT);
+
+    redisTokenService.saveRefreshToken(email, jwtRefreshToken, false);
+
+    resultClaims.put("accessToken", jwtAccessToken);
+    resultClaims.put("refreshToken", jwtRefreshToken);
+    resultClaims.put("profileComplete", true);
+
+    log.info("kakao email-match link confirmed: " + email);
+
+    return resultClaims;
+  }
+
+  @Override
+  public Map<String, Object> completeKakaoSignup(KakaoSignupCompleteDTO dto) {
+
+    Map<String, Object> pendingClaims;
+
+    try {
+      pendingClaims = JWTUtil.validateToken(dto.getPendingToken());
+    } catch (CustomJWTException e) {
+      throw new IllegalStateException("가입 세션이 만료되었습니다. 카카오 로그인을 다시 시도해주세요.");
+    }
+
+    if (!"KAKAO_PENDING_SIGNUP".equals(pendingClaims.get("purpose"))) {
+      throw new IllegalStateException("잘못된 요청입니다.");
+    }
+
+    String email = (String) pendingClaims.get("kakaoEmail");
+    String providerId = (String) pendingClaims.get("providerId");
+
+    // pendingToken 발급 이후(최대 30분 사이) 그 사이에 다른 경로로 이 카카오 계정이
+    // 이미 연동/가입됐을 수 있으니 마지막에 한 번 더 확인 (경쟁 상황 방어)
+    if (socialAccountRepository.findByProviderAndProviderId("kakao", providerId).isPresent()) {
+      throw new IllegalStateException("이미 다른 계정에 연동된 카카오 계정입니다. 로그인해주세요.");
+    }
+
+    // 닉네임 중복 체크
+    if (memberRepository.existsByNickname(dto.getNickname())) {
+      throw new IllegalStateException("이미 사용 중인 닉네임입니다.");
+    }
+
+    // 전화번호 중복/차단 체크
+    String phoneStatus = getPhoneCheckStatus(dto.getPhone());
+
+    if ("BLOCKED".equals(phoneStatus)) {
+      throw new IllegalStateException("정지 또는 휴면 처리된 회원과 동일한 전화번호입니다. 관리자에게 문의해주세요.");
+    }
+
+    if ("UNAVAILABLE".equals(phoneStatus)) {
+      throw new IllegalStateException("이미 사용 중인 휴대폰 번호입니다.");
+    }
+
+    // 완전 신규면 새로 만들고, 예전에 시작만 하다 만 레거시 row가 있으면 그걸 그대로 채움
+    Member member = memberRepository.findById(email).orElse(null);
+
+    if (member == null) {
+      member = Member.builder()
+              .email(email)
+              .pw(passwordEncoder.encode(makeTempPassword()))
+              .nickname(dto.getNickname())
+              .social(true)
+              .build();
+      member.addRole(MemberRole.USER);
+    } else {
+      member.changeNickname(dto.getNickname());
+    }
+
+    memberRepository.save(member);
+
+    ensureSocialAccount(member, providerId);
+
+    Optional<MemberDetail> existingDetail = memberDetailRepository.getByMemberEmail(email);
+
+    MemberDetail memberDetail = existingDetail.isPresent()
+            ? existingDetail.get()
+            : MemberDetail.builder().member(member).build();
+
+    memberDetail.changeName(dto.getName());
+    memberDetail.changePhone(dto.getPhone());
+    memberDetail.changeBirthDate(dto.getBirthDate());
+    memberDetail.changeAddress(dto.getZipCode(), dto.getAddress(), dto.getAddressDetail());
+
+    memberDetailRepository.save(memberDetail);
+
+    TermsAgree termsAgree = TermsAgree.builder()
+            .member(member)
+            .termsAgree(dto.isTermsAgree())
+            .privacyAgree(dto.isPrivacyAgree())
+            .marketing(dto.isMarketing())
+            .build();
+
+    termsAgreeRepository.save(termsAgree);
+
+    // 여기서 처음으로 진짜 로그인 처리 (JWT 발급)
+    MemberDTO memberDTO = entityToDTO(member);
+    Map<String, Object> resultClaims = memberDTO.getClaims();
+
+    // 카카오 신규가입도 "로그인 유지" 개념이 없어 항상 7일(미유지)로 취급
+    resultClaims.put("rememberMe", false);
+
+    String jwtAccessToken = JWTUtil.generateToken(resultClaims, JWTUtil.ACCESS_TOKEN_MINUTES);
+    String jwtRefreshToken = JWTUtil.generateToken(resultClaims, JWTUtil.REFRESH_TOKEN_MINUTES_DEFAULT);
+
+    redisTokenService.saveRefreshToken(email, jwtRefreshToken, false);
+
+    resultClaims.put("accessToken", jwtAccessToken);
+    resultClaims.put("refreshToken", jwtRefreshToken);
+    resultClaims.put("profileComplete", true);
+
+    log.info("kakao signup complete: " + email);
+
+    return resultClaims;
   }
 
   private void ensureSocialAccount(Member member, String providerId) {
@@ -295,64 +474,6 @@ public class MemberServiceImpl implements MemberService {
     }
 
     log.info("join requested (pending verification): " + joinDTO.getEmail());
-  }
-
-  @Override
-  public void completeSocialProfile(SocialCompleteDTO socialCompleteDTO) {
-
-    Optional<Member> result = memberRepository.findById(socialCompleteDTO.getEmail());
-
-    Member member = result.orElseThrow();
-
-    // 이미 상세정보가 있는 회원이면 중복 처리 방지
-    if (memberDetailRepository.getByMemberEmail(socialCompleteDTO.getEmail()).isPresent()) {
-      throw new IllegalStateException("이미 추가정보 입력이 완료된 회원입니다.");
-    }
-
-    // 닉네임 중복 체크 (본인이 원래 가지고 있던 임시 닉네임과 동일하면 통과)
-    if (!socialCompleteDTO.getNickname().equals(member.getNickname())
-            && memberRepository.existsByNickname(socialCompleteDTO.getNickname())) {
-      throw new IllegalStateException("이미 사용 중인 닉네임입니다.");
-    }
-
-    // 전화번호 중복/차단 체크
-    String phoneStatus = getPhoneCheckStatus(socialCompleteDTO.getPhone());
-
-    if ("BLOCKED".equals(phoneStatus)) {
-      throw new IllegalStateException("정지 또는 휴면 처리된 회원과 동일한 전화번호입니다. 관리자에게 문의해주세요.");
-    }
-
-    if ("UNAVAILABLE".equals(phoneStatus)) {
-      throw new IllegalStateException("이미 사용 중인 휴대폰 번호입니다.");
-    }
-
-    member.changeNickname(socialCompleteDTO.getNickname());
-    memberRepository.save(member);
-
-    // 1. MemberDetail 저장
-    MemberDetail memberDetail = MemberDetail.builder()
-            .member(member)
-            .name(socialCompleteDTO.getName())
-            .phone(socialCompleteDTO.getPhone())
-            .birthDate(socialCompleteDTO.getBirthDate())
-            .zipCode(socialCompleteDTO.getZipCode())
-            .address(socialCompleteDTO.getAddress())
-            .addressDetail(socialCompleteDTO.getAddressDetail())
-            .build();
-
-    memberDetailRepository.save(memberDetail);
-
-    // 2. TermsAgree 저장
-    TermsAgree termsAgree = TermsAgree.builder()
-            .member(member)
-            .termsAgree(socialCompleteDTO.isTermsAgree())
-            .privacyAgree(socialCompleteDTO.isPrivacyAgree())
-            .marketing(socialCompleteDTO.isMarketing())
-            .build();
-
-    termsAgreeRepository.save(termsAgree);
-
-    log.info("social profile complete: " + socialCompleteDTO.getEmail());
   }
 
   @Override

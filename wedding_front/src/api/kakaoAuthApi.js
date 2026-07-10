@@ -12,7 +12,10 @@ const access_token_url = `https://kauth.kakao.com/oauth/token`;
 const logout_path = `https://kauth.kakao.com/oauth/logout`;
 
 export const getKakaoLoginLink = () => {
-  const kakaoURL = `${auth_code_path}?client_id=${rest_api_key}&redirect_uri=${redirect_uri}&response_type=code`;
+  // prompt=login: 브라우저에 카카오 로그인 세션이 남아있어도 그걸 그냥 재사용하지 않고,
+  // 매번 카카오 로그인 화면을 다시 띄워서 사용자가 계정을 새로 선택/입력할 수 있게 함
+  // (이게 없으면 예전에 로그인했던 카카오 계정으로 묻지도 않고 자동 재로그인됨)
+  const kakaoURL = `${auth_code_path}?client_id=${rest_api_key}&redirect_uri=${redirect_uri}&response_type=code&prompt=login`;
 
   return kakaoURL;
 };
@@ -20,7 +23,7 @@ export const getKakaoLoginLink = () => {
 // 마이페이지에서 "카카오 계정 연동하기" 눌렀을 때 사용 - state 파라미터로 "이건 로그인이 아니라 연동 요청"임을 표시
 // (카카오는 이 state 값을 그대로 콜백에 돌려주므로, 리다이렉트 페이지에서 이 값을 보고 로그인/연동을 분기함)
 export const getKakaoLinkLink = () => {
-  const kakaoURL = `${auth_code_path}?client_id=${rest_api_key}&redirect_uri=${redirect_uri}&response_type=code&state=link`;
+  const kakaoURL = `${auth_code_path}?client_id=${rest_api_key}&redirect_uri=${redirect_uri}&response_type=code&state=link&prompt=login`;
 
   return kakaoURL;
 };

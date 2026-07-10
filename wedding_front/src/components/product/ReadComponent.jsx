@@ -32,8 +32,6 @@ const SECTIONS = [
   { key: "shipping", label: "배송안내" },
 ];
 
-const SCROLL_OFFSET = 90;
-
 const ReadComponent = ({ pno }) => {
   const [product, setProduct] = useState(initState);
   const [options, setOptions] = useState([]);
@@ -43,6 +41,24 @@ const ReadComponent = ({ pno }) => {
 
   const [wished, setWished] = useState(false);
   const [fetching, setFetching] = useState(false);
+
+  const [headerHeight, setHeaderHeight] = useState(0);
+
+  useEffect(() => {
+    const headerEl = document.getElementById("mainNav");
+    if (!headerEl) return;
+
+    const updateHeight = () => {
+      setHeaderHeight(headerEl.getBoundingClientRect().height);
+    };
+
+    updateHeight();
+
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(headerEl);
+
+    return () => observer.disconnect();
+  }, []);
 
   const { moveToList, moveToModify } = useCustomMove();
   const { changeCart } = useCustomCart();
@@ -64,8 +80,6 @@ const ReadComponent = ({ pno }) => {
       ([productData, optionData]) => {
         setProduct(productData);
         setOptions(optionData);
-        // 수정: 고정된 "기본" 버튼 대신, 옵션 목록의 첫 번째 항목을 기본 선택값으로 설정
-        // (더미데이터의 옵션 목록엔 이미 "각인 없음", "기본 포장"처럼 0원짜리 기본 선택지가 포함돼 있음)
         setSelectedOption(optionData.length > 0 ? optionData[0] : null);
         setFetching(false);
       },
@@ -150,21 +164,21 @@ const ReadComponent = ({ pno }) => {
     const el = sectionRefs.current[key];
     if (el) {
       const top =
-        el.getBoundingClientRect().top + window.scrollY - SCROLL_OFFSET;
+        el.getBoundingClientRect().top + window.scrollY - (headerHeight + 50);
       window.scrollTo({ top, behavior: "smooth" });
     }
   };
 
   return (
-    <div className="bg-white">
+    <div className="-mx-5 -mb-10 -mt-12 min-h-[calc(100vh-6rem)] bg-cream pt-16 text-ink">
       {fetching ? <FetchingModal /> : <></>}
 
-      <p className="max-w-[1140px] mx-auto px-6 pt-5 text-xs text-ink-faint">
+      <p className="max-w-[1320px] mx-auto px-6 text-xs text-ink-faint">
         답례품 쇼핑몰 {product.category ? `> ${product.category}` : ""} {" > "}
         <span className="text-ink-soft">{product.pname}</span>
       </p>
 
-      <div className="max-w-[1140px] mx-auto px-6 pt-5 grid grid-cols-[460px_1fr] gap-14">
+      <div className="max-w-[1320px] mx-auto px-6 pt-5 grid grid-cols-1 gap-8 lg:grid-cols-[460px_1fr] lg:gap-14">
         <ProductGalleryComponent
           pname={product.pname}
           uploadFileNames={product.uploadFileNames}
@@ -172,10 +186,14 @@ const ReadComponent = ({ pno }) => {
         />
 
         <div>
-          <p className="text-xs tracking-[0.15em] text-brand-accent mb-2.5">
+          <span className="inline-block -rotate-2 bg-blush-100 px-3 py-1 mb-3 font-['Gaegu'] text-[13px] text-brand-deep">
             {product.category}
+          </span>
+
+          <p className="font-['Gowun_Batang'] text-2xl mb-1.5">
+            {product.pname}
           </p>
-          <p className="font-serif text-2xl mb-1.5">{product.pname}</p>
+
           <p className="text-xs text-ink-faint flex items-center gap-1 mb-3">
             {"★".repeat(Math.round(product.ratingAvg || 0))}
             <span className="text-line-soft">
@@ -193,14 +211,13 @@ const ReadComponent = ({ pno }) => {
                 {options[0]?.optionName ?? "옵션"}
               </p>
               <div className="flex gap-2 flex-wrap mb-4">
-                {/* 수정: 고정 "기본" 버튼 제거, 옵션 목록만 그대로 렌더링 */}
                 {options.map((opt) => (
                   <span
                     key={opt.pono}
                     onClick={() => setSelectedOption(opt)}
                     className={`border rounded-full px-3.5 py-1.5 text-xs cursor-pointer ${
                       selectedOption?.pono === opt.pono
-                        ? "border-brand text-brand-accent bg-brand-light"
+                        ? "border-brand text-brand-deep bg-brand-light font-medium"
                         : "border-line-soft"
                     }`}
                   >
@@ -230,13 +247,13 @@ const ReadComponent = ({ pno }) => {
           <div className="flex gap-2.5">
             <button
               onClick={handleClickWish}
-              className="w-[46px] h-[46px] border border-line-soft rounded-full flex items-center justify-center"
+              className="w-[46px] h-[46px] shrink-0 border border-line-soft rounded-full flex items-center justify-center"
             >
               <svg
                 viewBox="0 0 24 24"
-                className="w-4.5 h-4.5"
-                fill={wished ? "#D4537E" : "none"}
-                stroke="#D4537E"
+                className="w-[18px] h-[18px]"
+                fill={wished ? "#C87070" : "none"}
+                stroke="#C87070"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -271,13 +288,16 @@ const ReadComponent = ({ pno }) => {
         </div>
       </div>
 
-      <div className="sticky top-0 bg-white z-10 border-b border-line mt-14">
-        <div className="max-w-[1140px] mx-auto px-6 flex gap-7 text-sm">
+      <div
+        className="sticky bg-white z-10 border-b border-line mt-14 -mx-5"
+        style={{ top: `${headerHeight}px` }}
+      >
+        <div className="max-w-[1320px] mx-auto px-6 flex gap-5 md:gap-7 text-sm overflow-x-auto">
           {SECTIONS.map((sec) => (
             <span
               key={sec.key}
               onClick={() => handleClickSection(sec.key)}
-              className={`py-3.5 cursor-pointer border-b-2 ${
+              className={`py-3.5 cursor-pointer border-b-2 whitespace-nowrap ${
                 activeSection === sec.key
                   ? "text-ink font-medium border-brand"
                   : "text-ink-faint border-transparent"
@@ -289,10 +309,10 @@ const ReadComponent = ({ pno }) => {
         </div>
       </div>
 
-      <div className="max-w-[1140px] mx-auto px-6">
+      <div className="max-w-[1320px] mx-auto px-6">
         <div
           ref={(el) => (sectionRefs.current.desc = el)}
-          className="py-10 border-b border-line"
+          className="py-8 md:py-10 border-b border-line"
         >
           <p className="text-sm font-medium mb-4">상세정보</p>
           <ProductDetailInfoComponent
@@ -304,7 +324,7 @@ const ReadComponent = ({ pno }) => {
 
         <div
           ref={(el) => (sectionRefs.current.review = el)}
-          className="py-10 border-b border-line"
+          className="py-8 md:py-10 border-b border-line"
         >
           <p className="text-sm font-medium mb-4">
             리뷰 ({product.reviewCount || 0})
@@ -321,7 +341,7 @@ const ReadComponent = ({ pno }) => {
 
         <div
           ref={(el) => (sectionRefs.current.qna = el)}
-          className="py-10 border-b border-line"
+          className="py-8 md:py-10 border-b border-line"
         >
           <p className="text-sm font-medium mb-4">Q&A</p>
           <QnaSectionComponent
@@ -334,7 +354,7 @@ const ReadComponent = ({ pno }) => {
 
         <div
           ref={(el) => (sectionRefs.current.shipping = el)}
-          className="py-10 mb-10"
+          className="py-8 md:py-10 mb-10"
         >
           <p className="text-sm font-medium mb-4">배송안내</p>
           <ShippingPolicyComponent />
@@ -348,7 +368,7 @@ const ReadComponent = ({ pno }) => {
         onClickProduct={(newPno) => navigate(`/product/read/${newPno}`)}
       />
 
-      <div className="max-w-[1140px] mx-auto px-6 pb-16 flex justify-end">
+      <div className="max-w-[1320px] mx-auto px-6 pb-16 flex justify-end">
         <button
           onClick={moveToList}
           className="h-11 px-6 rounded-full border border-line-soft text-sm"

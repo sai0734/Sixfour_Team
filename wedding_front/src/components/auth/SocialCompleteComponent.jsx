@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { useSelector } from "react-redux";
+import { useLocation } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import {
-  socialCompletePost,
+  completeKakaoSignupPost,
   checkNicknameAvailable,
   checkPhoneAvailable,
 } from "../../api/authApi";
+import { login } from "../../slices/loginSlice";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import AuthLayout from "./AuthLayout";
 
@@ -22,26 +24,64 @@ const initState = {
 };
 
 const inputClass =
-  "w-full px-4 py-3 rounded-xl border border-rose-100 bg-blush-50/40 text-plum-900 placeholder:text-plum-500/50 focus:border-rose-400 focus:ring-4 focus:ring-rose-100 outline-none transition";
-const labelClass = "block text-sm font-semibold text-plum-900/80 mb-1.5";
-const okMsgClass = "text-green-600 text-xs mt-1";
-const errMsgClass = "text-rose-600 text-xs mt-1";
+  "w-full px-4 py-3 rounded-xl border border-line bg-white/70 text-ink placeholder:text-ink-faint focus:border-brand focus:ring-4 focus:ring-blush-100 outline-none transition font-body";
+const labelClass = "block text-sm font-semibold text-ink-soft mb-1.5 font-body";
+const okMsgClass = "text-green-600 text-xs mt-1 font-body";
+const errMsgClass = "text-rose-600 text-xs mt-1 font-body";
 
 const PHONE_REGEX = /^01[0-9]-?\d{3,4}-?\d{4}$/;
 
 const SocialCompleteComponent = () => {
+  const location = useLocation();
+  const dispatch = useDispatch();
+  const { moveToPath } = useCustomLogin();
+
+  // 카카오 로그인 직후 KakaoRedirectPage가 navigate()로 들려준 값.
+  // 아직 로그인 전 상태라 Redux(loginSlice)에는 아무것도 없고, 이 라우터 state가 유일한 신원 증명 수단임
+  const pendingToken = location.state?.pendingToken;
+  const kakaoEmail = location.state?.kakaoEmail;
+
   const [completeParam, setCompleteParam] = useState({ ...initState });
   const [nicknameStatus, setNicknameStatus] = useState(null);
   const [phoneStatus, setPhoneStatus] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   const [touched, setTouched] = useState({
     nickname: false,
     name: false,
     phone: false,
     address: false,
   });
-  const loginInfo = useSelector((state) => state.loginSlice);
 
-  const { moveToPath } = useCustomLogin();
+  // pendingToken 없이 이 화면에 바로 들어온 경우(새로고침으로 state 유실 등) - 진행 불가
+  if (!pendingToken) {
+    return (
+      <AuthLayout
+        eyebrow="세션 만료"
+        title={
+          <>
+            다시
+            <br />
+            시도해 주세요
+          </>
+        }
+        subtitle="카카오 로그인 정보를 찾을 수 없어요"
+        stickerEmoji="😢"
+      >
+        <div className="max-w-sm w-full mx-auto text-center">
+          <p className="text-ink-muted text-sm mb-8">
+            새로고침 등으로 인증 정보가 사라졌어요. 카카오 로그인을 다시 시도해
+            주세요.
+          </p>
+          <button
+            className="w-full py-3 rounded-full bg-brand-gradient text-ink font-semibold shadow-lg shadow-blush-200/60 hover:shadow-blush-300/70 hover:-translate-y-0.5 transition-all"
+            onClick={() => moveToPath("/auth/login")}
+          >
+            로그인 화면으로
+          </button>
+        </div>
+      </AuthLayout>
+    );
+  }
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -195,16 +235,22 @@ const SocialCompleteComponent = () => {
       return;
     }
 
-    const socialCompleteParam = {
-      email: loginInfo.email,
+    const payload = {
+      pendingToken,
       ...completeParam,
       birthDate: completeParam.birthDate || null,
     };
 
-    socialCompletePost(socialCompleteParam)
+    setSubmitting(true);
+
+    completeKakaoSignupPost(payload)
       .then((data) => {
         console.log(data);
-        alert("추가정보 입력이 완료되었습니다.");
+
+        // 이 응답에 처음으로 accessToken/refreshToken이 들어있음 - 여기서 비로소 로그인 처리
+        dispatch(login(data));
+
+        alert("가입이 완료되었습니다.");
         moveToPath("/");
       })
       .catch((err) => {
@@ -213,14 +259,15 @@ const SocialCompleteComponent = () => {
         const msg = err.response?.data?.msg;
 
         alert(msg || "처리 중 오류가 발생했습니다.");
-      });
+      })
+      .finally(() => setSubmitting(false));
   };
 
   const renderNicknameMsg = () => {
     if (touched.nickname && !completeParam.nickname)
       return <div className={errMsgClass}>닉네임은 필수 입력 항목입니다.</div>;
     if (nicknameStatus === "checking")
-      return <div className="text-plum-500 text-xs mt-1">확인 중...</div>;
+      return <div className="text-ink-faint text-xs mt-1">확인 중...</div>;
     if (nicknameStatus === "available")
       return <div className={okMsgClass}>✓ 사용가능!</div>;
     if (nicknameStatus === "unavailable")
@@ -250,7 +297,7 @@ const SocialCompleteComponent = () => {
         </div>
       );
     if (phoneStatus === "checking")
-      return <div className="text-plum-500 text-xs mt-1">확인 중...</div>;
+      return <div className="text-ink-faint text-xs mt-1">확인 중...</div>;
     if (phoneStatus === "available")
       return <div className={okMsgClass}>✓ 사용가능!</div>;
     if (phoneStatus === "unavailable")
@@ -281,19 +328,20 @@ const SocialCompleteComponent = () => {
         </>
       }
       subtitle="추가 정보만 입력하면 가입이 완료돼요"
+      stickerEmoji="🎉"
       footer={
-        <div className="bg-white/15 rounded-xl p-4">
-          <div className="text-sm font-semibold mb-1">카카오 계정 연동됨</div>
-          <div className="text-xs text-white/80">{loginInfo.email}</div>
-          <div className="text-xs mt-1">✓ 인증 완료</div>
+        <div className="bg-white/80 border border-line rounded-xl p-4">
+          <div className="text-sm font-semibold text-ink mb-1">
+            카카오 계정 연동됨
+          </div>
+          <div className="text-xs text-ink-muted">{kakaoEmail}</div>
+          <div className="text-xs text-brand-deep mt-1">✓ 인증 완료</div>
         </div>
       }
     >
       <div className="max-w-sm w-full mx-auto">
-        <h2 className="font-display text-2xl text-plum-900 mb-1">
-          추가 정보 입력
-        </h2>
-        <p className="text-plum-500 text-sm mb-6">
+        <h2 className="font-serifkr text-2xl text-ink mb-1">추가 정보 입력</h2>
+        <p className="text-ink-muted text-sm mb-6">
           나머지 정보를 입력해 가입을 완료해요
         </p>
 
@@ -364,7 +412,7 @@ const SocialCompleteComponent = () => {
             ></input>
             <button
               type="button"
-              className="shrink-0 px-4 rounded-xl border border-rose-200 text-rose-600 text-sm font-semibold hover:bg-blush-50 transition whitespace-nowrap"
+              className="shrink-0 px-4 rounded-xl border border-line text-brand-deep text-sm font-semibold hover:bg-blush-50 transition whitespace-nowrap"
               onClick={handleClickAddressSearch}
             >
               📍 주소 검색
@@ -390,7 +438,7 @@ const SocialCompleteComponent = () => {
         </div>
 
         <div className="bg-blush-50 rounded-xl p-4 mb-6">
-          <label className="flex items-center gap-2 font-semibold text-plum-900 pb-2 mb-2 border-b border-rose-100">
+          <label className="flex items-center gap-2 font-semibold text-ink pb-2 mb-2 border-b border-line">
             <input
               type="checkbox"
               checked={
@@ -399,47 +447,48 @@ const SocialCompleteComponent = () => {
                 completeParam.marketing
               }
               onChange={handleClickAllAgree}
-              className="accent-rose-500"
+              className="accent-brand-deep"
             />
             전체 동의
           </label>
-          <label className="flex items-center gap-2 text-sm text-plum-900/80 mb-1.5">
+          <label className="flex items-center gap-2 text-sm text-ink-soft mb-1.5">
             <input
               type="checkbox"
               name="termsAgree"
               checked={completeParam.termsAgree}
               onChange={handleChange}
-              className="accent-rose-500"
+              className="accent-brand-deep"
             />
             [필수] 이용약관에 동의합니다.
           </label>
-          <label className="flex items-center gap-2 text-sm text-plum-900/80 mb-1.5">
+          <label className="flex items-center gap-2 text-sm text-ink-soft mb-1.5">
             <input
               type="checkbox"
               name="privacyAgree"
               checked={completeParam.privacyAgree}
               onChange={handleChange}
-              className="accent-rose-500"
+              className="accent-brand-deep"
             />
             [필수] 개인정보처리방침에 동의합니다.
           </label>
-          <label className="flex items-center gap-2 text-sm text-plum-900/80">
+          <label className="flex items-center gap-2 text-sm text-ink-soft">
             <input
               type="checkbox"
               name="marketing"
               checked={completeParam.marketing}
               onChange={handleChange}
-              className="accent-rose-500"
+              className="accent-brand-deep"
             />
             [선택] 마케팅 정보 수신에 동의합니다.
           </label>
         </div>
 
         <button
-          className="w-full py-3 rounded-xl bg-rose-gradient text-white font-semibold shadow-lg shadow-rose-200 hover:shadow-rose-300 hover:-translate-y-0.5 transition-all"
+          disabled={submitting}
+          className="w-full py-3 rounded-full bg-brand-gradient text-ink font-semibold shadow-lg shadow-blush-200/60 hover:shadow-blush-300/70 hover:-translate-y-0.5 transition-all disabled:opacity-50"
           onClick={handleClickComplete}
         >
-          가입 완료하기
+          {submitting ? "처리 중..." : "가입 완료하기"}
         </button>
       </div>
     </AuthLayout>
