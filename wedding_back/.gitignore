@@ -36,5 +36,3 @@ out/
 ### VS Code ###
 .vscode/
 
-.vite-cache/
-wedding_front/.vite-cache/
