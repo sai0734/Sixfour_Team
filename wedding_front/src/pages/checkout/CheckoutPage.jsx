@@ -7,6 +7,7 @@ import { TOSS_CLIENT_KEY } from "../../api/tossConfig";
 import { API_SERVER_HOST } from "../../api/reservationApi";
 import { calculateShippingFee } from "../../util/shippingPolicy";
 import BasicLayout from "../../layouts/BasicLayout";
+import ShopTapeLabel from "../../components/product/ShopTapeLabel";
 
 const host = API_SERVER_HOST;
 
@@ -75,7 +76,6 @@ const CheckoutPage = () => {
     }).open();
   };
 
-  // 우편번호/기본주소/상세주소를 각각 정확한 칸에 채우도록 변경
   const handleClickLoadLastAddress = () => {
     getLastAddress().then((data) => {
       if (!data) {
@@ -166,40 +166,51 @@ const CheckoutPage = () => {
 
   return (
     <BasicLayout showCart={false}>
-      <div className="bg-white min-h-screen">
-        <div className="max-w-[700px] mx-auto px-6 pt-10 pb-20">
-          <p className="text-xs tracking-[0.15em] text-brand-accent mb-2">
-            CHECKOUT
+      <div className="-mx-5 -mb-10 -mt-12 min-h-[calc(100vh-6rem)] bg-cream px-5 pt-16">
+        <div className="max-w-[700px] mx-auto px-6 pb-20">
+          <ShopTapeLabel className="mb-4">CHECKOUT</ShopTapeLabel>
+          <p className="font-['Gowun_Batang'] text-2xl mb-8 text-ink">
+            주문/결제
           </p>
-          <p className="font-serif text-2xl mb-8">주문/결제</p>
 
-          <div className="mb-8">
-            <p className="text-sm font-medium mb-3">주문 상품</p>
+          <div className="bg-white rounded-2xl p-5 shadow-[0_8px_24px_-12px_rgba(58,54,47,0.15)] mb-5">
+            <p className="text-sm font-medium mb-3 text-brand-deep">
+              주문 상품
+            </p>
             <div className="flex flex-col gap-3">
               {safeCartItems.map((item, i) => (
-                <div
-                  key={item.cino ?? i}
-                  className="flex justify-between text-sm"
-                >
-                  <span>
-                    {item.pname}
-                    {item.optionValue && ` (${item.optionValue})`} × {item.qty}
-                  </span>
-                  <span>
-                    {(
-                      (item.price + (item.extraPrice || 0)) *
-                      item.qty
-                    ).toLocaleString()}
-                    원
-                  </span>
+                <div key={item.cino ?? i} className="flex items-center gap-3">
+                  <div className="w-12 h-12 shrink-0 rounded-lg overflow-hidden bg-surface">
+                    {item.imageFile && (
+                      <img
+                        alt={item.pname}
+                        className="w-full h-full object-cover"
+                        src={`${host}/api/product/view/s_${item.imageFile}`}
+                      />
+                    )}
+                  </div>
+                  <div className="flex-1 flex justify-between items-center text-sm min-w-0">
+                    <span className="truncate">
+                      {item.pname}
+                      {item.optionValue && ` (${item.optionValue})`} ×{" "}
+                      {item.qty}
+                    </span>
+                    <span className="shrink-0 ml-2 font-medium">
+                      {(
+                        (item.price + (item.extraPrice || 0)) *
+                        item.qty
+                      ).toLocaleString()}
+                      원
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="mb-8 border-t border-line pt-6">
+          <div className="bg-white rounded-2xl p-5 shadow-[0_8px_24px_-12px_rgba(58,54,47,0.15)] mb-5">
             <div className="flex justify-between items-center mb-3">
-              <p className="text-sm font-medium">배송지 정보</p>
+              <p className="text-sm font-medium text-brand-deep">배송지 정보</p>
               <button
                 onClick={handleClickLoadLastAddress}
                 className="text-xs text-brand-accent underline"
@@ -214,14 +225,14 @@ const CheckoutPage = () => {
                 value={receiverName}
                 onChange={(e) => setReceiverName(e.target.value)}
                 placeholder="받으실 분"
-                className="h-10 px-4 border border-line-soft rounded-lg text-sm"
+                className="h-10 px-4 border border-line-soft rounded-lg text-sm focus:outline-none focus:border-brand"
               />
               <input
                 type="text"
                 value={receiverPhone}
                 onChange={(e) => setReceiverPhone(e.target.value)}
                 placeholder="연락처"
-                className="h-10 px-4 border border-line-soft rounded-lg text-sm"
+                className="h-10 px-4 border border-line-soft rounded-lg text-sm focus:outline-none focus:border-brand"
               />
               <div className="flex gap-2">
                 <input
@@ -233,7 +244,7 @@ const CheckoutPage = () => {
                 />
                 <button
                   onClick={handleClickSearchAddress}
-                  className="h-10 px-4 border border-line-soft rounded-lg text-xs"
+                  className="h-10 px-4 border border-line-soft rounded-lg text-xs hover:border-brand hover:text-brand-deep transition"
                 >
                   우편번호 찾기
                 </button>
@@ -250,19 +261,19 @@ const CheckoutPage = () => {
                 value={addressDetail}
                 onChange={(e) => setAddressDetail(e.target.value)}
                 placeholder="상세주소"
-                className="h-10 px-4 border border-line-soft rounded-lg text-sm"
+                className="h-10 px-4 border border-line-soft rounded-lg text-sm focus:outline-none focus:border-brand"
               />
               <textarea
                 value={request}
                 onChange={(e) => setRequest(e.target.value)}
                 placeholder="배송 요청사항 (선택)"
                 rows={2}
-                className="p-3 border border-line-soft rounded-lg text-sm resize-none"
+                className="p-3 border border-line-soft rounded-lg text-sm resize-none focus:outline-none focus:border-brand"
               />
             </div>
           </div>
 
-          <div className="border-t border-line pt-6 mb-8">
+          <div className="bg-white rounded-2xl p-5 shadow-[0_8px_24px_-12px_rgba(58,54,47,0.15)] mb-6">
             <div className="flex justify-between text-sm text-ink-soft mb-2">
               <span>상품금액</span>
               <span>{productSubtotal.toLocaleString()}원</span>
@@ -277,7 +288,7 @@ const CheckoutPage = () => {
             </div>
             <div className="flex justify-between items-baseline mt-3 pt-3 border-t border-line">
               <span className="text-sm text-ink-soft">결제 금액</span>
-              <span className="text-xl font-medium">
+              <span className="text-xl font-medium text-brand-deep">
                 {totalPrice.toLocaleString()}원
               </span>
             </div>

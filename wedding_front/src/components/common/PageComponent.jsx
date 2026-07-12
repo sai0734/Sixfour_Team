@@ -1,36 +1,44 @@
 const PageComponent = ({ serverData, movePage }) => {
   return (
-    <div className="m-6 flex justify-center">
+    <div className="my-6 flex justify-center items-center gap-1.5">
       {serverData.prev ? (
-        <div
-          className="m-2 p-2 w-16 text-center  font-bold text-blue-400 "
+        <button
           onClick={() => movePage({ page: serverData.prevPage })}
+          className="w-8 h-8 rounded-full border border-line-soft text-xs text-ink-soft hover:bg-blush-100"
         >
-          Prev{" "}
-        </div>
+          ‹
+        </button>
       ) : (
-        <></>
+        <span className="w-8 h-8 rounded-full border border-line-soft text-xs text-line-soft opacity-30 flex items-center justify-center cursor-not-allowed">
+          ‹
+        </span>
       )}
 
       {serverData.pageNumList.map((pageNum) => (
-        <div
+        <button
           key={pageNum}
-          className={`m-2 p-2 w-12  text-center rounded shadow-md text-white ${serverData.current === pageNum ? "bg-gray-500" : "bg-blue-400"}`}
           onClick={() => movePage({ page: pageNum })}
+          className={`w-8 h-8 rounded-full text-xs font-medium ${
+            serverData.current === pageNum
+              ? "bg-brand text-white"
+              : "text-ink-soft hover:bg-blush-100"
+          }`}
         >
           {pageNum}
-        </div>
+        </button>
       ))}
 
       {serverData.next ? (
-        <div
-          className="m-2 p-2 w-16 text-center font-bold text-blue-400"
+        <button
           onClick={() => movePage({ page: serverData.nextPage })}
+          className="w-8 h-8 rounded-full border border-line-soft text-xs text-ink-soft hover:bg-blush-100"
         >
-          Next
-        </div>
+          ›
+        </button>
       ) : (
-        <></>
+        <span className="w-8 h-8 rounded-full border border-line-soft text-xs text-line-soft opacity-30 flex items-center justify-center cursor-not-allowed">
+          ›
+        </span>
       )}
     </div>
   );

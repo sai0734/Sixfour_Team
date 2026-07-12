@@ -13,7 +13,11 @@ import {
   refundOrder,
 } from "../../api/adminOrderApi";
 import { getReviews, postReply, deleteReview } from "../../api/reviewApi";
+import { API_SERVER_HOST } from "../../api/reservationApi";
 import AdminLayout from "../../layouts/AdminLayout";
+import ShopTapeLabel from "../product/ShopTapeLabel";
+
+const host = API_SERVER_HOST;
 
 const TERMINAL_STATUSES = ["REFUNDED", "CANCELLED"];
 
@@ -28,19 +32,29 @@ const STATUS_LABEL = {
 
 const STATUS_FLOW = ["PAID", "SHIPPING_READY", "SHIPPING", "DELIVERED"];
 
-const AdminReviewMiniSection = ({ pno, pname }) => {
+const SectionCard = ({ title, children }) => (
+  <section className="bg-white rounded-2xl p-5 shadow-[0_6px_18px_-10px_rgba(58,54,47,0.18)] mb-5">
+    <p className="text-sm font-medium text-brand-deep mb-3">{title}</p>
+    {children}
+  </section>
+);
+
+const AdminReviewMiniSection = ({ pno, pname, thumbnail, memberEmail }) => {
   const [reviews, setReviews] = useState([]);
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyContent, setReplyContent] = useState("");
 
   const fetchReviews = () => {
-    getReviews(pno).then((data) => setReviews(data));
+    getReviews(pno).then((data) => {
+      const onlyMine = data.filter((r) => r.memberEmail === memberEmail);
+      setReviews(onlyMine);
+    });
   };
 
   useEffect(() => {
     fetchReviews();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pno]);
+  }, [pno, memberEmail]);
 
   const handleReply = (rno) => {
     if (!replyContent.trim()) return;
@@ -56,25 +70,43 @@ const AdminReviewMiniSection = ({ pno, pname }) => {
     deleteReview(pno, rno).then(fetchReviews);
   };
 
+  const ProductHeader = () => (
+    <div className="flex items-center gap-2.5 mb-2">
+      <div className="w-8 h-8 shrink-0 rounded-lg overflow-hidden bg-surface">
+        {thumbnail && (
+          <img
+            alt={pname}
+            className="w-full h-full object-cover"
+            src={`${host}/api/product/view/s_${thumbnail}`}
+          />
+        )}
+      </div>
+      <p className="text-xs font-medium">{pname}</p>
+    </div>
+  );
+
   if (reviews.length === 0) {
     return (
-      <div className="text-xs text-ink-faint py-2">
-        {pname}: 등록된 리뷰가 없습니다.
+      <div className="pb-3 mb-3 border-b border-line-soft last:border-b-0 last:mb-0 last:pb-0">
+        <ProductHeader />
+        <p className="text-xs text-ink-faint pl-[42px]">
+          이 구매자가 작성한 리뷰가 없습니다.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="mb-4">
-      <p className="text-xs font-medium mb-2">{pname}</p>
+    <div className="mb-4 last:mb-0">
+      <ProductHeader />
       {reviews.map((r) => (
-        <div
-          key={r.rno}
-          className="border border-line rounded-lg p-3 mb-2 text-xs"
-        >
+        <div key={r.rno} className="bg-cream rounded-xl p-3 mb-2 text-xs">
           <div className="flex justify-between">
             <span>
-              {r.nickname} · {"★".repeat(r.rating || 0)}
+              {r.nickname} ·{" "}
+              <span className="text-[#C9A96A]">
+                {"★".repeat(r.rating || 0)}
+              </span>
             </span>
             <button
               onClick={() => handleDelete(r.rno)}
@@ -88,7 +120,7 @@ const AdminReviewMiniSection = ({ pno, pname }) => {
           {r.replies?.map((reply) => (
             <div
               key={reply.rno}
-              className="bg-cream rounded p-2 mt-2 flex justify-between"
+              className="bg-white rounded-lg p-2 mt-2 flex justify-between"
             >
               <span>답변: {reply.content}</span>
               <button
@@ -106,11 +138,11 @@ const AdminReviewMiniSection = ({ pno, pname }) => {
                 <input
                   value={replyContent}
                   onChange={(e) => setReplyContent(e.target.value)}
-                  className="flex-1 border border-line-soft rounded px-2 py-1"
+                  className="flex-1 border border-line-soft rounded-full px-3 py-1 bg-white"
                 />
                 <button
                   onClick={() => handleReply(r.rno)}
-                  className="text-brand-accent underline"
+                  className="text-brand-deep underline"
                 >
                   등록
                 </button>
@@ -118,7 +150,7 @@ const AdminReviewMiniSection = ({ pno, pname }) => {
             ) : (
               <button
                 onClick={() => setReplyingTo(r.rno)}
-                className="text-brand-accent underline mt-2"
+                className="text-brand-deep underline mt-2"
               >
                 답변 달기
               </button>
@@ -182,7 +214,7 @@ const AdminOrderDetailComponent = ({ ono }) => {
   if (!order) {
     return (
       <AdminLayout>
-        <div className="p-10 text-center text-ink-faint text-sm">
+        <div className="bg-white rounded-2xl p-10 text-center text-ink-faint text-sm shadow-[0_6px_18px_-10px_rgba(58,54,47,0.18)]">
           불러오는 중...
         </div>
       </AdminLayout>
@@ -280,8 +312,13 @@ const AdminOrderDetailComponent = ({ ono }) => {
 
   return (
     <AdminLayout>
-      <div className="flex justify-between items-center mb-5">
-        <p className="font-serif text-2xl">주문 상세 - {order.orderNumber}</p>
+      <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
+        <div>
+          <ShopTapeLabel className="mb-2.5">관리자</ShopTapeLabel>
+          <p className="font-['Gowun_Batang'] text-2xl text-ink">
+            주문 상세 - {order.orderNumber}
+          </p>
+        </div>
         <button
           onClick={handleBackToList}
           className="text-xs text-ink-faint underline"
@@ -290,8 +327,7 @@ const AdminOrderDetailComponent = ({ ono }) => {
         </button>
       </div>
 
-      <section className="border-t border-line pt-4 mb-6">
-        <p className="text-sm font-medium mb-3">주문 정보</p>
+      <SectionCard title="주문 정보">
         <p className="text-sm text-ink-soft">주문자: {order.memberEmail}</p>
         <p className="text-sm text-ink-soft">
           받으실 분: {order.receiverName} / {order.receiverPhone}
@@ -303,20 +339,32 @@ const AdminOrderDetailComponent = ({ ono }) => {
           <p className="text-sm text-ink-soft">요청사항: {order.request}</p>
         )}
 
-        <div className="mt-3 flex flex-col gap-1">
+        <div className="mt-3 flex flex-col gap-2 bg-cream rounded-xl p-3">
           {order.items.map((item, i) => (
-            <div key={i} className="flex justify-between text-sm">
-              <span>
-                {item.pname} × {item.qty}
-              </span>
-              <span>{(item.price * item.qty).toLocaleString()}원</span>
+            <div key={i} className="flex items-center gap-3">
+              <div className="w-10 h-10 shrink-0 rounded-lg overflow-hidden bg-surface">
+                {item.thumbnail && (
+                  <img
+                    alt={item.pname}
+                    className="w-full h-full object-cover"
+                    src={`${host}/api/product/view/s_${item.thumbnail}`}
+                  />
+                )}
+              </div>
+              <div className="flex-1 flex justify-between text-sm min-w-0">
+                <span className="truncate">
+                  {item.pname} × {item.qty}
+                </span>
+                <span className="shrink-0 ml-2">
+                  {(item.price * item.qty).toLocaleString()}원
+                </span>
+              </div>
             </div>
           ))}
         </div>
-      </section>
+      </SectionCard>
 
-      <section className="border-t border-line pt-4 mb-6">
-        <p className="text-sm font-medium mb-3">결제 내역</p>
+      <SectionCard title="결제 내역">
         <p className="text-sm text-ink-soft">
           결제 수단: {order.payMethod ?? "-"}
         </p>
@@ -331,13 +379,11 @@ const AdminOrderDetailComponent = ({ ono }) => {
         <p className="text-sm font-medium mt-1">
           총 결제금액: {order.totalPrice.toLocaleString()}원
         </p>
-      </section>
+      </SectionCard>
 
-      <section className="border-t border-line pt-4 mb-6">
-        <p className="text-sm font-medium mb-3">
-          주문 상태 제어 (현재:{" "}
-          {STATUS_LABEL[order.orderStatus] ?? order.orderStatus})
-        </p>
+      <SectionCard
+        title={`주문 상태 제어 (현재: ${STATUS_LABEL[order.orderStatus] ?? order.orderStatus})`}
+      >
         {isStatusLocked && (
           <p className="text-xs text-ink-faint mb-3">
             환불/취소된 주문은 배송 상태를 변경할 수 없습니다.
@@ -349,24 +395,23 @@ const AdminOrderDetailComponent = ({ ono }) => {
               key={s}
               onClick={() => handleChangeStatus(s)}
               disabled={isStatusLocked || order.orderStatus === s}
-              className={`h-9 px-4 rounded-full text-xs border ${
+              className={`h-9 px-4 rounded-full text-xs border transition ${
                 order.orderStatus === s
                   ? "bg-brand text-white border-brand"
-                  : "border-line-soft"
+                  : "border-line-soft hover:border-brand hover:text-brand-deep"
               } ${isStatusLocked ? "opacity-40 cursor-not-allowed" : ""}`}
             >
               {STATUS_LABEL[s]}
             </button>
           ))}
         </div>
-      </section>
+      </SectionCard>
 
-      <section className="border-t border-line pt-4 mb-6">
-        <p className="text-sm font-medium mb-3">환불 처리</p>
+      <SectionCard title="환불 처리">
         {canRefund ? (
           <button
             onClick={handleRefund}
-            className="h-9 px-4 rounded-full border border-red-300 text-red-600 text-xs"
+            className="h-9 px-4 rounded-full border border-red-300 text-red-600 text-xs hover:bg-red-50 transition"
           >
             환불 승인 (PG 결제취소)
           </button>
@@ -375,10 +420,9 @@ const AdminOrderDetailComponent = ({ ono }) => {
             환불 처리가 완료된 주문입니다. (결제 상태: {order.payStatus ?? "-"})
           </p>
         )}
-      </section>
+      </SectionCard>
 
-      <section className="border-t border-line pt-4 mb-6">
-        <p className="text-sm font-medium mb-3">배송 정보 등록/수정</p>
+      <SectionCard title="배송 정보 등록/수정">
         <div className="flex flex-col gap-2 mb-3">
           <input
             value={shippingForm.receiverName}
@@ -386,7 +430,7 @@ const AdminOrderDetailComponent = ({ ono }) => {
               setShippingForm({ ...shippingForm, receiverName: e.target.value })
             }
             placeholder="받으실 분"
-            className="h-9 px-3 border border-line-soft rounded-lg text-sm"
+            className="h-9 px-3 border border-line-soft rounded-lg text-sm focus:outline-none focus:border-brand"
           />
           <input
             value={shippingForm.receiverPhone}
@@ -397,7 +441,7 @@ const AdminOrderDetailComponent = ({ ono }) => {
               })
             }
             placeholder="연락처"
-            className="h-9 px-3 border border-line-soft rounded-lg text-sm"
+            className="h-9 px-3 border border-line-soft rounded-lg text-sm focus:outline-none focus:border-brand"
           />
           <div className="flex gap-2">
             <input
@@ -406,7 +450,7 @@ const AdminOrderDetailComponent = ({ ono }) => {
                 setShippingForm({ ...shippingForm, zipcode: e.target.value })
               }
               placeholder="우편번호"
-              className="h-9 px-3 border border-line-soft rounded-lg text-sm w-28"
+              className="h-9 px-3 border border-line-soft rounded-lg text-sm w-28 focus:outline-none focus:border-brand"
             />
             <input
               value={shippingForm.address}
@@ -414,7 +458,7 @@ const AdminOrderDetailComponent = ({ ono }) => {
                 setShippingForm({ ...shippingForm, address: e.target.value })
               }
               placeholder="주소"
-              className="h-9 px-3 border border-line-soft rounded-lg text-sm flex-1"
+              className="h-9 px-3 border border-line-soft rounded-lg text-sm flex-1 focus:outline-none focus:border-brand"
             />
           </div>
           <input
@@ -426,12 +470,12 @@ const AdminOrderDetailComponent = ({ ono }) => {
               })
             }
             placeholder="상세주소"
-            className="h-9 px-3 border border-line-soft rounded-lg text-sm"
+            className="h-9 px-3 border border-line-soft rounded-lg text-sm focus:outline-none focus:border-brand"
           />
         </div>
         <button
           onClick={handleSaveShipping}
-          className="h-9 px-4 rounded-full bg-brand text-white text-xs"
+          className="h-9 px-4 rounded-full bg-brand text-white text-xs hover:bg-brand-dark transition"
         >
           배송지 저장
         </button>
@@ -441,47 +485,43 @@ const AdminOrderDetailComponent = ({ ono }) => {
             value={trackingNo}
             onChange={(e) => setTrackingNo(e.target.value)}
             placeholder="운송장 번호"
-            className="h-9 px-3 border border-line-soft rounded-lg text-sm flex-1"
+            className="h-9 px-3 border border-line-soft rounded-lg text-sm flex-1 focus:outline-none focus:border-brand"
           />
           <button
             onClick={handleSaveTracking}
-            className="h-9 px-4 rounded-full border border-line-soft text-xs"
+            className="h-9 px-4 rounded-full border border-line-soft text-xs hover:border-brand hover:text-brand-deep transition"
           >
             운송장 저장
           </button>
         </div>
-      </section>
+      </SectionCard>
 
-      <section className="border-t border-line pt-4 mb-6">
-        <p className="text-sm font-medium mb-3">
-          해당 상품 리뷰 모니터링 및 답글 관리
-        </p>
+      <SectionCard title="이 구매자의 리뷰 모니터링 및 답글 관리">
         {uniqueProducts.map((item) => (
           <AdminReviewMiniSection
             key={item.pno}
             pno={item.pno}
             pname={item.pname}
+            thumbnail={item.thumbnail}
+            memberEmail={order.memberEmail}
           />
         ))}
-      </section>
+      </SectionCard>
 
-      <section className="border-t border-line pt-4 mb-10">
-        <p className="text-sm font-medium mb-3">
-          관리자 전용 메모 (CS 요청사항 등)
-        </p>
+      <SectionCard title="관리자 전용 메모 (CS 요청사항 등)">
         <textarea
           value={memo}
           onChange={(e) => setMemo(e.target.value)}
           rows={3}
-          className="w-full border border-line-soft rounded-lg p-3 text-sm resize-none"
+          className="w-full border border-line-soft rounded-lg p-3 text-sm resize-none focus:outline-none focus:border-brand"
         />
         <button
           onClick={handleSaveMemo}
-          className="h-9 px-4 mt-2 rounded-full border border-line-soft text-xs"
+          className="h-9 px-4 mt-2 rounded-full border border-line-soft text-xs hover:border-brand hover:text-brand-deep transition"
         >
           메모 저장
         </button>
-      </section>
+      </SectionCard>
     </AdminLayout>
   );
 };

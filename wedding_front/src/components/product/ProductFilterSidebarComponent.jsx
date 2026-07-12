@@ -1,7 +1,6 @@
 import ShopTapeLabel from "./ShopTapeLabel";
 
 export const RATING_OPTIONS = [
-  { label: "★★★★★", minRating: 5.0 },
   { label: "★★★★☆ 이상", minRating: 4.0 },
   { label: "★★★☆☆ 이상", minRating: 3.0 },
   { label: "★★☆☆☆ 이상", minRating: 2.0 },

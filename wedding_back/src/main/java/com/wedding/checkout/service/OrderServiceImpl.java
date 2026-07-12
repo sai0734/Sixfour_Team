@@ -7,6 +7,8 @@ import com.wedding.checkout.repository.OrderRepository;
 import com.wedding.checkout.repository.PaymentRepository;
 import com.wedding.global.util.TossPaymentClient;
 import com.wedding.global.dto.PageResponseDTO;
+import com.wedding.product.domain.ProductImage;
+import java.util.Comparator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Page;
@@ -77,6 +79,12 @@ public class OrderServiceImpl implements OrderService {
                         .pname(oi.getPnameSnapshot())
                         .price(oi.getPriceSnapshot())
                         .qty(oi.getQty())
+                        .thumbnail(
+                                oi.getProduct().getImageList().stream()
+                                        .min(Comparator.comparingInt(ProductImage::getOrd))
+                                        .map(ProductImage::getFileName)
+                                        .orElse(null)
+                        )
                         .build())
                 .collect(Collectors.toList());
 

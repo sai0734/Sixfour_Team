@@ -9,6 +9,7 @@ import { deleteOne, getCategories } from "../../api/productApi";
 import { API_SERVER_HOST } from "../../api/reservationApi";
 import PageComponent from "../common/PageComponent";
 import AdminLayout from "../../layouts/AdminLayout";
+import ShopTapeLabel from "../product/ShopTapeLabel";
 
 const host = API_SERVER_HOST;
 
@@ -117,148 +118,169 @@ const AdminProductListComponent = () => {
 
   return (
     <AdminLayout>
-      <div className="flex justify-between items-center mb-5">
-        <p className="font-serif text-2xl">상품 관리</p>
+      <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
+        <div>
+          <ShopTapeLabel className="mb-2.5">관리자</ShopTapeLabel>
+          <p className="font-['Gowun_Batang'] text-2xl text-ink">상품 관리</p>
+        </div>
         <button
           onClick={handleClickAdd}
-          className="h-10 px-5 rounded-full bg-brand text-white text-sm font-medium"
+          className="h-10 px-5 rounded-full bg-brand text-white text-sm font-medium hover:bg-brand-dark transition"
         >
           상품 추가
         </button>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-5">
-        <input
-          type="text"
-          value={keywordInput}
-          onChange={(e) => setKeywordInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-          placeholder="상품명 검색"
-          className="h-9 px-4 border border-line-soft rounded-lg text-sm w-48"
-        />
-        <button
-          onClick={handleSearch}
-          className="h-9 px-4 border border-line-soft rounded-lg text-sm"
-        >
-          검색
-        </button>
+      <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-[0_8px_24px_-12px_rgba(58,54,47,0.15)] mb-5">
+        <div className="flex flex-wrap gap-2">
+          <input
+            type="text"
+            value={keywordInput}
+            onChange={(e) => setKeywordInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            placeholder="상품명 검색"
+            className="h-9 px-4 border border-line-soft rounded-full text-sm w-48 focus:outline-none focus:border-brand"
+          />
+          <button
+            onClick={handleSearch}
+            className="h-9 px-4 rounded-full bg-cream text-ink-soft text-sm hover:bg-blush-100 transition"
+          >
+            검색
+          </button>
 
-        <select
-          value={category}
-          onChange={(e) => {
-            moveToList({ page: 1, size }); // [수정]
-            setCategory(e.target.value);
-          }}
-          className="h-9 px-3 border border-line-soft rounded-lg text-sm"
-        >
-          <option value="">전체 카테고리</option>
-          {categoryList.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
+          <select
+            value={category}
+            onChange={(e) => {
+              moveToList({ page: 1, size });
+              setCategory(e.target.value);
+            }}
+            className="h-9 px-3 border border-line-soft rounded-full text-sm"
+          >
+            <option value="">전체 카테고리</option>
+            {categoryList.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
 
-        <select
-          value={saleStatus}
-          onChange={(e) => {
-            moveToList({ page: 1, size }); // [수정]
-            setSaleStatus(e.target.value);
-          }}
-          className="h-9 px-3 border border-line-soft rounded-lg text-sm"
-        >
-          <option value="">전체 판매상태</option>
-          <option value="ON_SALE">판매중</option>
-          <option value="SOLD_OUT">품절</option>
-          <option value="HIDDEN">숨김</option>
-        </select>
+          <select
+            value={saleStatus}
+            onChange={(e) => {
+              moveToList({ page: 1, size });
+              setSaleStatus(e.target.value);
+            }}
+            className="h-9 px-3 border border-line-soft rounded-full text-sm"
+          >
+            <option value="">전체 판매상태</option>
+            <option value="ON_SALE">판매중</option>
+            <option value="SOLD_OUT">품절</option>
+            <option value="HIDDEN">숨김</option>
+          </select>
 
-        <select
-          value={sortType}
-          onChange={(e) => setSortType(e.target.value)}
-          className="h-9 px-3 border border-line-soft rounded-lg text-sm"
-        >
-          <option value="latest">최신등록순</option>
-          <option value="stockAsc">재고적은순</option>
-          <option value="salesDesc">판매많은순</option>
-        </select>
+          <select
+            value={sortType}
+            onChange={(e) => setSortType(e.target.value)}
+            className="h-9 px-3 border border-line-soft rounded-full text-sm"
+          >
+            <option value="latest">최신등록순</option>
+            <option value="stockAsc">재고적은순</option>
+            <option value="salesDesc">판매많은순</option>
+          </select>
+        </div>
       </div>
 
-      <table className="w-full text-sm border-t border-line">
-        <thead>
-          <tr className="border-b border-line text-ink-faint text-xs">
-            <th className="py-3 text-left">썸네일</th>
-            <th className="py-3 text-left">상품명</th>
-            <th className="py-3 text-left">카테고리</th>
-            <th className="py-3 text-right">가격</th>
-            <th className="py-3 text-right">재고</th>
-            <th className="py-3 text-center">판매상태</th>
-            <th className="py-3 text-center">관리</th>
-          </tr>
-        </thead>
-        <tbody>
-          {serverData.dtoList.map((p) => {
-            const status = SALE_STATUS_LABEL[p.saleStatus] ?? {
-              label: p.saleStatus,
-              className: "",
-            };
-
-            return (
-              <tr
-                key={p.pno}
-                onClick={() => handleClickRow(p.pno)}
-                className={`border-b border-line cursor-pointer hover:bg-cream ${p.lowStock ? "bg-red-50" : ""}`}
-              >
-                <td className="py-2.5">
-                  <div className="w-12 h-12 rounded-lg overflow-hidden bg-surface">
-                    {p.thumbnail && (
-                      <img
-                        alt={p.pname}
-                        className="w-full h-full object-cover"
-                        src={`${host}/api/product/view/s_${p.thumbnail}`}
-                      />
-                    )}
-                  </div>
-                </td>
-                <td className="py-2.5">{p.pname}</td>
-                <td className="py-2.5 text-ink-faint">{p.category}</td>
-                <td className="py-2.5 text-right">
-                  {p.price?.toLocaleString()}원
-                </td>
-                <td className="py-2.5 text-right">
-                  {p.stockQty}
-                  {p.lowStock && (
-                    <span className="ml-1.5 text-xs text-red-600 font-medium">
-                      재고부족
-                    </span>
-                  )}
-                </td>
-                <td className="py-2.5 text-center">
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs ${status.className}`}
-                  >
-                    {status.label}
-                  </span>
-                </td>
-                <td className="py-2.5 text-center">
-                  <button
-                    onClick={(e) => handleClickModify(e, p.pno)}
-                    className="text-xs text-brand-accent underline mr-3"
-                  >
-                    수정
-                  </button>
-                  <button
-                    onClick={(e) => handleClickDelete(e, p.pno, p.pname)}
-                    className="text-xs text-ink-faint underline"
-                  >
-                    삭제
-                  </button>
-                </td>
+      <div className="bg-white rounded-2xl shadow-[0_8px_24px_-12px_rgba(58,54,47,0.15)] overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[720px]">
+            <thead>
+              <tr className="bg-cream text-ink-faint text-xs">
+                <th className="py-3 px-4 text-left whitespace-nowrap">
+                  썸네일
+                </th>
+                <th className="py-3 px-4 text-left">상품명</th>
+                <th className="py-3 px-4 text-left whitespace-nowrap">
+                  카테고리
+                </th>
+                <th className="py-3 px-4 text-right whitespace-nowrap">가격</th>
+                <th className="py-3 px-4 text-right whitespace-nowrap">재고</th>
+                <th className="py-3 px-4 text-center whitespace-nowrap">
+                  판매상태
+                </th>
+                <th className="py-3 px-4 text-center whitespace-nowrap">
+                  관리
+                </th>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
+            </thead>
+            <tbody>
+              {serverData.dtoList.map((p) => {
+                const status = SALE_STATUS_LABEL[p.saleStatus] ?? {
+                  label: p.saleStatus,
+                  className: "",
+                };
+
+                return (
+                  <tr
+                    key={p.pno}
+                    onClick={() => handleClickRow(p.pno)}
+                    className={`border-t border-line cursor-pointer hover:bg-cream transition ${p.lowStock ? "bg-red-50/60" : ""}`}
+                  >
+                    <td className="py-2.5 px-4">
+                      <div className="w-12 h-12 rounded-lg overflow-hidden bg-surface">
+                        {p.thumbnail && (
+                          <img
+                            alt={p.pname}
+                            className="w-full h-full object-cover"
+                            src={`${host}/api/product/view/s_${p.thumbnail}`}
+                          />
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-2.5 px-4">{p.pname}</td>
+                    {/* 수정시작: 각 셀에 whitespace-nowrap 추가 */}
+                    <td className="py-2.5 px-4 text-ink-faint whitespace-nowrap">
+                      {p.category}
+                    </td>
+                    <td className="py-2.5 px-4 text-right whitespace-nowrap">
+                      {p.price?.toLocaleString()}원
+                    </td>
+                    <td className="py-2.5 px-4 text-right whitespace-nowrap">
+                      {p.stockQty}
+                      {p.lowStock && (
+                        <span className="ml-1.5 text-xs text-red-600 font-medium">
+                          재고부족
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-2.5 px-4 text-center whitespace-nowrap">
+                      <span
+                        className={`px-2.5 py-1 rounded-full text-xs font-medium ${status.className}`}
+                      >
+                        {status.label}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-4 text-center whitespace-nowrap">
+                      {/* 수정끝 */}
+                      <button
+                        onClick={(e) => handleClickModify(e, p.pno)}
+                        className="text-xs text-brand-accent underline mr-3"
+                      >
+                        수정
+                      </button>
+                      <button
+                        onClick={(e) => handleClickDelete(e, p.pno, p.pname)}
+                        className="text-xs text-ink-faint underline"
+                      >
+                        삭제
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       <PageComponent
         serverData={serverData}

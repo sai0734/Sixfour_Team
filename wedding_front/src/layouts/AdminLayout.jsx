@@ -6,17 +6,17 @@ import { useSelector } from "react-redux";
 const AdminLayout = ({ children }) => {
   const loginState = useSelector((state) => state.loginSlice);
   const isAdmin = loginState.roleNames?.some((r) =>
-    ["ADMIN", "ROLE_ADMIN"].includes(r)
+    ["ADMIN", "ROLE_ADMIN"].includes(r),
   );
 
   return (
     <ProfileCompleteGuard>
       <>
         <BasicMenu />
-        <div className="bg-white min-h-screen">
-          <div className="max-w-[1600px] mx-auto px-3 sm:px-6 pt-16 sm:pt-20 flex">
+        <div className="bg-cream min-h-screen">
+          <div className="max-w-[1600px] mx-auto px-3 sm:px-6 pt-16 sm:pt-20 flex flex-col md:flex-row">
             {isAdmin && <AdminSidebar />}
-            <main className="flex-1 py-4 sm:py-8 min-w-0 overflow-x-hidden">{children}</main>
+            <main className="flex-1 py-4 sm:py-8 min-w-0">{children}</main>
           </div>
         </div>
       </>
