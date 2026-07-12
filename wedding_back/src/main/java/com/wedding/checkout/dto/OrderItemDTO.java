@@ -19,4 +19,6 @@ public class OrderItemDTO {
 
     private int qty;
 
+    private String thumbnail;
+
 }

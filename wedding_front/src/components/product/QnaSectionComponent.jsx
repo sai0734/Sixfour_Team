@@ -9,6 +9,8 @@ import {
 } from "../../api/qnaApi";
 import ShopTapeLabel from "./ShopTapeLabel";
 
+const ITEMS_PER_PAGE = 5;
+
 const QnaForm = ({ initialContent, onCancel, onSubmit, submitLabel }) => {
   const [content, setContent] = useState(initialContent ?? "");
 
@@ -59,6 +61,42 @@ const QABadge = ({ type }) => (
   </span>
 );
 
+const QnaPager = ({ page, totalPages, onChangePage }) => {
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="flex justify-center items-center gap-1.5 mt-6">
+      <button
+        onClick={() => onChangePage(page - 1)}
+        disabled={page === 1}
+        className="w-8 h-8 rounded-full border border-line-soft text-xs text-ink-soft disabled:opacity-30 disabled:cursor-not-allowed"
+      >
+        ‹
+      </button>
+      {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+        <button
+          key={n}
+          onClick={() => onChangePage(n)}
+          className={`w-8 h-8 rounded-full text-xs font-medium ${
+            page === n
+              ? "bg-lavender-dark text-white"
+              : "text-ink-soft hover:bg-lavender-light"
+          }`}
+        >
+          {n}
+        </button>
+      ))}
+      <button
+        onClick={() => onChangePage(page + 1)}
+        disabled={page === totalPages}
+        className="w-8 h-8 rounded-full border border-line-soft text-xs text-ink-soft disabled:opacity-30 disabled:cursor-not-allowed"
+      >
+        ›
+      </button>
+    </div>
+  );
+};
+
 const QnaSectionComponent = ({ pno, isLoggedIn, isAdmin, myEmail }) => {
   const [qnaList, setQnaList] = useState([]);
   const [showWriteForm, setShowWriteForm] = useState(false);
@@ -67,6 +105,7 @@ const QnaSectionComponent = ({ pno, isLoggedIn, isAdmin, myEmail }) => {
   const [replyContent, setReplyContent] = useState("");
   const [editingReplyQno, setEditingReplyQno] = useState(null);
   const [expandedQnos, setExpandedQnos] = useState(new Set());
+  const [page, setPage] = useState(1);
 
   const toggleExpand = (qno) => {
     setExpandedQnos((prev) => {
@@ -103,6 +142,7 @@ const QnaSectionComponent = ({ pno, isLoggedIn, isAdmin, myEmail }) => {
   const handleSubmitNew = (content) => {
     postQna(pno, content).then(() => {
       setShowWriteForm(false);
+      setPage(1);
       fetchQnaList();
     });
   };
@@ -138,6 +178,17 @@ const QnaSectionComponent = ({ pno, isLoggedIn, isAdmin, myEmail }) => {
     deleteQna(pno, qno).then(() => fetchQnaList());
   };
 
+  const totalPages = Math.max(1, Math.ceil(qnaList.length / ITEMS_PER_PAGE));
+  const pagedQnaList = qnaList.slice(
+    (page - 1) * ITEMS_PER_PAGE,
+    page * ITEMS_PER_PAGE,
+  );
+
+  const handleChangePage = (newPage) => {
+    if (newPage < 1 || newPage > totalPages) return;
+    setPage(newPage);
+  };
+
   return (
     <div>
       <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
@@ -167,178 +218,188 @@ const QnaSectionComponent = ({ pno, isLoggedIn, isAdmin, myEmail }) => {
           아직 문의가 없어요. 궁금한 점을 편하게 남겨주세요 🤍
         </div>
       ) : (
-        <div className="flex flex-col gap-2.5">
-          {qnaList.map((qna) => {
-            const qnaIsMine = checkIsMine(qna.memberEmail);
-            const isExpanded = expandedQnos.has(qna.qno);
-            const isEditing = editingQno === qna.qno;
-            const hasAnswer = qna.answers?.length > 0;
+        <>
+          <div className="flex flex-col gap-2.5">
+            {pagedQnaList.map((qna) => {
+              const qnaIsMine = checkIsMine(qna.memberEmail);
+              const isExpanded = expandedQnos.has(qna.qno);
+              const isEditing = editingQno === qna.qno;
+              const hasAnswer = qna.answers?.length > 0;
 
-            return (
-              <div
-                key={qna.qno}
-                className="rounded-xl border border-line bg-white overflow-hidden"
-              >
-                <button
-                  type="button"
-                  onClick={() => !isEditing && toggleExpand(qna.qno)}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 text-left"
+              return (
+                <div
+                  key={qna.qno}
+                  className="rounded-xl border border-line bg-white overflow-hidden"
                 >
-                  <QABadge type="Q" />
-                  <p
-                    className={`flex-1 text-sm text-ink ${
-                      isExpanded ? "" : "line-clamp-1"
-                    }`}
+                  <button
+                    type="button"
+                    onClick={() => !isEditing && toggleExpand(qna.qno)}
+                    className="w-full flex items-center gap-3 px-4 py-3.5 text-left"
                   >
-                    {qna.content}
-                  </p>
-                  {!hasAnswer && (
-                    <span className="shrink-0 text-[11px] text-ink-faint bg-cream px-2 py-0.5 rounded-full">
-                      답변대기
+                    <QABadge type="Q" />
+                    <p
+                      className={`flex-1 text-sm text-ink ${
+                        isExpanded ? "" : "line-clamp-1"
+                      }`}
+                    >
+                      {qna.content}
+                    </p>
+                    {!hasAnswer && (
+                      <span className="shrink-0 text-[11px] text-ink-faint bg-cream px-2 py-0.5 rounded-full">
+                        답변대기
+                      </span>
+                    )}
+                    <span className="text-xs text-ink-faint shrink-0">
+                      {qna.regDate?.slice(0, 10)}
                     </span>
-                  )}
-                  <span className="text-xs text-ink-faint shrink-0">
-                    {qna.regDate?.slice(0, 10)}
-                  </span>
-                  <svg
-                    viewBox="0 0 24 24"
-                    className={`w-4 h-4 shrink-0 text-ink-faint transition-transform ${
-                      isExpanded ? "rotate-180" : ""
-                    }`}
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="m6 9 6 6 6-6" />
-                  </svg>
-                </button>
+                    <svg
+                      viewBox="0 0 24 24"
+                      className={`w-4 h-4 shrink-0 text-ink-faint transition-transform ${
+                        isExpanded ? "rotate-180" : ""
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="m6 9 6 6 6-6" />
+                    </svg>
+                  </button>
 
-                {isExpanded && (
-                  <div className="px-4 pb-4 pl-[52px] border-t border-line-soft pt-3">
-                    {isEditing ? (
-                      <QnaForm
-                        initialContent={qna.content}
-                        onCancel={() => setEditingQno(null)}
-                        onSubmit={(content) =>
-                          handleSubmitEdit(qna.qno, content)
-                        }
-                        submitLabel="수정 완료"
-                      />
-                    ) : (
-                      <>
-                        <div className="flex justify-end gap-2 mb-3">
-                          {qnaIsMine && (
-                            <button
-                              onClick={() => setEditingQno(qna.qno)}
-                              className="text-xs text-ink-faint underline"
-                            >
-                              수정
-                            </button>
-                          )}
-                          {(qnaIsMine || isAdmin) && (
-                            <button
-                              onClick={() => handleDelete(qna.qno)}
-                              className="text-xs text-ink-faint underline"
-                            >
-                              삭제
-                            </button>
-                          )}
-                        </div>
-
-                        {qna.answers?.map((answer) => (
-                          <div
-                            key={answer.qno}
-                            className="flex gap-3 bg-cream rounded-xl p-4 mb-2"
-                          >
-                            <QABadge type="A" />
-                            <div className="flex-1">
-                              {editingReplyQno === answer.qno ? (
-                                <QnaForm
-                                  initialContent={answer.content}
-                                  onCancel={() => setEditingReplyQno(null)}
-                                  onSubmit={(content) =>
-                                    handleSubmitEditReply(answer.qno, content)
-                                  }
-                                  submitLabel="수정 완료"
-                                />
-                              ) : (
-                                <div className="flex justify-between items-start gap-2">
-                                  <p className="text-sm text-ink-soft">
-                                    {answer.content}
-                                  </p>
-                                  {isAdmin && (
-                                    <div className="flex gap-2 shrink-0">
-                                      <button
-                                        onClick={() =>
-                                          setEditingReplyQno(answer.qno)
-                                        }
-                                        className="text-xs text-ink-faint underline"
-                                      >
-                                        수정
-                                      </button>
-                                      <button
-                                        onClick={() => handleDelete(answer.qno)}
-                                        className="text-xs text-ink-faint underline"
-                                      >
-                                        삭제
-                                      </button>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-
-                        {!hasAnswer && (
-                          <div className="flex gap-3 bg-cream/60 rounded-xl p-4 mb-2 border border-dashed border-line">
-                            <QABadge type="A" />
-                            <p className="flex-1 text-sm text-ink-faint font-['Gaegu']">
-                              아직 답변 전이에요. 곧 답변드릴게요 🤍
-                            </p>
-                          </div>
-                        )}
-
-                        {isAdmin && !hasAnswer && (
-                          <div className="mt-2">
-                            {replyingTo === qna.qno ? (
-                              <div className="flex flex-col sm:flex-row gap-2">
-                                <input
-                                  type="text"
-                                  value={replyContent}
-                                  onChange={(e) =>
-                                    setReplyContent(e.target.value)
-                                  }
-                                  placeholder="답변을 입력하세요"
-                                  className="flex-1 border border-line-soft rounded-full px-4 py-1.5 text-xs focus:outline-none focus:border-lavender-dark"
-                                />
-                                <button
-                                  onClick={() => handleSubmitReply(qna.qno)}
-                                  className="text-xs px-4 py-1.5 rounded-full bg-lavender-dark text-white self-end sm:self-auto"
-                                >
-                                  등록
-                                </button>
-                              </div>
-                            ) : (
+                  {isExpanded && (
+                    <div className="px-4 pb-4 pl-[52px] border-t border-line-soft pt-3">
+                      {isEditing ? (
+                        <QnaForm
+                          initialContent={qna.content}
+                          onCancel={() => setEditingQno(null)}
+                          onSubmit={(content) =>
+                            handleSubmitEdit(qna.qno, content)
+                          }
+                          submitLabel="수정 완료"
+                        />
+                      ) : (
+                        <>
+                          <div className="flex justify-end gap-2 mb-3">
+                            {qnaIsMine && (
                               <button
-                                onClick={() => setReplyingTo(qna.qno)}
-                                className="text-xs text-lavender-dark underline"
+                                onClick={() => setEditingQno(qna.qno)}
+                                className="text-xs text-ink-faint underline"
                               >
-                                답변 달기
+                                수정
+                              </button>
+                            )}
+                            {(qnaIsMine || isAdmin) && (
+                              <button
+                                onClick={() => handleDelete(qna.qno)}
+                                className="text-xs text-ink-faint underline"
+                              >
+                                삭제
                               </button>
                             )}
                           </div>
-                        )}
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+
+                          {qna.answers?.map((answer) => (
+                            <div
+                              key={answer.qno}
+                              className="flex gap-3 bg-cream rounded-xl p-4 mb-2"
+                            >
+                              <QABadge type="A" />
+                              <div className="flex-1">
+                                {editingReplyQno === answer.qno ? (
+                                  <QnaForm
+                                    initialContent={answer.content}
+                                    onCancel={() => setEditingReplyQno(null)}
+                                    onSubmit={(content) =>
+                                      handleSubmitEditReply(answer.qno, content)
+                                    }
+                                    submitLabel="수정 완료"
+                                  />
+                                ) : (
+                                  <div className="flex justify-between items-start gap-2">
+                                    <p className="text-sm text-ink-soft">
+                                      {answer.content}
+                                    </p>
+                                    {isAdmin && (
+                                      <div className="flex gap-2 shrink-0">
+                                        <button
+                                          onClick={() =>
+                                            setEditingReplyQno(answer.qno)
+                                          }
+                                          className="text-xs text-ink-faint underline"
+                                        >
+                                          수정
+                                        </button>
+                                        <button
+                                          onClick={() =>
+                                            handleDelete(answer.qno)
+                                          }
+                                          className="text-xs text-ink-faint underline"
+                                        >
+                                          삭제
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+
+                          {!hasAnswer && (
+                            <div className="flex gap-3 bg-cream/60 rounded-xl p-4 mb-2 border border-dashed border-line">
+                              <QABadge type="A" />
+                              <p className="flex-1 text-sm text-ink-faint font-['Gaegu']">
+                                아직 답변 전이에요. 곧 답변드릴게요 🤍
+                              </p>
+                            </div>
+                          )}
+
+                          {isAdmin && !hasAnswer && (
+                            <div className="mt-2">
+                              {replyingTo === qna.qno ? (
+                                <div className="flex flex-col sm:flex-row gap-2">
+                                  <input
+                                    type="text"
+                                    value={replyContent}
+                                    onChange={(e) =>
+                                      setReplyContent(e.target.value)
+                                    }
+                                    placeholder="답변을 입력하세요"
+                                    className="flex-1 border border-line-soft rounded-full px-4 py-1.5 text-xs focus:outline-none focus:border-lavender-dark"
+                                  />
+                                  <button
+                                    onClick={() => handleSubmitReply(qna.qno)}
+                                    className="text-xs px-4 py-1.5 rounded-full bg-lavender-dark text-white self-end sm:self-auto"
+                                  >
+                                    등록
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => setReplyingTo(qna.qno)}
+                                  className="text-xs text-lavender-dark underline"
+                                >
+                                  답변 달기
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <QnaPager
+            page={page}
+            totalPages={totalPages}
+            onChangePage={handleChangePage}
+          />
+        </>
       )}
     </div>
   );

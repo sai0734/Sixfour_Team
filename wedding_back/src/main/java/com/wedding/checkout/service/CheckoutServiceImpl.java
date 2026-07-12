@@ -12,6 +12,8 @@ import com.wedding.checkout.repository.PaymentRepository;
 import com.wedding.global.util.TossPaymentClient;
 import com.wedding.member.domain.Member;
 import com.wedding.product.domain.Product;
+import com.wedding.product.domain.ProductImage;
+import java.util.Comparator;
 import com.wedding.product.domain.ProductOption;
 import com.wedding.product.repository.ProductOptionRepository;
 import com.wedding.product.repository.ProductRepository;
@@ -217,12 +219,21 @@ public class CheckoutServiceImpl implements CheckoutService {
     private OrderDTO toDTO(Orders orders) {
 
         List<OrderItemDTO> items = orders.getOrderItems().stream()
-                .map(oi -> OrderItemDTO.builder()
-                        .pno(oi.getProduct().getPno())
-                        .pname(oi.getPnameSnapshot())
-                        .price(oi.getPriceSnapshot())
-                        .qty(oi.getQty())
-                        .build())
+                .map(oi -> {
+                    String thumbnail = productRepository.findById(oi.getProduct().getPno())
+                            .flatMap(p -> p.getImageList().stream()
+                                    .min(Comparator.comparingInt(ProductImage::getOrd)))
+                            .map(ProductImage::getFileName)
+                            .orElse(null);
+
+                    return OrderItemDTO.builder()
+                            .pno(oi.getProduct().getPno())
+                            .pname(oi.getPnameSnapshot())
+                            .price(oi.getPriceSnapshot())
+                            .qty(oi.getQty())
+                            .thumbnail(thumbnail)
+                            .build();
+                })
                 .collect(Collectors.toList());
 
         return OrderDTO.builder()
