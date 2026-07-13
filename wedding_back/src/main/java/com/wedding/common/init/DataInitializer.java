@@ -29,8 +29,6 @@ import com.wedding.company.repository.HallItemRepository;
 import com.wedding.company.repository.MakeupDetailRepository;
 import com.wedding.company.repository.MakeupPackageRepository;
 import com.wedding.company.repository.StudioDetailRepository;
-import com.wedding.coupleprofile.domain.CoupleProfile;
-import com.wedding.coupleprofile.repository.CoupleProfileRepository;
 import com.wedding.member.domain.Member;
 import com.wedding.member.domain.MemberDetail;
 import com.wedding.member.domain.MemberRole;
@@ -91,7 +89,6 @@ public class DataInitializer implements ApplicationRunner {
   private final JdbcTemplate jdbcTemplate;
   private final BoardRepository boardRepository;
   private final CommentRepository commentRepository;
-  private final CoupleProfileRepository coupleProfileRepository;
 
   // 애플리케이션 기동 시 더미 시드 진입점 (모든 시드: 해당 테이블 count == 0 일 때만)
   // 1) data/product.json         → tbl_product, tbl_product_option
@@ -99,8 +96,7 @@ public class DataInitializer implements ApplicationRunner {
   // 3) data/board.json           → tbl_board (작성자는 ACTIVE 회원 순환 배정)
   // 4) data/comment.json         → tbl_comment (작성자는 ACTIVE 회원 순환 배정, board 이후)
   // 5) data/commerce_dummy.json  → tbl_orders, tbl_order_item, tbl_review, tbl_qna
-  // 6) data/couple_profile.json  → tbl_couple_profile (회원 이후)
-  // 7) data/makeup.json          → tbl_makeup_package (업체 DB 있을 때만)
+  // 6) data/makeup.json          → tbl_makeup_package (업체 DB 있을 때만)
   @Override
   @Transactional
   public void run(ApplicationArguments args) throws Exception {
@@ -115,12 +111,6 @@ public class DataInitializer implements ApplicationRunner {
       log.info("===== Member dummy seed start =====");
       insertMembers();
       log.info("===== Member dummy seed complete =====");
-    }
-
-    if (coupleProfileRepository.count() == 0) {
-      log.info("===== Couple profile dummy seed start =====");
-      insertCoupleProfiles();
-      log.info("===== Couple profile dummy seed complete =====");
     }
 
     // 게시판/댓글은 반드시 회원 삽입 이후에 실행되어야 함 (작성자를 실제 회원으로 배정하므로)
@@ -476,34 +466,6 @@ public class DataInitializer implements ApplicationRunner {
     }
 
     log.info("Inserted {} members (password: 1111).", memberRepository.count());
-  }
-
-  // data/couple_profile.json → tbl_couple_profile. 실제 회원 이메일과 연결된 선배부부 프로필
-  private void insertCoupleProfiles() throws Exception {
-    List<Map<String, Object>> list = readJsonArray("data/couple_profile.json");
-    List<CoupleProfile> profiles = new ArrayList<>();
-
-    for (Map<String, Object> m : list) {
-      String memberEmail = (String) m.get("memberEmail");
-
-      if (!memberRepository.existsById(memberEmail)) {
-        log.warn("Skip couple profile. Member not found: {}", memberEmail);
-        continue;
-      }
-
-      profiles.add(CoupleProfile.builder()
-              .memberEmail(memberEmail)
-              .budgetMin(toInt(m.get("budgetMin")))
-              .budgetMax(toInt(m.get("budgetMax")))
-              .region((String) m.get("region"))
-              .weddingStyle((String) m.get("weddingStyle"))
-              .weddingDate(LocalDate.parse((String) m.get("weddingDate")))
-              .bio((String) m.get("bio"))
-              .build());
-    }
-
-    coupleProfileRepository.saveAll(profiles);
-    log.info("Inserted {} couple profiles.", profiles.size());
   }
 
   // data/board.json → tbl_board. 작성자는 고정 가짜 이메일이 아니라 실제 ACTIVE 회원을 순환 배정
