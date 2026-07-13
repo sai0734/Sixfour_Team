@@ -33,7 +33,16 @@ const STATUS_LABEL = {
   EXCHANGE: "교환완료",
 };
 
-const STATUS_FLOW = ["PAID", "SHIPPING_READY", "SHIPPING", "DELIVERED"];
+const STATUS_FLOW = [
+  "PAID",
+  "SHIPPING_READY",
+  "SHIPPING",
+  "DELIVERED",
+  "EXCHANGE_REQUESTED",
+  "EXCHANGE",
+  "REFUND_REQUESTED",
+  "REFUNDED",
+];
 
 const SectionCard = ({ title, children }) => (
   <section className="bg-white rounded-2xl p-5 shadow-[0_6px_18px_-10px_rgba(58,54,47,0.18)] mb-5">
@@ -178,6 +187,7 @@ const AdminOrderDetailComponent = ({ ono }) => {
     addressDetail: "",
   });
   const [trackingNo, setTrackingNo] = useState("");
+  const [trackingLocked, setTrackingLocked] = useState(false);
   const [memo, setMemo] = useState("");
 
   const handleBackToList = () => {
@@ -205,6 +215,7 @@ const AdminOrderDetailComponent = ({ ono }) => {
         addressDetail: data.addressDetail ?? "",
       });
       setTrackingNo(data.trackingNo ?? "");
+      setTrackingLocked(!!data.trackingNo);
       setMemo(data.adminMemo ?? "");
     });
   };
@@ -277,7 +288,7 @@ const AdminOrderDetailComponent = ({ ono }) => {
       });
   };
 
-  const handleExchangeComplte = () => {
+  const handleExchangeComplete = () => {
     if (
       !window.confirm(
         "교환 처리하시겠습니까? 주문 상태가 '교환완료'로 변경됩니다.",
@@ -318,6 +329,10 @@ const AdminOrderDetailComponent = ({ ono }) => {
         console.error(err);
         alert("운송장 저장에 실패했습니다.");
       });
+  };
+
+  const handleEditTracking = () => {
+    setTrackingLocked(false);
   };
 
   const handleSaveMemo = () => {
@@ -419,11 +434,17 @@ const AdminOrderDetailComponent = ({ ono }) => {
             <button
               key={s}
               onClick={() => handleChangeStatus(s)}
-              disabled={isStatusLocked || order.orderStatus === s}
+              disabled={
+                s === "REFUNDED" || isStatusLocked || order.orderStatus === s
+              }
               className={`h-9 px-4 rounded-full text-xs border transition ${
                 order.orderStatus === s
                   ? "bg-brand text-white border-brand"
                   : "border-line-soft hover:border-brand hover:text-brand-deep"
+              } ${
+                s === "REFUNDED" && order.orderStatus !== s
+                  ? "opacity-40 cursor-not-allowed"
+                  : ""
               } ${isStatusLocked ? "opacity-40 cursor-not-allowed" : ""}`}
             >
               {STATUS_LABEL[s]}
@@ -433,7 +454,7 @@ const AdminOrderDetailComponent = ({ ono }) => {
       </SectionCard>
 
       {order.exchangeReturnType && (
-        <SectionCard title="교환/반품 신청 내용">
+        <SectionCard title="교환/환불 신청 내용">
           <p className="text-sm text-ink-soft">
             신청 구분:{" "}
             {order.exchangeReturnType === "EXCHANGE" ? "교환" : "환불"}
@@ -542,14 +563,26 @@ const AdminOrderDetailComponent = ({ ono }) => {
             value={trackingNo}
             onChange={(e) => setTrackingNo(e.target.value)}
             placeholder="운송장 번호"
-            className="h-9 px-3 border border-line-soft rounded-lg text-sm flex-1 focus:outline-none focus:border-brand"
+            disabled={trackingLocked}
+            className={`h-9 px-3 border border-line-soft rounded-lg text-sm flex-1 focus:outline-none focus:border-brand ${
+              trackingLocked ? "bg-surface text-ink-faint" : ""
+            }`}
           />
-          <button
-            onClick={handleSaveTracking}
-            className="h-9 px-4 rounded-full border border-line-soft text-xs hover:border-brand hover:text-brand-deep transition"
-          >
-            운송장 저장
-          </button>
+          {trackingLocked ? (
+            <button
+              onClick={handleEditTracking}
+              className="h-9 px-4 rounded-full border border-line-soft text-xs hover:border-brand hover:text-brand-deep transition"
+            >
+              운송장 수정
+            </button>
+          ) : (
+            <button
+              onClick={handleSaveTracking}
+              className="h-9 px-4 rounded-full border border-line-soft text-xs hover:border-brand hover:text-brand-deep transition"
+            >
+              운송장 저장
+            </button>
+          )}
         </div>
       </SectionCard>
 
