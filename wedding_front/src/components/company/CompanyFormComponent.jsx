@@ -68,6 +68,57 @@ const CompanyFormComponent = ({ mode = "add" }) => {
     setCompany((prev) => ({ ...prev, [name]: value }));
   };
 
+  const loadKakaoSdk = () =>
+    new Promise((resolve) => {
+      if (window.kakao && window.kakao.maps && window.kakao.maps.services) {
+        resolve();
+        return;
+      }
+      if (window.kakao && window.kakao.maps) {
+        window.kakao.maps.load(resolve);
+        return;
+      }
+      const existing = document.querySelector('script[src*="dapi.kakao.com"]');
+      if (existing) {
+        existing.addEventListener("load", () => window.kakao.maps.load(resolve));
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${import.meta.env.VITE_KAKAO_MAP_KEY}&autoload=false&libraries=services`;
+      script.async = true;
+      script.onload = () => window.kakao.maps.load(resolve);
+      document.head.appendChild(script);
+    });
+
+  const handleSearchAddress = async () => {
+    if (!window.daum || !window.daum.Postcode) {
+      alert("주소 검색 기능을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
+      return;
+    }
+    new window.daum.Postcode({
+      oncomplete: async (data) => {
+        const fullAddress = data.roadAddress || data.jibunAddress;
+        setCompany((prev) => ({ ...prev, address: fullAddress }));
+        try {
+          await loadKakaoSdk();
+          const geocoder = new window.kakao.maps.services.Geocoder();
+          geocoder.addressSearch(fullAddress, (result, status) => {
+            if (status === window.kakao.maps.services.Status.OK) {
+              setCompany((prev) => ({
+                ...prev,
+                latitude: result[0].y,
+                longitude: result[0].x,
+              }));
+            }
+          });
+        } catch {
+          // 좌표 변환 실패 시 주소만 채워줌
+        }
+      },
+    }).open();
+  };
+
+
   const handlePreview = (e) => {
     const files = Array.from(e.target.files || []);
     setPreviews(files.slice(0, 6).map((file) => URL.createObjectURL(file)));
@@ -116,18 +167,35 @@ const CompanyFormComponent = ({ mode = "add" }) => {
       return;
     }
 
+    if (isModify) {
+      const confirmed = window.confirm("변경된 사항을 저장하겠습니까?");
+      if (!confirmed) return;
+    }
+
     try {
       setFetching(true);
       const payload = await buildPayload();
       if (isModify) {
         await putOne(cmno, payload);
-        setResult(cmno);
+        setFetching(false);
+        window.location.href = `${companyPathPrefix}/read/${cmno}`;
       } else {
         const data = await postAdd(payload);
         setResult(data.cmno);
       }
     } catch (err) {
-      exceptionHandle(err);
+      setFetching(false);
+      const errorMsg = err?.response?.data?.error || "";
+      if (errorMsg === "ERROR_ACCESS_TOKEN") {
+        alert("로그인 세션이 만료되었습니다.\n다시 로그인해주세요.");
+        window.location.href = "/auth/login";
+        return;
+      }
+      try {
+        exceptionHandle(err);
+      } catch {
+        alert("저장에 실패했습니다. 다시 시도해주세요.");
+      }
     } finally {
       setFetching(false);
     }
@@ -210,13 +278,30 @@ const CompanyFormComponent = ({ mode = "add" }) => {
       <FormSection title="위치 및 견적 정보">
         <div className="grid gap-4 md:grid-cols-2">
           <Field label="주소" required full>
-            <input className="form-input" name="address" type="text" value={company.address || ""} onChange={handleChange} placeholder="상세 주소" />
+            <div className="flex gap-2">
+              <input
+                className="form-input flex-1"
+                name="address"
+                type="text"
+                value={company.address || ""}
+                onChange={handleChange}
+                placeholder="주소 찾기 버튼을 눌러 주소를 검색하세요"
+                readOnly
+              />
+              <button
+                type="button"
+                onClick={handleSearchAddress}
+                className="shrink-0 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              >
+                주소 찾기
+              </button>
+            </div>
           </Field>
           <Field label="위도">
-            <input className="form-input" name="latitude" type="number" value={company.latitude ?? ""} onChange={handleChange} placeholder="37.5665" />
+            <input className="form-input bg-slate-50" name="latitude" type="number" value={company.latitude ?? ""} onChange={handleChange} placeholder="주소 검색 시 자동 입력" />
           </Field>
           <Field label="경도">
-            <input className="form-input" name="longitude" type="number" value={company.longitude ?? ""} onChange={handleChange} placeholder="126.9780" />
+            <input className="form-input bg-slate-50" name="longitude" type="number" value={company.longitude ?? ""} onChange={handleChange} placeholder="주소 검색 시 자동 입력" />
           </Field>
           <Field label="평균 가격" required>
             <input className="form-input" name="priceAvg" type="number" value={company.priceAvg ?? ""} onChange={handleChange} placeholder="1200000" />
@@ -234,7 +319,7 @@ const CompanyFormComponent = ({ mode = "add" }) => {
             <div className="mb-2 text-sm font-medium text-slate-600">등록된 이미지</div>
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
               {company.uploadFileNames.map((fileName, index) => (
-                <div key={fileName} className="relative aspect-square overflow-hidden rounded-md border border-slate-200 bg-slate-100">
+                <div key={fileName} className="relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
                   <img className="h-full w-full object-cover" src={getCompanyImageUrl(fileName, true)} alt={`current ${index + 1}`} />
                   {index === 0 ? <span className="absolute bottom-1 left-1 rounded bg-blue-600 px-1.5 py-0.5 text-xs text-white">대표</span> : null}
                   <button className="absolute right-1 top-1 rounded bg-white px-2 py-1 text-xs text-red-600 shadow" type="button" onClick={() => handleRemoveCurrentImage(fileName)}>
@@ -258,7 +343,7 @@ const CompanyFormComponent = ({ mode = "add" }) => {
             <div className="grid grid-cols-3 gap-2">
               {previews.length > 0 ? (
                 previews.map((preview, index) => (
-                  <div key={preview} className="relative aspect-square overflow-hidden rounded-md border border-slate-200 bg-slate-100">
+                  <div key={preview} className="relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
                     <img className="h-full w-full object-cover" src={preview} alt={`preview ${index + 1}`} />
                     {index === 0 && !company.uploadFileNames?.length ? <span className="absolute bottom-1 left-1 rounded bg-blue-600 px-1.5 py-0.5 text-xs text-white">대표</span> : null}
                   </div>
