@@ -49,14 +49,15 @@ const MainPage = () => {
   const loginState = useSelector((state) => state.loginSlice);
   const isLoggedIn = !!loginState.email;
   const isAdmin = loginState.roleNames?.some((r) =>
-    ["ADMIN", "ROLE_ADMIN"].includes(r)
+    ["ADMIN", "ROLE_ADMIN"].includes(r),
   );
   const companyListPath = isAdmin ? "/admin/companies/list" : "/companies/list";
 
   const [activeSlide, setActiveSlide] = useState(0);
   const current = slides[activeSlide];
 
-  const nickname = loginState.nickname || loginState.email?.split("@")[0] || "회원";
+  const nickname =
+    loginState.nickname || loginState.email?.split("@")[0] || "회원";
   const dday = calcDday(loginState.weddingDate) ?? "D-???";
 
   useEffect(() => {
@@ -74,104 +75,116 @@ const MainPage = () => {
 
       {/* ===== HERO ===== */}
       <div className="hero-wrapper">
-      <section className="hero">
-        {/* 좌: 텍스트 슬라이드 */}
-        <div className="hero-copy">
-          <div className="hero-slide-content" key={activeSlide}>
-            <div className="hero-eyebrow">{current.eyebrow}</div>
-            <h1 style={{ whiteSpace: "pre-line" }}>{current.title}</h1>
-            <p style={{ whiteSpace: "pre-line" }}>{current.desc}</p>
-            {current.linkTo === "#" ? (
-              <a href="#" className="hero-cta-link">{current.cta}</a>
-            ) : (
-              <Link to={current.linkTo} className="hero-cta-link">{current.cta}</Link>
-            )}
+        <section className="hero">
+          {/* 좌: 텍스트 슬라이드 */}
+          <div className="hero-copy">
+            <div className="hero-slide-content" key={activeSlide}>
+              <div className="hero-eyebrow">{current.eyebrow}</div>
+              <h1 style={{ whiteSpace: "pre-line" }}>{current.title}</h1>
+              <p style={{ whiteSpace: "pre-line" }}>{current.desc}</p>
+              {current.linkTo === "#" ? (
+                <a href="#" className="hero-cta-link">
+                  {current.cta}
+                </a>
+              ) : (
+                <Link to={current.linkTo} className="hero-cta-link">
+                  {current.cta}
+                </Link>
+              )}
+            </div>
+            <div className="hero-dots">
+              {slides.map((_, i) => (
+                <button
+                  key={i}
+                  className={`hero-dot${activeSlide === i ? " active" : ""}`}
+                  onClick={() => goSlide(i)}
+                  aria-label={`${i + 1}번 슬라이드`}
+                />
+              ))}
+            </div>
           </div>
-          <div className="hero-dots">
-            {slides.map((_, i) => (
-              <button
-                key={i}
-                className={`hero-dot${activeSlide === i ? " active" : ""}`}
-                onClick={() => goSlide(i)}
-                aria-label={`${i + 1}번 슬라이드`}
-              />
-            ))}
-          </div>
-        </div>
 
-        {/* 우: 비로그인 → 폴라로이드 / 로그인 → 회원 위젯 */}
-        {!isLoggedIn ? (
-          <div className="polaroid-stack">
-            <div className="polaroid p1">
-              <div className="photo">
-                {/* 실사 교체: <img src="경로" alt="웨딩홀" /> */}
-                <div className="photo-placeholder">
-                  <span>💍</span>
-                  <span className="ph-label">Wedding Hall</span>
+          {/* 우: 비로그인 → 폴라로이드 / 로그인 → 회원 위젯 */}
+          {!isLoggedIn ? (
+            <div className="polaroid-stack">
+              <div className="polaroid p1">
+                <div className="photo">
+                  {/* 실사 교체: <img src="경로" alt="웨딩홀" /> */}
+                  <div className="photo-placeholder">
+                    <span>💍</span>
+                    <span className="ph-label">Wedding Hall</span>
+                  </div>
                 </div>
+                <div className="cap">웨딩홀 탐색 중 💍</div>
               </div>
-              <div className="cap">웨딩홀 탐색 중 💍</div>
-            </div>
-            <div className="polaroid p2">
-              <div className="photo">
-                <div className="photo-placeholder">
-                  <span>👗</span>
-                  <span className="ph-label">Dress &amp; Studio</span>
+              <div className="polaroid p2">
+                <div className="photo">
+                  <div className="photo-placeholder">
+                    <span>👗</span>
+                    <span className="ph-label">Dress &amp; Studio</span>
+                  </div>
                 </div>
+                <div className="cap">스드메 고르는 중 👗</div>
               </div>
-              <div className="cap">스드메 고르는 중 👗</div>
-            </div>
-            <div className="polaroid p3">
-              <div className="photo">
-                <div className="photo-placeholder">
-                  <span>🎁</span>
-                  <span className="ph-label">Gift Shop</span>
+              <div className="polaroid p3">
+                <div className="photo">
+                  <div className="photo-placeholder">
+                    <span>🎁</span>
+                    <span className="ph-label">Gift Shop</span>
+                  </div>
                 </div>
-              </div>
-              <div className="cap">답례품 구경 중 🎁</div>
-            </div>
-          </div>
-        ) : (
-          <div className="member-widget">
-            {/* D-day 노트 — 가장 뒤 (z-index 1) */}
-            <div className="w-card wc-dday">
-              <div className="dday-pin" />
-              <div className="dday-num">{dday}</div>
-              <div className="dday-note">{nickname} 님, 안녕하세요 🤍</div>
-              <hr className="dday-divider" />
-              <div className="dday-task">이번 주 할 일: 웨딩홀 상담 예약하고 예산표 정리하기!</div>
-            </div>
-            {/* 취향 폴라로이드 — 중간 (z-index 2) */}
-            <div className="w-card wc-taste">
-              <div className="taste-photo">
-                {/* 실사 교체: <img src={photoUrl} alt="우리 취향" /> */}
-              </div>
-              <div className="cap">우리 취향 저장 중 📌</div>
-            </div>
-            {/* AI 매칭 — 가장 앞 (z-index 3) */}
-            <div className="w-card wc-ai">
-              <div className="ai-label">
-                <div className="ai-dot" />
-                AI 매칭 진행중
-              </div>
-              <div className="ai-bars">
-                <div className="ai-bar-row">
-                  <span className="ai-bar-label">웨딩홀</span>
-                  <div className="ai-bar-track"><div className="ai-bar-fill bar-pink" /></div>
-                </div>
-                <div className="ai-bar-row">
-                  <span className="ai-bar-label">드레스</span>
-                  <div className="ai-bar-track"><div className="ai-bar-fill bar-coral" /></div>
-                </div>
-                <div className="ai-bar-row">
-                  <span className="ai-bar-label">스튜디오</span>
-                  <div className="ai-bar-track"><div className="ai-bar-fill bar-sage" /></div>
-                </div>
+                <div className="cap">답례품 구경 중 🎁</div>
               </div>
             </div>
-          </div>
-        )}
-      </section>
+          ) : (
+            <div className="member-widget">
+              {/* D-day 노트 — 가장 뒤 (z-index 1) */}
+              <div className="w-card wc-dday">
+                <div className="dday-pin" />
+                <div className="dday-num">{dday}</div>
+                <div className="dday-note">{nickname} 님, 안녕하세요 🤍</div>
+                <hr className="dday-divider" />
+                <div className="dday-task">
+                  이번 주 할 일: 웨딩홀 상담 예약하고 예산표 정리하기!
+                </div>
+              </div>
+              {/* 취향 폴라로이드 — 중간 (z-index 2) */}
+              <div className="w-card wc-taste">
+                <div className="taste-photo">
+                  {/* 실사 교체: <img src={photoUrl} alt="우리 취향" /> */}
+                </div>
+                <div className="cap">우리 취향 저장 중 📌</div>
+              </div>
+              {/* AI 매칭 — 가장 앞 (z-index 3) */}
+              <div className="w-card wc-ai">
+                <div className="ai-label">
+                  <div className="ai-dot" />
+                  AI 매칭 진행중
+                </div>
+                <div className="ai-bars">
+                  <div className="ai-bar-row">
+                    <span className="ai-bar-label">웨딩홀</span>
+                    <div className="ai-bar-track">
+                      <div className="ai-bar-fill bar-pink" />
+                    </div>
+                  </div>
+                  <div className="ai-bar-row">
+                    <span className="ai-bar-label">드레스</span>
+                    <div className="ai-bar-track">
+                      <div className="ai-bar-fill bar-coral" />
+                    </div>
+                  </div>
+                  <div className="ai-bar-row">
+                    <span className="ai-bar-label">스튜디오</span>
+                    <div className="ai-bar-track">
+                      <div className="ai-bar-fill bar-sage" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
       </div>
 
       {/* ===== FEATURES ===== */}
@@ -184,18 +197,35 @@ const MainPage = () => {
           <div className="feat-card">
             <div className="feat-icon">✨</div>
             <h3>AI 웨딩플랜</h3>
-            <p>예산과 날짜만 알면 AI가 일정과 예산 배분까지 자동으로 설계해드려요. 웨딩홀부터 스드메까지 딱 맞는 업체까지 추천해줍니다</p>
+            <p>
+              예산과 날짜만 알면 AI가 일정과 예산 배분까지 자동으로
+              설계해드려요. 웨딩홀부터 스드메까지 딱 맞는 업체까지 추천해줍니다
+            </p>
           </div>
-          <div className="feat-card">
+          <Link
+            to="/prep/hub"
+            className="feat-card"
+            aria-label="준비관리 페이지로 이동"
+          >
             <div className="feat-icon">📋</div>
             <h3>준비관리</h3>
-            <p>D-day까지 해야 할 일을 체크리스트와 예산, 납부 일정으로 자동 정리해드려요. 중요한 날짜를 절대 놓치지 않도록 챙겨드립니다</p>
-          </div>
-          <div className="feat-card">
+            <p>
+              D-day까지 해야 할 일을 체크리스트와 예산, 납부 일정으로 자동
+              정리해드려요. 중요한 날짜를 절대 놓치지 않도록 챙겨드립니다
+            </p>
+          </Link>
+          <Link
+            to="/product/"
+            className="feat-card"
+            aria-label="답례품 쇼핑몰로 이동"
+          >
             <div className="feat-icon">🎁</div>
             <h3>답례품 쇼핑몰</h3>
-            <p>캔들, 디퓨저, 수건 세트까지 취향대로 골라 바로 주문하세요. 하객분들이 기억하는 특별한 답례품을 함께 골라드립니다</p>
-          </div>
+            <p>
+              캔들, 디퓨저, 수건 세트까지 취향대로 골라 바로 주문하세요.
+              하객분들이 기억하는 특별한 답례품을 함께 골라드립니다
+            </p>
+          </Link>
         </div>
       </section>
 
@@ -205,15 +235,21 @@ const MainPage = () => {
         <h2>우리처럼, 함께 준비했어요</h2>
         <div className="trust-stats">
           <div>
-            <div className="stat-num">12,400<span style={{ fontSize: "22px" }}>+</span></div>
+            <div className="stat-num">
+              12,400<span style={{ fontSize: "22px" }}>+</span>
+            </div>
             <div className="stat-label">함께한 커플</div>
           </div>
           <div>
-            <div className="stat-num">3,800<span style={{ fontSize: "22px" }}>+</span></div>
+            <div className="stat-num">
+              3,800<span style={{ fontSize: "22px" }}>+</span>
+            </div>
             <div className="stat-label">실제 예약·계약 성사</div>
           </div>
           <div>
-            <div className="stat-num">4.8<span style={{ fontSize: "22px" }}>/5</span></div>
+            <div className="stat-num">
+              4.8<span style={{ fontSize: "22px" }}>/5</span>
+            </div>
             <div className="stat-label">이용자 평균 만족도</div>
           </div>
         </div>
@@ -228,10 +264,17 @@ const MainPage = () => {
         <div className="review-grid">
           <div className="review-card">
             <div className="review-stars">
-              <span className="star">★</span><span className="star">★</span>
-              <span className="star">★</span><span className="star">★</span><span className="star">★</span>
+              <span className="star">★</span>
+              <span className="star">★</span>
+              <span className="star">★</span>
+              <span className="star">★</span>
+              <span className="star">★</span>
             </div>
-            <p className="review-text">예산이랑 결혼식 날짜만 입력했는데 일정이랑 예산 배분까지 한 번에 짜주고, 딱 맞는 웨딩홀까지 추천해줬어요. 막막했던 시작이 훨씬 가벼워졌습니다.</p>
+            <p className="review-text">
+              예산이랑 결혼식 날짜만 입력했는데 일정이랑 예산 배분까지 한 번에
+              짜주고, 딱 맞는 웨딩홀까지 추천해줬어요. 막막했던 시작이 훨씬
+              가벼워졌습니다.
+            </p>
             <div className="review-footer">
               <div className="review-avatar">🌸</div>
               <div className="review-author">김O진 님</div>
@@ -240,10 +283,17 @@ const MainPage = () => {
           </div>
           <div className="review-card">
             <div className="review-stars">
-              <span className="star">★</span><span className="star">★</span>
-              <span className="star">★</span><span className="star">★</span><span className="star">★</span>
+              <span className="star">★</span>
+              <span className="star">★</span>
+              <span className="star">★</span>
+              <span className="star">★</span>
+              <span className="star">★</span>
             </div>
-            <p className="review-text">체크리스트 덕분에 뭘 놓치고 있는지 한눈에 보여서 정말 든든했어요. D-day 기준으로 알림까지 와서 계약금 미납 같은 실수를 막을 수 있었어요.</p>
+            <p className="review-text">
+              체크리스트 덕분에 뭘 놓치고 있는지 한눈에 보여서 정말 든든했어요.
+              D-day 기준으로 알림까지 와서 계약금 미납 같은 실수를 막을 수
+              있었어요.
+            </p>
             <div className="review-footer">
               <div className="review-avatar">🌿</div>
               <div className="review-author">박O영 님</div>
@@ -252,10 +302,16 @@ const MainPage = () => {
           </div>
           <div className="review-card">
             <div className="review-stars">
-              <span className="star">★</span><span className="star">★</span>
-              <span className="star">★</span><span className="star">★</span><span className="star">★</span>
+              <span className="star">★</span>
+              <span className="star">★</span>
+              <span className="star">★</span>
+              <span className="star">★</span>
+              <span className="star">★</span>
             </div>
-            <p className="review-text">답례품 고르는 것도 일이었는데 종류가 많고 후기도 자세해서 고민 없이 골랐어요. 하객분들 반응도 너무 좋았고 배송까지 빨랐습니다.</p>
+            <p className="review-text">
+              답례품 고르는 것도 일이었는데 종류가 많고 후기도 자세해서 고민
+              없이 골랐어요. 하객분들 반응도 너무 좋았고 배송까지 빨랐습니다.
+            </p>
             <div className="review-footer">
               <div className="review-avatar">🕊️</div>
               <div className="review-author">이O희 님</div>
@@ -271,33 +327,59 @@ const MainPage = () => {
           <div className="footer-top">
             <div>
               <div className="footer-logo">🤍 웨딩올인원</div>
-              <p className="footer-desc">결혼 준비의 모든 순간을<br />함께하겠습니다.<br /><br />wedding all in one</p>
+              <p className="footer-desc">
+                결혼 준비의 모든 순간을
+                <br />
+                함께하겠습니다.
+                <br />
+                <br />
+                wedding all in one
+              </p>
             </div>
             <div className="footer-nav-cols">
               <div className="footer-nav-group">
                 <h4>서비스</h4>
                 <ul>
-                  <li><Link to={companyListPath}>업체 둘러보기</Link></li>
-                  <li><a href="#">AI 웨딩플랜</a></li>
-                  <li><Link to="/prep/hub">준비관리</Link></li>
-                  <li><Link to="/product/">답례품 쇼핑몰</Link></li>
+                  <li>
+                    <Link to={companyListPath}>업체 둘러보기</Link>
+                  </li>
+                  <li>
+                    <a href="#">AI 웨딩플랜</a>
+                  </li>
+                  <li>
+                    <Link to="/prep/hub">준비관리</Link>
+                  </li>
+                  <li>
+                    <Link to="/product/">답례품 쇼핑몰</Link>
+                  </li>
                 </ul>
               </div>
               <div className="footer-nav-group">
                 <h4>커뮤니티</h4>
                 <ul>
-                  <li><Link to="/board/list">자유게시판</Link></li>
-                  <li><a href="#">웨딩 후기</a></li>
-                  <li><a href="#">Q&amp;A</a></li>
+                  <li>
+                    <Link to="/board/free">자유게시판</Link>
+                  </li>
+                  <li>
+                    <Link to="/board/review">웨딩 후기</Link>
+                  </li>
                 </ul>
               </div>
               <div className="footer-nav-group">
                 <h4>회사</h4>
                 <ul>
-                  <li><a href="#">회사소개</a></li>
-                  <li><a href="#">이용약관</a></li>
-                  <li><a href="#">개인정보처리방침</a></li>
-                  <li><a href="#">고객센터</a></li>
+                  <li>
+                    <a href="#">회사소개</a>
+                  </li>
+                  <li>
+                    <a href="#">이용약관</a>
+                  </li>
+                  <li>
+                    <a href="#">개인정보처리방침</a>
+                  </li>
+                  <li>
+                    <a href="#">고객센터</a>
+                  </li>
                 </ul>
               </div>
             </div>
@@ -305,23 +387,67 @@ const MainPage = () => {
               <p>우리를 팔로우해요</p>
               <div className="sns-row">
                 <a href="#" className="sns-btn" aria-label="인스타그램">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="0.8" fill="currentColor" />
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect x="2" y="2" width="20" height="20" rx="5" />
+                    <circle cx="12" cy="12" r="4" />
+                    <circle cx="17.5" cy="6.5" r="0.8" fill="currentColor" />
                   </svg>
                 </a>
                 <a href="#" className="sns-btn" aria-label="유튜브">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="5" width="20" height="14" rx="3" /><path d="M10 9l5 3-5 3V9z" fill="currentColor" stroke="none" />
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect x="2" y="5" width="20" height="14" rx="3" />
+                    <path
+                      d="M10 9l5 3-5 3V9z"
+                      fill="currentColor"
+                      stroke="none"
+                    />
                   </svg>
                 </a>
                 <a href="#" className="sns-btn" aria-label="카카오">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <path d="M12 3C6.5 3 2 6.7 2 11.3c0 2.9 1.8 5.5 4.6 7L5 21l4.4-2.3c.8.2 1.7.3 2.6.3 5.5 0 10-3.7 10-8.3S17.5 3 12 3z" />
                   </svg>
                 </a>
                 <a href="#" className="sns-btn" aria-label="블로그">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 7h13v8a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V7z" /><path d="M17 8h2a2 2 0 0 1 0 4h-2" />
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M4 7h13v8a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V7z" />
+                    <path d="M17 8h2a2 2 0 0 1 0 4h-2" />
                   </svg>
                 </a>
               </div>
@@ -329,10 +455,17 @@ const MainPage = () => {
           </div>
           <div className="footer-bottom">
             <div className="footer-info">
-              <span>(주)웨딩올인원</span><span>대표 홍길동</span><span>사업자등록번호 261-81-00000</span><br />
-              <span>서울특별시 강남구 테헤란로 123 올인원빌딩 5층</span><span>대표전화 1588-0000</span><span>이메일 hello@weddingooi.com</span>
+              <span>(주)웨딩올인원</span>
+              <span>대표 홍길동</span>
+              <span>사업자등록번호 261-81-00000</span>
+              <br />
+              <span>서울특별시 강남구 테헤란로 123 올인원빌딩 5층</span>
+              <span>대표전화 1588-0000</span>
+              <span>이메일 hello@weddingooi.com</span>
             </div>
-            <div className="footer-copy">© 2026 웨딩올인원. All rights reserved.</div>
+            <div className="footer-copy">
+              © 2026 웨딩올인원. All rights reserved.
+            </div>
           </div>
         </div>
       </footer>
@@ -643,7 +776,7 @@ const MainPage = () => {
         .section-head .tape { display: inline-block; background: #FFE2E2; color: #C06080; font-family: 'Gaegu', cursive; font-size: 13px; padding: 4px 14px; transform: rotate(-2deg); margin-bottom: 14px; }
         .section-head h2 { font-family: 'Gowun Batang', serif; font-size: 30px; color: #3A362F; }
         .feat-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
-        .feat-card { background: #fff; border-radius: 18px; padding: 36px 28px; box-shadow: 0 8px 24px -12px rgba(245,203,203,0.4); transition: transform 0.25s ease, box-shadow 0.25s ease; position: relative; overflow: hidden; }
+        .feat-card { display: block; background: #fff; color: inherit; text-decoration: none; cursor: pointer; border-radius: 18px; padding: 36px 28px; box-shadow: 0 8px 24px -12px rgba(245,203,203,0.4); transition: transform 0.25s ease, box-shadow 0.25s ease; position: relative; overflow: hidden; }
         .feat-card::before { content: ''; position: absolute; bottom: 0; right: 0; width: 80px; height: 80px; border-radius: 50%; opacity: 0.18; transition: transform 0.3s ease; }
         .feat-card:nth-child(1)::before { background: #FFE2E2; transform: translate(20px,20px); }
         .feat-card:nth-child(2)::before { background: #C5B3D3; transform: translate(20px,20px); }
