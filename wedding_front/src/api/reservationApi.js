@@ -37,3 +37,30 @@ export const deleteOne = async (reservationId) => {
 
   return res.data;
 };
+
+// ↓↓↓ 재원 추가 - 업체 예약 결제 (날짜/옵션 선택 → 토스 결제)
+
+// 결제창 열기 전 - 주문번호 발급
+export const preparePayment = async (reservationId) => {
+  const res = await jwtAxios.post(`${prefix}/${reservationId}/payment/prepare`);
+
+  return res.data;
+};
+
+// 결제 승인 (paymentKey, orderNumber, amount)
+export const confirmPayment = async (reservationId, payload) => {
+  const res = await jwtAxios.post(
+    `${prefix}/${reservationId}/payment/confirm`,
+    payload,
+  );
+
+  return res.data;
+};
+
+// 결제 취소/실패 처리
+export const cancelPayment = async (reservationId) => {
+  const res = await jwtAxios.post(`${prefix}/${reservationId}/payment/cancel`);
+
+  return res.data;
+};
+// ↑↑↑ 재원 추가

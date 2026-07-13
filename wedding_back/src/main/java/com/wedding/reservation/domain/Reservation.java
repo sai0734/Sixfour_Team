@@ -31,6 +31,28 @@ public class Reservation {
 
   private String memo;
 
+  // ↓↓↓ 재원 추가 - 업체 상세페이지 "예약" 버튼 → 날짜/옵션 선택 → 결제 흐름용
+  // 선택한 옵션명 (예: "그랜드홀 A / 뷔페", "아이보리 볼가운")
+  private String optionName;
+
+  // 결제 금액
+  @Builder.Default
+  private int amount = 0;
+
+  // 토스페이먼츠 주문번호 (prepare 시 발급, MariaDB InnoDB는 UNIQUE 컬럼에 NULL 다건 허용됨)
+  @Column(unique = true)
+  private String orderNumber;
+
+  // 토스페이먼츠 결제 승인키 (confirm 성공 시 저장)
+  private String paymentKey;
+
+  // NONE(미결제) / PAID(결제완료) / CANCELLED(취소·실패)
+  @Builder.Default
+  private String payStatus = "NONE";
+
+  private java.time.LocalDateTime paidAt;
+  // ↑↑↑ 재원 추가
+
   public void changeWeddingDate(LocalDate weddingDate) {
     this.weddingDate = weddingDate;
   }
@@ -41,6 +63,22 @@ public class Reservation {
 
   public void changeMemo(String memo) {
     this.memo = memo;
+  }
+
+  // 재원 추가 - 결제 관련 상태 변경 메서드
+  public void assignOrder(String orderNumber) {
+    this.orderNumber = orderNumber;
+  }
+
+  public void completePayment(String paymentKey, java.time.LocalDateTime paidAt) {
+    this.paymentKey = paymentKey;
+    this.payStatus = "PAID";
+    this.paidAt = paidAt;
+    this.status = "확정";
+  }
+
+  public void cancelPayment() {
+    this.payStatus = "CANCELLED";
   }
 
 }
