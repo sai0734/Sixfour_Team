@@ -1,9 +1,6 @@
+import { useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 
-// 준비관리(PrepSidebar)와 분리된 마이페이지 전용 사이드바.
-// 마이페이지 내부 탭(플랜/예약현황/결제내역/찜목록)은 아직 별도 라우트가 아니라
-// HubPage 내부 상태로 전환되므로, 여기서는 "마이페이지" 진입 링크와
-// 그 바깥에 있는 "회원정보 수정" 링크만 보여준다.
 const MENU_GROUPS = [
   {
     label: "마이페이지",
@@ -16,52 +13,55 @@ const MENU_GROUPS = [
 
 const MyPageSidebar = () => {
   const location = useLocation();
+  const activeRef = useRef(null);
+
+  useEffect(() => {
+    activeRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "center",
+    });
+  }, [location.pathname]);
+
+  const isActivePath = (path) => {
+    if (path === "/mypage") return location.pathname === "/mypage";
+    return location.pathname.startsWith(path);
+  };
 
   return (
-    <aside className="w-full py-4 lg:w-60 lg:shrink-0 lg:py-8 lg:pr-6">
+    <aside className="sticky top-[68px] z-20 w-full bg-[#FBF7F0]/95 py-3 backdrop-blur lg:static lg:z-auto lg:w-60 lg:shrink-0 lg:bg-transparent lg:py-8 lg:pr-6 lg:backdrop-blur-0">
       {MENU_GROUPS.map((group) => (
         <div
           key={group.label}
-          className="rounded-2xl bg-white p-4"
+          className="relative overflow-hidden rounded-2xl bg-white p-3 lg:p-4"
           style={{ boxShadow: "0 8px 24px -14px rgba(58,54,47,0.25)" }}
         >
-          <p
-            className="mb-3 px-3 text-xs font-bold tracking-wide"
-            style={{ color: "#C06080" }}
-          >
+          <p className="hidden px-3 text-xs font-bold tracking-wide text-[#7C8B6F] lg:mb-3 lg:block">
             {group.label}
           </p>
-          <nav className="flex flex-col gap-1">
+
+          <nav className="flex gap-2 overflow-x-auto scroll-smooth pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:flex-col lg:gap-1 lg:overflow-visible lg:pb-0">
             {group.items.map((item) => {
-              const isActive = location.pathname.startsWith(item.path);
+              const isActive = isActivePath(item.path);
 
               return (
                 <Link
                   key={item.name}
+                  ref={isActive ? activeRef : null}
                   to={item.path}
-                  className="flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium transition-colors"
-                  style={
+                  className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2.5 text-sm font-medium transition-colors lg:flex lg:items-center lg:gap-2 ${
                     isActive
-                      ? {
-                          background: "#C06080",
-                          color: "#FFFFFF",
-                          boxShadow: "0 4px 12px -4px rgba(192,96,128,0.6)",
-                        }
-                      : { color: "#4A3F38" }
-                  }
-                  onMouseEnter={(e) => {
-                    if (!isActive) e.currentTarget.style.background = "#FFE2E2";
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive)
-                      e.currentTarget.style.background = "transparent";
-                  }}
+                      ? "bg-[#7C8B6F] text-white shadow-[0_4px_12px_-4px_rgba(92,107,79,0.55)]"
+                      : "bg-[#F7F2EA] text-[#4A3F38] hover:bg-[#E6EBDD] lg:bg-transparent"
+                  }`}
                 >
                   {item.name}
                 </Link>
               );
             })}
           </nav>
+
+          <div className="pointer-events-none absolute bottom-0 right-0 top-0 w-8 bg-gradient-to-l from-white to-transparent lg:hidden" />
         </div>
       ))}
     </aside>

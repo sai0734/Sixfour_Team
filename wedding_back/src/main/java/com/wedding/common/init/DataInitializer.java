@@ -29,6 +29,8 @@ import com.wedding.company.repository.HallItemRepository;
 import com.wedding.company.repository.MakeupDetailRepository;
 import com.wedding.company.repository.MakeupPackageRepository;
 import com.wedding.company.repository.StudioDetailRepository;
+import com.wedding.coupleprofile.domain.CoupleProfile;
+import com.wedding.coupleprofile.repository.CoupleProfileRepository;
 import com.wedding.member.domain.Member;
 import com.wedding.member.domain.MemberDetail;
 import com.wedding.member.domain.MemberRole;
@@ -44,6 +46,7 @@ import com.wedding.product.repository.QnaRepository;
 import com.wedding.product.repository.ReviewRepository;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -88,6 +91,7 @@ public class DataInitializer implements ApplicationRunner {
   private final JdbcTemplate jdbcTemplate;
   private final BoardRepository boardRepository;
   private final CommentRepository commentRepository;
+  private final CoupleProfileRepository coupleProfileRepository;
 
   // 애플리케이션 기동 시 더미 시드 진입점 (모든 시드: 해당 테이블 count == 0 일 때만)
   // 1) data/product.json         → tbl_product, tbl_product_option
@@ -95,7 +99,8 @@ public class DataInitializer implements ApplicationRunner {
   // 3) data/board.json           → tbl_board (작성자는 ACTIVE 회원 순환 배정)
   // 4) data/comment.json         → tbl_comment (작성자는 ACTIVE 회원 순환 배정, board 이후)
   // 5) data/commerce_dummy.json  → tbl_orders, tbl_order_item, tbl_review, tbl_qna
-  // 6) data/makeup.json          → tbl_makeup_package (업체 DB 있을 때만)
+  // 6) data/couple_profile.json  → tbl_couple_profile (회원 이후)
+  // 7) data/makeup.json          → tbl_makeup_package (업체 DB 있을 때만)
   @Override
   @Transactional
   public void run(ApplicationArguments args) throws Exception {
@@ -110,6 +115,12 @@ public class DataInitializer implements ApplicationRunner {
       log.info("===== Member dummy seed start =====");
       insertMembers();
       log.info("===== Member dummy seed complete =====");
+    }
+
+    if (coupleProfileRepository.count() == 0) {
+      log.info("===== Couple profile dummy seed start =====");
+      insertCoupleProfiles();
+      log.info("===== Couple profile dummy seed complete =====");
     }
 
     // 게시판/댓글은 반드시 회원 삽입 이후에 실행되어야 함 (작성자를 실제 회원으로 배정하므로)
@@ -193,16 +204,16 @@ public class DataInitializer implements ApplicationRunner {
       Long jsonCmno = toLongObject(m.get("cmno"));
 
       Company company = Company.builder()
-          .category(enumValue(com.wedding.company.domain.CompanyCategory.class, m.get("category"), null))
-          .name((String) m.get("name"))
-          .ceoName((String) m.get("ceoName"))
-          .phone((String) m.get("phone"))
-          .address((String) m.get("address"))
-          .latitude(toDouble(m.get("latitude")))
-          .longitude(toDouble(m.get("longitude")))
-          .description((String) m.get("description"))
-          .priceAvg(toBigDecimal(m.get("priceAvg")))
-          .build();
+              .category(enumValue(com.wedding.company.domain.CompanyCategory.class, m.get("category"), null))
+              .name((String) m.get("name"))
+              .ceoName((String) m.get("ceoName"))
+              .phone((String) m.get("phone"))
+              .address((String) m.get("address"))
+              .latitude(toDouble(m.get("latitude")))
+              .longitude(toDouble(m.get("longitude")))
+              .description((String) m.get("description"))
+              .priceAvg(toBigDecimal(m.get("priceAvg")))
+              .build();
 
       List<Map<String, Object>> imageList = castList(m.get("imageList"));
       if (imageList != null) {
@@ -232,30 +243,30 @@ public class DataInitializer implements ApplicationRunner {
       }
 
       hallDetailRepository.save(HallDetail.builder()
-          .company(company)
-          .hallName((String) m.get("hallName"))
-          .address((String) m.get("address"))
-          .latitude(toDouble(m.get("latitude")))
-          .longitude(toDouble(m.get("longitude")))
-          .phone((String) m.get("phone"))
-          .representative((String) m.get("representative"))
-          .hallType(enumValue(HallType.class, m.get("hallType"), null))
-          .description((String) m.get("description"))
-          .imageUrl((String) m.get("imageUrl"))
-          .build());
+              .company(company)
+              .hallName((String) m.get("hallName"))
+              .address((String) m.get("address"))
+              .latitude(toDouble(m.get("latitude")))
+              .longitude(toDouble(m.get("longitude")))
+              .phone((String) m.get("phone"))
+              .representative((String) m.get("representative"))
+              .hallType(enumValue(HallType.class, m.get("hallType"), null))
+              .description((String) m.get("description"))
+              .imageUrl((String) m.get("imageUrl"))
+              .build());
 
       List<Map<String, Object>> items = castList(m.get("hallItems"));
       if (items != null) {
         for (Map<String, Object> item : items) {
           hallItemRepository.save(HallItem.builder()
-              .company(company)
-              .itemName((String) item.get("itemName"))
-              .price(toBigDecimal(item.get("price")))
-              .capacity(toIntegerObject(item.get("capacity")))
-              .imageUrl((String) item.get("imageUrl"))
-              .ord(toIntegerObject(item.get("ord")))
-              .mealType(enumValue(MealType.class, item.get("mealType"), null))
-              .build());
+                  .company(company)
+                  .itemName((String) item.get("itemName"))
+                  .price(toBigDecimal(item.get("price")))
+                  .capacity(toIntegerObject(item.get("capacity")))
+                  .imageUrl((String) item.get("imageUrl"))
+                  .ord(toIntegerObject(item.get("ord")))
+                  .mealType(enumValue(MealType.class, item.get("mealType"), null))
+                  .build());
         }
       }
     }
@@ -275,23 +286,23 @@ public class DataInitializer implements ApplicationRunner {
       }
 
       dressDetailRepository.save(DressDetail.builder()
-          .company(company)
-          .sizeRange((String) m.get("sizeRange"))
-          .build());
+              .company(company)
+              .sizeRange((String) m.get("sizeRange"))
+              .build());
 
       List<Map<String, Object>> items = castList(m.get("dressItems"));
       if (items != null) {
         for (Map<String, Object> item : items) {
           dressItemRepository.save(DressItem.builder()
-              .company(company)
-              .itemName((String) item.get("itemName"))
-              .price(toBigDecimal(item.get("price")))
-              .imageUrl((String) item.get("imageUrl"))
-              .ord(toIntegerObject(item.get("ord")))
-              .itemType(enumValue(DressItemType.class, item.get("itemType"), null))
-              .styleTags((String) item.get("styleTags"))
-              .sizeRange((String) item.get("sizeRange"))
-              .build());
+                  .company(company)
+                  .itemName((String) item.get("itemName"))
+                  .price(toBigDecimal(item.get("price")))
+                  .imageUrl((String) item.get("imageUrl"))
+                  .ord(toIntegerObject(item.get("ord")))
+                  .itemType(enumValue(DressItemType.class, item.get("itemType"), null))
+                  .styleTags((String) item.get("styleTags"))
+                  .sizeRange((String) item.get("sizeRange"))
+                  .build());
         }
       }
     }
@@ -312,13 +323,13 @@ public class DataInitializer implements ApplicationRunner {
 
       List<String> themeTagList = castList(m.get("themeTags"));
       String themeTags = themeTagList != null
-          ? String.join(",", themeTagList)
-          : (String) m.get("themeTags");
+              ? String.join(",", themeTagList)
+              : (String) m.get("themeTags");
 
       studioDetailRepository.save(StudioDetail.builder()
-          .company(company)
-          .themeTags(themeTags)
-          .build());
+              .company(company)
+              .themeTags(themeTags)
+              .build());
     }
 
     log.info("Inserted {} studio details.", studioDetailRepository.count());
@@ -337,12 +348,12 @@ public class DataInitializer implements ApplicationRunner {
 
       MakeupDetail detail = MakeupDetail.builder().company(company).build();
       detail.change(
-          Boolean.TRUE.equals(m.get("includesHairService")),
-          Boolean.TRUE.equals(m.get("includesMakeupService")),
-          Boolean.TRUE.equals(m.get("includesNailService")),
-          toBigDecimalNullable(m.get("hairPrice")),
-          toBigDecimalNullable(m.get("makeupPrice")),
-          toBigDecimalNullable(m.get("nailPrice"))
+              Boolean.TRUE.equals(m.get("includesHairService")),
+              Boolean.TRUE.equals(m.get("includesMakeupService")),
+              Boolean.TRUE.equals(m.get("includesNailService")),
+              toBigDecimalNullable(m.get("hairPrice")),
+              toBigDecimalNullable(m.get("makeupPrice")),
+              toBigDecimalNullable(m.get("nailPrice"))
       );
       makeupDetailRepository.save(detail);
 
@@ -351,16 +362,16 @@ public class DataInitializer implements ApplicationRunner {
         for (Map<String, Object> pkg : packages) {
           if (pkg == null) continue;
           makeupPackageRepository.save(MakeupPackage.builder()
-              .company(company)
-              .packageType(normalizeMakeupPackageType(pkg.get("packageType")))
-              .discountRate(toBigDecimal(pkg.get("discountRate")))
-              .build());
+                  .company(company)
+                  .packageType(normalizeMakeupPackageType(pkg.get("packageType")))
+                  .discountRate(toBigDecimal(pkg.get("discountRate")))
+                  .build());
         }
       }
     }
 
     log.info("Inserted {} makeup details, {} makeup packages.",
-        makeupDetailRepository.count(), makeupPackageRepository.count());
+            makeupDetailRepository.count(), makeupPackageRepository.count());
   }
 
 
@@ -465,6 +476,34 @@ public class DataInitializer implements ApplicationRunner {
     }
 
     log.info("Inserted {} members (password: 1111).", memberRepository.count());
+  }
+
+  // data/couple_profile.json → tbl_couple_profile. 실제 회원 이메일과 연결된 선배부부 프로필
+  private void insertCoupleProfiles() throws Exception {
+    List<Map<String, Object>> list = readJsonArray("data/couple_profile.json");
+    List<CoupleProfile> profiles = new ArrayList<>();
+
+    for (Map<String, Object> m : list) {
+      String memberEmail = (String) m.get("memberEmail");
+
+      if (!memberRepository.existsById(memberEmail)) {
+        log.warn("Skip couple profile. Member not found: {}", memberEmail);
+        continue;
+      }
+
+      profiles.add(CoupleProfile.builder()
+              .memberEmail(memberEmail)
+              .budgetMin(toInt(m.get("budgetMin")))
+              .budgetMax(toInt(m.get("budgetMax")))
+              .region((String) m.get("region"))
+              .weddingStyle((String) m.get("weddingStyle"))
+              .weddingDate(LocalDate.parse((String) m.get("weddingDate")))
+              .bio((String) m.get("bio"))
+              .build());
+    }
+
+    coupleProfileRepository.saveAll(profiles);
+    log.info("Inserted {} couple profiles.", profiles.size());
   }
 
   // data/board.json → tbl_board. 작성자는 고정 가짜 이메일이 아니라 실제 ACTIVE 회원을 순환 배정

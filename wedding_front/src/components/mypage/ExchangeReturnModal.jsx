@@ -1,57 +1,82 @@
 import { useState } from "react";
 import { requestExchangeReturn } from "../../api/checkoutApi";
 
-const REASON_OPTIONS = [
-  "단순 변심",
-  "상품 불량/파손",
-  "다른 상품이 왔어요(오배송)",
-  "상품 정보와 달라요",
-  "기타",
-];
+const REASON_OPTIONS = {
+  EXCHANGE: [
+    "상품 불량/파손",
+    "다른 상품이 왔어요(오배송)",
+    "옵션/수량이 달라요",
+    "상품 정보와 달라요",
+    "기타",
+  ],
+  RETURN: [
+    "단순 변심",
+    "상품 불량/파손",
+    "다른 상품이 왔어요(오배송)",
+    "상품 정보와 달라요",
+    "기타",
+  ],
+};
 
-// 마이페이지 결제내역 "교환/반품 신청" 모달.
-// TODO(황용현): 이 모달이 부르는 POST /api/checkout/orders/{orderNumber}/exchange-return
-// 엔드포인트가 아직 백엔드에 없음 - 별도로 스펙 전달해뒀음.
 const ExchangeReturnModal = ({ order, onClose, onSubmitted }) => {
   const [type, setType] = useState("EXCHANGE");
-  const [reason, setReason] = useState(REASON_OPTIONS[0]);
+  const [reason, setReason] = useState(REASON_OPTIONS.EXCHANGE[0]);
   const [detail, setDetail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = () => {
+  const changeType = (nextType) => {
+    setType(nextType);
+    setReason(REASON_OPTIONS[nextType][0]);
+    setError("");
+  };
+
+  const handleSubmit = async () => {
     if (!detail.trim()) {
       setError("상세 내용을 입력해주세요.");
       return;
     }
 
-    setSubmitting(true);
-
-    requestExchangeReturn(order.orderNumber, { type, reason, detail })
-      .then(() => {
-        onSubmitted?.();
-        onClose();
-      })
-      .catch((e) => {
-        console.error(e);
-        setError("신청에 실패했어요. 잠시 후 다시 시도해주세요.");
-      })
-      .finally(() => setSubmitting(false));
+    try {
+      setSubmitting(true);
+      setError("");
+      await requestExchangeReturn(order.orderNumber, {
+        type,
+        reason,
+        detail: detail.trim(),
+      });
+      onSubmitted?.({
+        type,
+        reason,
+        detail: detail.trim(),
+        requestedAt: new Date().toISOString(),
+      });
+      onClose();
+    } catch (e) {
+      console.error(e);
+      setError(
+        e?.response?.data?.message ||
+          e?.response?.data?.error ||
+          "신청에 실패했어요. 잠시 후 다시 시도해주세요.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <div
       className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
+      onClick={(e) => e.target === e.currentTarget && !submitting && onClose()}
     >
       <div className="bg-white rounded-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
-        <p className="text-lg font-medium text-ink mb-1">교환/반품 신청</p>
+        <p className="text-lg font-medium text-ink mb-1">교환/환불 신청</p>
         <p className="text-xs text-ink-faint mb-5">{order.orderNumber}</p>
 
         <div className="flex gap-2 mb-4">
           <button
             type="button"
-            onClick={() => setType("EXCHANGE")}
+            onClick={() => changeType("EXCHANGE")}
             className={`flex-1 h-10 rounded-full text-sm font-medium ${
               type === "EXCHANGE"
                 ? "bg-brand text-white"
@@ -62,14 +87,14 @@ const ExchangeReturnModal = ({ order, onClose, onSubmitted }) => {
           </button>
           <button
             type="button"
-            onClick={() => setType("RETURN")}
+            onClick={() => changeType("RETURN")}
             className={`flex-1 h-10 rounded-full text-sm font-medium ${
               type === "RETURN"
                 ? "bg-brand text-white"
                 : "bg-surface text-ink-muted"
             }`}
           >
-            반품
+            환불
           </button>
         </div>
 
@@ -81,9 +106,9 @@ const ExchangeReturnModal = ({ order, onClose, onSubmitted }) => {
           onChange={(e) => setReason(e.target.value)}
           className="w-full h-11 px-4 rounded-lg border border-line-soft text-sm mb-4 outline-none focus:border-brand"
         >
-          {REASON_OPTIONS.map((r) => (
-            <option key={r} value={r}>
-              {r}
+          {REASON_OPTIONS[type].map((item) => (
+            <option key={item} value={item}>
+              {item}
             </option>
           ))}
         </select>
@@ -98,22 +123,27 @@ const ExchangeReturnModal = ({ order, onClose, onSubmitted }) => {
             setError("");
           }}
           rows={4}
-          placeholder="어떤 문제가 있었는지 자세히 적어주시면 처리가 빨라져요"
+          maxLength={500}
+          placeholder="상품 상태와 요청 내용을 자세히 적어주세요"
           className="w-full px-4 py-3 rounded-lg border border-line-soft text-sm outline-none focus:border-brand resize-none"
         />
+        <div className="text-right text-[11px] text-ink-faint mt-1">
+          {detail.length}/500
+        </div>
 
         {error && <p className="text-xs text-red-600 mt-2">{error}</p>}
 
         <p className="text-[11px] text-ink-faint mt-4 mb-4">
-          신청 후 상품 상태 확인이 필요할 수 있어요. 처리 결과는 결제내역에서
-          확인할 수 있어요.
+          배송 완료 주문만 신청할 수 있으며, 신청 후 관리자가 내용을 확인해
+          처리합니다.
         </p>
 
         <div className="flex gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 h-11 rounded-full border border-line-soft text-sm text-ink-soft hover:bg-cream"
+            disabled={submitting}
+            className="flex-1 h-11 rounded-full border border-line-soft text-sm text-ink-soft hover:bg-cream disabled:opacity-60"
           >
             취소
           </button>
