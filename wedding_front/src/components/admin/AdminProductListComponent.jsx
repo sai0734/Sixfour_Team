@@ -194,7 +194,7 @@ const AdminProductListComponent = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[720px]">
             <thead>
-              <tr className="bg-cream text-ink-faint text-xs">
+              <tr className="bg-[ffffff] text-ink-faint text-xs">
                 <th className="py-3 px-4 text-left whitespace-nowrap">
                   썸네일
                 </th>

@@ -57,4 +57,12 @@ public class AdminOrderDetailDTO {
 
     private List<OrderItemDTO> items;
 
+    private String exchangeReturnType;
+
+    private String exchangeReturnReason;
+
+    private String exchangeReturnDetail;
+
+    private LocalDateTime exchangeReturnRequestedAt;
+
 }

@@ -1,9 +1,6 @@
 package com.wedding.checkout.controller;
 
-import com.wedding.checkout.dto.AddressDTO;
-import com.wedding.checkout.dto.CheckoutRequestDTO;
-import com.wedding.checkout.dto.ConfirmRequestDTO;
-import com.wedding.checkout.dto.OrderDTO;
+import com.wedding.checkout.dto.*;
 import com.wedding.checkout.service.CheckoutService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -12,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @Log4j2
@@ -69,6 +67,20 @@ public class CheckoutController {
         log.info("CheckoutController_myOrders 실행~~~~~~~~");
 
         return checkoutService.listMyOrders(principal.getName());
+
+    }
+
+    // 교환/환불 신청
+    @PreAuthorize("hasAnyRole('USER')")
+    @PostMapping("/orders/{orderNumber}/exchange-return")
+    public Map<String, String> requestExchangeReturn(Principal principal, @PathVariable String orderNumber,
+                                                     @RequestBody ExchangeReturnRequestDTO requestDTO) {
+
+        log.info("CheckoutController_requestExchangeReturn 실행~~~~~~~~");
+
+        checkoutService.requestExchangeReturn(principal.getName(), orderNumber, requestDTO);
+
+        return Map.of("RESULT", "SUCCESS");
 
     }
 
