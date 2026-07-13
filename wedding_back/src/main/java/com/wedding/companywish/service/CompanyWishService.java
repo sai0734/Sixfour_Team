@@ -2,17 +2,19 @@ package com.wedding.companywish.service;
 
 import java.util.List;
 
-import com.wedding.companywish.dto.CompanyWishDTO;
+import com.wedding.company.dto.CompanyDTO;
 
 public interface CompanyWishService {
 
-    Long register(CompanyWishDTO companyWishDTO);
+    /** 찜 여부 확인 */
+    boolean check(String memberEmail, Long cmno);
 
-    List<CompanyWishDTO> listByMember(String memberEmail);
+    /** 찜 등록 (이미 찜한 경우 무시) */
+    void add(String memberEmail, Long cmno);
 
-    void remove(Long wishId);
+    /** 찜 해제 */
+    void remove(String memberEmail, Long cmno);
 
-    // memberEmail + cmno로 찜 취소 (프론트에서 하트 아이콘 토글 시 wishId를 몰라도 되게)
-    void removeByMemberAndCompany(String memberEmail, Long cmno);
-
+    /** 마이페이지 찜 업체 목록 조회 (업체 상세 정보 포함) */
+    List<CompanyDTO> getMyCompanies(String memberEmail);
 }

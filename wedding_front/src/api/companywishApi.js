@@ -3,29 +3,26 @@ import { API_SERVER_HOST } from "./reservationApi";
 
 const prefix = `${API_SERVER_HOST}/api/companywishes`;
 
-export const getListByMember = async (memberEmail) => {
-  const res = await jwtAxios.get(`${prefix}/member/${memberEmail}`);
-
+/** 현재 로그인 사용자가 해당 업체를 찜했는지 확인 */
+export const checkCompanyWish = async (cmno) => {
+  const res = await jwtAxios.get(`${prefix}/${cmno}/check`);
   return res.data;
 };
 
-export const postAdd = async (companyWish) => {
-  const res = await jwtAxios.post(`${prefix}/`, companyWish);
-
+/** 업체 찜 등록 */
+export const addCompanyWish = async (cmno) => {
+  const res = await jwtAxios.post(`${prefix}/${cmno}`);
   return res.data;
 };
 
-export const deleteOne = async (wishId) => {
-  const res = await jwtAxios.delete(`${prefix}/${wishId}`);
-
+/** 업체 찜 해제 */
+export const removeCompanyWish = async (cmno) => {
+  const res = await jwtAxios.delete(`${prefix}/${cmno}`);
   return res.data;
 };
 
-// wishId를 모를 때 memberEmail + cmno로 찜 취소 (업체 상세페이지 하트 토글용)
-export const deleteByMemberAndCompany = async (memberEmail, cmno) => {
-  const res = await jwtAxios.delete(
-    `${prefix}/member/${memberEmail}/company/${cmno}`,
-  );
-
+/** 마이페이지 - 로그인 사용자의 찜 업체 목록 조회 */
+export const getMyCompanyWishes = async () => {
+  const res = await jwtAxios.get(prefix);
   return res.data;
 };
