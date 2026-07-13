@@ -22,6 +22,9 @@ const getStatusMeta = (status) =>
     className: "bg-surface text-ink-muted",
   };
 
+const getExchangeReturnLabel = (type) =>
+  type === "EXCHANGE" ? "교환 신청" : type === "RETURN" ? "환불 신청" : "";
+
 const ProductPaymentTab = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,32 +33,33 @@ const ProductPaymentTab = () => {
   const [trackingOrder, setTrackingOrder] = useState(null);
   const [exchangeOrder, setExchangeOrder] = useState(null);
 
+  const loadOrders = async () => {
+    try {
+      const data = await getMyOrders();
+      setOrders(data);
+
+      const pnoSet = new Set();
+      data.forEach((order) =>
+        order.items?.forEach((item) => pnoSet.add(item.pno)),
+      );
+
+      pnoSet.forEach((pno) => {
+        getProduct(pno)
+          .then((product) => {
+            const firstImage = product.uploadFileNames?.[0];
+            setThumbnails((prev) => ({ ...prev, [pno]: firstImage }));
+          })
+          .catch(() => {});
+      });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    getMyOrders()
-      .then((data) => {
-        setOrders(data);
-
-        // 주문에 포함된 상품들의 pno를 모아서 중복 없이 썸네일 조회
-        const pnoSet = new Set();
-        data.forEach((order) =>
-          order.items?.forEach((item) => pnoSet.add(item.pno)),
-        );
-
-        pnoSet.forEach((pno) => {
-          getProduct(pno)
-            .then((product) => {
-              // getOne()이 반환하는 상세 DTO엔 thumbnail 필드가 없고
-              // uploadFileNames 배열만 있음 (목록 조회용 DTO에만 thumbnail이 따로 있음)
-              const firstImage = product.uploadFileNames?.[0];
-              setThumbnails((prev) => ({ ...prev, [pno]: firstImage }));
-            })
-            .catch(() => {
-              // 상품이 삭제됐거나 조회 실패해도 결제내역 자체는 그대로 보여줘야 하니 무시
-            });
-        });
-      })
-      .catch((e) => console.error(e))
-      .finally(() => setLoading(false));
+    loadOrders();
   }, []);
 
   if (loading) {
@@ -171,6 +175,27 @@ const ProductPaymentTab = () => {
               );
             })()}
 
+            {order.exchangeReturnType && (
+              <div className="mt-3 rounded-xl border border-brand/20 bg-brand-light/40 p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-medium text-brand-accent">
+                    {getExchangeReturnLabel(order.exchangeReturnType)} 접수 완료
+                  </span>
+                  <span className="text-[11px] text-ink-faint">
+                    {order.exchangeReturnRequestedAt?.toString().slice(0, 10)}
+                  </span>
+                </div>
+                <p className="text-xs text-ink-muted mt-2">
+                  사유: {order.exchangeReturnReason}
+                </p>
+                {order.exchangeReturnDetail && (
+                  <p className="text-xs text-ink-faint mt-1 line-clamp-2">
+                    {order.exchangeReturnDetail}
+                  </p>
+                )}
+              </div>
+            )}
+
             <div className="flex gap-2 mt-3 pt-3 border-t border-line-soft">
               {(order.orderStatus === "SHIPPING" ||
                 order.orderStatus === "DELIVERED") && (
@@ -182,15 +207,16 @@ const ProductPaymentTab = () => {
                   배송조회
                 </button>
               )}
-              {order.orderStatus === "DELIVERED" && (
-                <button
-                  type="button"
-                  onClick={() => setExchangeOrder(order)}
-                  className="flex-1 h-9 rounded-full border border-line-soft text-xs text-ink-soft hover:bg-cream"
-                >
-                  교환/반품 신청
-                </button>
-              )}
+              {order.orderStatus === "DELIVERED" &&
+                !order.exchangeReturnType && (
+                  <button
+                    type="button"
+                    onClick={() => setExchangeOrder(order)}
+                    className="flex-1 h-9 rounded-full border border-line-soft text-xs text-ink-soft hover:bg-cream"
+                  >
+                    교환/환불 신청
+                  </button>
+                )}
             </div>
           </div>
         );
@@ -207,9 +233,12 @@ const ProductPaymentTab = () => {
         <ExchangeReturnModal
           order={exchangeOrder}
           onClose={() => setExchangeOrder(null)}
-          onSubmitted={() =>
-            alert("교환/반품 신청이 접수됐어요. 처리 결과를 안내드릴게요.")
-          }
+          onSubmitted={async ({ type }) => {
+            alert(
+              `${type === "EXCHANGE" ? "교환" : "환불"} 신청이 접수됐어요.`,
+            );
+            await loadOrders();
+          }}
         />
       )}
     </div>

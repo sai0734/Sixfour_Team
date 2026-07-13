@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 
 const TABS = [
@@ -8,38 +9,40 @@ const TABS = [
   { key: "SENIOR", label: "선배 부부 매칭", to: "/board/senior" },
 ];
 
-// active: "ALL" | "FREE" | "REVIEW"
 const BoardTopTabs = ({ active }) => {
+  const activeRef = useRef(null);
+
+  useEffect(() => {
+    activeRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "center",
+    });
+  }, [active]);
+
   return (
-    <nav className="flex gap-7 text-sm font-medium border-b border-line">
-      {TABS.map((tab) => {
-        if (!tab.to) {
+    <div className="sticky top-[68px] z-20 -mx-5 bg-[#FBF7F0]/95 px-5 py-3 backdrop-blur md:mx-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-0 lg:static">
+      <nav className="flex gap-2 overflow-x-auto scroll-smooth border-b border-line pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:gap-7 md:pb-0">
+        {TABS.map((tab) => {
+          const isActive = active === tab.key;
+
           return (
-            <span
+            <Link
               key={tab.key}
-              title="준비 중인 기능입니다"
-              className="pb-3 border-b border-transparent text-ink-faint cursor-not-allowed select-none"
+              ref={isActive ? activeRef : null}
+              to={tab.to}
+              className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors md:rounded-none md:px-0 md:pb-3 md:pt-0 md:border-b ${
+                isActive
+                  ? "bg-[#7C8B6F] text-white md:bg-transparent md:text-brand md:border-brand"
+                  : "bg-white text-[#4A3F38] hover:bg-[#E6EBDD] md:bg-transparent md:text-ink-soft md:border-transparent md:hover:bg-transparent md:hover:text-ink"
+              }`}
             >
               {tab.label}
-            </span>
+            </Link>
           );
-        }
-
-        return (
-          <Link
-            key={tab.key}
-            to={tab.to}
-            className={`pb-3 border-b ${
-              active === tab.key
-                ? "text-brand border-brand"
-                : "text-ink-soft border-transparent hover:text-ink"
-            }`}
-          >
-            {tab.label}
-          </Link>
-        );
-      })}
-    </nav>
+        })}
+      </nav>
+    </div>
   );
 };
 

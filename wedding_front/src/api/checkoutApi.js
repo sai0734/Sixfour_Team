@@ -35,20 +35,12 @@ export const getMyOrders = async () => {
   return res.data;
 };
 
-// 교환/반품 신청 (백엔드에 아직 없음 - 이 경로/스펙대로 만들어달라고 요청해둔 상태)
+// 교환/환불 신청
 // payload: { type: "EXCHANGE" | "RETURN", reason, detail }
 export const requestExchangeReturn = async (orderNumber, payload) => {
   const res = await jwtAxios.post(
     `${host}/orders/${orderNumber}/exchange-return`,
     payload,
-  );
-  return res.data;
-};
-
-// 교환/반품 신청 현황 조회 (있으면 이미 신청한 건, 없으면 null)
-export const getExchangeReturn = async (orderNumber) => {
-  const res = await jwtAxios.get(
-    `${host}/orders/${orderNumber}/exchange-return`,
   );
   return res.data;
 };
