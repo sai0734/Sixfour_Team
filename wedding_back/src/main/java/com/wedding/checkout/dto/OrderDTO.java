@@ -38,6 +38,14 @@ public class OrderDTO {
 
     private String trackingNo;      // 재원 추가 - 배송조회
 
+    private String exchangeReturnType;
+
+    private String exchangeReturnReason;
+
+    private String exchangeReturnDetail;
+
+    private LocalDateTime exchangeReturnRequestedAt;
+
     private List<OrderItemDTO> items;
 
 }
