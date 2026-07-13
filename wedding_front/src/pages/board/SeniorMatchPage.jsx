@@ -35,7 +35,7 @@ const BUDGET_BUCKETS = [
 const YEAR_OPTIONS = ["2025", "2026", "2027"];
 
 const SeniorMatchPage = () => {
-  const { loginState } = useCustomLogin();
+  const { loginState, moveToLogin } = useCustomLogin();
 
   const [myProfile, setMyProfile] = useState(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
@@ -72,7 +72,13 @@ const SeniorMatchPage = () => {
       );
     }
     if (regionFilter) {
-      result = result.filter((p) => p.region === regionFilter);
+      const mainRegions = ["서울", "경기", "부산", "인천", "대구"];
+
+      result = result.filter((p) =>
+        regionFilter === "기타"
+          ? p.region && !mainRegions.includes(p.region)
+          : p.region === regionFilter,
+      );
     }
     if (styleFilter) {
       result = result.filter((p) => p.weddingStyle === styleFilter);
@@ -131,8 +137,38 @@ const SeniorMatchPage = () => {
     return (
       <>
         <BasicMenu />
-        <div className="p-10 text-center text-ink-faint">
-          로그인 후 이용해주세요.
+        <div className="min-h-screen bg-[#FBF7F0]">
+          <section
+            className="relative bg-cover bg-center px-5 pt-24 pb-8 text-center md:px-8 md:pt-28 md:pb-10 lg:px-[60px]"
+            style={{ backgroundImage: "url('/prep-hero.jpg')" }}
+          >
+            <div className="absolute inset-0 bg-black/45" />
+
+            <div className="relative z-10">
+              <TapeLabel tone="white" className="mb-3">
+                SENIOR COUPLE MATCHING
+              </TapeLabel>
+              <p className="mb-2 font-['Gowun_Batang'] text-2xl text-white md:text-3xl">
+                선배 부부 매칭
+              </p>
+              <p className="text-sm text-white/85">
+                비슷한 조건의 선배 부부에게 노하우를 물어보세요
+              </p>
+            </div>
+          </section>
+
+          <div className="mx-auto max-w-[560px] px-5 py-16 text-center">
+            <p className="text-sm text-ink-muted mb-6">
+              로그인하면 나와 비슷한 조건의 선배 부부를 찾아볼 수 있어요.
+            </p>
+            <button
+              type="button"
+              onClick={() => moveToLogin("/board/senior")}
+              className="h-11 px-8 rounded-full bg-brand text-white text-sm font-medium hover:bg-brand-dark"
+            >
+              로그인하러 가기
+            </button>
+          </div>
         </div>
       </>
     );

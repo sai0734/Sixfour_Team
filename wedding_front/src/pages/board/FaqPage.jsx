@@ -100,6 +100,7 @@ const FaqPage = () => {
                 activeValue: categoryFilter,
                 onSelect: setCategoryFilter,
                 hideReset: true,
+                enhancedMobileScroll: true,
               },
             ]}
           />
