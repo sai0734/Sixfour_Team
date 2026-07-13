@@ -1,4 +1,4 @@
-package com.wedding.openAIClient;
+package com.wedding.global.util;
 
 import com.wedding.openAIClient.dto.OpenAiMessageDTO;
 import com.wedding.openAIClient.dto.OpenAiRequestDTO;

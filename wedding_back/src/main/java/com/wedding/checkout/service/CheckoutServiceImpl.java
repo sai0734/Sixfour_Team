@@ -13,7 +13,9 @@ import com.wedding.global.util.TossPaymentClient;
 import com.wedding.member.domain.Member;
 import com.wedding.product.domain.Product;
 import com.wedding.product.domain.ProductImage;
-import java.util.Comparator;
+
+import java.util.*;
+
 import com.wedding.product.domain.ProductOption;
 import com.wedding.product.repository.ProductOptionRepository;
 import com.wedding.product.repository.ProductRepository;
@@ -22,10 +24,6 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,6 +41,8 @@ public class CheckoutServiceImpl implements CheckoutService {
 
     private static final int FREE_SHIPPING_THRESHOLD = 30000;
     private static final int SHIPPING_FEE = 3000;
+
+    private static final Set<String> EXCHANGE_RETURN_TYPES = Set.of("EXCHANGE", "RETURN");
 
     private int calculateShippingFee(int productSubtotal) {
         return productSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
@@ -259,6 +259,26 @@ public class CheckoutServiceImpl implements CheckoutService {
 
         return orderRepository.listByMember(memberEmail).stream().map(order -> toDTO(order))
                 .collect(Collectors.toList());
+
+    }
+
+    // 교환/환불 신청 (사유 저장만 - 배송완료 주문만 신청 가능)
+    @Override
+    public void requestExchangeReturn(String memberEmail, String orderNumber, ExchangeReturnRequestDTO requestDTO) {
+
+        Orders orders = orderRepository.findByOrderNumberAndMember(orderNumber, memberEmail).orElseThrow(() -> new NoSuchElementException("주문을 찾을 수 없습니다. orderNumber=" + orderNumber));
+
+        if(!"DELIVERED".equals(orders.getOrderStatus())) {
+            throw new IllegalStateException("배송완료된 주문만 교환/환불을 신청할 수 있습니다.");
+        }
+
+        if(requestDTO.getType() == null || !EXCHANGE_RETURN_TYPES.contains(requestDTO.getType())) {
+            throw new IllegalStateException("교환/반품 구분 값이 올바르지 않습니다.");
+        }
+
+        orders.requestExchangeReturn(requestDTO.getType(), requestDTO.getReason(), requestDTO.getDetail(), LocalDateTime.now());
+
+        orderRepository.save(orders);
 
     }
 

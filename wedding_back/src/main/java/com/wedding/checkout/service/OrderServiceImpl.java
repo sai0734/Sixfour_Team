@@ -8,6 +8,9 @@ import com.wedding.checkout.repository.PaymentRepository;
 import com.wedding.global.util.TossPaymentClient;
 import com.wedding.global.dto.PageResponseDTO;
 import com.wedding.product.domain.ProductImage;
+// 수정시작: productRepository 재조회 방식으로 바꾸기 위해 추가
+import com.wedding.product.repository.ProductRepository;
+// 수정끝
 import java.util.Comparator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -32,6 +35,7 @@ public class OrderServiceImpl implements OrderService {
     private final PaymentRepository paymentRepository;
     private final TossPaymentClient tossPaymentClient;
     private final OrderNotificationService orderNotificationService;
+    private final ProductRepository productRepository;
 
     private static final Set<String> TERMINAL_ORDER_STATUSES = Set.of("REFUNDED", "CANCELLED");
 
@@ -74,18 +78,21 @@ public class OrderServiceImpl implements OrderService {
         Optional<Payment> paymentOpt = paymentRepository.findLatestByOrderOno(ono);
 
         List<OrderItemDTO> items = orders.getOrderItems().stream()
-                .map(oi -> OrderItemDTO.builder()
-                        .pno(oi.getProduct().getPno())
-                        .pname(oi.getPnameSnapshot())
-                        .price(oi.getPriceSnapshot())
-                        .qty(oi.getQty())
-                        .thumbnail(
-                                oi.getProduct().getImageList().stream()
-                                        .min(Comparator.comparingInt(ProductImage::getOrd))
-                                        .map(ProductImage::getFileName)
-                                        .orElse(null)
-                        )
-                        .build())
+                .map(oi -> {
+                    String thumbnail = productRepository.findById(oi.getProduct().getPno())
+                            .flatMap(p -> p.getImageList().stream()
+                                    .min(Comparator.comparingInt(ProductImage::getOrd)))
+                            .map(ProductImage::getFileName)
+                            .orElse(null);
+
+                    return OrderItemDTO.builder()
+                            .pno(oi.getProduct().getPno())
+                            .pname(oi.getPnameSnapshot())
+                            .price(oi.getPriceSnapshot())
+                            .qty(oi.getQty())
+                            .thumbnail(thumbnail)
+                            .build();
+                })
                 .collect(Collectors.toList());
 
         AdminOrderDetailDTO.AdminOrderDetailDTOBuilder builder = AdminOrderDetailDTO.builder()
@@ -104,7 +111,11 @@ public class OrderServiceImpl implements OrderService {
                 .shippingFee(orders.getShippingFee())
                 .orderStatus(orders.getOrderStatus())
                 .regDate(orders.getRegDate())
-                .items(items);
+                .items(items)
+                .exchangeReturnType(orders.getExchangeReturnType())
+                .exchangeReturnReason(orders.getExchangeReturnReason())
+                .exchangeReturnDetail(orders.getExchangeReturnDetail())
+                .exchangeReturnRequestedAt(orders.getExchangeReturnRequestedAt());
 
         paymentOpt.ifPresent(payment -> builder
                 .payMethod(payment.getPayMethod())

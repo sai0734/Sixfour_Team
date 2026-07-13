@@ -1,9 +1,6 @@
 package com.wedding.checkout.service;
 
-import com.wedding.checkout.dto.AddressDTO;
-import com.wedding.checkout.dto.CheckoutRequestDTO;
-import com.wedding.checkout.dto.ConfirmRequestDTO;
-import com.wedding.checkout.dto.OrderDTO;
+import com.wedding.checkout.dto.*;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -25,5 +22,8 @@ public interface CheckoutService {
 
     // 회원 본인 주문 목록
     List<OrderDTO> listMyOrders(String memberEmail);
+
+    // 교환 / 환불 신청
+    void requestExchangeReturn(String memberEmail, String orderNumber, ExchangeReturnRequestDTO requestDTO);
 
 }
