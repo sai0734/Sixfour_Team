@@ -59,13 +59,25 @@ public class Company extends BaseTimeEntity {
   @Column(columnDefinition = "boolean default false")
   private boolean delFlag;
 
+  // 이 업체의 문의 답변을 전담하는 회원(담당자)의 이메일. 관리자가 회원관리에서 임명함.
+  // 담당자로 지정된 회원은 로그인 시 문의 답변 전용 페이지로만 이동하도록 프론트에서 강제함
+  private String managerEmail;
+
+  public void assignManager(String managerEmail) {
+    this.managerEmail = managerEmail;
+  }
+
+  public void unassignManager() {
+    this.managerEmail = null;
+  }
+
   @ElementCollection
   @CollectionTable(name = "tbl_company_image", joinColumns = @JoinColumn(name = "company_cmno"))
   @Builder.Default
   private List<CompanyImage> imageList = new ArrayList<>();
 
   public void change(String name, String ceoName, CompanyCategory category, String phone, String address,
-      Double latitude, Double longitude, String description, BigDecimal priceAvg) {
+                     Double latitude, Double longitude, String description, BigDecimal priceAvg) {
     this.name = name;
     this.ceoName = ceoName;
     this.category = category;
