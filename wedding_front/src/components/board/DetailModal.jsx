@@ -26,7 +26,7 @@ const DetailModal = ({
     listByBoard(board.boardId).then((data) => setImages(data));
   }, [board?.boardId, loginState.email]);
 
-  // ESC 키로 모달 닫기
+  // ESC 키로 모달 닫기 + 모달이 열린 동안 배경 스크롤 잠금
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "Escape") {
@@ -34,8 +34,14 @@ const DetailModal = ({
       }
     };
 
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, [onClose]);
 
   if (!board) return null;
@@ -52,10 +58,10 @@ const DetailModal = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-black/30 px-4 pb-8 pt-20 sm:pt-24"
       onClick={handleOverlayClick}
     >
-      <div className="bg-white rounded-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+      <div className="w-full max-w-lg max-h-[calc(100dvh-7rem)] overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl sm:max-h-[calc(100dvh-8rem)] sm:p-6">
         <div className="flex items-center gap-2 mb-3">
           <span className="text-[11px] bg-brand-light text-brand-accent px-2.5 py-1 rounded-full font-medium">
             {BOARD_TYPE_LABELS[board.boardType]}
