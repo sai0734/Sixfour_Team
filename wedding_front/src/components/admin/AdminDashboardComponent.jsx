@@ -235,7 +235,7 @@ const CompanyRow = ({ rank, company }) => {
   return (
     <div className="flex items-center gap-3 border-b border-slate-100 pb-3 last:border-b-0 last:pb-0">
       <div className="w-6 text-center text-sm font-semibold text-slate-400">{rank}</div>
-      <div className="h-12 w-16 overflow-hidden rounded-md bg-slate-100">
+      <div className="h-12 w-16 overflow-hidden rounded-xl bg-slate-100">
         {imageUrl ? (
           <img className="h-full w-full object-cover" src={imageUrl} alt={company.name} />
         ) : (
