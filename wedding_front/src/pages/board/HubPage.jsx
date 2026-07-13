@@ -41,7 +41,7 @@ const getPageNumbers = (currentPage, totalPages) => {
 };
 
 const HubPage = () => {
-  const { loginState } = useCustomLogin();
+  const { loginState, moveToLogin } = useCustomLogin();
   const isAdmin = loginState.roleNames?.some((r) =>
     ["ADMIN", "ROLE_ADMIN"].includes(r),
   );
@@ -221,7 +221,11 @@ const HubPage = () => {
 
             <button
               type="button"
-              onClick={() => setModalOpen(true)}
+              onClick={() =>
+                loginState.email
+                  ? setModalOpen(true)
+                  : moveToLogin("/board/list")
+              }
               className="h-10 px-5 rounded-full bg-brand text-white text-sm font-medium hover:bg-brand-dark mb-3 shrink-0 self-start sm:self-auto"
             >
               + 글쓰기

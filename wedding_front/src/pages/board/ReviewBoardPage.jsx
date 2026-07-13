@@ -31,7 +31,7 @@ const RATING_OPTIONS = [
 ];
 
 const ReviewBoardPage = () => {
-  const { loginState } = useCustomLogin();
+  const { loginState, moveToLogin } = useCustomLogin();
   const isAdmin = loginState.roleNames?.some((r) =>
     ["ADMIN", "ROLE_ADMIN"].includes(r),
   );
@@ -225,6 +225,7 @@ const ReviewBoardPage = () => {
                 activeValue: activeRating,
                 onSelect: setActiveRating,
                 resetLabel: "전체",
+                enhancedMobileScroll: true,
               },
             ]}
           />
@@ -238,7 +239,11 @@ const ReviewBoardPage = () => {
               </p>
               <button
                 type="button"
-                onClick={() => setModalOpen(true)}
+                onClick={() =>
+                  loginState.email
+                    ? setModalOpen(true)
+                    : moveToLogin("/board/review")
+                }
                 className="h-10 px-5 rounded-full bg-brand text-white text-sm font-medium hover:bg-brand-dark"
               >
                 + 후기 작성

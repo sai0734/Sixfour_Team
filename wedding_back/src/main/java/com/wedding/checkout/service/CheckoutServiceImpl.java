@@ -249,6 +249,10 @@ public class CheckoutServiceImpl implements CheckoutService {
                 .orderStatus(orders.getOrderStatus())
                 .regDate(orders.getRegDate())
                 .trackingNo(orders.getTrackingNo()) // 재원 추가 - 배송 조회
+                .exchangeReturnType(orders.getExchangeReturnType())
+                .exchangeReturnReason(orders.getExchangeReturnReason())
+                .exchangeReturnDetail(orders.getExchangeReturnDetail())
+                .exchangeReturnRequestedAt(orders.getExchangeReturnRequestedAt())
                 .items(items)
                 .build();
     }
@@ -270,6 +274,10 @@ public class CheckoutServiceImpl implements CheckoutService {
 
         if(!"DELIVERED".equals(orders.getOrderStatus())) {
             throw new IllegalStateException("배송완료된 주문만 교환/환불을 신청할 수 있습니다.");
+        }
+
+        if(orders.getExchangeReturnType() != null) {
+            throw new IllegalStateException("이미 교환/환불 신청이 접수된 주문입니다.");
         }
 
         if(requestDTO.getType() == null || !EXCHANGE_RETURN_TYPES.contains(requestDTO.getType())) {

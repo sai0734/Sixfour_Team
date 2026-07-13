@@ -23,7 +23,7 @@ const FREE_CATEGORIES = ["웨딩준비", "업체정보", "잡담", "꿀팁"];
 const PAGE_SIZE = 10;
 
 const FreeBoardPage = () => {
-  const { loginState } = useCustomLogin();
+  const { loginState, moveToLogin } = useCustomLogin();
   const isAdmin = loginState.roleNames?.some((r) =>
     ["ADMIN", "ROLE_ADMIN"].includes(r),
   );
@@ -218,7 +218,11 @@ const FreeBoardPage = () => {
               </p>
               <button
                 type="button"
-                onClick={() => setModalOpen(true)}
+                onClick={() =>
+                  loginState.email
+                    ? setModalOpen(true)
+                    : moveToLogin("/board/free")
+                }
                 className="h-10 px-5 rounded-full bg-brand text-white text-sm font-medium hover:bg-brand-dark"
               >
                 + 글쓰기
