@@ -28,6 +28,9 @@ const STATUS_LABEL = {
   DELIVERED: "배송완료",
   REFUNDED: "환불완료",
   CANCELLED: "주문취소",
+  EXCHANGE_REQUESTED: "교환신청",
+  REFUND_REQUESTED: "환불신청",
+  EXCHANGE: "교환완료",
 };
 
 const STATUS_FLOW = ["PAID", "SHIPPING_READY", "SHIPPING", "DELIVERED"];
@@ -246,7 +249,10 @@ const AdminOrderDetailComponent = ({ ono }) => {
   };
 
   const handleRefund = () => {
-    const reason = window.prompt("환불 사유를 입력해주세요.");
+    const reason = window.prompt(
+      "환불 사유를 입력해주세요.",
+      order.exchangeReturnReason || "",
+    );
     if (!reason) return;
     if (
       !window.confirm(
@@ -268,6 +274,25 @@ const AdminOrderDetailComponent = ({ ono }) => {
             err.response?.data?.error ||
             "환불 처리에 실패했습니다. 콘솔을 확인해주세요.",
         );
+      });
+  };
+
+  const handleExchangeComplte = () => {
+    if (
+      !window.confirm(
+        "교환 처리하시겠습니까? 주문 상태가 '교환완료'로 변경됩니다.",
+      )
+    )
+      return;
+
+    changeOrderStatus(ono, "EXCHANGE")
+      .then(() => {
+        alert("교환 처리가 완료되었습니다.");
+        fetchDetail();
+      })
+      .catch((err) => {
+        console.error(err);
+        alert(err.response?.data?.msg || "교환처리에 실패했습니다.");
       });
   };
 
@@ -406,6 +431,38 @@ const AdminOrderDetailComponent = ({ ono }) => {
           ))}
         </div>
       </SectionCard>
+
+      {order.exchangeReturnType && (
+        <SectionCard title="교환/반품 신청 내용">
+          <p className="text-sm text-ink-soft">
+            신청 구분:{" "}
+            {order.exchangeReturnType === "EXCHANGE" ? "교환" : "환불"}
+          </p>
+          <p className="text-sm text-ink-soft">
+            사유: {order.exchangeReturnReason}
+          </p>
+          {order.exchangeReturnDetail && (
+            <p className="text-sm text-ink-soft bg-cream rounded-lg p-3 mt-1">
+              {order.exchangeReturnDetail}
+            </p>
+          )}
+          {order.exchangeReturnRequestedAt && (
+            <p className="text-xs text-ink-faint mt-1">
+              신청일: {order.exchangeReturnRequestedAt.toString().slice(0, 10)}
+            </p>
+          )}
+
+          {order.exchangeReturnType === "EXCHANGE" &&
+            order.orderStatus === "EXCHANGE_REQUESTED" && (
+              <button
+                onClick={handleExchangeComplete}
+                className="h-9 px-4 mt-3 rounded-full bg-brand text-white text-xs hover:bg-brand-dark transition"
+              >
+                교환처리
+              </button>
+            )}
+        </SectionCard>
+      )}
 
       <SectionCard title="환불 처리">
         {canRefund ? (

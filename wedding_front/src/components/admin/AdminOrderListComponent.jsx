@@ -18,6 +18,9 @@ const STATUS_TABS = [
   { key: "SHIPPING_READY", label: "배송준비" },
   { key: "SHIPPING", label: "배송중" },
   { key: "DELIVERED", label: "배송완료" },
+  { key: "EXCHANGE_REQUESTED", label: "교환신청" },
+  { key: "REFUND_REQUESTED", label: "환불신청" },
+  { key: "EXCHANGE", label: "교환완료" },
   { key: "REFUNDED", label: "환불완료" },
   { key: "CANCELLED", label: "취소" },
 ];
