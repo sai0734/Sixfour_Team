@@ -3,15 +3,15 @@ package com.wedding.companywish.controller;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.wedding.companywish.dto.CompanyWishDTO;
+import com.wedding.company.dto.CompanyDTO;
 import com.wedding.companywish.service.CompanyWishService;
 
 import lombok.RequiredArgsConstructor;
@@ -25,48 +25,43 @@ public class CompanyWishController {
 
     private final CompanyWishService service;
 
-    // 회원의 찜 목록 전체 조회
-    // 예: GET /api/companywishes/member/test@test.com
-    @GetMapping("/member/{memberEmail}")
-    public List<CompanyWishDTO> listByMember(@PathVariable(name = "memberEmail") String memberEmail) {
-
-        log.info("companyWish list by member: " + memberEmail);
-
-        return service.listByMember(memberEmail);
-    }
-
-    @PostMapping("/")
-    public Map<String, Long> register(@RequestBody CompanyWishDTO companyWishDTO) {
-
-        log.info("CompanyWishDTO: " + companyWishDTO);
-
-        Long wishId = service.register(companyWishDTO);
-
-        return Map.of("wishId", wishId);
-    }
-
-    @DeleteMapping("/{wishId}")
-    public Map<String, String> remove(@PathVariable(name = "wishId") Long wishId) {
-
-        log.info("Remove: " + wishId);
-
-        service.remove(wishId);
-
-        return Map.of("RESULT", "SUCCESS");
-    }
-
-    // wishId를 모를 때 memberEmail + cmno로 찜 취소 (하트 토글용)
-    // 예: DELETE /api/companywishes/member/test@test.com/company/5
-    @DeleteMapping("/member/{memberEmail}/company/{cmno}")
-    public Map<String, String> removeByMemberAndCompany(
-            @PathVariable(name = "memberEmail") String memberEmail,
+    /** 현재 로그인 사용자가 해당 업체를 찜했는지 확인 */
+    @GetMapping("/{cmno}/check")
+    public Map<String, Boolean> check(
+            Authentication authentication,
             @PathVariable(name = "cmno") Long cmno) {
 
-        log.info("Remove by member+company: " + memberEmail + ", " + cmno);
-
-        service.removeByMemberAndCompany(memberEmail, cmno);
-
-        return Map.of("RESULT", "SUCCESS");
+        boolean liked = service.check(authentication.getName(), cmno);
+        return Map.of("liked", liked);
     }
 
+    /** 업체 찜 등록 */
+    @PostMapping("/{cmno}")
+    public Map<String, Object> add(
+            Authentication authentication,
+            @PathVariable(name = "cmno") Long cmno) {
+
+        log.info("company wish add: email={}, cmno={}", authentication.getName(), cmno);
+        service.add(authentication.getName(), cmno);
+        return Map.of("result", "success", "liked", true);
+    }
+
+    /** 업체 찜 해제 */
+    @DeleteMapping("/{cmno}")
+    public Map<String, Object> remove(
+            Authentication authentication,
+            @PathVariable(name = "cmno") Long cmno) {
+
+        log.info("company wish remove: email={}, cmno={}", authentication.getName(), cmno);
+        service.remove(authentication.getName(), cmno);
+        return Map.of("result", "success", "liked", false);
+    }
+
+    /** 마이페이지 - 로그인 사용자의 찜 업체 목록 조회 */
+    @GetMapping
+    public List<CompanyDTO> list(Authentication authentication) {
+
+        log.info("company wish list: email={}", authentication.getName());
+        return service.getMyCompanies(authentication.getName());
+    }
 }
