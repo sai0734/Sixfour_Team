@@ -17,6 +17,7 @@ const initState = {
 };
 
 const WITHDRAW_CONFIRM_TEXT = "회원탈퇴";
+const PW_REGEX = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+=-]).{8,}$/;
 
 // TODO(권용익): 이 화면은 "틀"만 잡아둔 상태야. 아래 로직은 이미 동작하게
 // 만들어놨는데 (닉네임 변경 + 비밀번호 변경, 빈칸이면 비번은 안 바뀜).
@@ -44,6 +45,10 @@ const ModifyComponent = () => {
   const [error, setError] = useState("");
 
   const isSocialOnly = Boolean(loginInfo.social);
+  // loginInfo.social은 로그인할 때 발급된 토큰 안 값이라 그 이후에 비밀번호를
+  // 설정해도 즉시 반영이 안 됨(다시 로그인해야 갱신됨). 그래서 "방금 이 화면에서
+  // 비밀번호를 설정했는지"는 별도로 로컬 상태로 들고 있다가, 배너 표시 여부에 반영함
+  const [passwordJustSet, setPasswordJustSet] = useState(false);
 
   // ---- 소셜 계정 연동 ----
   const [linkedProviders, setLinkedProviders] = useState([]);
@@ -94,6 +99,13 @@ const ModifyComponent = () => {
   };
 
   const handleClickModify = () => {
+    if (auth.pw && !PW_REGEX.test(auth.pw)) {
+      setError(
+        "비밀번호는 영문, 숫자, 특수문자를 모두 포함해 8자 이상이어야 해요.",
+      );
+      return;
+    }
+
     if (auth.pw && auth.pw !== pwConfirm) {
       setError("새 비밀번호가 일치하지 않아요.");
       return;
@@ -113,6 +125,9 @@ const ModifyComponent = () => {
     const payload = auth.pw ? auth : { ...auth, pw: "" };
 
     modifyAuth(payload).then(() => {
+      if (passwordChanged) {
+        setPasswordJustSet(true);
+      }
       setResult("Modified");
     });
   };
@@ -249,7 +264,7 @@ const ModifyComponent = () => {
           비밀번호 변경
         </TapeLabel>
 
-        {isSocialOnly && (
+        {isSocialOnly && !passwordJustSet && (
           <div className="mb-4 rounded-lg bg-brand-light/60 border border-brand-light px-4 py-3">
             <p className="text-xs text-brand-accent leading-relaxed">
               아직 설정된 비밀번호가 없어요. 여기서 새로 설정하면 이메일로도
@@ -262,13 +277,16 @@ const ModifyComponent = () => {
           새 비밀번호
         </label>
         <input
-          className="w-full h-11 px-4 rounded-lg border border-line-soft text-sm outline-none focus:border-brand mb-4"
+          className="w-full h-11 px-4 rounded-lg border border-line-soft text-sm outline-none focus:border-brand"
           name="pw"
           type="password"
           placeholder="변경하지 않으려면 비워두세요"
           value={auth.pw}
           onChange={handleChange}
         />
+        <p className="text-xs text-ink-faint mt-1 mb-4">
+          영문, 숫자, 특수문자를 모두 포함해 8자 이상
+        </p>
 
         <label className="block text-xs font-medium text-ink-muted mb-1.5">
           새 비밀번호 확인

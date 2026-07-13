@@ -126,7 +126,7 @@ public class JoinController {
   }
 
   @PostMapping("/password-reset/confirm")
-  public Map<String, String> confirmPasswordReset(@RequestBody PasswordResetConfirmDTO confirmDTO) {
+  public Map<String, String> confirmPasswordReset(@Valid @RequestBody PasswordResetConfirmDTO confirmDTO) {
 
     log.info("password reset confirm: token=" + confirmDTO.getToken());
 

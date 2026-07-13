@@ -16,8 +16,8 @@ public class JoinDTO {
 
   @NotBlank
   @Pattern(
-      regexp = "^(?=.*[A-Za-z])(?=.*\\d).{8,}$",
-      message = "비밀번호는 영문과 숫자를 포함해 8자 이상이어야 합니다."
+          regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[!@#$%^&*()_+=-]).{8,}$",
+          message = "비밀번호는 영문, 숫자, 특수문자를 모두 포함해 8자 이상이어야 합니다."
   )
   private String pw;
 

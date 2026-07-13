@@ -18,50 +18,57 @@ import com.wedding.global.util.CustomJWTException;
 public class CustomControllerAdvice {
 
 
-  @ExceptionHandler(NoSuchElementException.class)
-  protected ResponseEntity<?> notExist(NoSuchElementException e) {
+    @ExceptionHandler(NoSuchElementException.class)
+    protected ResponseEntity<?> notExist(NoSuchElementException e) {
 
-      String msg = e.getMessage();
+        String msg = e.getMessage();
 
-      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("msg", msg));
-  }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("msg", msg));
+    }
 
-  @ExceptionHandler(MethodArgumentNotValidException.class)
-  protected ResponseEntity<?> handleIllegalArgumentException(MethodArgumentNotValidException e) {
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    protected ResponseEntity<?> handleIllegalArgumentException(MethodArgumentNotValidException e) {
 
-      String msg = e.getMessage();
+        String msg = e.getMessage();
 
-      return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(Map.of("msg", msg));
-  }
+        return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(Map.of("msg", msg));
+    }
 
-  @ExceptionHandler(CustomJWTException.class)
-  protected ResponseEntity<?> handleJWTException(CustomJWTException e) {
+    @ExceptionHandler(CustomJWTException.class)
+    protected ResponseEntity<?> handleJWTException(CustomJWTException e) {
 
-      String msg = e.getMessage();
+        String msg = e.getMessage();
 
-      return ResponseEntity.ok().body(Map.of("error", msg));
-  }
+        return ResponseEntity.ok().body(Map.of("error", msg));
+    }
 
-  @ExceptionHandler(NotEnoughStockException.class)
+    @ExceptionHandler(NotEnoughStockException.class)
     protected  ResponseEntity<?> handleNotEnoughStock(NotEnoughStockException e) {
 
-      String msg = e.getMessage();
+        String msg = e.getMessage();
 
-      return ResponseEntity.ok().body(Map.of("msg", msg));
-  }
+        return ResponseEntity.ok().body(Map.of("msg", msg));
+    }
 
-  @ExceptionHandler(DuplicateEmailException.class)
+    @ExceptionHandler(DuplicateEmailException.class)
     protected  ResponseEntity<?> handleDuplicateEmail(DuplicateEmailException e) {
 
-      String msg = e.getMessage();
+        String msg = e.getMessage();
 
-      return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("msg", msg));
-  }
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("msg", msg));
+    }
 
     @ExceptionHandler(IllegalStateException.class)
     protected ResponseEntity<?> handleIllegalState(IllegalStateException e) {
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("msg", e.getMessage()));
+
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    protected ResponseEntity<?> handleIllegalArgument(IllegalArgumentException e) {
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("msg", e.getMessage()));
 
     }
 }

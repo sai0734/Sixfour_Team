@@ -26,14 +26,14 @@ const initState = {
 };
 
 const inputClass =
-  "w-full px-4 py-3 rounded-xl border border-line bg-white/70 text-ink placeholder:text-ink-faint focus:border-brand focus:ring-4 focus:ring-blush-100 outline-none transition font-body";
-const labelClass = "block text-sm font-semibold text-ink-soft mb-1.5 font-body";
-const okMsgClass = "text-green-600 text-xs mt-1 font-body";
-const errMsgClass = "text-rose-600 text-xs mt-1 font-body";
-const hintMsgClass = "text-ink-faint text-xs mt-1 font-body";
+  "w-full px-4 py-3 rounded-xl border border-rose-100 bg-blush-50/40 text-plum-900 placeholder:text-plum-500/50 focus:border-rose-400 focus:ring-4 focus:ring-rose-100 outline-none transition";
+const labelClass = "block text-sm font-semibold text-plum-900/80 mb-1.5";
+const okMsgClass = "text-green-600 text-xs mt-1";
+const errMsgClass = "text-rose-600 text-xs mt-1";
+const hintMsgClass = "text-plum-500 text-xs mt-1";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PW_REGEX = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+const PW_REGEX = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+=-]).{8,}$/;
 const PHONE_REGEX = /^01[0-9]-?\d{3,4}-?\d{4}$/;
 
 const JoinComponent = () => {
@@ -203,7 +203,9 @@ const JoinComponent = () => {
     }
 
     if (!PW_REGEX.test(joinParam.pw)) {
-      alert("비밀번호는 영문과 숫자를 포함해 8자 이상이어야 합니다.");
+      alert(
+        "비밀번호는 영문, 숫자, 특수문자를 모두 포함해 8자 이상이어야 합니다.",
+      );
       return;
     }
 
@@ -318,7 +320,9 @@ const JoinComponent = () => {
       );
     if (joinParam.pw.length > 0 && !PW_REGEX.test(joinParam.pw))
       return (
-        <div className={errMsgClass}>영문+숫자 조합 8자 이상이어야 해요</div>
+        <div className={errMsgClass}>
+          영문+숫자+특수문자 조합 8자 이상이어야 해요
+        </div>
       );
     if (joinParam.pw.length > 0 && PW_REGEX.test(joinParam.pw))
       return <div className={okMsgClass}>✓ 사용가능!</div>;
@@ -406,39 +410,36 @@ const JoinComponent = () => {
           </>
         }
         subtitle="인증 메일 속 링크를 눌러야 가입이 완료돼요"
-        stickerEmoji="✉️"
       >
         <div className="max-w-sm w-full mx-auto text-center">
           <div className="w-16 h-16 rounded-full bg-blush-100 flex items-center justify-center mx-auto mb-6 text-3xl">
             ✉️
           </div>
-          <h2 className="font-serifkr text-2xl text-ink mb-2">
+          <h2 className="font-display text-2xl text-plum-900 mb-2">
             메일함을 확인해 주세요
           </h2>
-          <p className="text-ink-muted text-sm mb-1">
-            <span className="font-semibold text-brand-deep">
-              {pendingEmail}
-            </span>
+          <p className="text-plum-500 text-sm mb-1">
+            <span className="font-semibold text-rose-600">{pendingEmail}</span>
           </p>
-          <p className="text-ink-muted text-sm mb-8">
+          <p className="text-plum-500 text-sm mb-8">
             주소로 인증 메일을 보냈습니다. 스팸함도 확인해 주세요.
           </p>
 
           <button
-            className="w-full py-3 rounded-full bg-brand-gradient text-ink font-semibold shadow-lg shadow-blush-200/60 hover:shadow-blush-300/70 hover:-translate-y-0.5 transition-all mb-3"
+            className="w-full py-3 rounded-xl bg-rose-gradient text-white font-semibold shadow-lg shadow-rose-200 hover:shadow-rose-300 hover:-translate-y-0.5 transition-all mb-3"
             onClick={() => moveToLogin()}
           >
             로그인 화면으로
           </button>
           <button
-            className="w-full py-3 rounded-xl border border-line text-brand-deep font-semibold hover:bg-blush-50 transition"
+            className="w-full py-3 rounded-xl border border-rose-200 text-rose-600 font-semibold hover:bg-blush-50 transition"
             onClick={handleClickResend}
           >
             메일 다시 받기
           </button>
 
           <button
-            className="text-sm text-ink-muted underline mt-6"
+            className="text-sm text-plum-500 underline mt-6"
             onClick={() => setPendingEmail(null)}
           >
             이메일을 잘못 입력했나요? 다시 입력하기
@@ -461,11 +462,12 @@ const JoinComponent = () => {
         </>
       }
       subtitle="가입 후 모든 서비스를 자유롭게 이용하세요"
-      stickerEmoji="✨"
     >
       <div className="max-w-sm w-full mx-auto">
-        <h2 className="font-serifkr text-2xl text-ink mb-1">계정 만들기</h2>
-        <p className="text-ink-muted text-sm mb-6">
+        <h2 className="font-display text-2xl text-plum-900 mb-1">
+          계정 만들기
+        </h2>
+        <p className="text-plum-500 text-sm mb-6">
           정보를 입력해 가입을 완료하세요
         </p>
 
@@ -577,7 +579,7 @@ const JoinComponent = () => {
             ></input>
             <button
               type="button"
-              className="shrink-0 px-4 rounded-xl border border-line text-brand-deep text-sm font-semibold hover:bg-blush-50 transition whitespace-nowrap"
+              className="shrink-0 px-4 rounded-xl border border-rose-200 text-rose-600 text-sm font-semibold hover:bg-blush-50 transition whitespace-nowrap"
               onClick={handleClickAddressSearch}
             >
               📍 주소 검색
@@ -603,7 +605,7 @@ const JoinComponent = () => {
         </div>
 
         <div className="bg-blush-50 rounded-xl p-4 mb-6">
-          <label className="flex items-center gap-2 font-semibold text-ink pb-2 mb-2 border-b border-line">
+          <label className="flex items-center gap-2 font-semibold text-plum-900 pb-2 mb-2 border-b border-rose-100">
             <input
               type="checkbox"
               checked={
@@ -612,53 +614,53 @@ const JoinComponent = () => {
                 joinParam.marketing
               }
               onChange={handleClickAllAgree}
-              className="accent-brand-deep"
+              className="accent-rose-500"
             />
             전체 동의
           </label>
-          <label className="flex items-center gap-2 text-sm text-ink-soft mb-1.5">
+          <label className="flex items-center gap-2 text-sm text-plum-900/80 mb-1.5">
             <input
               type="checkbox"
               name="termsAgree"
               checked={joinParam.termsAgree}
               onChange={handleChange}
-              className="accent-brand-deep"
+              className="accent-rose-500"
             />
             [필수] 이용약관에 동의합니다.
           </label>
-          <label className="flex items-center gap-2 text-sm text-ink-soft mb-1.5">
+          <label className="flex items-center gap-2 text-sm text-plum-900/80 mb-1.5">
             <input
               type="checkbox"
               name="privacyAgree"
               checked={joinParam.privacyAgree}
               onChange={handleChange}
-              className="accent-brand-deep"
+              className="accent-rose-500"
             />
             [필수] 개인정보처리방침에 동의합니다.
           </label>
-          <label className="flex items-center gap-2 text-sm text-ink-soft">
+          <label className="flex items-center gap-2 text-sm text-plum-900/80">
             <input
               type="checkbox"
               name="marketing"
               checked={joinParam.marketing}
               onChange={handleChange}
-              className="accent-brand-deep"
+              className="accent-rose-500"
             />
             [선택] 마케팅 정보 수신에 동의합니다.
           </label>
         </div>
 
         <button
-          className="w-full py-3 rounded-full bg-brand-gradient text-ink font-semibold shadow-lg shadow-blush-200/60 hover:shadow-blush-300/70 hover:-translate-y-0.5 transition-all"
+          className="w-full py-3 rounded-xl bg-rose-gradient text-white font-semibold shadow-lg shadow-rose-200 hover:shadow-rose-300 hover:-translate-y-0.5 transition-all"
           onClick={handleClickJoin}
         >
           가입하기
         </button>
 
-        <div className="text-center mt-6 text-sm text-ink-muted">
+        <div className="text-center mt-6 text-sm text-plum-500">
           이미 계정이 있으신가요?{" "}
           <button
-            className="text-brand-deep font-semibold hover:text-brand-dark"
+            className="text-rose-600 font-semibold hover:text-rose-700"
             onClick={() => moveToLogin()}
           >
             로그인
