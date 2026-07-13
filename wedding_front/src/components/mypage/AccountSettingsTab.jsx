@@ -129,7 +129,7 @@ const AccountSettingsTab = () => {
             <ul className="mb-4 space-y-1.5 text-sm text-ink leading-relaxed list-disc list-inside">
               <li>
                 로그인 정보(이메일/비밀번호)가 즉시 삭제되며, 같은 이메일로도
-                재로그인할 수 없어요.
+                재가입 할 수 없어요.
               </li>
               <li>
                 작성한 게시글·댓글·리뷰는 삭제되지 않지만, 더 이상 내 계정으로
