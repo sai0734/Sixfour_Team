@@ -285,6 +285,7 @@ public class CheckoutServiceImpl implements CheckoutService {
         }
 
         orders.requestExchangeReturn(requestDTO.getType(), requestDTO.getReason(), requestDTO.getDetail(), LocalDateTime.now());
+        orders.changeStatus("EXCHANGE".equals(requestDTO.getType()) ? "EXCHANGE_REQUESTED" : "REFUND_REQUESTED");
 
         orderRepository.save(orders);
 
