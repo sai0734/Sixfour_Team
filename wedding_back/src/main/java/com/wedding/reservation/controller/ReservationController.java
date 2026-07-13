@@ -1,8 +1,10 @@
 package com.wedding.reservation.controller;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.wedding.reservation.dto.ReservationDTO;
+import com.wedding.reservation.dto.ReservationPaymentConfirmRequestDTO;
 import com.wedding.reservation.service.ReservationService;
 
 import lombok.RequiredArgsConstructor;
@@ -73,5 +76,45 @@ public class ReservationController {
 
     return Map.of("RESULT", "SUCCESS");
   }
+
+  // ↓↓↓ 재원 추가 - 업체 상세페이지 "예약" 버튼 → 날짜/옵션 선택 → 결제
+  // (황용현님 checkout 패키지는 건드리지 않고, TossPaymentClient만 재사용)
+
+  // 결제창 열기 전 - 주문번호 발급
+  @PreAuthorize("hasAnyRole('USER')")
+  @PostMapping("/{reservationId}/payment/prepare")
+  public ReservationDTO preparePayment(Principal principal,
+                                       @PathVariable(name = "reservationId") Long reservationId) {
+
+    log.info("ReservationController_preparePayment 실행~~~~~~~~");
+
+    return service.preparePayment(reservationId, principal.getName());
+  }
+
+  // 결제 승인
+  @PreAuthorize("hasAnyRole('USER')")
+  @PostMapping("/{reservationId}/payment/confirm")
+  public ReservationDTO confirmPayment(Principal principal,
+                                       @PathVariable(name = "reservationId") Long reservationId,
+                                       @RequestBody ReservationPaymentConfirmRequestDTO requestDTO) {
+
+    log.info("ReservationController_confirmPayment 실행~~~~~~~~");
+
+    return service.confirmPayment(reservationId, principal.getName(), requestDTO);
+  }
+
+  // 결제 취소/실패 처리
+  @PreAuthorize("hasAnyRole('USER')")
+  @PostMapping("/{reservationId}/payment/cancel")
+  public Map<String, String> cancelPayment(Principal principal,
+                                           @PathVariable(name = "reservationId") Long reservationId) {
+
+    log.info("ReservationController_cancelPayment 실행~~~~~~~~");
+
+    service.cancelPayment(reservationId, principal.getName());
+
+    return Map.of("RESULT", "SUCCESS");
+  }
+  // ↑↑↑ 재원 추가
 
 }

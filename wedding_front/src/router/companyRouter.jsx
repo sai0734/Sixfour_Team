@@ -7,6 +7,16 @@ const CompanyList = lazy(() => import("../pages/company/CompanyListPage"));
 const CompanyAdd = lazy(() => import("../pages/company/CompanyAddPage"));
 const CompanyModify = lazy(() => import("../pages/company/CompanyModifyPage"));
 const CompanyRead = lazy(() => import("../pages/company/CompanyReadPage"));
+// 재원 추가 - 업체 상세페이지 "예약" 버튼 → 날짜/옵션 선택 → 결제
+const ReservationReserve = lazy(
+  () => import("../pages/reservation/ReservationReservePage"),
+);
+const ReservationPaymentSuccess = lazy(
+  () => import("../pages/reservation/ReservationPaymentSuccessPage"),
+);
+const ReservationPaymentFail = lazy(
+  () => import("../pages/reservation/ReservationPaymentFailPage"),
+);
 
 const companyRouter = () => {
   return [
@@ -50,6 +60,32 @@ const companyRouter = () => {
         </Suspense>
       ),
     },
+    // ↓↓↓ 재원 추가
+    {
+      path: "reserve/:cmno",
+      element: (
+        <Suspense fallback={Loading}>
+          <ReservationReserve />
+        </Suspense>
+      ),
+    },
+    {
+      path: "reserve/:cmno/success",
+      element: (
+        <Suspense fallback={Loading}>
+          <ReservationPaymentSuccess />
+        </Suspense>
+      ),
+    },
+    {
+      path: "reserve/:cmno/fail",
+      element: (
+        <Suspense fallback={Loading}>
+          <ReservationPaymentFail />
+        </Suspense>
+      ),
+    },
+    // ↑↑↑ 재원 추가
   ];
 };
 
