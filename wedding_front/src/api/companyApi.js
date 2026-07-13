@@ -258,6 +258,16 @@ const sortCompanies = (list, sort) => {
   return copiedList.sort((a, b) => Number(b.cmno || 0) - Number(a.cmno || 0));
 };
 
+export const updateMakeupDetail = async (cmno, dto) => {
+  const res = await jwtAxios.put(`${host}/makeup/${cmno}`, dto);
+  return res.data;
+};
+
+export const updateDressDetail = async (cmno, dto) => {
+  const res = await jwtAxios.put(`${host}/dresses/${cmno}`, dto);
+  return res.data;
+};
+
 // ===== 업체 문의 담당자 임명 (관리자 전용) =====
 
 export const assignCompanyManager = async (cmno, managerEmail) => {
