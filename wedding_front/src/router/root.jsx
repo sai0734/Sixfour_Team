@@ -27,6 +27,9 @@ const ReviewBoardPage = lazy(() => import("../pages/board/ReviewBoardPage"));
 const SeniorMatchPage = lazy(() => import("../pages/board/SeniorMatchPage"));
 const FaqPage = lazy(() => import("../pages/board/FaqPage"));
 const CartPage = lazy(() => import("../pages/cart/CartPage"));
+const ContractReviewPage = lazy(
+  () => import("../pages/contract/ContractReviewPage"),
+);
 const CheckoutPage = lazy(() => import("../pages/checkout/CheckoutPage"));
 const CheckoutSuccessPage = lazy(
   () => import("../pages/checkout/CheckoutSuccessPage"),
@@ -305,6 +308,14 @@ const root = createBrowserRouter([
     element: (
       <Suspense fallback={Loading}>
         <CartPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/contract-review",
+    element: (
+      <Suspense fallback={Loading}>
+        <ContractReviewPage />
       </Suspense>
     ),
   },

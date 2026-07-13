@@ -85,7 +85,7 @@ public class KakaoAuthController {
     }
 
     @PutMapping("/api/auth/modify")
-    public Map<String,String> modify(@RequestBody MemberModifyDTO memberModifyDTO) {
+    public Map<String,String> modify(@Valid @RequestBody MemberModifyDTO memberModifyDTO) {
         log.info("member modify: " + memberModifyDTO);
         memberService.modifyMember(memberModifyDTO);
         return Map.of("result","modified");

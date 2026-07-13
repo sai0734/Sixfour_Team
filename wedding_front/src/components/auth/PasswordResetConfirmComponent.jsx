@@ -5,12 +5,12 @@ import useCustomLogin from "../../hooks/useCustomLogin";
 import AuthLayout from "./AuthLayout";
 
 const inputClass =
-  "w-full px-4 py-3 rounded-xl border border-line bg-white/70 text-ink placeholder:text-ink-faint focus:border-brand focus:ring-4 focus:ring-blush-100 outline-none transition font-body";
-const labelClass = "block text-sm font-semibold text-ink-soft mb-1.5 font-body";
+  "w-full px-4 py-3 rounded-xl border border-rose-100 bg-blush-50/40 text-plum-900 placeholder:text-plum-500/50 focus:border-rose-400 focus:ring-4 focus:ring-rose-100 outline-none transition";
+const labelClass = "block text-sm font-semibold text-plum-900/80 mb-1.5";
 const okMsgClass = "text-green-600 text-xs mt-1";
 const errMsgClass = "text-rose-600 text-xs mt-1";
 
-const PW_REGEX = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+const PW_REGEX = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+=-]).{8,}$/;
 
 const PasswordResetConfirmComponent = () => {
   const [searchParams] = useSearchParams();
@@ -40,7 +40,9 @@ const PasswordResetConfirmComponent = () => {
     }
 
     if (!PW_REGEX.test(newPw)) {
-      alert("비밀번호는 영문과 숫자를 포함해 8자 이상이어야 합니다.");
+      alert(
+        "비밀번호는 영문, 숫자, 특수문자를 모두 포함해 8자 이상이어야 합니다.",
+      );
       return;
     }
 
@@ -77,7 +79,9 @@ const PasswordResetConfirmComponent = () => {
       );
     if (newPw.length > 0 && !PW_REGEX.test(newPw))
       return (
-        <div className={errMsgClass}>영문+숫자 조합 8자 이상이어야 해요</div>
+        <div className={errMsgClass}>
+          영문+숫자+특수문자 조합 8자 이상이어야 해요
+        </div>
       );
     if (newPw.length > 0 && PW_REGEX.test(newPw))
       return <div className={okMsgClass}>✓ 사용가능!</div>;
@@ -110,13 +114,12 @@ const PasswordResetConfirmComponent = () => {
         </>
       }
       subtitle="안전한 새 비밀번호로 계정을 지켜주세요"
-      stickerEmoji="🔐"
     >
       <div className="max-w-sm w-full mx-auto">
-        <h2 className="font-serifkr text-2xl text-ink mb-1">비밀번호 재설정</h2>
-        <p className="text-ink-muted text-sm mb-8">
-          새 비밀번호를 입력해주세요
-        </p>
+        <h2 className="font-display text-2xl text-plum-900 mb-1">
+          비밀번호 재설정
+        </h2>
+        <p className="text-plum-500 text-sm mb-8">새 비밀번호를 입력해주세요</p>
 
         <div className="mb-4">
           <label className={labelClass}>새 비밀번호</label>
@@ -143,7 +146,7 @@ const PasswordResetConfirmComponent = () => {
         </div>
 
         <button
-          className="w-full py-3 rounded-full bg-brand-gradient text-ink font-semibold shadow-lg shadow-blush-200/60 hover:shadow-blush-300/70 hover:-translate-y-0.5 transition-all"
+          className="w-full py-3 rounded-xl bg-rose-gradient text-white font-semibold shadow-lg shadow-rose-200 hover:shadow-rose-300 hover:-translate-y-0.5 transition-all"
           onClick={handleClickConfirm}
         >
           비밀번호 변경하기
