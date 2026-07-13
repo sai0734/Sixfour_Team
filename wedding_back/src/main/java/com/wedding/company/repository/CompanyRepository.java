@@ -3,6 +3,7 @@ package com.wedding.company.repository;
 import com.wedding.company.domain.Company;
 import com.wedding.company.domain.CompanyCategory;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,10 +25,10 @@ public interface CompanyRepository extends JpaRepository<Company, Long> {
         and (:maxPrice is null or c.priceAvg <= :maxPrice)
       """)
   Page<Company> searchList(@Param("category") CompanyCategory category,
-      @Param("keyword") String keyword,
-      @Param("minPrice") BigDecimal minPrice,
-      @Param("maxPrice") BigDecimal maxPrice,
-      Pageable pageable);
+                           @Param("keyword") String keyword,
+                           @Param("minPrice") BigDecimal minPrice,
+                           @Param("maxPrice") BigDecimal maxPrice,
+                           Pageable pageable);
 
   @EntityGraph(attributePaths = "imageList")
   @Query("select c from Company c where c.cmno = :cmno")
@@ -36,4 +37,10 @@ public interface CompanyRepository extends JpaRepository<Company, Long> {
   @Modifying
   @Query("update Company c set c.delFlag = :delFlag where c.cmno = :cmno")
   void updateDelFlag(@Param("cmno") Long cmno, @Param("delFlag") boolean delFlag);
+
+  // 회원 이메일로 그 회원이 담당하고 있는 업체 찾기 (담당자는 업체 1곳만 맡음)
+  Optional<Company> findByManagerEmail(String managerEmail);
+
+  // 담당자가 지정된 업체 전체 (관리자 회원관리 "담당자 탭"용)
+  List<Company> findByManagerEmailIsNotNull();
 }

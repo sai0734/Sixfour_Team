@@ -6,10 +6,26 @@ const host = `${API_SERVER_HOST}/api/companies`;
 const imageHost = `${host}/images`;
 
 export const getList = async (pageParam = {}) => {
-  const { page = 1, size = 10, category, keyword, sort, minPrice, maxPrice } = pageParam;
+  const {
+    page = 1,
+    size = 10,
+    category,
+    keyword,
+    sort,
+    minPrice,
+    maxPrice,
+  } = pageParam;
 
   try {
-    return await getDummyList({ page, size, category, keyword, sort, minPrice, maxPrice });
+    return await getDummyList({
+      page,
+      size,
+      category,
+      keyword,
+      sort,
+      minPrice,
+      maxPrice,
+    });
   } catch (err) {
     console.warn("Company dummy list API failed. Try DB company list.", err);
   }
@@ -25,17 +41,14 @@ export const getList = async (pageParam = {}) => {
 };
 
 export const getOne = async (cmno) => {
-  // DB 우선 — 실제 cmno 기준으로 저장/수정 가능
   try {
-    const res = await axios.get(`${host}/${cmno}`);
-    return { ...normalizeCompany(res.data), _isDummyOnly: false };
+    return await getDummyOne(cmno);
   } catch (err) {
-    console.warn("DB company read failed. Fallback to dummy data.", err);
+    console.warn("Company dummy read API failed. Try DB company read.", err);
   }
 
-  // DB에 없을 경우 더미 폴백 (_isDummyOnly: true → 수정 버튼 숨김)
-  const data = await getDummyOne(cmno);
-  return { ...data, _isDummyOnly: true };
+  const res = await axios.get(`${host}/${cmno}`);
+  return normalizeCompany(res.data);
 };
 
 export const postAdd = async (company) => {
@@ -50,22 +63,6 @@ export const putOne = async (cmno, company) => {
 
 export const deleteOne = async (cmno) => {
   const res = await jwtAxios.delete(`${host}/${cmno}`);
-  return res.data;
-};
-
-export const updateMakeupDetail = async (cmno, data) => {
-  const res = await jwtAxios.put(
-    `${API_SERVER_HOST}/api/companies/makeup/${cmno}`,
-    data
-  );
-  return res.data;
-};
-
-export const updateDressDetail = async (cmno, data) => {
-  const res = await jwtAxios.put(
-    `${API_SERVER_HOST}/api/companies/dresses/${cmno}`,
-    data
-  );
   return res.data;
 };
 
@@ -115,7 +112,15 @@ export const getCompanyImageUrl = (fileName, thumbnail = false) => {
 };
 
 export const getDummyList = async (pageParam = {}) => {
-  const { page = 1, size = 10, category, keyword, sort, minPrice, maxPrice } = pageParam;
+  const {
+    page = 1,
+    size = 10,
+    category,
+    keyword,
+    sort,
+    minPrice,
+    maxPrice,
+  } = pageParam;
   const res = await axios.get(`${host}/dummy`);
   let list = normalizeDummyCompanies(res.data);
 
@@ -126,29 +131,37 @@ export const getDummyList = async (pageParam = {}) => {
   if (keyword) {
     const loweredKeyword = keyword.toLowerCase();
     list = list.filter((company) =>
-      [company.name, company.address, company.phone, company.category].some((value) =>
-        String(value || "").toLowerCase().includes(loweredKeyword),
+      [company.name, company.address, company.phone, company.category].some(
+        (value) =>
+          String(value || "")
+            .toLowerCase()
+            .includes(loweredKeyword),
       ),
     );
   }
 
   if (minPrice) {
-    list = list.filter((company) => Number(company.priceAvg || 0) >= Number(minPrice));
+    list = list.filter(
+      (company) => Number(company.priceAvg || 0) >= Number(minPrice),
+    );
   }
 
   if (maxPrice) {
-    list = list.filter((company) => Number(company.priceAvg || 0) <= Number(maxPrice));
+    list = list.filter(
+      (company) => Number(company.priceAvg || 0) <= Number(maxPrice),
+    );
   }
 
   list = sortCompanies(list, sort);
 
   const totalCount = list.length;
-  const totalPage = Math.max(1, Math.ceil(totalCount / size));
-  // 필터 변경으로 page가 유효 범위를 초과하면 마지막 페이지로 클램핑
-  const safePage = Math.min(Math.max(1, page), totalPage);
-  const start = (safePage - 1) * size;
+  const start = (page - 1) * size;
   const dtoList = list.slice(start, start + size);
-  const pageNumList = Array.from({ length: totalPage }, (_, index) => index + 1);
+  const totalPage = Math.max(1, Math.ceil(totalCount / size));
+  const pageNumList = Array.from(
+    { length: totalPage },
+    (_, index) => index + 1,
+  );
 
   return {
     dtoList,
@@ -166,7 +179,9 @@ export const getDummyList = async (pageParam = {}) => {
 
 export const getDummyOne = async (cmno) => {
   const res = await axios.get(`${host}/dummy`);
-  const company = normalizeDummyCompanies(res.data).find((item) => String(item.cmno) === String(cmno));
+  const company = normalizeDummyCompanies(res.data).find(
+    (item) => String(item.cmno) === String(cmno),
+  );
 
   if (!company) {
     throw new Error(`Dummy company not found. cmno=${cmno}`);
@@ -176,26 +191,46 @@ export const getDummyOne = async (cmno) => {
 };
 
 const normalizeDummyCompanies = (data) => {
-  const list = Array.isArray(data) ? data : data?.companies || data?.dtoList || data?.list || [];
+  const list = Array.isArray(data)
+    ? data
+    : data?.companies || data?.dtoList || data?.list || [];
 
   return list
-    .filter((item) => item && (item.cmno || item.companyId || item.id) && (item.name || item.companyName || item.vendorName))
+    .filter(
+      (item) =>
+        item &&
+        (item.cmno || item.companyId || item.id) &&
+        (item.name || item.companyName || item.vendorName),
+    )
     .map(normalizeCompany);
 };
 
 const normalizeCompany = (company = {}) => {
-  const imageList = company.imageList || company.images || company.companyImages || [];
+  const imageList =
+    company.imageList || company.images || company.companyImages || [];
   const uploadFileNames =
     company.uploadFileNames ||
-    imageList.map((image) => (typeof image === "string" ? image : image.fileName || image.fileUrl || image.url)).filter(Boolean) ||
+    imageList
+      .map((image) =>
+        typeof image === "string"
+          ? image
+          : image.fileName || image.fileUrl || image.url,
+      )
+      .filter(Boolean) ||
     [];
 
   return {
     ...company,
     cmno: company.cmno || company.companyId || company.id,
     category: company.category || company.companyCategory || company.type,
-    name: company.name || company.companyName || company.vendorName || company.businessName || "",
-    ceoName: company.ceoName || company.representative || company.ownerName || "",
+    name:
+      company.name ||
+      company.companyName ||
+      company.vendorName ||
+      company.businessName ||
+      "",
+    ceoName:
+      company.ceoName || company.representative || company.ownerName || "",
     phone: company.phone || company.tel || company.contact || "",
     address: company.address || company.addr || "",
     description: company.description || company.desc || "",
@@ -209,12 +244,40 @@ const sortCompanies = (list, sort) => {
   const copiedList = [...list];
 
   if (sort === "name") {
-    return copiedList.sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
+    return copiedList.sort((a, b) =>
+      String(a.name || "").localeCompare(String(b.name || "")),
+    );
   }
 
   if (sort === "price") {
-    return copiedList.sort((a, b) => Number(a.priceAvg || 0) - Number(b.priceAvg || 0));
+    return copiedList.sort(
+      (a, b) => Number(a.priceAvg || 0) - Number(b.priceAvg || 0),
+    );
   }
 
   return copiedList.sort((a, b) => Number(b.cmno || 0) - Number(a.cmno || 0));
+};
+
+// ===== 업체 문의 담당자 임명 (관리자 전용) =====
+
+export const assignCompanyManager = async (cmno, managerEmail) => {
+  const res = await jwtAxios.put(`${host}/${cmno}/manager`, { managerEmail });
+  return res.data;
+};
+
+export const unassignCompanyManager = async (cmno) => {
+  const res = await jwtAxios.delete(`${host}/${cmno}/manager`);
+  return res.data;
+};
+
+// 로그인한 회원 본인이 담당하고 있는 업체가 있는지 확인 (없으면 isManager: false)
+export const getMyManagedCompany = async (email) => {
+  const res = await jwtAxios.get(`${host}/my-managed`, { params: { email } });
+  return res.data;
+};
+
+// 관리자 - 담당자 지정된 업체 전체 목록 (회원관리 "담당자 탭"용)
+export const getManagedCompanies = async () => {
+  const res = await jwtAxios.get(`${host}/managers`);
+  return res.data;
 };
