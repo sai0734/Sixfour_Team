@@ -1,25 +1,31 @@
 import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
-import { getListByMember, postAdd, deleteOne } from "../../api/companywishApi";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { getMyCompanyWishes, removeCompanyWish } from "../../api/companywishApi";
 import {
   getListByMember as getProductWishList,
   deleteWish as deleteProductWish,
 } from "../../api/wishApi";
+import { getCompanyImageUrl } from "../../api/companyApi";
 import { API_SERVER_HOST } from "../../api/reservationApi";
 import useCustomLogin from "../../hooks/useCustomLogin";
-import WishFormModal from "./WishFormModal";
 
 const SUB_TABS = [
   { key: "company", label: "업체 찜" },
   { key: "product", label: "답례품 찜" },
 ];
 
+const categoryLabel = {
+  HALL: "웨딩홀",
+  DRESS: "드레스",
+  MAKEUP: "메이크업",
+  STUDIO: "스튜디오",
+};
+
 const WishTab = () => {
   const { loginState } = useCustomLogin();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // 답례품 상세로 갔다가 뒤로가기 눌러도 "찜 목록 > 답례품 찜"으로 돌아오도록
-  // 서브탭 상태를 URL(?wsub=)에 둠
   const subTab = searchParams.get("wsub") === "product" ? "product" : "company";
   const setSubTab = (key) => {
     setSearchParams(
@@ -32,24 +38,35 @@ const WishTab = () => {
     );
   };
 
+  // ── 업체 찜 상태 ──
   const [wishList, setWishList] = useState([]);
-  const [refresh, setRefresh] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [companyLoading, setCompanyLoading] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
+  const [companyRefresh, setCompanyRefresh] = useState(false);
 
+  // ── 답례품 찜 상태 ──
   const [productWishList, setProductWishList] = useState([]);
-  const [productRefresh, setProductRefresh] = useState(false);
   const [selectedPnos, setSelectedPnos] = useState(new Set());
+  const [productRefresh, setProductRefresh] = useState(false);
 
+  // ── 업체 찜 목록 로드 ──
   useEffect(() => {
     if (!loginState.email) return;
 
-    getListByMember(loginState.email).then((data) => {
-      setWishList(data);
-      setSelectedIds(new Set());
-    });
-  }, [loginState.email, refresh]);
+    setCompanyLoading(true);
+    getMyCompanyWishes()
+      .then((data) => {
+        const list = Array.isArray(data) ? data : data?.dtoList ?? data?.content ?? [];
+        setWishList(list);
+        setSelectedIds(new Set());
+      })
+      .catch((e) => {
+        console.error("업체 찜 목록 조회 실패:", e);
+      })
+      .finally(() => setCompanyLoading(false));
+  }, [loginState.email, companyRefresh]);
 
+  // ── 답례품 찜 목록 로드 ──
   useEffect(() => {
     if (!loginState.email) return;
 
@@ -59,34 +76,30 @@ const WishTab = () => {
     });
   }, [loginState.email, productRefresh]);
 
-  const handleAdd = (cmno) => {
-    postAdd({ memberEmail: loginState.email, cmno })
-      .then(() => {
-        setModalOpen(false);
-        setRefresh(!refresh);
-      })
-      .catch((e) => {
-        console.error(e);
-        alert("찜 등록에 실패했습니다. 이미 찜한 업체일 수 있습니다.");
+  // ── 업체 찜 해제 (단건) ──
+  const handleRemoveCompanyWish = async (event, cmno) => {
+    event.stopPropagation();
+    if (!window.confirm("찜한 업체에서 삭제하시겠습니까?")) return;
+
+    try {
+      await removeCompanyWish(cmno);
+      setWishList((prev) => prev.filter((c) => c.cmno !== cmno));
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(cmno);
+        return next;
       });
+    } catch (e) {
+      console.error("찜 삭제 실패:", e);
+      alert("찜 삭제에 실패했습니다.");
+    }
   };
 
-  const handleDelete = (wishId) => {
-    deleteOne(wishId)
-      .then(() => setRefresh(!refresh))
-      .catch((e) => console.error(e));
-  };
-
-  const handleDeleteProductWish = (pno) => {
-    deleteProductWish(pno)
-      .then(() => setProductRefresh(!productRefresh))
-      .catch((e) => console.error(e));
-  };
-
-  const toggleSelect = (id) => {
+  // ── 업체 찜 선택/전체선택 ──
+  const toggleSelect = (cmno) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      next.has(cmno) ? next.delete(cmno) : next.add(cmno);
       return next;
     });
   };
@@ -95,20 +108,25 @@ const WishTab = () => {
     setSelectedIds((prev) =>
       prev.size === wishList.length
         ? new Set()
-        : new Set(wishList.map((item) => item.wishId)),
+        : new Set(wishList.map((c) => c.cmno)),
     );
   };
 
-  const handleBulkDelete = () => {
+  // ── 업체 찜 선택 삭제 ──
+  const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return;
-    if (!window.confirm(`선택한 ${selectedIds.size}곳을 찜 취소하시겠습니까?`))
-      return;
+    if (!window.confirm(`선택한 ${selectedIds.size}곳을 찜 취소하시겠습니까?`)) return;
 
-    Promise.all([...selectedIds].map((id) => deleteOne(id)))
-      .then(() => setRefresh((r) => !r))
-      .catch((e) => console.error(e));
+    try {
+      await Promise.all([...selectedIds].map((cmno) => removeCompanyWish(cmno)));
+      setCompanyRefresh((r) => !r);
+    } catch (e) {
+      console.error("선택 삭제 실패:", e);
+      alert("일부 항목 삭제에 실패했습니다.");
+    }
   };
 
+  // ── 답례품 찜 선택/전체선택 ──
   const toggleSelectProduct = (pno) => {
     setSelectedPnos((prev) => {
       const next = new Set(prev);
@@ -127,8 +145,7 @@ const WishTab = () => {
 
   const handleBulkDeleteProduct = () => {
     if (selectedPnos.size === 0) return;
-    if (!window.confirm(`선택한 ${selectedPnos.size}개를 찜 취소하시겠습니까?`))
-      return;
+    if (!window.confirm(`선택한 ${selectedPnos.size}개를 찜 취소하시겠습니까?`)) return;
 
     Promise.all([...selectedPnos].map((pno) => deleteProductWish(pno)))
       .then(() => setProductRefresh((r) => !r))
@@ -137,6 +154,7 @@ const WishTab = () => {
 
   return (
     <div>
+      {/* ── 서브탭 ── */}
       <nav className="flex gap-6 text-sm font-medium border-b border-line mb-6">
         {SUB_TABS.map((tab) => (
           <span
@@ -153,6 +171,7 @@ const WishTab = () => {
         ))}
       </nav>
 
+      {/* ── 업체 찜 탭 ── */}
       {subTab === "company" && (
         <div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
@@ -164,10 +183,7 @@ const WishTab = () => {
                 <label className="flex items-center gap-1.5 text-xs text-ink-soft cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={
-                      wishList.length > 0 &&
-                      selectedIds.size === wishList.length
-                    }
+                    checked={wishList.length > 0 && selectedIds.size === wishList.length}
                     onChange={toggleSelectAll}
                     className="accent-brand"
                   />
@@ -175,82 +191,119 @@ const WishTab = () => {
                 </label>
               )}
             </div>
-            <div className="flex items-center gap-2">
-              {selectedIds.size > 0 && (
-                <button
-                  type="button"
-                  onClick={handleBulkDelete}
-                  className="h-10 px-4 rounded-full border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50"
-                >
-                  선택 삭제 ({selectedIds.size})
-                </button>
-              )}
+            {selectedIds.size > 0 && (
               <button
                 type="button"
-                onClick={() => setModalOpen(true)}
-                className="h-10 px-5 rounded-full bg-brand text-white text-sm font-medium hover:bg-brand-dark"
+                onClick={handleBulkDelete}
+                className="h-10 px-4 rounded-full border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50"
               >
-                + 업체 찜하기
+                선택 삭제 ({selectedIds.size})
               </button>
-            </div>
+            )}
           </div>
 
-          {wishList.length === 0 && (
+          {companyLoading && (
+            <div className="text-center text-ink-faint py-16">
+              로딩 중...
+            </div>
+          )}
+
+          {!companyLoading && wishList.length === 0 && (
             <div className="text-center text-ink-faint py-16 bg-white rounded-2xl border border-line">
-              찜한 업체가 없습니다.
+              <p className="text-sm">찜한 업체가 없습니다.</p>
+              <button
+                type="button"
+                onClick={() => navigate("/companies/list")}
+                className="mt-4 h-10 rounded-full border border-line px-5 text-sm transition hover:border-brand hover:text-brand"
+              >
+                업체 보러가기
+              </button>
             </div>
           )}
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {wishList.map((item) => (
-              <div
-                key={item.wishId}
-                className="relative bg-white rounded-2xl border border-line p-5"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedIds.has(item.wishId)}
-                  onChange={() => toggleSelect(item.wishId)}
-                  className="absolute top-4 left-4 w-4 h-4 accent-brand z-10"
-                />
+            {wishList.map((company) => {
+              const mainImage = company.uploadFileNames?.[0];
 
-                <div className="aspect-square rounded-xl bg-surface flex items-center justify-center mb-3">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="#D4537E"
-                    strokeWidth="1.5"
-                    className="w-7 h-7 opacity-60"
-                  >
-                    <path d="M19.5 12.572 12 20l-7.5-7.428a5 5 0 1 1 7.5-6.566 5 5 0 1 1 7.5 6.566Z" />
-                  </svg>
-                </div>
-
-                <p className="text-sm font-medium text-ink mb-1">
-                  업체 번호 #{item.cmno}
-                </p>
-                <p className="text-xs text-ink-muted mb-4">{item.regDate}</p>
-
-                <button
-                  type="button"
-                  onClick={() => handleDelete(item.wishId)}
-                  className="w-full h-9 rounded-full border border-line-soft text-xs text-ink-soft hover:bg-cream"
+              return (
+                <article
+                  key={company.cmno}
+                  className="relative bg-white rounded-2xl border border-line overflow-hidden transition hover:border-brand hover:shadow-md cursor-pointer"
+                  onClick={() => navigate(`/companies/read/${company.cmno}`)}
                 >
-                  찜 취소
-                </button>
-              </div>
-            ))}
-          </div>
+                  {/* 체크박스 */}
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(company.cmno)}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      toggleSelect(company.cmno);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="absolute top-3 left-3 w-4 h-4 accent-brand z-10"
+                  />
 
-          {modalOpen && (
-            <WishFormModal
-              onSubmit={handleAdd}
-              onClose={() => setModalOpen(false)}
-            />
-          )}
+                  {/* 대표 이미지 */}
+                  {mainImage ? (
+                    <img
+                      src={getCompanyImageUrl(mainImage)}
+                      alt={company.name}
+                      className="h-44 w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-44 items-center justify-center bg-blush-50 text-sm text-ink-faint">
+                      대표 이미지 없음
+                    </div>
+                  )}
+
+                  <div className="p-4">
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                      <span className="rounded-full bg-blush-100 px-2.5 py-1 text-xs text-brand-deep">
+                        {categoryLabel[company.category] || company.category}
+                      </span>
+
+                      {/* 찜 해제 버튼 */}
+                      <button
+                        type="button"
+                        onClick={(e) => handleRemoveCompanyWish(e, company.cmno)}
+                        className="text-lg text-rose-500 transition hover:scale-110"
+                        title="찜 해제"
+                        aria-label={`${company.name} 찜 해제`}
+                      >
+                        ♥
+                      </button>
+                    </div>
+
+                    <p className="truncate text-base font-semibold text-ink">
+                      {company.name}
+                    </p>
+
+                    {company.address && (
+                      <p className="mt-2 line-clamp-2 text-sm text-ink-muted">
+                        📍 {company.address}
+                      </p>
+                    )}
+
+                    {company.phone && (
+                      <p className="mt-1 text-sm text-ink-muted">
+                        📞 {company.phone}
+                      </p>
+                    )}
+
+                    {company.priceAvg && (
+                      <p className="mt-3 text-base font-medium">
+                        {Number(company.priceAvg).toLocaleString()}원~
+                      </p>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
         </div>
       )}
 
+      {/* ── 답례품 찜 탭 ── */}
       {subTab === "product" && (
         <div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
@@ -328,7 +381,11 @@ const WishTab = () => {
 
                 <button
                   type="button"
-                  onClick={() => handleDeleteProductWish(item.pno)}
+                  onClick={() =>
+                    deleteProductWish(item.pno)
+                      .then(() => setProductRefresh((r) => !r))
+                      .catch((e) => console.error(e))
+                  }
                   className="w-full h-9 rounded-full border border-line-soft text-xs text-ink-soft hover:bg-cream"
                 >
                   찜 취소

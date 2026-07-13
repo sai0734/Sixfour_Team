@@ -14,6 +14,11 @@ import {
   updateDressDetail,
   uploadCompanyImages,
 } from "../../api/companyApi";
+import {
+  checkCompanyWish,
+  addCompanyWish,
+  removeCompanyWish,
+} from "../../api/companywishApi";
 import FetchingModal from "../common/FetchingModal";
 import useCustomLogin from "../../hooks/useCustomLogin";
 
@@ -161,6 +166,53 @@ const CompanyReadComponent = () => {
       });
   };
 
+  // ── 찜 상태 ──
+  const isLoggedIn = Boolean(loginState?.email || loginState?.accessToken);
+  const [liked, setLiked] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
+
+  useEffect(() => {
+    if (!cmno || !isLoggedIn) {
+      setLiked(false);
+      return;
+    }
+    checkCompanyWish(cmno)
+      .then((data) => {
+        const nextLiked = typeof data === "boolean" ? data : Boolean(data?.liked);
+        setLiked(nextLiked);
+      })
+      .catch((err) => {
+        console.error("업체 찜 여부 조회 실패:", err);
+        setLiked(false);
+      });
+  }, [cmno, isLoggedIn]);
+
+  const handleFavoriteClick = async () => {
+    if (!company.cmno || favoriteLoading) return;
+
+    if (!isLoggedIn) {
+      alert("로그인 후 찜하기를 이용할 수 있습니다.");
+      navigate("/auth/login");
+      return;
+    }
+
+    try {
+      setFavoriteLoading(true);
+      if (liked) {
+        await removeCompanyWish(company.cmno);
+        setLiked(false);
+      } else {
+        await addCompanyWish(company.cmno);
+        setLiked(true);
+      }
+    } catch (err) {
+      console.error("업체 찜 처리 실패:", err);
+      exceptionHandle(err);
+    } finally {
+      setFavoriteLoading(false);
+    }
+  };
+
   const mainImage = company.uploadFileNames?.[0];
 
   const detailImageClassByCategory = {
@@ -268,11 +320,19 @@ const CompanyReadComponent = () => {
           {/* 액션 버튼 */}
           <div className="flex gap-2.5 flex-wrap">
             <button
-              className="w-[46px] h-[46px] shrink-0 border border-line bg-white rounded-full flex items-center justify-center text-brand text-lg transition hover:bg-blush-50"
+              className={`w-[46px] h-[46px] shrink-0 border rounded-full flex items-center justify-center text-lg transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                liked
+                  ? "border-rose-300 bg-rose-50 text-rose-500"
+                  : "border-line bg-white text-brand hover:bg-blush-50"
+              }`}
               type="button"
-              title="찜하기"
+              title={liked ? "찜 해제" : "찜하기"}
+              aria-label={liked ? `${company.name} 찜 해제` : `${company.name} 찜하기`}
+              aria-pressed={liked}
+              onClick={handleFavoriteClick}
+              disabled={favoriteLoading}
             >
-              ♡
+              {favoriteLoading ? "…" : liked ? "♥" : "♡"}
             </button>
             <button
               className="flex-1 min-w-[100px] h-[46px] rounded-full border border-line bg-white text-sm font-medium transition hover:border-brand hover:text-brand"
