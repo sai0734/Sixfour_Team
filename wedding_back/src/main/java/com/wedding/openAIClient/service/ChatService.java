@@ -1,6 +1,6 @@
 package com.wedding.openAIClient.service;
 
-import com.wedding.openAIClient.OpenAiClient;
+import com.wedding.global.util.OpenAiClient;
 import com.wedding.openAIClient.dto.OpenAiResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

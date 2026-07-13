@@ -5,6 +5,7 @@ import com.wedding.member.domain.Member;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,6 +61,15 @@ public class Orders extends BaseTimeEntity {
 
     private String adminMemo;
 
+    private String exchangeReturnType;
+
+    private String exchangeReturnReason;
+
+    @Column(columnDefinition = "TEXT")
+    private String exchangeReturnDetail;
+
+    private LocalDateTime exchangeReturnRequestedAt;
+
     public void addOrderItem(OrderItem orderItem) {
         this.orderItems.add(orderItem);
         orderItem.setOrders(this);
@@ -92,6 +102,13 @@ public class Orders extends BaseTimeEntity {
         this.zipcode = zipcode;
         this.address = address;
         this.addressDetail = addressDetail;
+    }
+
+    public void requestExchangeReturn(String type, String reason, String detail, LocalDateTime requestedAt) {
+        this.exchangeReturnType = type;
+        this.exchangeReturnReason = reason;
+        this.exchangeReturnDetail = detail;
+        this.exchangeReturnRequestedAt = requestedAt;
     }
 
 }

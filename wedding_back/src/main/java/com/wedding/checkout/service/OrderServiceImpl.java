@@ -111,7 +111,11 @@ public class OrderServiceImpl implements OrderService {
                 .shippingFee(orders.getShippingFee())
                 .orderStatus(orders.getOrderStatus())
                 .regDate(orders.getRegDate())
-                .items(items);
+                .items(items)
+                .exchangeReturnType(orders.getExchangeReturnType())
+                .exchangeReturnReason(orders.getExchangeReturnReason())
+                .exchangeReturnDetail(orders.getExchangeReturnDetail())
+                .exchangeReturnRequestedAt(orders.getExchangeReturnRequestedAt());
 
         paymentOpt.ifPresent(payment -> builder
                 .payMethod(payment.getPayMethod())
