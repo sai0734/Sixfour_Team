@@ -5,6 +5,13 @@ import {
   setDormantMember,
   suspendMember,
 } from "../../api/adminMemberApi";
+import {
+  getList as getCompanyList,
+  assignCompanyManager,
+  unassignCompanyManager,
+  getMyManagedCompany,
+  getManagedCompanies,
+} from "../../api/companyApi";
 import PageComponent from "../common/PageComponent";
 
 const initState = {
@@ -59,6 +66,53 @@ const MemberManageComponent = () => {
 
   const [actionEmail, setActionEmail] = useState(null); // 처리중인 행 (버튼 중복 클릭 방지)
 
+  // 업체 담당자 임명 모달
+  const [managerTarget, setManagerTarget] = useState(null); // null이면 닫힘
+  const [managerCurrent, setManagerCurrent] = useState(null); // 이미 담당 중인 업체(있으면)
+  const [companyOptions, setCompanyOptions] = useState([]);
+  const [selectedCmno, setSelectedCmno] = useState("");
+  const [managerLoading, setManagerLoading] = useState(false);
+
+  // 회원 목록 / 담당자 목록 탭
+  const [activeTab, setActiveTab] = useState("members"); // "members" | "managers"
+  const [managerList, setManagerList] = useState([]);
+  const [managerListLoading, setManagerListLoading] = useState(false);
+
+  const fetchManagerList = () => {
+    setManagerListLoading(true);
+    getManagedCompanies()
+      .then((data) => setManagerList(data))
+      .catch((err) => {
+        console.error(err);
+        alert("담당자 목록을 불러오지 못했습니다.");
+      })
+      .finally(() => setManagerListLoading(false));
+  };
+
+  useEffect(() => {
+    if (activeTab === "managers") {
+      fetchManagerList();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
+  const handleUnassignFromList = async (company) => {
+    if (
+      !window.confirm(
+        `${company.name}의 담당자(${company.managerEmail}) 지정을 해제할까요?`,
+      )
+    ) {
+      return;
+    }
+    try {
+      await unassignCompanyManager(company.cmno);
+      fetchManagerList();
+    } catch (err) {
+      console.error(err);
+      alert("해제 중 오류가 발생했습니다.");
+    }
+  };
+
   const fetchList = (param) => {
     setFetching(true);
     setError("");
@@ -109,6 +163,81 @@ const MemberManageComponent = () => {
   };
 
   const closeSuspendModal = () => setSuspendTarget(null);
+
+  // 업체 담당자 임명 모달
+  const openManagerModal = async (member) => {
+    setManagerTarget(member);
+    setSelectedCmno("");
+    setManagerCurrent(null);
+    setManagerLoading(true);
+
+    try {
+      const [companyRes, myManaged] = await Promise.all([
+        companyOptions.length > 0
+          ? Promise.resolve({ dtoList: companyOptions })
+          : getCompanyList({ page: 1, size: 200 }),
+        getMyManagedCompany(member.email),
+      ]);
+
+      if (companyOptions.length === 0) {
+        setCompanyOptions(companyRes.dtoList || []);
+      }
+
+      if (myManaged.isManager) {
+        setManagerCurrent(myManaged.company);
+        setSelectedCmno(String(myManaged.company.cmno));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("업체 목록을 불러오지 못했습니다.");
+    } finally {
+      setManagerLoading(false);
+    }
+  };
+
+  const closeManagerModal = () => {
+    setManagerTarget(null);
+    setManagerCurrent(null);
+    setSelectedCmno("");
+  };
+
+  const confirmAssignManager = async () => {
+    if (!selectedCmno) {
+      alert("업체를 선택해주세요.");
+      return;
+    }
+
+    try {
+      setManagerLoading(true);
+      await assignCompanyManager(Number(selectedCmno), managerTarget.email);
+      alert(`${managerTarget.email} 님을 담당자로 임명했습니다.`);
+      closeManagerModal();
+    } catch (err) {
+      console.error(err);
+      const msg = err.response?.data?.msg;
+      alert(msg || "임명 중 오류가 발생했습니다.");
+    } finally {
+      setManagerLoading(false);
+    }
+  };
+
+  const handleUnassignManager = async () => {
+    if (!managerCurrent) return;
+    if (!window.confirm(`${managerCurrent.name} 담당자 지정을 해제할까요?`))
+      return;
+
+    try {
+      setManagerLoading(true);
+      await unassignCompanyManager(managerCurrent.cmno);
+      alert("담당자 지정을 해제했습니다.");
+      closeManagerModal();
+    } catch (err) {
+      console.error(err);
+      alert("해제 중 오류가 발생했습니다.");
+    } finally {
+      setManagerLoading(false);
+    }
+  };
 
   const confirmSuspend = async () => {
     if (!suspendReason.trim()) {
@@ -189,163 +318,260 @@ const MemberManageComponent = () => {
         </div>
       ) : null}
 
-      {/* 검색 + 필터 */}
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <form onSubmit={handleSearch} className="flex gap-2">
-          <input
-            type="text"
-            value={keywordInput}
-            onChange={handleKeywordChange}
-            placeholder="닉네임 또는 이메일 검색"
-            className="w-64 rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-400"
-          />
-          <button
-            type="submit"
-            className="rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
-          >
-            검색
-          </button>
-        </form>
-
-        <div className="flex gap-2">
-          {[
-            { value: "", label: "전체" },
-            { value: "ACTIVE", label: "정상" },
-            { value: "BLACKLIST", label: "정지" },
-            { value: "DORMANT", label: "휴면" },
-            { value: "WITHDRAWN", label: "탈퇴" },
-          ].map((opt) => (
-            <button
-              key={opt.value || "ALL"}
-              onClick={() => handleStatusFilter(opt.value)}
-              className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
-                queryParam.status === opt.value
-                  ? "bg-blue-600 text-white"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
+      {/* 회원 목록 / 담당자 목록 탭 */}
+      <div className="mb-4 flex gap-1 border-b border-slate-200">
+        <button
+          onClick={() => setActiveTab("members")}
+          className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
+            activeTab === "members"
+              ? "border-blue-600 text-blue-600"
+              : "border-transparent text-slate-500 hover:text-slate-700"
+          }`}
+        >
+          회원 목록
+        </button>
+        <button
+          onClick={() => setActiveTab("managers")}
+          className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
+            activeTab === "managers"
+              ? "border-blue-600 text-blue-600"
+              : "border-transparent text-slate-500 hover:text-slate-700"
+          }`}
+        >
+          담당자 목록
+        </button>
       </div>
 
-      {/* 테이블 */}
-      <div className="overflow-x-auto rounded-lg border border-slate-200">
-        <table className="w-full min-w-[820px] text-left text-sm">
-          <thead className="bg-slate-50 text-xs uppercase text-slate-500">
-            <tr>
-              <th className="px-4 py-3">닉네임</th>
-              <th className="px-4 py-3">이메일</th>
-              <th className="px-4 py-3">가입일</th>
-              <th className="px-4 py-3">최근 로그인</th>
-              <th className="px-4 py-3">포인트</th>
-              <th className="px-4 py-3">상태</th>
-              <th className="px-4 py-3">관리</th>
-            </tr>
-          </thead>
-          <tbody>
-            {fetching ? (
+      {activeTab === "managers" ? (
+        <div className="overflow-x-auto rounded-lg border border-slate-200">
+          <table className="w-full min-w-[600px] text-left text-sm">
+            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
               <tr>
-                <td
-                  colSpan={7}
-                  className="px-4 py-8 text-center text-slate-400"
-                >
-                  불러오는 중...
-                </td>
+                <th className="px-4 py-3">업체명</th>
+                <th className="px-4 py-3">카테고리</th>
+                <th className="px-4 py-3">담당자 이메일</th>
+                <th className="px-4 py-3">관리</th>
               </tr>
-            ) : serverData.dtoList.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={7}
-                  className="px-4 py-8 text-center text-slate-400"
-                >
-                  조건에 맞는 회원이 없습니다.
-                </td>
-              </tr>
-            ) : (
-              serverData.dtoList.map((member) => (
-                <tr key={member.email} className="border-t border-slate-100">
-                  <td className="px-4 py-3 font-medium">{member.nickname}</td>
-                  <td className="px-4 py-3 text-slate-600">{member.email}</td>
-                  <td className="px-4 py-3 text-slate-600">
-                    {formatDate(member.regDate)}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">
-                    {formatDate(member.lastLoginAt)}
-                  </td>
-                  {/* 포인트 테이블이 아직 없어서 임시로 - 표시 (담당자 확인 필요) */}
-                  <td className="px-4 py-3 text-slate-400">-</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusColor[member.status]}`}
-                    >
-                      {statusLabel[member.status] || member.status}
-                    </span>
-                    {member.admin ? (
-                      <span className="ml-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 border border-blue-200">
-                        관리자
-                      </span>
-                    ) : null}
-                    {member.status === "BLACKLIST" && member.suspendReason ? (
-                      <div className="mt-1 text-xs text-slate-400">
-                        {member.suspendReason}
-                        {member.suspendUntil
-                          ? ` · ~${formatDate(member.suspendUntil)}`
-                          : " · 영구정지"}
-                      </div>
-                    ) : null}
-                  </td>
-                  <td className="px-4 py-3">
-                    {member.admin ? (
-                      <span className="text-xs text-slate-400">
-                        관리자 계정은 상태를 변경할 수 없어요
-                      </span>
-                    ) : member.status === "WITHDRAWN" ? (
-                      <span className="text-xs text-slate-400">
-                        탈퇴한 회원이에요
-                      </span>
-                    ) : (
-                      <div className="flex flex-wrap gap-1.5">
-                        {member.status !== "BLACKLIST" && (
-                          <button
-                            disabled={actionEmail === member.email}
-                            onClick={() => openSuspendModal(member)}
-                            className="rounded-md bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-100 disabled:opacity-50"
-                          >
-                            정지
-                          </button>
-                        )}
-                        {member.status === "ACTIVE" && (
-                          <button
-                            disabled={actionEmail === member.email}
-                            onClick={() => handleDormant(member)}
-                            className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-200 disabled:opacity-50"
-                          >
-                            휴면 전환
-                          </button>
-                        )}
-                        {(member.status === "BLACKLIST" ||
-                          member.status === "DORMANT") && (
-                          <button
-                            disabled={actionEmail === member.email}
-                            onClick={() => handleReactivate(member)}
-                            className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
-                          >
-                            정상 복귀
-                          </button>
-                        )}
-                      </div>
-                    )}
+            </thead>
+            <tbody>
+              {managerListLoading ? (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="px-4 py-8 text-center text-slate-400"
+                  >
+                    불러오는 중...
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : managerList.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="px-4 py-8 text-center text-slate-400"
+                  >
+                    아직 지정된 담당자가 없습니다.
+                  </td>
+                </tr>
+              ) : (
+                managerList.map((company) => (
+                  <tr key={company.cmno} className="border-t border-slate-100">
+                    <td className="px-4 py-3 font-medium">{company.name}</td>
+                    <td className="px-4 py-3 text-slate-600">
+                      {company.category}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">
+                      {company.managerEmail}
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => handleUnassignFromList(company)}
+                        className="rounded-md bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-100"
+                      >
+                        담당 해제
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <>
+          {/* 검색 + 필터 */}
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <form onSubmit={handleSearch} className="flex gap-2">
+              <input
+                type="text"
+                value={keywordInput}
+                onChange={handleKeywordChange}
+                placeholder="닉네임 또는 이메일 검색"
+                className="w-64 rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-400"
+              />
+              <button
+                type="submit"
+                className="rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+              >
+                검색
+              </button>
+            </form>
 
-      <PageComponent serverData={serverData} movePage={movePage} />
+            <div className="flex gap-2">
+              {[
+                { value: "", label: "전체" },
+                { value: "ACTIVE", label: "정상" },
+                { value: "BLACKLIST", label: "정지" },
+                { value: "DORMANT", label: "휴면" },
+                { value: "WITHDRAWN", label: "탈퇴" },
+              ].map((opt) => (
+                <button
+                  key={opt.value || "ALL"}
+                  onClick={() => handleStatusFilter(opt.value)}
+                  className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
+                    queryParam.status === opt.value
+                      ? "bg-blue-600 text-white"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 테이블 */}
+          <div className="overflow-x-auto rounded-lg border border-slate-200">
+            <table className="w-full min-w-[820px] text-left text-sm">
+              <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                <tr>
+                  <th className="px-4 py-3">닉네임</th>
+                  <th className="px-4 py-3">이메일</th>
+                  <th className="px-4 py-3">가입일</th>
+                  <th className="px-4 py-3">최근 로그인</th>
+                  <th className="px-4 py-3">포인트</th>
+                  <th className="px-4 py-3">상태</th>
+                  <th className="px-4 py-3">관리</th>
+                </tr>
+              </thead>
+              <tbody>
+                {fetching ? (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="px-4 py-8 text-center text-slate-400"
+                    >
+                      불러오는 중...
+                    </td>
+                  </tr>
+                ) : serverData.dtoList.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="px-4 py-8 text-center text-slate-400"
+                    >
+                      조건에 맞는 회원이 없습니다.
+                    </td>
+                  </tr>
+                ) : (
+                  serverData.dtoList.map((member) => (
+                    <tr
+                      key={member.email}
+                      className="border-t border-slate-100"
+                    >
+                      <td className="px-4 py-3 font-medium">
+                        {member.nickname}
+                      </td>
+                      <td className="px-4 py-3 text-slate-600">
+                        {member.email}
+                      </td>
+                      <td className="px-4 py-3 text-slate-600">
+                        {formatDate(member.regDate)}
+                      </td>
+                      <td className="px-4 py-3 text-slate-600">
+                        {formatDate(member.lastLoginAt)}
+                      </td>
+                      {/* 포인트 테이블이 아직 없어서 임시로 - 표시 (담당자 확인 필요) */}
+                      <td className="px-4 py-3 text-slate-400">-</td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusColor[member.status]}`}
+                        >
+                          {statusLabel[member.status] || member.status}
+                        </span>
+                        {member.admin ? (
+                          <span className="ml-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 border border-blue-200">
+                            관리자
+                          </span>
+                        ) : null}
+                        {member.status === "BLACKLIST" &&
+                        member.suspendReason ? (
+                          <div className="mt-1 text-xs text-slate-400">
+                            {member.suspendReason}
+                            {member.suspendUntil
+                              ? ` · ~${formatDate(member.suspendUntil)}`
+                              : " · 영구정지"}
+                          </div>
+                        ) : null}
+                      </td>
+                      <td className="px-4 py-3">
+                        {member.admin ? (
+                          <span className="text-xs text-slate-400">
+                            관리자 계정은 상태를 변경할 수 없어요
+                          </span>
+                        ) : member.status === "WITHDRAWN" ? (
+                          <span className="text-xs text-slate-400">
+                            탈퇴한 회원이에요
+                          </span>
+                        ) : (
+                          <div className="flex flex-wrap gap-1.5">
+                            {member.status !== "BLACKLIST" && (
+                              <button
+                                disabled={actionEmail === member.email}
+                                onClick={() => openSuspendModal(member)}
+                                className="rounded-md bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-100 disabled:opacity-50"
+                              >
+                                정지
+                              </button>
+                            )}
+                            {member.status === "ACTIVE" && (
+                              <button
+                                disabled={actionEmail === member.email}
+                                onClick={() => handleDormant(member)}
+                                className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-200 disabled:opacity-50"
+                              >
+                                휴면 전환
+                              </button>
+                            )}
+                            {(member.status === "BLACKLIST" ||
+                              member.status === "DORMANT") && (
+                              <button
+                                disabled={actionEmail === member.email}
+                                onClick={() => handleReactivate(member)}
+                                className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
+                              >
+                                정상 복귀
+                              </button>
+                            )}
+                            <button
+                              disabled={actionEmail === member.email}
+                              onClick={() => openManagerModal(member)}
+                              className="rounded-md bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-100 disabled:opacity-50"
+                            >
+                              업체 담당자 임명
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <PageComponent serverData={serverData} movePage={movePage} />
+        </>
+      )}
 
       {/* 정지 처리 모달 */}
       {suspendTarget ? (
@@ -406,6 +632,73 @@ const MemberManageComponent = () => {
               >
                 정지 처리
               </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {/* 업체 담당자 임명 모달 */}
+      {managerTarget ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-md rounded-xl bg-white p-6">
+            <h3 className="mb-1 text-base font-semibold text-slate-800">
+              업체 담당자 임명
+            </h3>
+            <p className="mb-4 text-xs text-slate-500">
+              {managerTarget.email} 님을 업체 문의 답변 담당자로 지정합니다.
+            </p>
+
+            {managerCurrent && (
+              <div className="mb-4 rounded-md bg-indigo-50 border border-indigo-200 px-3 py-2 text-xs text-indigo-700">
+                현재 <strong>{managerCurrent.name}</strong>의 담당자로 지정되어
+                있어요.
+              </div>
+            )}
+
+            <label className="mb-1.5 block text-xs font-medium text-slate-600">
+              담당할 업체 선택
+            </label>
+            <select
+              value={selectedCmno}
+              onChange={(e) => setSelectedCmno(e.target.value)}
+              disabled={managerLoading}
+              className="mb-4 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-400"
+            >
+              <option value="">-- 업체를 선택하세요 --</option>
+              {companyOptions.map((c) => (
+                <option key={c.cmno} value={c.cmno}>
+                  [{c.category}] {c.name}
+                </option>
+              ))}
+            </select>
+
+            <div className="flex justify-between gap-2">
+              <div>
+                {managerCurrent && (
+                  <button
+                    onClick={handleUnassignManager}
+                    disabled={managerLoading}
+                    className="rounded-md bg-red-50 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-100 disabled:opacity-50"
+                  >
+                    담당 해제
+                  </button>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={closeManagerModal}
+                  className="rounded-md px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={confirmAssignManager}
+                  disabled={managerLoading}
+                  className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                >
+                  임명하기
+                </button>
+              </div>
             </div>
           </div>
         </div>

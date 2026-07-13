@@ -58,24 +58,24 @@ public class CompanyServiceImpl implements CompanyService {
   @Transactional(readOnly = true)
   public PageResponseDTO<CompanyListDTO> getList(CompanySearchDTO searchDTO) {
     Pageable pageable = PageRequest.of(
-        searchDTO.getPage() - 1,
-        searchDTO.getSize(),
-        getSort(searchDTO.getSort()));
+            searchDTO.getPage() - 1,
+            searchDTO.getSize(),
+            getSort(searchDTO.getSort()));
 
     Page<Company> result = companyRepository.searchList(
-        searchDTO.getCategory(),
-        blankToNull(searchDTO.getKeyword()),
-        searchDTO.getMinPrice(),
-        searchDTO.getMaxPrice(),
-        pageable);
+            searchDTO.getCategory(),
+            blankToNull(searchDTO.getKeyword()),
+            searchDTO.getMinPrice(),
+            searchDTO.getMaxPrice(),
+            pageable);
 
     List<CompanyListDTO> dtoList = result.get().map(this::toListDTO).toList();
 
     return PageResponseDTO.<CompanyListDTO>withAll()
-        .dtoList(dtoList)
-        .totalCount(result.getTotalElements())
-        .pageRequestDTO(searchDTO)
-        .build();
+            .dtoList(dtoList)
+            .totalCount(result.getTotalElements())
+            .pageRequestDTO(searchDTO)
+            .build();
   }
 
   @Override
@@ -97,15 +97,15 @@ public class CompanyServiceImpl implements CompanyService {
     Company company = companyRepository.selectOne(companyDTO.getCmno()).orElseThrow();
 
     company.change(
-        companyDTO.getName(),
-        companyDTO.getCeoName(),
-        companyDTO.getCategory(),
-        companyDTO.getPhone(),
-        companyDTO.getAddress(),
-        companyDTO.getLatitude(),
-        companyDTO.getLongitude(),
-        companyDTO.getDescription(),
-        companyDTO.getPriceAvg());
+            companyDTO.getName(),
+            companyDTO.getCeoName(),
+            companyDTO.getCategory(),
+            companyDTO.getPhone(),
+            companyDTO.getAddress(),
+            companyDTO.getLatitude(),
+            companyDTO.getLongitude(),
+            companyDTO.getDescription(),
+            companyDTO.getPriceAvg());
 
     company.clearImages();
     if (companyDTO.getUploadFileNames() != null) {
@@ -120,20 +120,54 @@ public class CompanyServiceImpl implements CompanyService {
     companyRepository.updateDelFlag(cmno, true);
   }
 
+  @Override
+  public void assignManager(Long cmno, String managerEmail) {
+    // 한 회원은 업체 1곳만 담당 - 이 회원이 이미 다른 업체를 담당 중이면 그쪽부터 해제
+    companyRepository.findByManagerEmail(managerEmail)
+            .filter(existing -> !existing.getCmno().equals(cmno))
+            .ifPresent(Company::unassignManager);
+
+    Company company = companyRepository.selectOne(cmno).orElseThrow();
+    company.assignManager(managerEmail);
+  }
+
+  @Override
+  public void unassignManager(Long cmno) {
+    Company company = companyRepository.selectOne(cmno).orElseThrow();
+    company.unassignManager();
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public CompanyDTO getManagedCompany(String memberEmail) {
+    return companyRepository.findByManagerEmail(memberEmail)
+            .map(this::toDTO)
+            .orElse(null);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<CompanyDTO> getManagedCompanies() {
+    return companyRepository.findByManagerEmailIsNotNull()
+            .stream()
+            .map(this::toDTO)
+            .toList();
+  }
+
   private Company toEntity(CompanyDTO dto) {
     Company company = Company.builder()
-        .cmno(dto.getCmno())
-        .category(dto.getCategory())
-        .name(dto.getName())
-        .ceoName(dto.getCeoName())
-        .phone(dto.getPhone())
-        .address(dto.getAddress())
-        .latitude(dto.getLatitude())
-        .longitude(dto.getLongitude())
-        .description(dto.getDescription())
-        .priceAvg(dto.getPriceAvg())
-        .delFlag(dto.isDelFlag())
-        .build();
+            .cmno(dto.getCmno())
+            .category(dto.getCategory())
+            .name(dto.getName())
+            .ceoName(dto.getCeoName())
+            .phone(dto.getPhone())
+            .address(dto.getAddress())
+            .latitude(dto.getLatitude())
+            .longitude(dto.getLongitude())
+            .description(dto.getDescription())
+            .priceAvg(dto.getPriceAvg())
+            .delFlag(dto.isDelFlag())
+            .build();
 
     if (dto.getUploadFileNames() != null) {
       dto.getUploadFileNames().forEach(company::addImage);
@@ -143,34 +177,35 @@ public class CompanyServiceImpl implements CompanyService {
 
   private CompanyListDTO toListDTO(Company company) {
     return CompanyListDTO.builder()
-        .cmno(company.getCmno())
-        .category(company.getCategory())
-        .name(company.getName())
-        .phone(company.getPhone())
-        .address(company.getAddress())
-        .latitude(company.getLatitude())
-        .longitude(company.getLongitude())
-        .description(company.getDescription())
-        .priceAvg(company.getPriceAvg())
-        .mainImage(firstImage(company))
-        .build();
+            .cmno(company.getCmno())
+            .category(company.getCategory())
+            .name(company.getName())
+            .phone(company.getPhone())
+            .address(company.getAddress())
+            .latitude(company.getLatitude())
+            .longitude(company.getLongitude())
+            .description(company.getDescription())
+            .priceAvg(company.getPriceAvg())
+            .mainImage(firstImage(company))
+            .build();
   }
 
   private CompanyDTO toDTO(Company company) {
     CompanyDTO dto = CompanyDTO.builder()
-        .cmno(company.getCmno())
-        .category(company.getCategory())
-        .name(company.getName())
-        .ceoName(company.getCeoName())
-        .phone(company.getPhone())
-        .address(company.getAddress())
-        .latitude(company.getLatitude())
-        .longitude(company.getLongitude())
-        .description(company.getDescription())
-        .priceAvg(company.getPriceAvg())
-        .delFlag(company.isDelFlag())
-        .uploadFileNames(company.getImageList().stream().map(CompanyImage::getFileName).toList())
-        .build();
+            .cmno(company.getCmno())
+            .category(company.getCategory())
+            .name(company.getName())
+            .ceoName(company.getCeoName())
+            .phone(company.getPhone())
+            .address(company.getAddress())
+            .latitude(company.getLatitude())
+            .longitude(company.getLongitude())
+            .description(company.getDescription())
+            .priceAvg(company.getPriceAvg())
+            .delFlag(company.isDelFlag())
+            .managerEmail(company.getManagerEmail())
+            .uploadFileNames(company.getImageList().stream().map(CompanyImage::getFileName).toList())
+            .build();
 
     hallDetailRepository.findByCompany_Cmno(company.getCmno()).map(this::toHallDTO).ifPresent(dto::setHallDetail);
     dressDetailRepository.findByCompany_Cmno(company.getCmno()).map(this::toDressDTO).ifPresent(dto::setDressDetail);
@@ -197,9 +232,9 @@ public class CompanyServiceImpl implements CompanyService {
 
   private void saveHall(Company company, HallDetailDTO dto) {
     HallDetail detail = hallDetailRepository.findByCompany_Cmno(company.getCmno())
-        .orElse(HallDetail.builder().company(company).build());
+            .orElse(HallDetail.builder().company(company).build());
     detail.change(dto.getHallName(), dto.getAddress(), dto.getLatitude(), dto.getLongitude(), dto.getPhone(),
-        dto.getRepresentative(), dto.getHallType(), dto.getDescription(), dto.getImageUrl());
+            dto.getRepresentative(), dto.getHallType(), dto.getDescription(), dto.getImageUrl());
     hallDetailRepository.save(detail);
 
     hallItemRepository.deleteByCompany_Cmno(company.getCmno());
@@ -210,7 +245,7 @@ public class CompanyServiceImpl implements CompanyService {
 
   private void saveDress(Company company, DressDetailDTO dto) {
     DressDetail detail = dressDetailRepository.findByCompany_Cmno(company.getCmno())
-        .orElse(DressDetail.builder().company(company).build());
+            .orElse(DressDetail.builder().company(company).build());
     detail.change(dto.getSizeRange());
     dressDetailRepository.save(detail);
 
@@ -222,9 +257,9 @@ public class CompanyServiceImpl implements CompanyService {
 
   private void saveMakeup(Company company, MakeupDetailDTO dto) {
     MakeupDetail detail = makeupDetailRepository.findByCompany_Cmno(company.getCmno())
-        .orElse(MakeupDetail.builder().company(company).build());
+            .orElse(MakeupDetail.builder().company(company).build());
     detail.change(dto.getIncludesHairService(), dto.getIncludesMakeupService(), dto.getIncludesNailService(),
-        dto.getHairPrice(), dto.getMakeupPrice(), dto.getNailPrice());
+            dto.getHairPrice(), dto.getMakeupPrice(), dto.getNailPrice());
     makeupDetailRepository.save(detail);
 
     makeupPackageRepository.deleteByCompany_Cmno(company.getCmno());
@@ -235,46 +270,46 @@ public class CompanyServiceImpl implements CompanyService {
 
   private void saveStudio(Company company, StudioDetailDTO dto) {
     StudioDetail detail = studioDetailRepository.findByCompany_Cmno(company.getCmno())
-        .orElse(StudioDetail.builder().company(company).build());
+            .orElse(StudioDetail.builder().company(company).build());
     detail.change(dto.getThemeTags());
     studioDetailRepository.save(detail);
   }
 
   private HallDetailDTO toHallDTO(HallDetail detail) {
     return HallDetailDTO.builder()
-        .cmno(detail.getCmno())
-        .hallName(detail.getHallName())
-        .address(detail.getAddress())
-        .latitude(detail.getLatitude())
-        .longitude(detail.getLongitude())
-        .phone(detail.getPhone())
-        .representative(detail.getRepresentative())
-        .hallType(detail.getHallType())
-        .description(detail.getDescription())
-        .imageUrl(detail.getImageUrl())
-        .items(hallItemRepository.findByCompany_CmnoOrderByOrdAsc(detail.getCmno()).stream().map(this::toHallItemDTO).toList())
-        .build();
+            .cmno(detail.getCmno())
+            .hallName(detail.getHallName())
+            .address(detail.getAddress())
+            .latitude(detail.getLatitude())
+            .longitude(detail.getLongitude())
+            .phone(detail.getPhone())
+            .representative(detail.getRepresentative())
+            .hallType(detail.getHallType())
+            .description(detail.getDescription())
+            .imageUrl(detail.getImageUrl())
+            .items(hallItemRepository.findByCompany_CmnoOrderByOrdAsc(detail.getCmno()).stream().map(this::toHallItemDTO).toList())
+            .build();
   }
 
   private DressDetailDTO toDressDTO(DressDetail detail) {
     return DressDetailDTO.builder()
-        .cmno(detail.getCmno())
-        .sizeRange(detail.getSizeRange())
-        .items(dressItemRepository.findByCompany_CmnoOrderByOrdAsc(detail.getCmno()).stream().map(this::toDressItemDTO).toList())
-        .build();
+            .cmno(detail.getCmno())
+            .sizeRange(detail.getSizeRange())
+            .items(dressItemRepository.findByCompany_CmnoOrderByOrdAsc(detail.getCmno()).stream().map(this::toDressItemDTO).toList())
+            .build();
   }
 
   private MakeupDetailDTO toMakeupDTO(MakeupDetail detail) {
     return MakeupDetailDTO.builder()
-        .cmno(detail.getCmno())
-        .includesHairService(detail.getIncludesHairService())
-        .includesMakeupService(detail.getIncludesMakeupService())
-        .includesNailService(detail.getIncludesNailService())
-        .hairPrice(detail.getHairPrice())
-        .makeupPrice(detail.getMakeupPrice())
-        .nailPrice(detail.getNailPrice())
-        .packages(makeupPackageRepository.findByCompany_Cmno(detail.getCmno()).stream().map(this::toMakeupPackageDTO).toList())
-        .build();
+            .cmno(detail.getCmno())
+            .includesHairService(detail.getIncludesHairService())
+            .includesMakeupService(detail.getIncludesMakeupService())
+            .includesNailService(detail.getIncludesNailService())
+            .hairPrice(detail.getHairPrice())
+            .makeupPrice(detail.getMakeupPrice())
+            .nailPrice(detail.getNailPrice())
+            .packages(makeupPackageRepository.findByCompany_Cmno(detail.getCmno()).stream().map(this::toMakeupPackageDTO).toList())
+            .build();
   }
 
   private StudioDetailDTO toStudioDTO(StudioDetail detail) {
@@ -283,74 +318,74 @@ public class CompanyServiceImpl implements CompanyService {
 
   private HallItem toHallItem(Company company, HallItemDTO dto) {
     return HallItem.builder()
-        .hallItemId(dto.getHallItemId())
-        .company(company)
-        .itemName(dto.getItemName())
-        .price(dto.getPrice())
-        .capacity(dto.getCapacity())
-        .imageUrl(dto.getImageUrl())
-        .ord(dto.getOrd())
-        .mealType(dto.getMealType())
-        .build();
+            .hallItemId(dto.getHallItemId())
+            .company(company)
+            .itemName(dto.getItemName())
+            .price(dto.getPrice())
+            .capacity(dto.getCapacity())
+            .imageUrl(dto.getImageUrl())
+            .ord(dto.getOrd())
+            .mealType(dto.getMealType())
+            .build();
   }
 
   private HallItemDTO toHallItemDTO(HallItem item) {
     return HallItemDTO.builder()
-        .hallItemId(item.getHallItemId())
-        .cmno(item.getCompany().getCmno())
-        .itemName(item.getItemName())
-        .price(item.getPrice())
-        .capacity(item.getCapacity())
-        .imageUrl(item.getImageUrl())
-        .ord(item.getOrd())
-        .mealType(item.getMealType())
-        .build();
+            .hallItemId(item.getHallItemId())
+            .cmno(item.getCompany().getCmno())
+            .itemName(item.getItemName())
+            .price(item.getPrice())
+            .capacity(item.getCapacity())
+            .imageUrl(item.getImageUrl())
+            .ord(item.getOrd())
+            .mealType(item.getMealType())
+            .build();
   }
 
   private DressItem toDressItem(Company company, DressItemDTO dto) {
     return DressItem.builder()
-        .dressItemId(dto.getDressItemId())
-        .company(company)
-        .itemName(dto.getItemName())
-        .price(dto.getPrice())
-        .imageUrl(dto.getImageUrl())
-        .ord(dto.getOrd())
-        .itemType(dto.getItemType())
-        .styleTags(dto.getStyleTags())
-        .sizeRange(dto.getSizeRange())
-        .build();
+            .dressItemId(dto.getDressItemId())
+            .company(company)
+            .itemName(dto.getItemName())
+            .price(dto.getPrice())
+            .imageUrl(dto.getImageUrl())
+            .ord(dto.getOrd())
+            .itemType(dto.getItemType())
+            .styleTags(dto.getStyleTags())
+            .sizeRange(dto.getSizeRange())
+            .build();
   }
 
   private DressItemDTO toDressItemDTO(DressItem item) {
     return DressItemDTO.builder()
-        .dressItemId(item.getDressItemId())
-        .cmno(item.getCompany().getCmno())
-        .itemName(item.getItemName())
-        .price(item.getPrice())
-        .imageUrl(item.getImageUrl())
-        .ord(item.getOrd())
-        .itemType(item.getItemType())
-        .styleTags(item.getStyleTags())
-        .sizeRange(item.getSizeRange())
-        .build();
+            .dressItemId(item.getDressItemId())
+            .cmno(item.getCompany().getCmno())
+            .itemName(item.getItemName())
+            .price(item.getPrice())
+            .imageUrl(item.getImageUrl())
+            .ord(item.getOrd())
+            .itemType(item.getItemType())
+            .styleTags(item.getStyleTags())
+            .sizeRange(item.getSizeRange())
+            .build();
   }
 
   private MakeupPackage toMakeupPackage(Company company, MakeupPackageDTO dto) {
     return MakeupPackage.builder()
-        .packageId(dto.getPackageId())
-        .company(company)
-        .packageType(dto.getPackageType())
-        .discountRate(dto.getDiscountRate())
-        .build();
+            .packageId(dto.getPackageId())
+            .company(company)
+            .packageType(dto.getPackageType())
+            .discountRate(dto.getDiscountRate())
+            .build();
   }
 
   private MakeupPackageDTO toMakeupPackageDTO(MakeupPackage pkg) {
     return MakeupPackageDTO.builder()
-        .packageId(pkg.getPackageId())
-        .cmno(pkg.getCompany().getCmno())
-        .packageType(pkg.getPackageType())
-        .discountRate(pkg.getDiscountRate())
-        .build();
+            .packageId(pkg.getPackageId())
+            .cmno(pkg.getCompany().getCmno())
+            .packageType(pkg.getPackageType())
+            .discountRate(pkg.getDiscountRate())
+            .build();
   }
 
   private String firstImage(Company company) {

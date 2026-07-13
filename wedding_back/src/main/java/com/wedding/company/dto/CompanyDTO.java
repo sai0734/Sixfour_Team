@@ -27,6 +27,8 @@ public class CompanyDTO {
   private BigDecimal priceAvg;
   private boolean delFlag;
 
+  private String managerEmail;
+
   @Builder.Default
   private List<String> uploadFileNames = new ArrayList<>();
 

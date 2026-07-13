@@ -43,8 +43,8 @@ public class CompanyController {
     ObjectMapper objectMapper = new ObjectMapper();
 
     List<Map<String, Object>> companies = objectMapper.readValue(
-        new ClassPathResource("data/company.json").getInputStream(),
-        new TypeReference<List<Map<String, Object>>>() {});
+            new ClassPathResource("data/company.json").getInputStream(),
+            new TypeReference<List<Map<String, Object>>>() {});
 
     Map<Long, Map<String, Object>> hallByCmno = readDetailByCmno(objectMapper, "data/hall.json");
     Map<Long, Map<String, Object>> dressByCmno = readDetailByCmno(objectMapper, "data/dress.json");
@@ -73,13 +73,13 @@ public class CompanyController {
 
   private Map<Long, Map<String, Object>> readDetailByCmno(ObjectMapper objectMapper, String path) throws Exception {
     List<Map<String, Object>> details = objectMapper.readValue(
-        new ClassPathResource(path).getInputStream(),
-        new TypeReference<List<Map<String, Object>>>() {});
+            new ClassPathResource(path).getInputStream(),
+            new TypeReference<List<Map<String, Object>>>() {});
 
     return details.stream()
-        .collect(Collectors.toMap(
-            detail -> ((Number) detail.get("cmno")).longValue(),
-            Function.identity()));
+            .collect(Collectors.toMap(
+                    detail -> ((Number) detail.get("cmno")).longValue(),
+                    Function.identity()));
   }
 
   @GetMapping("/{cmno}")
@@ -107,5 +107,34 @@ public class CompanyController {
   public Map<String, String> remove(@PathVariable Long cmno) {
     companyService.remove(cmno);
     return Map.of("RESULT", "SUCCESS");
+  }
+
+  // 관리자가 회원을 이 업체의 문의 담당자로 임명
+  @PreAuthorize("hasRole('ADMIN')")
+  @PutMapping("/{cmno}/manager")
+  public Map<String, String> assignManager(@PathVariable Long cmno, @RequestBody Map<String, String> body) {
+    companyService.assignManager(cmno, body.get("managerEmail"));
+    return Map.of("RESULT", "SUCCESS");
+  }
+
+  @PreAuthorize("hasRole('ADMIN')")
+  @DeleteMapping("/{cmno}/manager")
+  public Map<String, String> unassignManager(@PathVariable Long cmno) {
+    companyService.unassignManager(cmno);
+    return Map.of("RESULT", "SUCCESS");
+  }
+
+  // 로그인한 회원 본인이 담당하고 있는 업체가 있는지 확인 (프론트에서 리다이렉트 여부 판단용)
+  @GetMapping("/my-managed")
+  public Map<String, Object> getMyManagedCompany(@org.springframework.web.bind.annotation.RequestParam String email) {
+    CompanyDTO dto = companyService.getManagedCompany(email);
+    return Map.of("isManager", dto != null, "company", dto == null ? Map.of() : dto);
+  }
+
+  // 관리자 회원관리 "담당자 탭" - 담당자 지정된 업체 전체 목록
+  @PreAuthorize("hasRole('ADMIN')")
+  @GetMapping("/managers")
+  public List<CompanyDTO> getManagedCompanies() {
+    return companyService.getManagedCompanies();
   }
 }
