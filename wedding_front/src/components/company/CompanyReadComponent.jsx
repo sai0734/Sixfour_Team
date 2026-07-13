@@ -16,6 +16,7 @@ import {
 } from "../../api/companyApi";
 import FetchingModal from "../common/FetchingModal";
 import useCustomLogin from "../../hooks/useCustomLogin";
+import KakaoMap from "../common/KakaoMap";
 
 const initState = {
   cmno: 0,
@@ -181,7 +182,7 @@ const CompanyReadComponent = () => {
     thumbnailImageClassByCategory[category] || "h-28 w-full";
 
   return (
-    <div className="bg-white text-ink pb-16">
+    <div className="text-ink pb-16">
       {fetching ? <FetchingModal /> : null}
 
       {/* ── 브레드크럼 ── */}
@@ -280,6 +281,7 @@ const CompanyReadComponent = () => {
             >
               예약 문의
             </button>
+
             {canManageCompany && (
               <>
                 <button
@@ -303,7 +305,12 @@ const CompanyReadComponent = () => {
               </>
             )}
           </div>
-
+          <KakaoMap
+            latitude={company.latitude}
+            longitude={company.longitude}
+            name={company.name}
+            address={company.address}
+          />
           {canManageCompany && (
             <p className="mt-3 text-xs text-ink-faint">
               업체 번호 #{company.cmno}
@@ -353,12 +360,6 @@ const CompanyReadComponent = () => {
         <p className="whitespace-pre-wrap text-sm leading-7 text-ink-muted">
           {company.description || "등록된 소개가 없습니다."}
         </p>
-        {(company.latitude || company.longitude) && (
-          <div className="mt-6 flex flex-wrap gap-4 text-xs text-ink-faint border-t border-line pt-4">
-            {company.latitude && <span>위도 {company.latitude}</span>}
-            {company.longitude && <span>경도 {company.longitude}</span>}
-          </div>
-        )}
       </div>
 
       {/* ── 카테고리 상세 섹션 ── */}
@@ -418,8 +419,8 @@ const CategoryDetail = ({ company, canManageCompany, onRefresh }) => {
 
 /* ── 수정용 입력 컴포넌트 (MakeupDetail 보다 먼저 선언) ── */
 const EditPriceRow = ({ label, value, onChange }) => (
-  <div className="border-b border-slate-100 py-3 last:border-b-0">
-    <div className="text-xs font-medium uppercase text-slate-400 mb-1">
+  <div className="border-b border-line py-3 last:border-b-0">
+    <div className="text-xs font-medium uppercase text-ink-faint mb-1">
       {label}
     </div>
     <div className="flex items-center gap-1">
@@ -428,17 +429,17 @@ const EditPriceRow = ({ label, value, onChange }) => (
         min="0"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-md border border-slate-200 px-2 py-1 text-sm text-slate-800 focus:border-rose-300 focus:outline-none"
+        className="w-full rounded-md border border-line px-2 py-1 text-sm text-ink focus:border-rose-300 focus:outline-none"
         placeholder="금액 입력"
       />
-      <span className="text-sm text-slate-500 shrink-0">원</span>
+      <span className="text-sm text-ink-muted shrink-0">원</span>
     </div>
   </div>
 );
 
 const EditDiscountRow = ({ label, value, onChange }) => (
-  <div className="border-b border-slate-100 py-3 last:border-b-0">
-    <div className="text-xs font-medium uppercase text-slate-400 mb-1">
+  <div className="border-b border-line py-3 last:border-b-0">
+    <div className="text-xs font-medium uppercase text-ink-faint mb-1">
       {label}
     </div>
     <div className="flex items-center gap-1">
@@ -449,10 +450,10 @@ const EditDiscountRow = ({ label, value, onChange }) => (
         step="0.1"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-md border border-slate-200 px-2 py-1 text-sm text-slate-800 focus:border-rose-300 focus:outline-none"
+        className="w-full rounded-md border border-line px-2 py-1 text-sm text-ink focus:border-rose-300 focus:outline-none"
         placeholder="할인율 입력"
       />
-      <span className="text-sm text-slate-500 shrink-0">%</span>
+      <span className="text-sm text-ink-muted shrink-0">%</span>
     </div>
   </div>
 );
@@ -591,7 +592,7 @@ const MakeupDetail = ({ detail, cmno, canManageCompany, onRefresh }) => {
         <button
           type="button"
           onClick={cancelEdit}
-          className="rounded-md border border-slate-200 px-3 py-1 text-xs text-slate-500 hover:bg-slate-50"
+          className="rounded-md border border-line px-3 py-1 text-xs text-ink-muted hover:bg-blush-50"
         >
           취소
         </button>
@@ -619,7 +620,7 @@ const MakeupDetail = ({ detail, cmno, canManageCompany, onRefresh }) => {
       {editing ? (
         <>
           {/* 가격 수정 */}
-          <div className="mb-1 text-xs font-semibold text-slate-500">
+          <div className="mb-1 text-xs font-semibold text-ink-muted">
             가격 수정
           </div>
           <div className="grid gap-3 sm:grid-cols-3 mb-6">
@@ -642,7 +643,7 @@ const MakeupDetail = ({ detail, cmno, canManageCompany, onRefresh }) => {
 
           {/* 패키지 수정 */}
           <div className="flex items-center justify-between mb-2">
-            <div className="text-xs font-semibold text-slate-500">
+            <div className="text-xs font-semibold text-ink-muted">
               패키지 수정
             </div>
             <button
@@ -655,7 +656,7 @@ const MakeupDetail = ({ detail, cmno, canManageCompany, onRefresh }) => {
           </div>
 
           {form.packages.length === 0 ? (
-            <p className="text-xs text-slate-400 py-2">
+            <p className="text-xs text-ink-faint py-2">
               등록된 패키지가 없습니다. 추가 버튼으로 패키지를 추가하세요.
             </p>
           ) : (
@@ -663,10 +664,10 @@ const MakeupDetail = ({ detail, cmno, canManageCompany, onRefresh }) => {
               {form.packages.map((pkg, index) => (
                 <div
                   key={index}
-                  className="rounded-lg border border-slate-200 bg-slate-50 p-3"
+                  className="rounded-lg border border-line bg-blush-50 p-3"
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium text-slate-500">
+                    <span className="text-xs font-medium text-ink-muted">
                       패키지 {index + 1}
                     </span>
                     <button
@@ -680,7 +681,7 @@ const MakeupDetail = ({ detail, cmno, canManageCompany, onRefresh }) => {
                   <div className="grid gap-2 sm:grid-cols-2">
                     {/* 패키지 타입 선택 */}
                     <div>
-                      <div className="text-xs text-slate-400 mb-1">
+                      <div className="text-xs text-ink-faint mb-1">
                         패키지 종류
                       </div>
                       <select
@@ -688,7 +689,7 @@ const MakeupDetail = ({ detail, cmno, canManageCompany, onRefresh }) => {
                         onChange={(e) =>
                           handlePackageTypeChange(index, e.target.value)
                         }
-                        className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-sm text-slate-800 bg-white focus:border-rose-300 focus:outline-none"
+                        className="w-full rounded-md border border-line px-2 py-1.5 text-sm text-ink bg-white focus:border-rose-300 focus:outline-none"
                       >
                         {PACKAGE_TYPE_OPTIONS.map((opt) => (
                           <option key={opt.value} value={opt.value}>
@@ -699,7 +700,7 @@ const MakeupDetail = ({ detail, cmno, canManageCompany, onRefresh }) => {
                     </div>
                     {/* 할인율 입력 */}
                     <div>
-                      <div className="text-xs text-slate-400 mb-1">
+                      <div className="text-xs text-ink-faint mb-1">
                         할인율 (%)
                       </div>
                       <div className="flex items-center gap-1">
@@ -712,10 +713,10 @@ const MakeupDetail = ({ detail, cmno, canManageCompany, onRefresh }) => {
                           onChange={(e) =>
                             handlePackageRateChange(index, e.target.value)
                           }
-                          className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-sm text-slate-800 focus:border-rose-300 focus:outline-none"
+                          className="w-full rounded-md border border-line px-2 py-1.5 text-sm text-ink focus:border-rose-300 focus:outline-none"
                           placeholder="예: 10"
                         />
-                        <span className="text-sm text-slate-500 shrink-0">
+                        <span className="text-sm text-ink-muted shrink-0">
                           %
                         </span>
                       </div>
@@ -759,9 +760,9 @@ const MakeupDetail = ({ detail, cmno, canManageCompany, onRefresh }) => {
                 return (
                   <div
                     key={`${pkg.packageType || "PACKAGE"}-${index}`}
-                    className="border-b border-slate-100 py-3 last:border-b-0"
+                    className="border-b border-line py-3 last:border-b-0"
                   >
-                    <div className="text-xs font-medium uppercase text-slate-400 mb-1">
+                    <div className="text-xs font-medium uppercase text-ink-faint mb-1">
                       {packageTypeLabel[pkg.packageType] ||
                         pkg.packageType ||
                         "패키지"}
@@ -775,7 +776,7 @@ const MakeupDetail = ({ detail, cmno, canManageCompany, onRefresh }) => {
                       {discountedPrice != null && (
                         <span className="text-sm text-slate-700">
                           {basePrice > 0 && (
-                            <span className="text-xs text-slate-400 line-through mr-1">
+                            <span className="text-xs text-ink-faint line-through mr-1">
                               {basePrice.toLocaleString()}원
                             </span>
                           )}
@@ -865,7 +866,7 @@ const DressItemViewModal = ({
                 className="max-h-[45vh] sm:max-h-[70vh] w-full object-contain"
               />
             ) : (
-              <div className="flex h-48 sm:h-80 w-full items-center justify-center text-slate-500">
+              <div className="flex h-48 sm:h-80 w-full items-center justify-center text-ink-muted">
                 <span className="text-4xl">👗</span>
               </div>
             )}
@@ -893,13 +894,13 @@ const DressItemViewModal = ({
               >
                 {isSuitItem ? "슈트" : "드레스"}
               </span>
-              <h2 className="mt-2 text-xl font-bold text-slate-800 leading-snug">
+              <h2 className="mt-2 text-xl font-bold text-ink leading-snug">
                 {item.itemName || "이름 없음"}
               </h2>
 
               {item.price && (
                 <div className="mt-4">
-                  <p className="text-xs font-medium text-slate-400 uppercase tracking-wide">
+                  <p className="text-xs font-medium text-ink-faint uppercase tracking-wide">
                     가격
                   </p>
                   <p className="mt-1 text-2xl font-bold text-rose-500">
@@ -910,7 +911,7 @@ const DressItemViewModal = ({
 
               {item.sizeRange && (
                 <div className="mt-4">
-                  <p className="text-xs font-medium text-slate-400 uppercase tracking-wide">
+                  <p className="text-xs font-medium text-ink-faint uppercase tracking-wide">
                     보유 사이즈
                   </p>
                   <p className="mt-1 text-sm text-slate-700">
@@ -921,7 +922,7 @@ const DressItemViewModal = ({
 
               {item.styleTags && (
                 <div className="mt-4">
-                  <p className="text-xs font-medium text-slate-400 uppercase tracking-wide">
+                  <p className="text-xs font-medium text-ink-faint uppercase tracking-wide">
                     스타일 태그
                   </p>
                   <div className="mt-2 flex flex-wrap gap-1.5">
@@ -932,7 +933,7 @@ const DressItemViewModal = ({
                       .map((tag) => (
                         <span
                           key={tag}
-                          className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs text-slate-600"
+                          className="rounded-full bg-blush-50 px-2.5 py-0.5 text-xs text-ink-muted"
                         >
                           {tag}
                         </span>
@@ -948,16 +949,16 @@ const DressItemViewModal = ({
                 type="button"
                 disabled={!hasPrev}
                 onClick={() => onNavigate(currentIdx - 1)}
-                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-500 hover:bg-slate-50 disabled:opacity-30 transition-colors"
+                className="rounded-lg border border-line px-3 py-1.5 text-xs text-ink-muted hover:bg-blush-50 disabled:opacity-30 transition-colors"
               >
                 ◀ 이전
               </button>
-              <span className="text-xs text-slate-400">← → 키로 이동</span>
+              <span className="text-xs text-ink-faint">← → 키로 이동</span>
               <button
                 type="button"
                 disabled={!hasNext}
                 onClick={() => onNavigate(currentIdx + 1)}
-                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-500 hover:bg-slate-50 disabled:opacity-30 transition-colors"
+                className="rounded-lg border border-line px-3 py-1.5 text-xs text-ink-muted hover:bg-blush-50 disabled:opacity-30 transition-colors"
               >
                 다음 ▶
               </button>
@@ -1013,21 +1014,21 @@ const DressItemModal = ({ modalData, isSuitFn, onSave, onDelete, onClose }) => {
       >
         <div className="relative w-full max-w-xl rounded-2xl bg-white shadow-2xl overflow-hidden my-4">
           {/* 헤더 */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-line">
             <div className="flex items-center gap-2">
               <span
                 className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${isSuitItem ? "bg-blue-100 text-blue-600" : "bg-rose-100 text-rose-600"}`}
               >
                 {isSuitItem ? "슈트" : "드레스"}
               </span>
-              <h3 className="text-base font-semibold text-slate-800">
+              <h3 className="text-base font-semibold text-ink">
                 {isNew ? "새 아이템 추가" : "아이템 수정"}
               </h3>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors text-base leading-none"
+              className="rounded-full p-1.5 text-ink-faint hover:bg-blush-50 hover:text-ink-muted transition-colors text-base leading-none"
             >
               ✕
             </button>
@@ -1038,7 +1039,7 @@ const DressItemModal = ({ modalData, isSuitFn, onSave, onDelete, onClose }) => {
             {/* 이미지 */}
             <div className="sm:w-56 shrink-0">
               <label
-                className="block cursor-pointer relative group rounded-xl overflow-hidden border-2 border-dashed border-slate-200 hover:border-rose-300 transition-colors"
+                className="block cursor-pointer relative group rounded-xl overflow-hidden border-2 border-dashed border-line hover:border-rose-300 transition-colors"
                 title="클릭하여 이미지 변경"
               >
                 <input
@@ -1053,7 +1054,7 @@ const DressItemModal = ({ modalData, isSuitFn, onSave, onDelete, onClose }) => {
                     <img
                       src={imageSrc}
                       alt={localItem.itemName || "이미지"}
-                      className="h-48 sm:h-64 w-full object-contain bg-slate-50"
+                      className="h-48 sm:h-64 w-full object-contain bg-blush-50"
                     />
                     <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
                       <span className="text-white text-xs font-medium bg-black/60 px-3 py-1.5 rounded-lg">
@@ -1062,7 +1063,7 @@ const DressItemModal = ({ modalData, isSuitFn, onSave, onDelete, onClose }) => {
                     </div>
                   </>
                 ) : (
-                  <div className="h-48 sm:h-64 w-full bg-slate-50 flex flex-col items-center justify-center gap-2 text-slate-400 group-hover:text-rose-400 transition-colors">
+                  <div className="h-48 sm:h-64 w-full bg-blush-50 flex flex-col items-center justify-center gap-2 text-ink-faint group-hover:text-rose-400 transition-colors">
                     {uploading ? (
                       <>
                         <span className="text-2xl">⏳</span>
@@ -1086,7 +1087,7 @@ const DressItemModal = ({ modalData, isSuitFn, onSave, onDelete, onClose }) => {
             {/* 폼 */}
             <div className="flex-1 flex flex-col gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1.5">
+                <label className="block text-xs font-semibold text-ink-muted mb-1.5">
                   아이템명 *
                 </label>
                 <input
@@ -1095,11 +1096,11 @@ const DressItemModal = ({ modalData, isSuitFn, onSave, onDelete, onClose }) => {
                     setLocalItem((p) => ({ ...p, itemName: e.target.value }))
                   }
                   placeholder="예: 아이보리 볼가운"
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:border-rose-300 focus:outline-none focus:ring-1 focus:ring-rose-100"
+                  className="w-full rounded-lg border border-line px-3 py-2.5 text-sm focus:border-rose-300 focus:outline-none focus:ring-1 focus:ring-rose-100"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1.5">
+                <label className="block text-xs font-semibold text-ink-muted mb-1.5">
                   가격
                 </label>
                 <div className="flex items-center gap-2">
@@ -1110,15 +1111,15 @@ const DressItemModal = ({ modalData, isSuitFn, onSave, onDelete, onClose }) => {
                       setLocalItem((p) => ({ ...p, price: e.target.value }))
                     }
                     placeholder="예: 1500000"
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:border-rose-300 focus:outline-none focus:ring-1 focus:ring-rose-100"
+                    className="w-full rounded-lg border border-line px-3 py-2.5 text-sm focus:border-rose-300 focus:outline-none focus:ring-1 focus:ring-rose-100"
                   />
-                  <span className="text-sm text-slate-500 shrink-0 font-medium">
+                  <span className="text-sm text-ink-muted shrink-0 font-medium">
                     원
                   </span>
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1.5">
+                <label className="block text-xs font-semibold text-ink-muted mb-1.5">
                   보유 사이즈
                 </label>
                 <input
@@ -1127,11 +1128,11 @@ const DressItemModal = ({ modalData, isSuitFn, onSave, onDelete, onClose }) => {
                     setLocalItem((p) => ({ ...p, sizeRange: e.target.value }))
                   }
                   placeholder="예: 44~66"
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:border-rose-300 focus:outline-none focus:ring-1 focus:ring-rose-100"
+                  className="w-full rounded-lg border border-line px-3 py-2.5 text-sm focus:border-rose-300 focus:outline-none focus:ring-1 focus:ring-rose-100"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1.5">
+                <label className="block text-xs font-semibold text-ink-muted mb-1.5">
                   스타일 태그
                 </label>
                 <input
@@ -1140,9 +1141,9 @@ const DressItemModal = ({ modalData, isSuitFn, onSave, onDelete, onClose }) => {
                     setLocalItem((p) => ({ ...p, styleTags: e.target.value }))
                   }
                   placeholder="예: 로맨틱, 클래식, 볼가운"
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:border-rose-300 focus:outline-none focus:ring-1 focus:ring-rose-100"
+                  className="w-full rounded-lg border border-line px-3 py-2.5 text-sm focus:border-rose-300 focus:outline-none focus:ring-1 focus:ring-rose-100"
                 />
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="mt-1 text-xs text-ink-faint">
                   쉼표(,)로 구분해서 입력하세요
                 </p>
               </div>
@@ -1150,7 +1151,7 @@ const DressItemModal = ({ modalData, isSuitFn, onSave, onDelete, onClose }) => {
           </div>
 
           {/* 푸터 */}
-          <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50">
+          <div className="flex items-center justify-between px-6 py-4 border-t border-line bg-blush-50">
             {!isNew ? (
               <button
                 type="button"
@@ -1166,7 +1167,7 @@ const DressItemModal = ({ modalData, isSuitFn, onSave, onDelete, onClose }) => {
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-lg border border-slate-200 px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 transition-colors"
+                className="rounded-lg border border-line px-4 py-2 text-sm text-ink-muted hover:bg-blush-50 transition-colors"
               >
                 취소
               </button>
@@ -1373,7 +1374,7 @@ const DressDetail = ({ detail, cmno, canManageCompany, onRefresh }) => {
         <button
           type="button"
           onClick={cancelEdit}
-          className="rounded-md border border-slate-200 px-3 py-1 text-xs text-slate-500 hover:bg-slate-50"
+          className="rounded-md border border-line px-3 py-1 text-xs text-ink-muted hover:bg-blush-50"
         >
           취소
         </button>
@@ -1424,13 +1425,13 @@ const DressDetail = ({ detail, cmno, canManageCompany, onRefresh }) => {
       {/* 사이즈 */}
       {editing ? (
         <div className="mb-4 flex items-center gap-2">
-          <span className="text-xs text-slate-400 shrink-0">보유 사이즈</span>
+          <span className="text-xs text-ink-faint shrink-0">보유 사이즈</span>
           <input
             value={form.sizeRange}
             onChange={(e) =>
               setForm((p) => ({ ...p, sizeRange: e.target.value }))
             }
-            className="rounded-md border border-slate-200 px-2 py-1 text-sm focus:border-rose-300 focus:outline-none"
+            className="rounded-md border border-line px-2 py-1 text-sm focus:border-rose-300 focus:outline-none"
             placeholder="예: 44~66"
           />
         </div>
@@ -1439,7 +1440,7 @@ const DressDetail = ({ detail, cmno, canManageCompany, onRefresh }) => {
       )}
 
       {/* 탭 */}
-      <div className="mt-4 border-b border-slate-200 flex items-center">
+      <div className="mt-4 border-b border-line flex items-center">
         {[
           {
             key: "DRESS",
@@ -1468,11 +1469,11 @@ const DressDetail = ({ detail, cmno, canManageCompany, onRefresh }) => {
               setViewModalIdx(null);
               key === "SUIT" ? setSuitPage(0) : setDressPage(0);
             }}
-            className={`px-5 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === key ? activeClass : "border-transparent text-slate-400 hover:text-slate-600"}`}
+            className={`px-5 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === key ? activeClass : "border-transparent text-ink-faint hover:text-ink-muted"}`}
           >
             {label}
             <span
-              className={`ml-1 rounded-full px-1.5 py-0.5 text-xs ${activeTab === key ? badgeClass : "bg-slate-100 text-slate-400"}`}
+              className={`ml-1 rounded-full px-1.5 py-0.5 text-xs ${activeTab === key ? badgeClass : "bg-blush-50 text-ink-faint"}`}
             >
               {count}
             </span>
@@ -1507,7 +1508,7 @@ const DressDetail = ({ detail, cmno, canManageCompany, onRefresh }) => {
       {/* 그리드 (8개/페이지) */}
       <div className="mt-4">
         {activeIndexed.length === 0 ? (
-          <p className="py-8 text-center text-sm text-slate-400">
+          <p className="py-8 text-center text-sm text-ink-faint">
             {editing
               ? `위의 추가 버튼으로 ${activeTab === "SUIT" ? "슈트" : "드레스"}를 등록하세요.`
               : `등록된 ${activeTab === "SUIT" ? "슈트" : "드레스"} 항목이 없습니다.`}
@@ -1524,7 +1525,7 @@ const DressDetail = ({ detail, cmno, canManageCompany, onRefresh }) => {
                 return (
                   <div
                     key={`item-${globalIdx}`}
-                    className="group rounded-lg border border-slate-200 bg-white overflow-hidden hover:shadow-md transition-shadow"
+                    className="group rounded-xl border border-line bg-white overflow-hidden hover:shadow-md hover:border-brand transition-all"
                   >
                     {/* 이미지 — 클릭 시 뷰 모달 */}
                     <button
@@ -1537,7 +1538,7 @@ const DressDetail = ({ detail, cmno, canManageCompany, onRefresh }) => {
                           <img
                             src={imageSrc}
                             alt={item.itemName}
-                            className="h-36 sm:h-44 w-full object-contain bg-slate-50 transition-transform duration-300 group-hover:scale-105"
+                            className="h-36 sm:h-44 w-full object-contain bg-blush-50 transition-transform duration-300 group-hover:scale-105"
                           />
                           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
                             <span className="opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-medium bg-black/50 px-2 py-1 rounded-full">
@@ -1546,7 +1547,7 @@ const DressDetail = ({ detail, cmno, canManageCompany, onRefresh }) => {
                           </div>
                         </>
                       ) : (
-                        <div className="h-36 sm:h-44 w-full bg-slate-100 flex items-center justify-center text-slate-300 text-xs">
+                        <div className="h-36 sm:h-44 w-full bg-blush-50 flex items-center justify-center text-ink-faint text-xs">
                           이미지 없음
                         </div>
                       )}
@@ -1560,17 +1561,17 @@ const DressDetail = ({ detail, cmno, canManageCompany, onRefresh }) => {
                       </span>
                       {/* 이름 클릭도 뷰 모달 열기 */}
                       <div
-                        className="text-sm font-semibold text-slate-800 truncate cursor-pointer hover:text-rose-500 transition-colors"
+                        className="text-sm font-semibold text-ink truncate cursor-pointer hover:text-rose-500 transition-colors"
                         onClick={() => setViewModalIdx(viewIdx)}
                       >
                         {item.itemName || "이름 없음"}
                       </div>
-                      <div className="mt-0.5 text-xs text-slate-500">
+                      <div className="mt-0.5 text-xs text-ink-muted">
                         {item.price
                           ? `${Number(item.price).toLocaleString()}원`
                           : "-"}
                       </div>
-                      <div className="text-xs text-slate-400 truncate">
+                      <div className="text-xs text-ink-faint truncate">
                         {item.sizeRange || ""}
                         {item.styleTags ? ` · ${item.styleTags}` : ""}
                       </div>
@@ -1579,7 +1580,7 @@ const DressDetail = ({ detail, cmno, canManageCompany, onRefresh }) => {
                         <button
                           type="button"
                           onClick={() => openEditModal(globalIdx)}
-                          className="mt-2 w-full rounded border border-slate-200 py-1 text-xs text-slate-500 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-500 transition-colors"
+                          className="mt-2 w-full rounded border border-line py-1 text-xs text-ink-muted hover:bg-rose-50 hover:border-rose-200 hover:text-rose-500 transition-colors"
                         >
                           ✏ 수정
                         </button>
@@ -1596,11 +1597,11 @@ const DressDetail = ({ detail, cmno, canManageCompany, onRefresh }) => {
                   type="button"
                   onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
                   disabled={currentPage === 0}
-                  className="rounded-md border border-slate-200 px-3 py-1 text-xs text-slate-500 hover:bg-slate-50 disabled:opacity-30"
+                  className="rounded-md border border-line px-3 py-1 text-xs text-ink-muted hover:bg-blush-50 disabled:opacity-30"
                 >
                   ◀ 이전
                 </button>
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-ink-muted">
                   {currentPage + 1} / {totalPages}
                 </span>
                 <button
@@ -1609,7 +1610,7 @@ const DressDetail = ({ detail, cmno, canManageCompany, onRefresh }) => {
                     setCurrentPage((p) => Math.min(totalPages - 1, p + 1))
                   }
                   disabled={currentPage >= totalPages - 1}
-                  className="rounded-md border border-slate-200 px-3 py-1 text-xs text-slate-500 hover:bg-slate-50 disabled:opacity-30"
+                  className="rounded-md border border-line px-3 py-1 text-xs text-ink-muted hover:bg-blush-50 disabled:opacity-30"
                 >
                   다음 ▶
                 </button>
@@ -1674,7 +1675,7 @@ const StudioDetail = ({ detail }) => {
 };
 
 const DetailSection = ({ title, children, headerAction }) => (
-  <div className="mt-5 rounded-lg border border-slate-200 bg-white p-3 sm:p-5">
+  <div className="mt-5 rounded-xl border border-line bg-white p-3 sm:p-5">
     <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
       <h3 className="text-base font-semibold">{title}</h3>
       {headerAction && <div>{headerAction}</div>}
@@ -1684,25 +1685,23 @@ const DetailSection = ({ title, children, headerAction }) => (
 );
 
 const ItemCard = ({ title, children }) => (
-  <div className="rounded-md border border-slate-100 p-4">
-    <div className="mb-2 text-sm font-semibold text-slate-800">
-      {title || "항목"}
-    </div>
+  <div className="rounded-md border border-line p-4">
+    <div className="mb-2 text-sm font-semibold text-ink">{title || "항목"}</div>
     <div className="space-y-1">{children}</div>
   </div>
 );
 
 const InfoLine = ({ label, value }) => (
   <div className="flex justify-between gap-3 text-sm">
-    <span className="text-slate-400">{label}</span>
+    <span className="text-ink-faint">{label}</span>
     <span className="text-right text-slate-700">{value}</span>
   </div>
 );
 
 const InfoRow = ({ label, value }) => (
-  <div className="border-b border-slate-100 py-3 last:border-b-0">
-    <div className="text-xs font-medium uppercase text-slate-400">{label}</div>
-    <div className="mt-1 text-sm text-slate-800">{value}</div>
+  <div className="border-b border-line py-3 last:border-b-0">
+    <div className="text-xs font-medium uppercase text-ink-faint">{label}</div>
+    <div className="mt-1 text-sm text-ink">{value}</div>
   </div>
 );
 
