@@ -140,3 +140,21 @@ export const getSocialAccounts = async (email) => {
 
   return res.data; // { providers: ["kakao", ...] }
 };
+
+// 마이페이지 회원정보수정 - 이름/전화번호/생년월일/주소 조회·수정
+export const getMemberDetail = async (email) => {
+  const res = await jwtAxios.get(`${API_SERVER_HOST}/api/member/detail`, {
+    params: { email },
+  });
+
+  return res.data;
+};
+
+export const modifyMemberDetail = async (detailParam) => {
+  const res = await jwtAxios.put(
+    `${API_SERVER_HOST}/api/member/detail`,
+    detailParam,
+  );
+
+  return res.data;
+};
