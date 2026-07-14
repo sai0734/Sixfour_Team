@@ -4,6 +4,7 @@ import productRouter from "./productRouter";
 import authRouter from "./authRouter";
 import dressItemRouter from "./dressItemRouter";
 import companyRouter from "./companyRouter";
+import AppShell from "../layouts/AppShell";
 import AdminOnly from "../components/common/AdminOnly";
 
 const Loading = <div>Loading....</div>;
@@ -53,7 +54,7 @@ const ManagerInquiryPage = lazy(
   () => import("../pages/manager/ManagerInquiryPage"),
 );
 
-const root = createBrowserRouter([
+const appRoutes = [
   {
     path: "/",
     element: (
@@ -333,6 +334,13 @@ const root = createBrowserRouter([
         <CheckoutFailPage />
       </Suspense>
     ),
+  },
+];
+
+const root = createBrowserRouter([
+  {
+    element: <AppShell />,
+    children: appRoutes,
   },
 ]);
 
