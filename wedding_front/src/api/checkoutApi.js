@@ -31,7 +31,7 @@ export const getLastAddress = async () => {
 // 주의: 백엔드 컨트롤러 매핑이 "/api/checkout" + "/api/my-order"로 겹쳐서
 // 실제 등록된 경로가 /api/checkout/api/my-order 임 (오타로 보이지만 현재 이 경로가 맞음)
 export const getMyOrders = async () => {
-  const res = await jwtAxios.get(`${host}/api/my-order`);
+  const res = await jwtAxios.get(`${host}/my-order`);
   return res.data;
 };
 

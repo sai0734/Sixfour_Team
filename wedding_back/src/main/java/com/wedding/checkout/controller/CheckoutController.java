@@ -61,7 +61,7 @@ public class CheckoutController {
 
     // 회원 본인 주문 목록(마이페이지 결제 내역용)
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    @GetMapping("/api/my-order")
+    @GetMapping("/my-order")
     public List<OrderDTO> myOrders(Principal principal) {
 
         log.info("CheckoutController_myOrders 실행~~~~~~~~");
