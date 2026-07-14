@@ -1,14 +1,14 @@
+import { useSelector } from "react-redux";
 import CompanyChatModal from "./CompanyChatModal";
 import CompanyChatFloatingButton from "./CompanyChatFloatingButton";
 import AiChatbotFloatingButton from "./AiChatbotFloatingButton";
 import useInquiryChat from "../../context/InquiryChatContext";
-import useCustomLogin from "../../hooks/useCustomLogin";
 
 const GlobalInquiryChatHost = () => {
-  const { loginState } = useCustomLogin();
+  const email = useSelector((state) => state.loginSlice?.email);
   const { sessions, openInquiry, minimizeInquiry } = useInquiryChat();
 
-  if (!loginState.email) {
+  if (!email) {
     return null;
   }
 
