@@ -20,6 +20,9 @@ public class CompanyWishDTO {
 
     private Long cmno;
 
+    // 재원 추가
+    private String optionName;
+
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime regDate;
 }

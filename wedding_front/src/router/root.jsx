@@ -24,7 +24,6 @@ const MyPageHub = lazy(() => import("../pages/mypage/HubPage"));
 const BoardHubPage = lazy(() => import("../pages/board/HubPage"));
 const FreeBoardPage = lazy(() => import("../pages/board/FreeBoardPage"));
 const ReviewBoardPage = lazy(() => import("../pages/board/ReviewBoardPage"));
-const SeniorMatchPage = lazy(() => import("../pages/board/SeniorMatchPage"));
 const FaqPage = lazy(() => import("../pages/board/FaqPage"));
 const CartPage = lazy(() => import("../pages/cart/CartPage"));
 
@@ -258,14 +257,6 @@ const root = createBrowserRouter([
     element: (
       <Suspense fallback={Loading}>
         <ReviewBoardPage />
-      </Suspense>
-    ),
-  },
-  {
-    path: "/board/senior",
-    element: (
-      <Suspense fallback={Loading}>
-        <SeniorMatchPage />
       </Suspense>
     ),
   },
