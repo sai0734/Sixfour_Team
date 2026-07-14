@@ -2,6 +2,10 @@ package com.wedding.reservation.service;
 
 import java.util.List;
 
+// 승진 코드 추가
+import com.wedding.reservation.dto.ReservationBulkPaymentConfirmRequestDTO;
+import com.wedding.reservation.dto.ReservationBulkPaymentPrepareDTO;
+// 승진 코드 추가 끝
 import com.wedding.reservation.dto.ReservationDTO;
 import com.wedding.reservation.dto.ReservationPaymentConfirmRequestDTO;
 
@@ -27,5 +31,16 @@ public interface ReservationService {
     // 결제 취소/실패 처리
     void cancelPayment(Long reservationId, String memberEmail);
     // ↑↑↑ 재원 추가
+
+    // 승진 코드 추가
+    // 묶음 결제 - 주문번호 발급 (여러 예약 총액 계산)
+    ReservationBulkPaymentPrepareDTO prepareBulkPayment(List<Long> reservationIds, String memberEmail);
+
+    // 묶음 결제 - 토스 승인 후 전체 PAID 처리
+    List<ReservationDTO> confirmBulkPayment(String memberEmail, ReservationBulkPaymentConfirmRequestDTO requestDTO);
+
+    // 묶음 결제 취소/실패 처리
+    void cancelBulkPayment(List<Long> reservationIds, String memberEmail);
+    // 승진 코드 추가 끝
 
 }

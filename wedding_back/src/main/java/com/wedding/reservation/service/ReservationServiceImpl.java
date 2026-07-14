@@ -1,5 +1,9 @@
 package com.wedding.reservation.service;
 
+// 승진 코드 추가
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+// 승진 코드 추가 끝
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -8,6 +12,10 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import com.wedding.reservation.domain.Reservation;
+// 승진 코드 추가
+import com.wedding.reservation.dto.ReservationBulkPaymentConfirmRequestDTO;
+import com.wedding.reservation.dto.ReservationBulkPaymentPrepareDTO;
+// 승진 코드 추가 끝
 import com.wedding.reservation.dto.ReservationDTO;
 import com.wedding.reservation.dto.ReservationPaymentConfirmRequestDTO;
 import com.wedding.reservation.repository.ReservationRepository;
@@ -152,5 +160,79 @@ public class ReservationServiceImpl implements ReservationService {
     reservationRepository.save(reservation);
   }
   // ↑↑↑ 재원 추가
+
+  // 승진 코드 추가
+  @Override
+  public ReservationBulkPaymentPrepareDTO prepareBulkPayment(List<Long> reservationIds, String memberEmail) {
+
+    String orderNumber = "RSV-BULK-" + System.currentTimeMillis();
+    int totalAmount = 0;
+
+    for (Long reservationId : reservationIds) {
+      Reservation r = reservationRepository.findById(reservationId)
+          .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다: " + reservationId));
+
+      if (!r.getMemberEmail().equals(memberEmail)) {
+        throw new IllegalStateException("본인의 예약만 결제할 수 있습니다.");
+      }
+      if ("PAID".equals(r.getPayStatus())) {
+        throw new IllegalStateException("이미 결제된 예약입니다: " + reservationId);
+      }
+
+      r.assignOrder(orderNumber);
+      reservationRepository.save(r);
+      totalAmount += r.getAmount();
+    }
+
+    log.info("prepareBulkPayment - orderNumber: {}, totalAmount: {}", orderNumber, totalAmount);
+
+    return ReservationBulkPaymentPrepareDTO.builder()
+        .orderNumber(orderNumber)
+        .totalAmount(totalAmount)
+        .reservationIds(reservationIds)
+        .build();
+  }
+
+  @Override
+  public List<ReservationDTO> confirmBulkPayment(String memberEmail, ReservationBulkPaymentConfirmRequestDTO requestDTO) {
+
+    tossPaymentClient.confirmPayment(
+        requestDTO.getPaymentKey(), requestDTO.getOrderNumber(), requestDTO.getAmount());
+
+    LocalDateTime now = LocalDateTime.now();
+    List<ReservationDTO> result = new ArrayList<>();
+
+    for (Long reservationId : requestDTO.getReservationIds()) {
+      Reservation r = reservationRepository.findById(reservationId).orElseThrow();
+
+      if (!r.getMemberEmail().equals(memberEmail)) {
+        throw new IllegalStateException("본인의 예약만 결제할 수 있습니다.");
+      }
+
+      r.completePayment(requestDTO.getPaymentKey(), now);
+      reservationRepository.save(r);
+      result.add(modelMapper.map(r, ReservationDTO.class));
+    }
+
+    log.info("confirmBulkPayment 완료 - reservationIds: {}", requestDTO.getReservationIds());
+
+    return result;
+  }
+
+  @Override
+  public void cancelBulkPayment(List<Long> reservationIds, String memberEmail) {
+
+    for (Long reservationId : reservationIds) {
+      Reservation r = reservationRepository.findById(reservationId).orElseThrow();
+
+      if (!r.getMemberEmail().equals(memberEmail)) {
+        throw new IllegalStateException("본인의 예약만 취소할 수 있습니다.");
+      }
+
+      r.cancelPayment();
+      reservationRepository.save(r);
+    }
+  }
+  // 승진 코드 추가 끝
 
 }

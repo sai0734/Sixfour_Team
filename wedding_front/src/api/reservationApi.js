@@ -64,3 +64,26 @@ export const cancelPayment = async (reservationId) => {
   return res.data;
 };
 // ↑↑↑ 재원 추가
+
+// 승진 코드 추가
+// 묶음 결제 - 주문번호 발급 (reservationIds: number[])
+export const prepareBulkPayment = async (reservationIds) => {
+  const res = await jwtAxios.post(`${prefix}/payment/bulk-prepare`, reservationIds);
+
+  return res.data;
+};
+
+// 묶음 결제 승인 ({ paymentKey, orderNumber, amount, reservationIds })
+export const confirmBulkPayment = async (payload) => {
+  const res = await jwtAxios.post(`${prefix}/payment/bulk-confirm`, payload);
+
+  return res.data;
+};
+
+// 묶음 결제 취소/실패 처리 (reservationIds: number[])
+export const cancelBulkPayment = async (reservationIds) => {
+  const res = await jwtAxios.post(`${prefix}/payment/bulk-cancel`, reservationIds);
+
+  return res.data;
+};
+// 승진 코드 추가 끝

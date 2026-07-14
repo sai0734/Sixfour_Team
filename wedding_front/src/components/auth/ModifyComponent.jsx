@@ -5,6 +5,9 @@ import {
   getSocialAccounts,
   unlinkSocialAccount,
   withdrawPost,
+  getMemberDetail,
+  modifyMemberDetail,
+  checkPhoneAvailable,
 } from "../../api/authApi";
 import { getKakaoLinkLink } from "../../api/kakaoAuthApi";
 import useCustomLogin from "../../hooks/useCustomLogin";
@@ -16,8 +19,18 @@ const initState = {
   nickname: "",
 };
 
+const initDetailState = {
+  name: "",
+  phone: "",
+  birthDate: "",
+  zipCode: "",
+  address: "",
+  addressDetail: "",
+};
+
 const WITHDRAW_CONFIRM_TEXT = "회원탈퇴";
 const PW_REGEX = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+=-]).{8,}$/;
+const PHONE_REGEX = /^01[0-9]-?\d{3,4}-?\d{4}$/;
 
 // TODO(권용익): 이 화면은 "틀"만 잡아둔 상태야. 아래 로직은 이미 동작하게
 // 만들어놨는데 (닉네임 변경 + 비밀번호 변경, 빈칸이면 비번은 안 바뀜).
@@ -50,6 +63,11 @@ const ModifyComponent = () => {
   // 비밀번호를 설정했는지"는 별도로 로컬 상태로 들고 있다가, 배너 표시 여부에 반영함
   const [passwordJustSet, setPasswordJustSet] = useState(false);
 
+  // ---- 이름/전화번호/생년월일/주소 ----
+  const [detail, setDetail] = useState(initDetailState);
+  const [originalDetail, setOriginalDetail] = useState(initDetailState);
+  const [phoneStatus, setPhoneStatus] = useState(null);
+
   // ---- 소셜 계정 연동 ----
   const [linkedProviders, setLinkedProviders] = useState([]);
   const [loadingProviders, setLoadingProviders] = useState(true);
@@ -65,6 +83,25 @@ const ModifyComponent = () => {
     setAuth({ ...loginInfo, pw: "" });
     setPwConfirm("");
   }, [loginInfo]);
+
+  useEffect(() => {
+    if (!loginInfo.email) return;
+
+    getMemberDetail(loginInfo.email)
+      .then((data) => {
+        const loaded = {
+          name: data.name || "",
+          phone: data.phone || "",
+          birthDate: data.birthDate || "",
+          zipCode: data.zipCode || "",
+          address: data.address || "",
+          addressDetail: data.addressDetail || "",
+        };
+        setDetail(loaded);
+        setOriginalDetail(loaded);
+      })
+      .catch((err) => console.error(err));
+  }, [loginInfo.email]);
 
   useEffect(() => {
     if (!loginInfo.email) return;
@@ -98,6 +135,76 @@ const ModifyComponent = () => {
     setError("");
   };
 
+  const handleDetailChange = (e) => {
+    const { name, value } = e.target;
+    setDetail((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const formatPhoneNumber = (value) => {
+    const digits = value.replace(/[^0-9]/g, "").slice(0, 11);
+
+    if (digits.length < 4) return digits;
+    if (digits.length < 8) {
+      return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+    }
+    return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+  };
+
+  const handleChangePhone = (e) => {
+    setDetail((prev) => ({
+      ...prev,
+      phone: formatPhoneNumber(e.target.value),
+    }));
+    setPhoneStatus(null);
+  };
+
+  const handleBlurPhone = () => {
+    // 원래 쓰던 번호 그대로면(안 건드렸으면) 굳이 중복체크 안 함
+    if (!detail.phone || detail.phone === originalDetail.phone) {
+      setPhoneStatus(null);
+      return;
+    }
+
+    if (!PHONE_REGEX.test(detail.phone)) {
+      setPhoneStatus("invalid");
+      return;
+    }
+
+    setPhoneStatus("checking");
+
+    checkPhoneAvailable(detail.phone)
+      .then((data) => {
+        if (data.blocked) {
+          setPhoneStatus("blocked");
+        } else {
+          setPhoneStatus(data.available ? "available" : "unavailable");
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        setPhoneStatus(null);
+      });
+  };
+
+  const handleClickAddressSearch = () => {
+    if (!window.daum || !window.daum.Postcode) {
+      alert(
+        "주소 검색 기능을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
+      );
+      return;
+    }
+
+    new window.daum.Postcode({
+      oncomplete: (data) => {
+        setDetail((prev) => ({
+          ...prev,
+          zipCode: data.zonecode,
+          address: data.roadAddress || data.jibunAddress,
+        }));
+      },
+    }).open();
+  };
+
   const handleClickModify = () => {
     if (auth.pw && !PW_REGEX.test(auth.pw)) {
       setError(
@@ -111,25 +218,63 @@ const ModifyComponent = () => {
       return;
     }
 
+    if (detail.phone && !PHONE_REGEX.test(detail.phone)) {
+      setError("올바른 휴대폰 번호 형식이 아니에요. (예: 010-1234-5678)");
+      return;
+    }
+
+    if (phoneStatus === "unavailable") {
+      setError("이미 사용 중인 휴대폰 번호예요.");
+      return;
+    }
+
+    if (phoneStatus === "blocked") {
+      setError(
+        "정지 또는 휴면 처리된 회원과 동일한 전화번호예요. 관리자에게 문의해주세요.",
+      );
+      return;
+    }
+
     const nicknameChanged = auth.nickname !== loginInfo.nickname;
     const passwordChanged = Boolean(auth.pw);
+    const detailChanged =
+      JSON.stringify(detail) !== JSON.stringify(originalDetail);
 
-    // 닉네임도 그대로, 비밀번호도 안 건드렸으면 저장 요청 자체를 보내지 않음
+    // 아무것도 안 바꿨으면 저장 요청 자체를 보내지 않음
     // (예전엔 무조건 요청을 보내서, 아무것도 안 바꿔도 "수정되었습니다"가 떴음)
-    if (!nicknameChanged && !passwordChanged) {
+    if (!nicknameChanged && !passwordChanged && !detailChanged) {
       alert("변경된 내용이 없어요.");
       return;
     }
 
     // 비밀번호를 안 건드렸으면(빈 값) 비번 변경 요청 자체를 보내지 않는다.
-    const payload = auth.pw ? auth : { ...auth, pw: "" };
+    const authPayload = auth.pw ? auth : { ...auth, pw: "" };
 
-    modifyAuth(payload).then(() => {
-      if (passwordChanged) {
-        setPasswordJustSet(true);
-      }
-      setResult("Modified");
-    });
+    const requests = [];
+
+    if (nicknameChanged || passwordChanged) {
+      requests.push(modifyAuth(authPayload));
+    }
+
+    if (detailChanged) {
+      requests.push(modifyMemberDetail({ email: loginInfo.email, ...detail }));
+    }
+
+    Promise.all(requests)
+      .then(() => {
+        if (passwordChanged) {
+          setPasswordJustSet(true);
+        }
+        if (detailChanged) {
+          setOriginalDetail(detail);
+        }
+        setResult("Modified");
+      })
+      .catch((err) => {
+        console.error(err);
+        const msg = err.response?.data?.msg;
+        setError(msg || "저장 중 오류가 발생했습니다.");
+      });
   };
 
   // 저장은 탈퇴와 달리 세션을 끊을 이유가 없으므로, 로그아웃/이동 없이
@@ -250,11 +395,102 @@ const ModifyComponent = () => {
           닉네임
         </label>
         <input
-          className="w-full h-11 px-4 rounded-lg border border-line-soft text-sm outline-none focus:border-brand"
+          className="w-full h-11 px-4 rounded-lg border border-line-soft text-sm outline-none focus:border-brand mb-4"
           name="nickname"
           type="text"
           value={auth.nickname}
           onChange={handleChange}
+        />
+
+        <label className="block text-xs font-medium text-ink-muted mb-1.5">
+          이름
+        </label>
+        <input
+          className="w-full h-11 px-4 rounded-lg border border-line-soft text-sm outline-none focus:border-brand mb-4"
+          name="name"
+          type="text"
+          value={detail.name}
+          onChange={handleDetailChange}
+        />
+
+        <label className="block text-xs font-medium text-ink-muted mb-1.5">
+          휴대폰 번호
+        </label>
+        <input
+          className="w-full h-11 px-4 rounded-lg border border-line-soft text-sm outline-none focus:border-brand"
+          name="phone"
+          type="text"
+          placeholder="010-1234-5678"
+          value={detail.phone}
+          onChange={handleChangePhone}
+          onBlur={handleBlurPhone}
+        />
+        {phoneStatus === "checking" && (
+          <p className="text-xs text-ink-faint mt-1">확인 중...</p>
+        )}
+        {phoneStatus === "available" && (
+          <p className="text-xs text-green-600 mt-1">✓ 사용가능!</p>
+        )}
+        {phoneStatus === "unavailable" && (
+          <p className="text-xs text-red-600 mt-1">
+            이미 사용 중인 휴대폰 번호예요
+          </p>
+        )}
+        {phoneStatus === "blocked" && (
+          <p className="text-xs text-red-600 mt-1">
+            차단(정지·휴면)된 회원의 번호예요
+          </p>
+        )}
+        {phoneStatus === "invalid" && (
+          <p className="text-xs text-red-600 mt-1">
+            올바른 휴대폰 번호 형식이 아니에요
+          </p>
+        )}
+
+        <label className="block text-xs font-medium text-ink-muted mb-1.5 mt-4">
+          생년월일
+        </label>
+        <input
+          className="w-full h-11 px-4 rounded-lg border border-line-soft text-sm outline-none focus:border-brand mb-4"
+          name="birthDate"
+          type="date"
+          value={detail.birthDate || ""}
+          onChange={handleDetailChange}
+        />
+
+        <label className="block text-xs font-medium text-ink-muted mb-1.5">
+          주소
+        </label>
+        <div className="flex gap-2 mb-2">
+          <input
+            className="flex-1 h-11 px-4 rounded-lg border border-line-soft bg-surface text-sm text-ink-faint"
+            type="text"
+            placeholder="우편번호"
+            value={detail.zipCode}
+            readOnly
+          />
+          <button
+            type="button"
+            onClick={handleClickAddressSearch}
+            className="shrink-0 px-4 h-11 rounded-lg border border-line-soft text-sm font-medium text-ink hover:bg-cream"
+          >
+            📍 주소 검색
+          </button>
+        </div>
+        <input
+          className="w-full h-11 px-4 rounded-lg border border-line-soft bg-surface text-sm text-ink-faint mb-2"
+          type="text"
+          placeholder="주소 검색을 눌러주세요"
+          value={detail.address}
+          readOnly
+        />
+        <input
+          className="w-full h-11 px-4 rounded-lg border border-line-soft text-sm outline-none focus:border-brand"
+          name="addressDetail"
+          type="text"
+          placeholder="상세주소를 입력해 주세요"
+          value={detail.addressDetail}
+          onChange={handleDetailChange}
         />
       </div>
 

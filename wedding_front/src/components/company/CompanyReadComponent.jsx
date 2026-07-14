@@ -24,6 +24,7 @@ import { buildCompanyOptions } from "../../util/companyOptionBuilder";
 import FetchingModal from "../common/FetchingModal";
 import KakaoMap from "../common/KakaoMap";
 import useCustomLogin from "../../hooks/useCustomLogin";
+import CompanyInquiryChat from "../chat/CompanyInquiryChat";
 
 const initState = {
   cmno: 0,
@@ -175,6 +176,8 @@ const CompanyReadComponent = () => {
   const [favoriteLoading, setFavoriteLoading] = useState(false);
   // 재원 추가 - 홀/드레스/메이크업처럼 옵션이 있는 업체는 찜하기 전에 옵션을 고르게 함
   const [wishModalOpen, setWishModalOpen] = useState(false);
+  // 용현 추가 - 문의하기 클릭 트리거
+  const [inquiryOpenRequest, setInquiryOpenRequest] = useState(0);
   const wishOptions = useMemo(() => buildCompanyOptions(company), [company]);
 
   useEffect(() => {
@@ -226,6 +229,16 @@ const CompanyReadComponent = () => {
     } finally {
       setFavoriteLoading(false);
     }
+  };
+
+  // 용현 추가 문의하기 클릭 — 로그인 확인 후 채팅 시작
+  const handleInquiryClick = () => {
+    if (!loginState.email) {
+      alert("로그인이 필요한 기능입니다.");
+      navigate("/auth/login");
+      return;
+    }
+    setInquiryOpenRequest((prev) => prev + 1);
   };
 
   const handleWishOptionSubmit = async (optionName) => {
@@ -380,6 +393,15 @@ const CompanyReadComponent = () => {
             >
               예약
             </button>
+            {!canManageCompany && (
+              <button
+                className="flex-1 min-w-[100px] h-[46px] rounded-full border border-brand bg-brand text-sm font-medium text-white transition hover:opacity-90"
+                type="button"
+                onClick={handleInquiryClick}
+              >
+                문의하기
+              </button>
+            )}
             {canManageCompany && (
               <>
                 <button
@@ -425,6 +447,14 @@ const CompanyReadComponent = () => {
           options={wishOptions}
           onSubmit={handleWishOptionSubmit}
           onClose={() => setWishModalOpen(false)}
+        />
+      )}
+
+      {!canManageCompany && company.cmno > 0 && (
+        <CompanyInquiryChat
+          cmno={company.cmno}
+          companyName={company.name}
+          openRequest={inquiryOpenRequest}
         />
       )}
 

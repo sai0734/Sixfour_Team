@@ -49,7 +49,7 @@ const CompanyChatModal = ({ companyName, roomId, onMinimize }) => {
   // 새 메시지 오면 맨 아래로 스크롤
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messges]);
+  }, [messages]);
 
   // ESC 키 + 배경 스크롤 잠금
   useEffect(() => {
@@ -84,7 +84,7 @@ const CompanyChatModal = ({ companyName, roomId, onMinimize }) => {
     }
   };
 
-  // Esnter 키로 전송
+  // Enter 키로 전송
   const handleKeyDownInput = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
