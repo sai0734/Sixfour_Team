@@ -121,9 +121,13 @@ const ReservationTab = () => {
       .catch((e) => console.error(e));
   };
 
-  // 체크박스
-  const payableIds = reservations
-    .filter((r) => r.payStatus !== "PAID" && r.amount > 0)
+  // 승진 코드 추가 - PAID 예약은 결제내역으로 이동, 예약현황에서 제외
+  const displayReservations = reservations.filter((r) => r.payStatus !== "PAID");
+  // 승진 코드 추가 끝
+
+  // 체크박스 (displayReservations = 이미 PAID 제외)
+  const payableIds = displayReservations
+    .filter((r) => r.amount > 0)
     .map((r) => r.reservationId);
 
   const toggleSelect = (id) => {
@@ -177,12 +181,9 @@ const ReservationTab = () => {
     }
   };
 
-  const unpaidCount = reservations.filter((r) => r.payStatus !== "PAID" && r.amount > 0).length;
-  const totalPaid = reservations
-    .filter((r) => r.payStatus === "PAID")
-    .reduce((s, r) => s + (r.amount || 0), 0);
-  const totalUnpaid = reservations
-    .filter((r) => r.payStatus !== "PAID" && r.amount > 0)
+  const unpaidCount = displayReservations.filter((r) => r.amount > 0).length;
+  const totalUnpaid = displayReservations
+    .filter((r) => r.amount > 0)
     .reduce((s, r) => s + (r.amount || 0), 0);
 
   return (
@@ -190,7 +191,7 @@ const ReservationTab = () => {
       {/* ── 상단 요약 + 액션 ── */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
         <div className="flex items-center gap-3 flex-wrap">
-          <span className="text-sm text-ink-muted">전체 {reservations.length}건</span>
+          <span className="text-sm text-ink-muted">전체 {displayReservations.length}건</span>
           {unpaidCount > 0 && (
             <span className="text-sm font-medium text-amber-600">미결제 {unpaidCount}건</span>
           )}
@@ -228,13 +229,8 @@ const ReservationTab = () => {
       </div>
 
       {/* ── 합계 요약 바 ── */}
-      {reservations.length > 0 && (totalPaid > 0 || totalUnpaid > 0) && (
+      {displayReservations.length > 0 && totalUnpaid > 0 && (
         <div className="flex gap-4 mb-5 px-4 py-3 bg-white rounded-xl border border-line text-xs text-ink-muted">
-          <span>
-            결제완료{" "}
-            <strong className="text-emerald-700 text-sm">{totalPaid.toLocaleString()}원</strong>
-          </span>
-          <span className="text-line">|</span>
           <span>
             미결제{" "}
             <strong className="text-amber-600 text-sm">{totalUnpaid.toLocaleString()}원</strong>
@@ -243,7 +239,7 @@ const ReservationTab = () => {
       )}
 
       {/* ── 예약 없음 ── */}
-      {!loading && reservations.length === 0 && (
+      {!loading && displayReservations.length === 0 && (
         <div className="text-center text-ink-faint py-16 bg-white rounded-2xl border border-line">
           등록된 예약이 없습니다.
         </div>
@@ -251,7 +247,7 @@ const ReservationTab = () => {
 
       {/* ── 카드 그리드 ── */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {reservations.map((r) => {
+        {displayReservations.map((r) => {
           const company = companyMap[r.cmno];
           const canPay = r.payStatus !== "PAID" && r.amount > 0;
           const catIcon = CATEGORY_ICON[company?.category] || "🏢";

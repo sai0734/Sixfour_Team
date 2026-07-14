@@ -38,12 +38,12 @@ public class CompanyWish {
     //  옵션이 없는 업체는 0 / null로 저장하고, 조회 시 업체 대표가격/이미지로 대체 표시함)
     @Builder.Default
     @Column(name = "option_amount")
-    private int optionAmount = 0;
+    private Integer optionAmount = 0;
 
     @Column(name = "option_image")
     private String optionImage;
 
-    public void changeOptionInfo(int optionAmount, String optionImage) {
+    public void changeOptionInfo(Integer optionAmount, String optionImage) {
         this.optionAmount = optionAmount;
         this.optionImage = optionImage;
     }

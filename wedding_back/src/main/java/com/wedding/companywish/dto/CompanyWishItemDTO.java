@@ -25,7 +25,7 @@ public class CompanyWishItemDTO {
     private String optionName;
 
     // 재원 추가 - 옵션 자체의 가격/이미지 (없으면 0 / null, 프론트에서 업체 대표가격/이미지로 대체)
-    private int optionAmount;
+    private Integer optionAmount;
 
     private String optionImage;
 
