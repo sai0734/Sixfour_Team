@@ -347,7 +347,8 @@ const CompanyListComponent = () => {
             {serverData.dtoList.map((company) => (
               <tr
                 key={company.cmno}
-                className="border-b border-line transition hover:bg-blush-50"
+                className="border-b border-line transition hover:bg-blush-50 cursor-pointer"
+                onClick={() => moveToCompanyRead(company.cmno)}
               >
                 {/* 업체명 */}
                 <td className="px-2 py-3">
@@ -378,7 +379,7 @@ const CompanyListComponent = () => {
                   {company.priceAvg ? `${Number(company.priceAvg).toLocaleString()}원` : "-"}
                 </td>
                 {/* 관리 버튼 */}
-                <td className="px-2 py-3">
+                <td className="px-2 py-3" onClick={(e) => e.stopPropagation()}>
                   <div className="flex justify-end gap-1.5 whitespace-nowrap">
                     <button
                       className="h-8 rounded-full border border-line px-3.5 text-xs text-ink transition hover:border-brand hover:text-brand-deep"

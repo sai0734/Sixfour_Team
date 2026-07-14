@@ -17,6 +17,14 @@ const ReservationPaymentSuccess = lazy(
 const ReservationPaymentFail = lazy(
   () => import("../pages/reservation/ReservationPaymentFailPage"),
 );
+// 승진 코드 추가
+const ReservationBulkPaymentSuccess = lazy(
+  () => import("../pages/reservation/ReservationBulkPaymentSuccessPage"),
+);
+const ReservationBulkPaymentFail = lazy(
+  () => import("../pages/reservation/ReservationBulkPaymentFailPage"),
+);
+// 승진 코드 추가 끝
 
 const companyRouter = () => {
   return [
@@ -60,6 +68,25 @@ const companyRouter = () => {
         </Suspense>
       ),
     },
+    // 승진 코드 추가
+    // 묶음 결제 (static → dynamic 순으로 앞에 배치)
+    {
+      path: "reserve/bulk/success",
+      element: (
+        <Suspense fallback={Loading}>
+          <ReservationBulkPaymentSuccess />
+        </Suspense>
+      ),
+    },
+    {
+      path: "reserve/bulk/fail",
+      element: (
+        <Suspense fallback={Loading}>
+          <ReservationBulkPaymentFail />
+        </Suspense>
+      ),
+    },
+    // 승진 코드 추가 끝
     // ↓↓↓ 재원 추가
     {
       path: "reserve/:cmno",
