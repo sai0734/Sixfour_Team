@@ -20,6 +20,7 @@ import {
   removeCompanyWish,
 } from "../../api/companywishApi";
 import FetchingModal from "../common/FetchingModal";
+import KakaoMap from "../common/KakaoMap";
 import useCustomLogin from "../../hooks/useCustomLogin";
 
 const initState = {
@@ -178,7 +179,8 @@ const CompanyReadComponent = () => {
     }
     checkCompanyWish(cmno)
       .then((data) => {
-        const nextLiked = typeof data === "boolean" ? data : Boolean(data?.liked);
+        const nextLiked =
+          typeof data === "boolean" ? data : Boolean(data?.liked);
         setLiked(nextLiked);
       })
       .catch((err) => {
@@ -327,7 +329,9 @@ const CompanyReadComponent = () => {
               }`}
               type="button"
               title={liked ? "찜 해제" : "찜하기"}
-              aria-label={liked ? `${company.name} 찜 해제` : `${company.name} 찜하기`}
+              aria-label={
+                liked ? `${company.name} 찜 해제` : `${company.name} 찜하기`
+              }
               aria-pressed={liked}
               onClick={handleFavoriteClick}
               disabled={favoriteLoading}
@@ -377,6 +381,13 @@ const CompanyReadComponent = () => {
               업체 번호 #{company.cmno}
             </p>
           )}
+
+          <KakaoMap
+            latitude={company.latitude}
+            longitude={company.longitude}
+            name={company.name}
+            address={company.address}
+          />
         </div>
       </div>
 
@@ -421,12 +432,6 @@ const CompanyReadComponent = () => {
         <p className="whitespace-pre-wrap text-sm leading-7 text-ink-muted">
           {company.description || "등록된 소개가 없습니다."}
         </p>
-        {(company.latitude || company.longitude) && (
-          <div className="mt-6 flex flex-wrap gap-4 text-xs text-ink-faint border-t border-line pt-4">
-            {company.latitude && <span>위도 {company.latitude}</span>}
-            {company.longitude && <span>경도 {company.longitude}</span>}
-          </div>
-        )}
       </div>
 
       {/* ── 카테고리 상세 섹션 ── */}
