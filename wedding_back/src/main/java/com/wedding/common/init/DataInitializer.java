@@ -29,6 +29,8 @@ import com.wedding.company.repository.HallItemRepository;
 import com.wedding.company.repository.MakeupDetailRepository;
 import com.wedding.company.repository.MakeupPackageRepository;
 import com.wedding.company.repository.StudioDetailRepository;
+import com.wedding.faq.domain.Faq;
+import com.wedding.faq.repository.FaqRepository;
 import com.wedding.member.domain.Member;
 import com.wedding.member.domain.MemberDetail;
 import com.wedding.member.domain.MemberRole;
@@ -89,6 +91,9 @@ public class DataInitializer implements ApplicationRunner {
   private final JdbcTemplate jdbcTemplate;
   private final BoardRepository boardRepository;
   private final CommentRepository commentRepository;
+  // 재원 수정 - FAQ 더미데이터를 faq/config/FaqDummyDataLoader.java(별도 CommandLineRunner,
+  // 하드코딩된 Java 데이터)에서 다른 도메인들과 동일한 방식(data/*.json + DataInitializer)으로 통일
+  private final FaqRepository faqRepository;
 
   // 애플리케이션 기동 시 더미 시드 진입점 (모든 시드: 해당 테이블 count == 0 일 때만)
   // 1) data/product.json         → tbl_product, tbl_product_option
@@ -96,7 +101,8 @@ public class DataInitializer implements ApplicationRunner {
   // 3) data/board.json           → tbl_board (작성자는 ACTIVE 회원 순환 배정)
   // 4) data/comment.json         → tbl_comment (작성자는 ACTIVE 회원 순환 배정, board 이후)
   // 5) data/commerce_dummy.json  → tbl_orders, tbl_order_item, tbl_review, tbl_qna
-  // 6) data/makeup.json          → tbl_makeup_package (업체 DB 있을 때만)
+  // 6) data/faq.json             → tbl_faq
+  // 7) data/makeup.json          → tbl_makeup_package (업체 DB 있을 때만)
   @Override
   @Transactional
   public void run(ApplicationArguments args) throws Exception {
@@ -124,6 +130,13 @@ public class DataInitializer implements ApplicationRunner {
       log.info("===== Comment dummy seed start =====");
       insertComments();
       log.info("===== Comment dummy seed complete =====");
+    }
+
+    // 재원 추가 - FAQ는 다른 데이터와 의존관계 없어서 순서 상관없이 아무데나 둬도 됨
+    if (faqRepository.count() == 0) {
+      log.info("===== Faq dummy seed start =====");
+      insertFaqs();
+      log.info("===== Faq dummy seed complete =====");
     }
 
     if (orderRepository.count() == 0) {
@@ -572,6 +585,28 @@ public class DataInitializer implements ApplicationRunner {
             .filter(member -> "ACTIVE".equals(member.getStatus()))
             .sorted(Comparator.comparing(Member::getEmail))
             .toList();
+  }
+
+  // 재원 추가 - data/faq.json → tbl_faq
+  // (원래 faq/config/FaqDummyDataLoader.java에 Java 코드로 하드코딩되어 있던 것을
+  //  다른 도메인들과 동일하게 JSON + DataInitializer 방식으로 통일함. 회원 등 다른 데이터에
+  //  의존하지 않는 단순 목록이라 별다른 가공 없이 그대로 저장)
+  private void insertFaqs() throws Exception {
+    List<Map<String, Object>> list = readJsonArray("data/faq.json");
+
+    List<Faq> faqs = new ArrayList<>();
+    for (Map<String, Object> m : list) {
+      faqs.add(Faq.builder()
+              .category((String) m.get("category"))
+              .sortOrder(toInt(m.get("sortOrder")))
+              .likeCount(toInt(m.get("likeCount")))
+              .question((String) m.get("question"))
+              .answer((String) m.get("answer"))
+              .build());
+    }
+
+    faqRepository.saveAll(faqs);
+    log.info("Inserted {} faqs.", faqs.size());
   }
 
   // data/commerce_dummy.json → tbl_orders, tbl_order_item, tbl_review, tbl_qna
