@@ -25,7 +25,7 @@ import FetchingModal from "../common/FetchingModal";
 import KakaoMap from "../common/KakaoMap";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import useManagedCompany from "../../hooks/useManagedCompany";
-import CompanyInquiryChat from "../chat/CompanyInquiryChat";
+import useInquiryChat from "../../context/InquiryChatContext";
 
 const initState = {
   cmno: 0,
@@ -184,7 +184,7 @@ const CompanyReadComponent = () => {
   const [favoriteLoading, setFavoriteLoading] = useState(false);
   // 재원 추가 - 홀/드레스/메이크업처럼 옵션이 있는 업체는 찜하기 전에 옵션을 고르게 함
   const [wishModalOpen, setWishModalOpen] = useState(false);
-  const [inquiryOpenRequest, setInquiryOpenRequest] = useState(0);
+  const { startInquiry } = useInquiryChat();
   const wishOptions = useMemo(() => buildCompanyOptions(company), [company]);
 
   useEffect(() => {
@@ -245,7 +245,7 @@ const CompanyReadComponent = () => {
       navigate("/auth/login");
       return;
     }
-    setInquiryOpenRequest((prev) => prev + 1);
+    startInquiry(company.cmno, company.name);
   };
 
   const handleWishOptionSubmit = async (option) => {
@@ -493,14 +493,6 @@ const CompanyReadComponent = () => {
           options={wishOptions}
           onSubmit={handleWishOptionSubmit}
           onClose={() => setWishModalOpen(false)}
-        />
-      )}
-
-      {!canManageCompany && !isManagedByMe && company.cmno > 0 && (
-        <CompanyInquiryChat
-          cmno={company.cmno}
-          companyName={company.name}
-          openRequest={inquiryOpenRequest}
         />
       )}
 
