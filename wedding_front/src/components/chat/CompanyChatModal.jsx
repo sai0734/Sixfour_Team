@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useSelector } from "react-redux";
 import {
   getInquiryMessages,
   sendInquiryMessage,
 } from "../../api/companyInquiryApi";
-import useCustomLogin from "../../hooks/useCustomLogin";
 
 const POLL_INTERVAL_MS = 3000;
 
@@ -13,7 +13,7 @@ const CompanyChatModal = ({
   onMinimize,
   subtitle = "업체 문의",
 }) => {
-  const { loginState } = useCustomLogin();
+  const email = useSelector((state) => state.loginSlice?.email);
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -22,6 +22,11 @@ const CompanyChatModal = ({
 
   const messageEndRef = useRef(null);
   const messageListRef = useRef(null);
+  const onMinimizeRef = useRef(onMinimize);
+
+  useEffect(() => {
+    onMinimizeRef.current = onMinimize;
+  }, [onMinimize]);
 
   // 메시지 목록 조회
   const loadMessages = useCallback(async () => {
@@ -60,7 +65,7 @@ const CompanyChatModal = ({
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "Escape") {
-        onMinimize();
+        onMinimizeRef.current();
       }
     };
     const previousOverflow = document.body.style.overflow;
@@ -70,7 +75,7 @@ const CompanyChatModal = ({
       document.body.style.overflow = previousOverflow;
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [onMinimize]);
+  }, [roomId]);
 
   // 메시지 전송
   const handleSend = async () => {
@@ -105,7 +110,7 @@ const CompanyChatModal = ({
   };
 
   // 내 메시지인지 판별 (말풍선 좌/우 구분)
-  const isMine = (senderEmail) => senderEmail === loginState.email;
+  const isMine = (senderEmail) => senderEmail === email;
 
   return (
     <div
