@@ -18,19 +18,21 @@ import java.util.List;
 @Transactional
 @RequiredArgsConstructor
 @Log4j2
-public class InquiryServiceImpl implements InquiryService{
+public class InquiryServiceImpl implements InquiryService {
 
     private final InquiryRoomRepository inquiryRoomRepository;
     private final InquiryMessageRepository inquiryMessageRepository;
+    private final InquiryAccessService inquiryAccessService;
 
     // 문의하기 클릭 시 — 기존 방 있으면 반환, 없으면 새로 생성
     @Override
     public InquiryRoomDTO getOrCreateRoom(String memberEmail, Long cmno) {
-
         log.info("InquiryServiceImpl_getOrCreateRoom_실행~~~~~~~~~~~");
 
+        inquiryAccessService.requireCanOpenRoom(memberEmail, cmno);
+
         return inquiryRoomRepository.findByMemberEmailAndCmno(memberEmail, cmno)
-                .map(room -> InquiryRoomDTO.from(room))
+                .map(InquiryRoomDTO::from)
                 .orElseGet(() -> {
                     InquiryRoom newRoom = InquiryRoom.builder()
                             .memberEmail(memberEmail)
@@ -43,41 +45,43 @@ public class InquiryServiceImpl implements InquiryService{
 
     // 매니저 화면 - 해당 업체(cmno)의 모든 문의방 목록 (최근 대화순)
     @Override
-    public List<InquiryRoomDTO> listRoomsByCompany(Long cmno) {
-
+    @Transactional(readOnly = true)
+    public List<InquiryRoomDTO> listRoomsByCompany(Long cmno, String callerEmail) {
         log.info("InquiryServiceImpl_listRoomsByCompany_실행~~~~~~~~~~~");
 
-        return inquiryRoomRepository.findByCmnoOrderByLastMessageAtDesc(cmno)
-                .stream().map(room -> InquiryRoomDTO.from(room))
-                .toList();
+        inquiryAccessService.requireCanListCompanyRooms(callerEmail, cmno);
 
+        return inquiryRoomRepository.findByCmnoOrderByLastMessageAtDesc(cmno)
+                .stream()
+                .map(InquiryRoomDTO::from)
+                .toList();
     }
 
     // 채팅창 열 때 / 풀링할 때 특정 방의 메시지 목록 (시간순)
     @Override
-    public List<InquiryMessageDTO> getMessages(Long roomId) {
-
+    @Transactional(readOnly = true)
+    public List<InquiryMessageDTO> getMessages(Long roomId, String callerEmail) {
         log.info("InquiryServiceImpl_getMessages_실행~~~~~~~~~~~");
 
-        // 방 존재 여부 확인 (없는 roomId면 예외)
-        inquiryRoomRepository.findById(roomId).orElseThrow();
+        inquiryAccessService.requireAccessibleRoom(callerEmail, roomId);
+
         return inquiryMessageRepository.findByRoomIdOrderByRegDateAsc(roomId)
                 .stream()
-                .map(message -> InquiryMessageDTO.from(message))
+                .map(InquiryMessageDTO::from)
                 .toList();
     }
 
     // 메시지 전송 - 저장 + 방의 LastMessageAt 갱신
     @Override
-    @Transactional
     public InquiryMessageDTO sendMessage(Long roomId, String senderEmail, String content) {
-
         log.info("InquiryServiceImpl_sendMessage_실행~~~~~~~~~~~");
 
         if (content == null || content.isBlank()) {
             throw new IllegalArgumentException("메시지 내용을 입력해주세요.");
         }
-        InquiryRoom room = inquiryRoomRepository.findById(roomId).orElseThrow();
+
+        InquiryRoom room = inquiryAccessService.requireAccessibleRoom(senderEmail, roomId);
+
         LocalDateTime now = LocalDateTime.now();
         InquiryMessage message = InquiryMessage.builder()
                 .roomId(roomId)
@@ -88,5 +92,4 @@ public class InquiryServiceImpl implements InquiryService{
         room.updateLastMessageAt(now);
         return InquiryMessageDTO.from(saved);
     }
-
 }

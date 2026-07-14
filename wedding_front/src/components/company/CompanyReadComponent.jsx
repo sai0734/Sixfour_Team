@@ -24,6 +24,7 @@ import { buildCompanyOptions } from "../../util/companyOptionBuilder";
 import FetchingModal from "../common/FetchingModal";
 import KakaoMap from "../common/KakaoMap";
 import useCustomLogin from "../../hooks/useCustomLogin";
+import useManagedCompany from "../../hooks/useManagedCompany";
 import CompanyInquiryChat from "../chat/CompanyInquiryChat";
 
 const initState = {
@@ -98,6 +99,13 @@ const CompanyReadComponent = () => {
   const canManageCompany =
     loginState.roleNames?.some((roleName) => adminRoles.includes(roleName)) &&
     !company._isDummyOnly;
+  const { isManager, company: managedCompany } = useManagedCompany({
+    enabled: Boolean(loginState.email),
+  });
+  const isManagedByMe =
+    isManager &&
+    managedCompany?.cmno != null &&
+    Number(managedCompany.cmno) === Number(company.cmno);
   // 관리자 경로에서 상세로 들어온 경우 목록/수정 이동도 관리자 경로로 유지합니다.
   const companyPathPrefix = location.pathname.startsWith("/admin/companies")
     ? "/admin/companies"
@@ -365,84 +373,102 @@ const CompanyReadComponent = () => {
           )}
 
           {/* 액션 버튼 */}
-          <div className="flex gap-2.5 flex-wrap">
-            <button
-              className={`w-[46px] h-[46px] shrink-0 border rounded-full flex items-center justify-center text-lg transition disabled:cursor-not-allowed disabled:opacity-60 ${
-                liked
-                  ? "border-rose-300 bg-rose-50 text-rose-500"
-                  : "border-line bg-white text-brand hover:bg-blush-50"
-              }`}
-              type="button"
-              title={liked ? "찜 해제" : "찜하기"}
-              aria-label={
-                liked ? `${company.name} 찜 해제` : `${company.name} 찜하기`
-              }
-              aria-pressed={liked}
-              onClick={handleFavoriteClick}
-              disabled={favoriteLoading}
-            >
-              {favoriteLoading ? "…" : liked ? "♥" : "♡"}
-            </button>
-            {/* 승진 코드 추가 - 예약하기 / 결제하기 분리 */}
-            <button
-              className="flex-1 min-w-[80px] h-[46px] rounded-full border border-line bg-white text-sm font-medium transition hover:border-brand hover:text-brand"
-              type="button"
-              onClick={() => {
-                if (!loginState.email) {
-                  alert("로그인이 필요한 기능입니다.");
-                  navigate("/auth/login");
-                  return;
-                }
-                navigate(`/companies/reserve/${company.cmno}?mode=reserve`);
-              }}
-            >
-              예약하기
-            </button>
-            <button
-              className="flex-1 min-w-[80px] h-[46px] rounded-full bg-brand text-white text-sm font-medium transition hover:bg-brand-deep"
-              type="button"
-              onClick={() => {
-                if (!loginState.email) {
-                  alert("로그인이 필요한 기능입니다.");
-                  navigate("/auth/login");
-                  return;
-                }
-                navigate(`/companies/reserve/${company.cmno}?mode=pay`);
-              }}
-            >
-              결제하기
-            </button>
-            {/* 승진 코드 추가 끝 */}
-            {!canManageCompany && (
+          <div className="space-y-2.5">
+            <div className="flex gap-2.5">
               <button
-                className="flex-1 min-w-[80px] h-[46px] rounded-full border border-brand bg-brand text-sm font-medium text-white transition hover:opacity-90"
+                className={`w-[46px] h-[46px] shrink-0 border rounded-full flex items-center justify-center text-lg transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                  liked
+                    ? "border-rose-300 bg-rose-50 text-rose-500"
+                    : "border-line bg-white text-brand hover:bg-blush-50"
+                }`}
                 type="button"
-                onClick={handleInquiryClick}
+                title={liked ? "찜 해제" : "찜하기"}
+                aria-label={
+                  liked ? `${company.name} 찜 해제` : `${company.name} 찜하기`
+                }
+                aria-pressed={liked}
+                onClick={handleFavoriteClick}
+                disabled={favoriteLoading}
               >
-                문의하기
+                {favoriteLoading ? "…" : liked ? "♥" : "♡"}
               </button>
-            )}
-            {canManageCompany && (
-              <>
-                <button
-                  className="h-[46px] px-4 rounded-full border border-brand text-brand text-sm font-medium transition hover:bg-brand hover:text-white"
-                  type="button"
-                  onClick={() =>
-                    navigate({
-                      pathname: `${companyPathPrefix}/modify/${company.cmno}`,
-                    })
+              {/* 승진 코드 추가 - 예약하기 / 결제하기 분리 */}
+              <button
+                className="flex-1 h-[46px] rounded-full border border-line bg-white text-sm font-medium transition hover:border-brand hover:text-brand"
+                type="button"
+                onClick={() => {
+                  if (!loginState.email) {
+                    alert("로그인이 필요한 기능입니다.");
+                    navigate("/auth/login");
+                    return;
                   }
-                >
-                  수정
-                </button>
-                <button
-                  className="h-[46px] px-4 rounded-full border border-red-300 text-red-500 text-sm font-medium transition hover:bg-red-50"
-                  type="button"
-                  onClick={handleDelete}
-                >
-                  삭제
-                </button>
-              </>
+                  navigate(`/companies/reserve/${company.cmno}?mode=reserve`);
+                }}
+              >
+                예약하기
+              </button>
+              <button
+                className="flex-1 h-[46px] rounded-full bg-brand text-white text-sm font-medium transition hover:bg-brand-deep"
+                type="button"
+                onClick={() => {
+                  if (!loginState.email) {
+                    alert("로그인이 필요한 기능입니다.");
+                    navigate("/auth/login");
+                    return;
+                  }
+                  navigate(`/companies/reserve/${company.cmno}?mode=pay`);
+                }}
+              >
+                결제하기
+              </button>
+              {/* 승진 코드 추가 끝 */}
+            </div>
+
+            {(isManagedByMe ||
+              (!canManageCompany && !isManagedByMe) ||
+              canManageCompany) && (
+              <div className="flex gap-2.5">
+                {isManagedByMe && (
+                  <button
+                    className="flex-1 h-[46px] rounded-full border border-brand bg-brand text-sm font-medium text-white transition hover:opacity-90"
+                    type="button"
+                    onClick={() => navigate("/manager/inquiries")}
+                  >
+                    업체페이지
+                  </button>
+                )}
+                {!canManageCompany && !isManagedByMe && (
+                  <button
+                    className="flex-1 h-[46px] rounded-full border border-brand bg-brand text-sm font-medium text-white transition hover:opacity-90"
+                    type="button"
+                    onClick={handleInquiryClick}
+                  >
+                    문의하기
+                  </button>
+                )}
+                {canManageCompany && (
+                  <>
+                    <button
+                      className="flex-1 h-[46px] rounded-full border border-brand text-brand text-sm font-medium transition hover:bg-brand hover:text-white"
+                      type="button"
+                      onClick={() =>
+                        navigate({
+                          pathname: `${companyPathPrefix}/modify/${company.cmno}`,
+                        })
+                      }
+                    >
+                      수정
+                    </button>
+                    <button
+                      className="flex-1 h-[46px] rounded-full border border-red-300 text-red-500 text-sm font-medium transition hover:bg-red-50"
+                      type="button"
+                      onClick={handleDelete}
+                    >
+                      삭제
+                    </button>
+                  </>
+                )}
+              </div>
             )}
           </div>
 
@@ -470,7 +496,7 @@ const CompanyReadComponent = () => {
         />
       )}
 
-      {!canManageCompany && company.cmno > 0 && (
+      {!canManageCompany && !isManagedByMe && company.cmno > 0 && (
         <CompanyInquiryChat
           cmno={company.cmno}
           companyName={company.name}
