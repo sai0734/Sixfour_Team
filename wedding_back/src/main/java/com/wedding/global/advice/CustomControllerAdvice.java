@@ -5,6 +5,7 @@ import java.util.NoSuchElementException;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -17,6 +18,18 @@ import com.wedding.global.util.CustomJWTException;
 @RestControllerAdvice
 public class CustomControllerAdvice {
 
+
+    @ExceptionHandler(AccessDeniedException.class)
+    protected ResponseEntity<?> handleAccessDenied(AccessDeniedException e) {
+
+        String msg = e.getMessage();
+        if (msg == null || msg.isBlank()) {
+            msg = "접근 권한이 없습니다.";
+        }
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("error", "ERROR_ACCESSDENIED", "msg", msg));
+    }
 
     @ExceptionHandler(NoSuchElementException.class)
     protected ResponseEntity<?> notExist(NoSuchElementException e) {
@@ -63,5 +76,16 @@ public class CustomControllerAdvice {
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("msg", e.getMessage()));
 
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    protected ResponseEntity<?> handleIllegalArgument(IllegalArgumentException e) {
+
+        String msg = e.getMessage();
+        if (msg == null || msg.isBlank()) {
+            msg = "잘못된 요청입니다.";
+        }
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("msg", msg));
     }
 }
