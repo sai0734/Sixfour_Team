@@ -5,6 +5,25 @@ import { linkKakaoAccountPost, confirmKakaoLinkPost } from "../../api/authApi";
 import { login } from "../../slices/loginSlice";
 import { useDispatch, useSelector } from "react-redux";
 import useCustomLogin from "../../hooks/useCustomLogin";
+import { getMyManagedCompany } from "../../api/companyApi";
+
+// 매니저 카카오 로그인 후 업체페이지 리다이렉트
+const moveAfterSocialLogin = (authData, moveToPath) => {
+  const isAdmin = authData?.roleNames?.some((roleName) =>
+    ["ADMIN", "ROLE_ADMIN"].includes(roleName),
+  );
+  if (isAdmin) {
+    moveToPath("/admin");
+    return;
+  }
+  getMyManagedCompany()
+    .then((managed) => {
+      moveToPath(managed?.isManager ? "/manager/inquiries" : "/");
+    })
+    .catch(() => {
+      moveToPath("/");
+    });
+};
 
 const KakaoRedirectPage = () => {
   const [searchParams] = useSearchParams();
@@ -72,7 +91,7 @@ const KakaoRedirectPage = () => {
             confirmKakaoLinkPost(authInfo.confirmToken)
               .then((data) => {
                 dispatch(login(data));
-                moveToPath("/");
+                moveAfterSocialLogin(data, moveToPath);
               })
               .catch((err) => {
                 console.error(err);
@@ -85,7 +104,7 @@ const KakaoRedirectPage = () => {
 
           // READY
           dispatch(login(authInfo));
-          moveToPath("/");
+          moveAfterSocialLogin(authInfo, moveToPath);
         })
         .catch((err) => {
           console.error(err);
