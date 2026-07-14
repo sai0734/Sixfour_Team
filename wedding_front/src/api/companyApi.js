@@ -291,3 +291,11 @@ export const getManagedCompanies = async () => {
   const res = await jwtAxios.get(`${host}/managers`);
   return res.data;
 };
+
+export const updateMemberRole = async (email, role) => {
+  const res = await jwtAxios.put(
+    `${API_SERVER_HOST}/api/members/role/${email}`,
+    { role },
+  );
+  return res.data;
+};

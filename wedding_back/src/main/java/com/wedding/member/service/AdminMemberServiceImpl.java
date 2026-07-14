@@ -57,7 +57,6 @@ public class AdminMemberServiceImpl implements AdminMemberService {
 
     @Override
     public void changeStatus(String email, MemberStatusUpdateDTO updateDTO) {
-
         log.info("AdminMemberServiceImpl_changeStatus 실행~~~~~~~~ " + email + " -> " + updateDTO);
 
         String status = updateDTO.getStatus();
@@ -96,8 +95,22 @@ public class AdminMemberServiceImpl implements AdminMemberService {
         memberRepository.save(member);
     }
 
-    private AdminMemberDTO toDTO(Member member) {
+    @Override
+    public void changeRole(String email, String newRole) {
+        log.info("AdminMemberServiceImpl_changeRole 실행: " + email + " -> " + newRole);
 
+        Member member = memberRepository.findById(email)
+                .orElseThrow(() -> new NoSuchElementException("해당 회원을 찾을 수 없습니다: " + email));
+
+        // Enum 변환 (대문자로 변환하여 일치 확인)
+        MemberRole roleToAdd = MemberRole.valueOf(newRole.toUpperCase());
+
+        member.addRole(roleToAdd);
+
+        memberRepository.save(member);
+    }
+
+    private AdminMemberDTO toDTO(Member member) {
         return AdminMemberDTO.builder()
                 .email(member.getEmail())
                 .nickname(member.getNickname())
@@ -110,5 +123,4 @@ public class AdminMemberServiceImpl implements AdminMemberService {
                 .admin(member.getMemberRoleList().contains(MemberRole.ADMIN))
                 .build();
     }
-
 }

@@ -11,4 +11,5 @@ public interface AdminMemberService {
 
     void changeStatus(String email, MemberStatusUpdateDTO updateDTO);
 
+    void changeRole(String email, String newRole);
 }
