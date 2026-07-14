@@ -21,8 +21,15 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler{
       AccessDeniedException accessDeniedException) throws IOException, ServletException {
 
     Gson gson = new Gson();
-    
-    String jsonStr = gson.toJson(Map.of("error", "ERROR_ACCESSDENIED"));
+
+    String message = accessDeniedException.getMessage();
+    if (message == null || message.isBlank()) {
+      message = "접근 권한이 없습니다.";
+    }
+
+    String jsonStr = gson.toJson(Map.of(
+        "error", "ERROR_ACCESSDENIED",
+        "msg", message));
 
     response.setContentType("application/json");
     response.setStatus(HttpStatus.FORBIDDEN.value());

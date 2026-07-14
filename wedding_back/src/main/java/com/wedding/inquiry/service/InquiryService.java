@@ -11,10 +11,10 @@ public interface InquiryService {
     InquiryRoomDTO getOrCreateRoom(String memberEmail, Long cmno);
 
     // 매니저 화면 — 해당 업체(cmno)의 모든 문의방 목록 (최근 대화순)
-    List<InquiryRoomDTO> listRoomsByCompany(Long cmno);
+    List<InquiryRoomDTO> listRoomsByCompany(Long cmno, String callerEmail);
 
     // 채팅창 열 때 / 폴링할 때 — 특정 방의 메시지 목록 (시간순)
-    List<InquiryMessageDTO> getMessages(Long roomId);
+    List<InquiryMessageDTO> getMessages(Long roomId, String callerEmail);
 
     // 메시지 전송 — 저장 + 방의 lastMessageAt 갱신
     InquiryMessageDTO sendMessage(Long roomId, String senderEmail, String content);
