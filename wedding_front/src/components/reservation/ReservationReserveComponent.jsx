@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import {
   getOne as getCompanyOne,
@@ -37,6 +37,10 @@ const ReservationReserveComponent = () => {
   const { cmno } = useParams();
   const navigate = useNavigate();
   const loginState = useSelector((state) => state.loginSlice);
+  // 승진 코드 추가 - mode=reserve(예약만) / mode=pay(결제, 기본값)
+  const [searchParams] = useSearchParams();
+  const mode = searchParams.get("mode") === "reserve" ? "reserve" : "pay";
+  // 승진 코드 추가 끝
 
   const [company, setCompany] = useState(null);
   const [fetching, setFetching] = useState(true);
@@ -73,7 +77,8 @@ const ReservationReserveComponent = () => {
 
   const mainImage = company?.uploadFileNames?.[0];
 
-  const handleClickPay = async () => {
+  // 승진 코드 추가 - mode 분기 핸들러
+  const handleClickSubmit = async () => {
     if (!weddingDate) {
       alert("예약 날짜를 선택해주세요.");
       return;
@@ -85,10 +90,8 @@ const ReservationReserveComponent = () => {
 
     setSubmitting(true);
 
-    let reservationId = null;
-
     try {
-      // 1) 예약 등록 (대기 상태, 결제 전)
+      // 1) 예약 등록 (대기 상태)
       const registerResult = await postAdd({
         cmno: Number(cmno),
         memberEmail: loginState.email,
@@ -98,12 +101,20 @@ const ReservationReserveComponent = () => {
         optionName: selectedOption ? selectedOption.label : "",
         amount: selectedOption ? selectedOption.price : 0,
       });
-      reservationId = registerResult.reservationId;
+      const reservationId = registerResult.reservationId;
 
-      // 결제 금액이 0원이면(옵션 가격 미등록 업체) 결제 없이 예약만 완료
+      // ── 예약만 하기 모드 ──
+      if (mode === "reserve") {
+        alert("예약이 등록되었습니다.");
+        navigate("/mypage?tab=reservation");
+        return;
+      }
+
+      // ── 결제 모드 ──
+      // 결제 금액이 0원이면 결제 없이 예약만 완료
       if (!selectedOption || selectedOption.price <= 0) {
         alert("예약이 등록되었습니다. (결제 없이 진행되는 예약입니다)");
-        navigate(`/companies/read/${cmno}`);
+        navigate("/mypage?tab=reservation");
         return;
       }
 
@@ -129,6 +140,7 @@ const ReservationReserveComponent = () => {
       setSubmitting(false);
     }
   };
+  // 승진 코드 추가 끝
 
   if (fetching || !company) {
     return <FetchingModal />;
@@ -140,7 +152,11 @@ const ReservationReserveComponent = () => {
         {categoryLabel[company.category] || company.category} {" > "}
         <span className="text-ink-soft">{company.name}</span>
       </p>
-      <p className="font-['Gowun_Batang'] text-2xl mb-8 text-ink">예약하기</p>
+      {/* 승진 코드 추가 - mode에 따라 타이틀 변경 */}
+      <p className="font-['Gowun_Batang'] text-2xl mb-8 text-ink">
+        {mode === "reserve" ? "예약하기" : "결제하기"}
+      </p>
+      {/* 승진 코드 추가 끝 */}
 
       <div className="bg-white rounded-2xl p-5 shadow-[0_8px_24px_-12px_rgba(58,54,47,0.15)] mb-5 flex items-center gap-4">
         <div className="w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-surface">
@@ -235,18 +251,22 @@ const ReservationReserveComponent = () => {
         </div>
       )}
 
+      {/* 승진 코드 추가 - mode에 따라 버튼 텍스트/스타일 변경 */}
       <button
         type="button"
-        onClick={handleClickPay}
+        onClick={handleClickSubmit}
         disabled={submitting}
         className="w-full h-12 rounded-full bg-brand text-sm font-medium text-white transition hover:bg-brand-deep disabled:opacity-50"
       >
         {submitting
           ? "처리 중..."
-          : selectedOption && selectedOption.price > 0
-            ? "결제하기"
-            : "예약하기"}
+          : mode === "reserve"
+            ? "예약 등록하기"
+            : selectedOption && selectedOption.price > 0
+              ? "결제하기"
+              : "예약하기"}
       </button>
+      {/* 승진 코드 추가 끝 */}
     </div>
   );
 };
