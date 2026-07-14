@@ -26,21 +26,27 @@ public class AdminMemberController {
 
     @GetMapping
     public PageResponseDTO<AdminMemberDTO> list(AdminMemberSearchDTO searchDTO) {
-
-        log.info("AdminMemberController_list 실행~~~~~~~~ " + searchDTO);
-
+        log.info("AdminMemberController_list 실행: " + searchDTO);
         return adminMemberService.getMemberList(searchDTO);
     }
 
     @PutMapping("/{email}/status")
     public Map<String, String> changeStatus(@PathVariable String email,
                                             @Valid @RequestBody MemberStatusUpdateDTO updateDTO) {
-
-        log.info("AdminMemberController_changeStatus 실행~~~~~~~~ " + email);
-
+        log.info("AdminMemberController_changeStatus 실행: " + email);
         adminMemberService.changeStatus(email, updateDTO);
-
         return Map.of("result", "success");
     }
 
+    @PutMapping("/{email}/role")
+    public Map<String, String> changeRole(@PathVariable String email,
+                                          @RequestBody Map<String, String> request) {
+
+        String newRole = request.get("role");
+        log.info("AdminMemberController_changeRole 실행: " + email + " -> " + newRole);
+
+        adminMemberService.changeRole(email, newRole);
+
+        return Map.of("result", "success");
+    }
 }

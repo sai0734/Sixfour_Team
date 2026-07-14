@@ -49,8 +49,9 @@ public class Member extends BaseTimeEntity {
   private LocalDateTime lastLoginAt;
 
   public void addRole(MemberRole memberRole){
-
-    memberRoleList.add(memberRole);
+    if (!memberRoleList.contains(memberRole)) {
+      memberRoleList.add(memberRole);
+    }
   }
 
   public void clearRole(){
