@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import KakaoLoginComponent from "./KakaoLoginComponent";
 import AuthLayout from "./AuthLayout";
+import { getMyManagedCompany } from "../../api/companyApi";
 
 const initState = {
   email: "",
@@ -84,8 +85,17 @@ const LoginComponent = () => {
         const isAdmin = data.roleNames?.some((roleName) =>
           ["ADMIN", "ROLE_ADMIN"].includes(roleName),
         );
-
-        moveToPath(isAdmin ? "/admin" : "/");
+        if (isAdmin) {
+          moveToPath("/admin");
+          return;
+        }
+        getMyManagedCompany()
+          .then((managed) => {
+            moveToPath(managed?.isManager ? "/manager/inquiries" : "/");
+          })
+          .catch(() => {
+            moveToPath("/");
+          });
       }
     });
   };

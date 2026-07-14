@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { getMyManagedCompany } from "../../api/companyApi";
 
 const BasicMenu = () => {
   const loginState = useSelector((state) => state.loginSlice);
@@ -9,10 +10,40 @@ const BasicMenu = () => {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const isAdmin = loginState.roleNames?.some((r) =>
-    ["ADMIN", "ROLE_ADMIN"].includes(r)
+    ["ADMIN", "ROLE_ADMIN"].includes(r),
   );
   const isLoggedIn = !!loginState.email;
   const companyListPath = isAdmin ? "/admin/companies/list" : "/companies/list";
+
+  const [isManager, setIsManager] = useState(false);
+
+  useEffect(() => {
+    if (!isLoggedIn || isAdmin) {
+      setIsManager(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    getMyManagedCompany()
+      .then((data) => {
+        if (!cancelled) {
+          setIsManager(Boolean(data?.isManager));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setIsManager(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isLoggedIn, isAdmin]);
+
+  const myPageLink = isManager ? "/manager/inquiries" : "/mypage";
+  const myPageLabel = isManager ? "업체페이지" : "마이페이지";
 
   useEffect(() => {
     // .hero 섹션이 없는 페이지(다른 페이지)에선 즉시 scrolled 처리
@@ -34,8 +65,10 @@ const BasicMenu = () => {
       const menuEl = document.getElementById("mobileMenuPanel");
       const btnEl = document.getElementById("hamburgerBtn");
       if (
-        menuEl && !menuEl.contains(e.target) &&
-        btnEl && !btnEl.contains(e.target)
+        menuEl &&
+        !menuEl.contains(e.target) &&
+        btnEl &&
+        !btnEl.contains(e.target)
       ) {
         setMenuOpen(false);
       }
@@ -46,25 +79,56 @@ const BasicMenu = () => {
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [menuOpen]);
 
   const closeMobileMenu = () => setMenuOpen(false);
 
   const isActive = (prefix) =>
-    prefix === "/" ? location.pathname === "/" : location.pathname.startsWith(prefix);
+    prefix === "/"
+      ? location.pathname === "/"
+      : location.pathname.startsWith(prefix);
 
   return (
     <>
       {/* 모바일 메뉴 패널 */}
-      <div id="mobileMenuPanel" className={`mobile-menu${menuOpen ? " open" : ""}`}>
+      <div
+        id="mobileMenuPanel"
+        className={`mobile-menu${menuOpen ? " open" : ""}`}
+      >
         <ul>
-          <li><Link to="/" onClick={closeMobileMenu}>홈</Link></li>
-          <li><a href="#" onClick={closeMobileMenu}>AI 웨딩플랜</a></li>
-          <li><Link to={companyListPath} onClick={closeMobileMenu}>홀 / 스드메</Link></li>
-          <li><Link to="/prep/hub" onClick={closeMobileMenu}>준비관리</Link></li>
-          <li><Link to="/product/" onClick={closeMobileMenu}>답례품</Link></li>
-          <li><Link to="/board/list" onClick={closeMobileMenu}>커뮤니티</Link></li>
+          <li>
+            <Link to="/" onClick={closeMobileMenu}>
+              홈
+            </Link>
+          </li>
+          <li>
+            <a href="#" onClick={closeMobileMenu}>
+              AI 웨딩플랜
+            </a>
+          </li>
+          <li>
+            <Link to={companyListPath} onClick={closeMobileMenu}>
+              홀 / 스드메
+            </Link>
+          </li>
+          <li>
+            <Link to="/prep/hub" onClick={closeMobileMenu}>
+              준비관리
+            </Link>
+          </li>
+          <li>
+            <Link to="/product/" onClick={closeMobileMenu}>
+              답례품
+            </Link>
+          </li>
+          <li>
+            <Link to="/board/list" onClick={closeMobileMenu}>
+              커뮤니티
+            </Link>
+          </li>
         </ul>
       </div>
 
@@ -75,15 +139,36 @@ const BasicMenu = () => {
             id="hamburgerBtn"
             className="hamburger-btn"
             aria-label="메뉴 열기"
-            onClick={(e) => { e.preventDefault(); setMenuOpen((v) => !v); }}
+            onClick={(e) => {
+              e.preventDefault();
+              setMenuOpen((v) => !v);
+            }}
           >
             {menuOpen ? (
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <line x1="4" y1="4" x2="20" y2="20" />
                 <line x1="20" y1="4" x2="4" y2="20" />
               </svg>
             ) : (
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <line x1="3" y1="6" x2="21" y2="6" />
                 <line x1="3" y1="12" x2="21" y2="12" />
                 <line x1="3" y1="18" x2="21" y2="18" />
@@ -95,47 +180,124 @@ const BasicMenu = () => {
         </Link>
 
         <ul className="navlinks">
-          <li><Link to="/" className={isActive("/") ? "active" : ""}>홈</Link></li>
-          <li><a href="#">AI 웨딩플랜</a></li>
-          <li><Link to={companyListPath} className={isActive("/companies") || isActive("/admin/companies") ? "active" : ""}>홀 / 스드메</Link></li>
-          <li><Link to="/prep/hub" className={isActive("/prep") ? "active" : ""}>준비관리</Link></li>
-          <li><Link to="/product/" className={isActive("/product") ? "active" : ""}>답례품</Link></li>
-          <li><Link to="/board/list" className={isActive("/board") ? "active" : ""}>커뮤니티</Link></li>
+          <li>
+            <Link to="/" className={isActive("/") ? "active" : ""}>
+              홈
+            </Link>
+          </li>
+          <li>
+            <a href="#">AI 웨딩플랜</a>
+          </li>
+          <li>
+            <Link
+              to={companyListPath}
+              className={
+                isActive("/companies") || isActive("/admin/companies")
+                  ? "active"
+                  : ""
+              }
+            >
+              홀 / 스드메
+            </Link>
+          </li>
+          <li>
+            <Link to="/prep/hub" className={isActive("/prep") ? "active" : ""}>
+              준비관리
+            </Link>
+          </li>
+          <li>
+            <Link
+              to="/product/"
+              className={isActive("/product") ? "active" : ""}
+            >
+              답례품
+            </Link>
+          </li>
+          <li>
+            <Link
+              to="/board/list"
+              className={isActive("/board") ? "active" : ""}
+            >
+              커뮤니티
+            </Link>
+          </li>
         </ul>
 
         {!isLoggedIn ? (
           <div className="nav-right">
             <Link to="/cart" className="nav-cart" aria-label="장바구니">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="9" cy="21" r="1" />
+                <circle cx="20" cy="21" r="1" />
                 <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
               </svg>
             </Link>
-            <Link to="/auth/join" className="nav-signup">회원가입</Link>
-            <Link to="/auth/login" className="nav-btn">로그인</Link>
+            <Link to="/auth/join" className="nav-signup">
+              회원가입
+            </Link>
+            <Link to="/auth/login" className="nav-btn">
+              로그인
+            </Link>
           </div>
         ) : isAdmin ? (
           <div className="nav-right">
             <Link to="/cart" className="nav-cart" aria-label="장바구니">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="9" cy="21" r="1" />
+                <circle cx="20" cy="21" r="1" />
                 <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
               </svg>
             </Link>
-            <Link to="/admin" className="nav-mypage">관리자페이지</Link>
-            <Link to="/auth/logout" className="nav-btn">로그아웃</Link>
+            <Link to="/admin" className="nav-mypage">
+              관리자페이지
+            </Link>
+            <Link to="/auth/logout" className="nav-btn">
+              로그아웃
+            </Link>
           </div>
         ) : (
           <div className="nav-right">
             <Link to="/cart" className="nav-cart" aria-label="장바구니">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="9" cy="21" r="1" />
+                <circle cx="20" cy="21" r="1" />
                 <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
               </svg>
               <span className="cart-badge">0</span>
             </Link>
-            <Link to="/mypage" className="nav-mypage">마이페이지</Link>
-            <Link to="/auth/logout" className="nav-btn">로그아웃</Link>
+            <Link to={myPageLink} className="nav-mypage">
+              {myPageLabel}
+            </Link>
+            <Link to="/auth/logout" className="nav-btn">
+              로그아웃
+            </Link>
           </div>
         )}
       </nav>

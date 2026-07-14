@@ -1,5 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { getMyManagedCompany } from "../api/companyApi";
 
 const MENU_GROUPS = [
   {
@@ -14,6 +16,8 @@ const MENU_GROUPS = [
 const MyPageSidebar = () => {
   const location = useLocation();
   const activeRef = useRef(null);
+  const loginState = useSelector((state) => state.loginSlice);
+  const [isManager, setIsManager] = useState(false);
 
   useEffect(() => {
     activeRef.current?.scrollIntoView({
@@ -23,10 +27,52 @@ const MyPageSidebar = () => {
     });
   }, [location.pathname]);
 
+  // 로그인한 회원이 업체 담당자(매니저)인지 확인
+  useEffect(() => {
+    if (!loginState.email) {
+      setIsManager(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    getMyManagedCompany()
+      .then((data) => {
+        if (!cancelled) {
+          setIsManager(Boolean(data?.isManager));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setIsManager(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loginState.email]);
+
   const isActivePath = (path) => {
     if (path === "/mypage") return location.pathname === "/mypage";
+    if (path === "/manager/inquiries") {
+      return location.pathname.startsWith("/manager/inquiries");
+    }
     return location.pathname.startsWith(path);
   };
+
+  // 매니저면 "마이페이지" 대신 "업체페이지"로 교체
+  const menuItems = isManager
+    ? [
+        { name: "업체페이지", path: "/manager/inquiries", enabled: true },
+        { name: "회원정보 수정", path: "/auth/modify", enabled: true },
+      ]
+    : [
+        { name: "마이페이지", path: "/mypage", enabled: true },
+        { name: "회원정보 수정", path: "/auth/modify", enabled: true },
+      ];
+
+  const sidebarLabel = isManager ? "업체페이지" : "마이페이지";
 
   return (
     <aside className="sticky top-[68px] z-20 w-full bg-[#FBF7F0]/95 py-3 backdrop-blur lg:static lg:z-auto lg:w-60 lg:shrink-0 lg:bg-transparent lg:py-8 lg:pr-6 lg:backdrop-blur-0">
@@ -37,11 +83,11 @@ const MyPageSidebar = () => {
           style={{ boxShadow: "0 8px 24px -14px rgba(58,54,47,0.25)" }}
         >
           <p className="hidden px-3 text-xs font-bold tracking-wide text-[#7C8B6F] lg:mb-3 lg:block">
-            {group.label}
+            {sidebarLabel}
           </p>
 
           <nav className="flex gap-2 overflow-x-auto scroll-smooth pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:flex-col lg:gap-1 lg:overflow-visible lg:pb-0">
-            {group.items.map((item) => {
+            {menuItems.map((item) => {
               const isActive = isActivePath(item.path);
 
               return (
