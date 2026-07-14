@@ -43,6 +43,11 @@ public class CompanyWish {
     @Column(name = "option_image")
     private String optionImage;
 
+    public void changeOptionInfo(int optionAmount, String optionImage) {
+        this.optionAmount = optionAmount;
+        this.optionImage = optionImage;
+    }
+
     @Column(name = "reg_date", updatable = false)
     @Builder.Default
     private LocalDateTime regDate = LocalDateTime.now();
