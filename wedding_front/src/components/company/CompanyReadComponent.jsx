@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   useLocation,
   useNavigate,
@@ -19,6 +19,8 @@ import {
   addCompanyWish,
   removeCompanyWish,
 } from "../../api/companywishApi";
+import CompanyWishOptionModal from "../companywish/CompanyWishOptionModal";
+import { buildCompanyOptions } from "../../util/companyOptionBuilder";
 import FetchingModal from "../common/FetchingModal";
 import KakaoMap from "../common/KakaoMap";
 import useCustomLogin from "../../hooks/useCustomLogin";
@@ -171,6 +173,9 @@ const CompanyReadComponent = () => {
   const isLoggedIn = Boolean(loginState?.email || loginState?.accessToken);
   const [liked, setLiked] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
+  // 재원 추가 - 홀/드레스/메이크업처럼 옵션이 있는 업체는 찜하기 전에 옵션을 고르게 함
+  const [wishModalOpen, setWishModalOpen] = useState(false);
+  const wishOptions = useMemo(() => buildCompanyOptions(company), [company]);
 
   useEffect(() => {
     if (!cmno || !isLoggedIn) {
@@ -198,6 +203,14 @@ const CompanyReadComponent = () => {
       return;
     }
 
+    // 옵션이 있는 업체(홀/드레스/메이크업)는 어떤 옵션에 관심있는지 고르고 찜하도록
+    // 모달을 띄움. 여러 옵션을 각각 찜해둘 수 있어서, 이미 찜한 상태라도 다시 누르면
+    // 다른 옵션을 추가로 찜할 수 있게 함. 특정 옵션만 찜 해제하는 건 마이페이지에서.
+    if (wishOptions.length > 0) {
+      setWishModalOpen(true);
+      return;
+    }
+
     try {
       setFavoriteLoading(true);
       if (liked) {
@@ -207,6 +220,21 @@ const CompanyReadComponent = () => {
         await addCompanyWish(company.cmno);
         setLiked(true);
       }
+    } catch (err) {
+      console.error("업체 찜 처리 실패:", err);
+      exceptionHandle(err);
+    } finally {
+      setFavoriteLoading(false);
+    }
+  };
+
+  const handleWishOptionSubmit = async (optionName) => {
+    try {
+      setFavoriteLoading(true);
+      await addCompanyWish(company.cmno, optionName);
+      setLiked(true);
+      setWishModalOpen(false);
+      alert(`"${optionName}" 옵션으로 찜했습니다.`);
     } catch (err) {
       console.error("업체 찜 처리 실패:", err);
       exceptionHandle(err);
@@ -390,6 +418,15 @@ const CompanyReadComponent = () => {
           />
         </div>
       </div>
+
+      {wishModalOpen && (
+        <CompanyWishOptionModal
+          companyName={company.name}
+          options={wishOptions}
+          onSubmit={handleWishOptionSubmit}
+          onClose={() => setWishModalOpen(false)}
+        />
+      )}
 
       {/* ── 탭 네비게이션 ── */}
       <div
