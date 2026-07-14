@@ -182,11 +182,6 @@ public class FaqDummyDataLoader implements CommandLineRunner {
                         .question("댓글에 답글(대댓글)도 달 수 있나요?")
                         .answer("네, 댓글 아래 '답글' 버튼을 누르면 해당 댓글에 대한 답글을 작성할 수 있어요.")
                         .build(),
-                Faq.builder().category("커뮤니티").sortOrder(4)
-                        .likeCount(55)
-                        .question("선배 부부 매칭은 어떻게 신청하나요?")
-                        .answer("커뮤니티 > 선배 부부 매칭에서 내 프로필을 등록하면, 조건이 비슷한 다른 선배 부부 목록에 나타나게 돼요.")
-                        .build(),
                 Faq.builder().category("커뮤니티").sortOrder(5)
                         .likeCount(15)
                         .question("부적절한 게시글은 어떻게 신고하나요?")
