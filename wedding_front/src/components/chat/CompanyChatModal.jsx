@@ -7,7 +7,12 @@ import useCustomLogin from "../../hooks/useCustomLogin";
 
 const POLL_INTERVAL_MS = 3000;
 
-const CompanyChatModal = ({ companyName, roomId, onMinimize }) => {
+const CompanyChatModal = ({
+  companyName,
+  roomId,
+  onMinimize,
+  subtitle = "업체 문의",
+}) => {
   const { loginState } = useCustomLogin();
 
   const [messages, setMessages] = useState([]);
@@ -115,7 +120,7 @@ const CompanyChatModal = ({ companyName, roomId, onMinimize }) => {
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <div>
             <p className="text-sm font-semibold text-ink">{companyName}</p>
-            <p className="text-xs text-ink-muted">업체 문의</p>
+            <p className="text-xs text-ink-muted">{subtitle}</p>
           </div>
           <button
             type="button"
