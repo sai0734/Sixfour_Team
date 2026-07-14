@@ -58,7 +58,7 @@ public class CompanyWishServiceImpl implements CompanyWishService {
     // ↓↓↓ 재원 추가 - 옵션과 함께 찜하기
 
     @Override
-    public void addWithOption(String memberEmail, Long cmno, String optionName, int optionAmount, String optionImage) {
+    public void addWithOption(String memberEmail, Long cmno, String optionName, Integer optionAmount, String optionImage) {
         String normalized = optionName == null ? "" : optionName;
 
         var existing = companyWishRepository

@@ -102,6 +102,9 @@ const ReservationReserveComponent = () => {
         amount: selectedOption ? selectedOption.price : 0,
       });
       const reservationId = registerResult.reservationId;
+      // 승진 코드 추가 - postAdd로 저장된 amount 기준으로 결제 여부 판단
+      const savedAmount = selectedOption ? selectedOption.price : 0;
+      // 승진 코드 추가 끝
 
       // ── 예약만 하기 모드 ──
       if (mode === "reserve") {
@@ -111,12 +114,13 @@ const ReservationReserveComponent = () => {
       }
 
       // ── 결제 모드 ──
-      // 결제 금액이 0원이면 결제 없이 예약만 완료
-      if (!selectedOption || selectedOption.price <= 0) {
-        alert("예약이 등록되었습니다. (결제 없이 진행되는 예약입니다)");
+      // 승진 코드 추가 - savedAmount 기준으로 결제 여부 판단 (selectedOption.price 대신)
+      if (savedAmount <= 0) {
+        alert("예약이 등록되었습니다. (결제 금액이 없어 예약으로 처리됩니다)");
         navigate("/mypage?tab=reservation");
         return;
       }
+      // 승진 코드 추가 끝
 
       // 2) 주문번호 발급
       const prepared = await preparePayment(reservationId);
@@ -126,9 +130,9 @@ const ReservationReserveComponent = () => {
       const tossPayments = window.TossPayments(TOSS_CLIENT_KEY);
 
       await tossPayments.requestPayment("카드", {
-        amount: prepared.amount,
+        amount: prepared.amount || savedAmount,
         orderId: prepared.orderNumber,
-        orderName: `${company.name} - ${selectedOption.label}`,
+        orderName: `${company.name} - ${selectedOption ? selectedOption.label : "예약"}`,
         customerName: loginState.nickname || loginState.email,
         successUrl: `${window.location.origin}/companies/reserve/${cmno}/success?reservationId=${reservationId}`,
         failUrl: `${window.location.origin}/companies/reserve/${cmno}/fail?reservationId=${reservationId}`,
@@ -193,6 +197,7 @@ const ReservationReserveComponent = () => {
           </p>
         ) : (
           <div className="flex flex-col gap-2">
+            {/* 승진 코드 추가 - 할인 정보 표시 */}
             {options.map((opt) => (
               <label
                 key={opt.key}
@@ -213,18 +218,29 @@ const ReservationReserveComponent = () => {
                     <p className="text-sm font-medium text-ink truncate">
                       {opt.label}
                     </p>
-                    {opt.detail && (
-                      <p className="text-xs text-ink-faint truncate">
-                        {opt.detail}
-                      </p>
+                    {/* 할인율 배지 */}
+                    {opt.discountRate > 0 && (
+                      <span className="inline-block mt-0.5 text-[11px] font-semibold text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded">
+                        {opt.discountRate}% 할인
+                      </span>
                     )}
                   </div>
                 </div>
-                <span className="shrink-0 text-sm font-medium text-ink">
-                  {opt.price > 0 ? `${opt.price.toLocaleString()}원` : "-"}
-                </span>
+
+                {/* 가격 영역 */}
+                <div className="shrink-0 text-right">
+                  {opt.discountRate > 0 && opt.originalPrice > 0 && (
+                    <p className="text-xs text-ink-faint line-through">
+                      {opt.originalPrice.toLocaleString()}원
+                    </p>
+                  )}
+                  <p className={`text-sm font-semibold ${opt.discountRate > 0 ? "text-rose-500" : "text-ink"}`}>
+                    {opt.price > 0 ? `${opt.price.toLocaleString()}원` : "-"}
+                  </p>
+                </div>
               </label>
             ))}
+            {/* 승진 코드 추가 끝 */}
           </div>
         )}
       </div>
@@ -262,9 +278,7 @@ const ReservationReserveComponent = () => {
           ? "처리 중..."
           : mode === "reserve"
             ? "예약 등록하기"
-            : selectedOption && selectedOption.price > 0
-              ? "결제하기"
-              : "예약하기"}
+            : "업체 결제하기"}
       </button>
       {/* 승진 코드 추가 끝 */}
     </div>

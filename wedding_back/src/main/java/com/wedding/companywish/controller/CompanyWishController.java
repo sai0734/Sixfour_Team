@@ -47,7 +47,7 @@ public class CompanyWishController {
             Authentication authentication,
             @PathVariable(name = "cmno") Long cmno,
             @RequestParam(name = "optionName", required = false, defaultValue = "") String optionName,
-            @RequestParam(name = "optionAmount", required = false, defaultValue = "0") int optionAmount,
+            @RequestParam(name = "optionAmount", required = false, defaultValue = "0") Integer optionAmount,
             @RequestParam(name = "optionImage", required = false) String optionImage) {
 
         log.info("company wish add: email={}, cmno={}, optionName={}, optionAmount={}",

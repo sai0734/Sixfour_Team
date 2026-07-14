@@ -22,7 +22,7 @@ public interface CompanyWishService {
     // ↓↓↓ 재원 추가 - 홀/드레스/메이크업처럼 옵션이 있는 업체를 옵션과 함께 찜하는 기능
 
     /** 옵션과 함께 찜 등록 (이미 같은 옵션으로 찜한 경우 무시) */
-    void addWithOption(String memberEmail, Long cmno, String optionName, int optionAmount, String optionImage);
+    void addWithOption(String memberEmail, Long cmno, String optionName, Integer optionAmount, String optionImage);
 
     /** wishId로 정확히 찜 해제 (마이페이지 카드/전체선택 삭제용, 본인 소유만) */
     void removeByWishId(String memberEmail, Long wishId);

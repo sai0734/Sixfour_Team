@@ -107,19 +107,21 @@ const ReservationPaymentSuccessPage = () => {
           </div>
         </div>
 
-        <div className="flex gap-2 justify-center">
+        <div className="flex gap-2 justify-center flex-wrap">
+          {/* 승진 코드 추가 - 결제내역 바로가기 버튼 추가 */}
+          <button
+            onClick={() => navigate("/mypage?tab=payment&psub=vendor")}
+            className="h-11 px-8 rounded-full bg-brand text-white text-sm font-medium hover:bg-brand-dark transition"
+          >
+            결제내역 보기
+          </button>
           <button
             onClick={() => navigate("/companies/list")}
-            className="h-11 px-8 rounded-full bg-brand text-white text-sm font-medium hover:bg-brand-dark transition"
+            className="h-11 px-8 rounded-full border border-line-soft text-sm hover:border-brand hover:text-brand transition"
           >
             업체 목록으로
           </button>
-          <button
-            onClick={() => navigate("/mypage")}
-            className="h-11 px-8 rounded-full border border-line-soft text-sm hover:border-brand hover:text-brand transition"
-          >
-            내 예약 보기
-          </button>
+          {/* 승진 코드 추가 끝 */}
         </div>
       </div>
     </BasicLayout>
