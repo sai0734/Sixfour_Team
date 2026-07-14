@@ -27,10 +27,6 @@ const ReviewBoardPage = lazy(() => import("../pages/board/ReviewBoardPage"));
 const FaqPage = lazy(() => import("../pages/board/FaqPage"));
 const CartPage = lazy(() => import("../pages/cart/CartPage"));
 
-const ManagerInquiryPage = lazy(
-  () => import("../pages/manager/ManagerInquiryPage"),
-);
-
 const CheckoutPage = lazy(() => import("../pages/checkout/CheckoutPage"));
 const CheckoutSuccessPage = lazy(
   () => import("../pages/checkout/CheckoutSuccessPage"),
@@ -224,14 +220,6 @@ const root = createBrowserRouter([
     element: (
       <Suspense fallback={Loading}>
         <MyPageHub />
-      </Suspense>
-    ),
-  },
-  {
-    path: "/manager/inquiries",
-    element: (
-      <Suspense fallback={Loading}>
-        <ManagerInquiryPage />
       </Suspense>
     ),
   },
