@@ -125,8 +125,20 @@ public class CompanyController {
   }
 
   // 로그인한 회원 본인이 담당하고 있는 업체가 있는지 확인 (프론트에서 리다이렉트 여부 판단용)
+  // 보안 수정: email을 프론트가 보내는 값이 아니라 로그인 토큰에서 직접 꺼낸 값으로 고정
   @GetMapping("/my-managed")
-  public Map<String, Object> getMyManagedCompany(@org.springframework.web.bind.annotation.RequestParam String email) {
+  public Map<String, Object> getMyManagedCompany(
+          @org.springframework.security.core.annotation.AuthenticationPrincipal
+          com.wedding.member.dto.MemberDTO memberDTO) {
+    CompanyDTO dto = companyService.getManagedCompany(memberDTO.getEmail());
+    return Map.of("isManager", dto != null, "company", dto == null ? Map.of() : dto);
+  }
+
+  // 관리자가 특정 회원(target)의 담당업체를 조회 (회원관리 "담당자 임명" 모달에서 사용)
+  // /my-managed와 다르게, 조회 대상 이메일을 파라미터로 받되 관리자 권한으로만 제한
+  @PreAuthorize("hasRole('ADMIN')")
+  @GetMapping("/managed-by")
+  public Map<String, Object> getManagedCompanyByEmail(@org.springframework.web.bind.annotation.RequestParam String email) {
     CompanyDTO dto = companyService.getManagedCompany(email);
     return Map.of("isManager", dto != null, "company", dto == null ? Map.of() : dto);
   }

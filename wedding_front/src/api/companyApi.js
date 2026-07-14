@@ -258,16 +258,6 @@ const sortCompanies = (list, sort) => {
   return copiedList.sort((a, b) => Number(b.cmno || 0) - Number(a.cmno || 0));
 };
 
-export const updateMakeupDetail = async (cmno, dto) => {
-  const res = await jwtAxios.put(`${host}/makeup/${cmno}`, dto);
-  return res.data;
-};
-
-export const updateDressDetail = async (cmno, dto) => {
-  const res = await jwtAxios.put(`${host}/dresses/${cmno}`, dto);
-  return res.data;
-};
-
 // ===== 업체 문의 담당자 임명 (관리자 전용) =====
 
 export const assignCompanyManager = async (cmno, managerEmail) => {
@@ -281,8 +271,14 @@ export const unassignCompanyManager = async (cmno) => {
 };
 
 // 로그인한 회원 본인이 담당하고 있는 업체가 있는지 확인 (없으면 isManager: false)
-export const getMyManagedCompany = async (email) => {
-  const res = await jwtAxios.get(`${host}/my-managed`, { params: { email } });
+export const getMyManagedCompany = async () => {
+  const res = await jwtAxios.get(`${host}/my-managed`);
+  return res.data;
+};
+
+// 관리자 전용 - 특정 회원(target)이 담당하고 있는 업체 확인 (회원관리 임명 모달용)
+export const getManagedCompanyByEmail = async (email) => {
+  const res = await jwtAxios.get(`${host}/managed-by`, { params: { email } });
   return res.data;
 };
 
