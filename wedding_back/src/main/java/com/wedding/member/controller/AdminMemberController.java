@@ -37,16 +37,4 @@ public class AdminMemberController {
         adminMemberService.changeStatus(email, updateDTO);
         return Map.of("result", "success");
     }
-
-    @PutMapping("/{email}/role")
-    public Map<String, String> changeRole(@PathVariable String email,
-                                          @RequestBody Map<String, String> request) {
-
-        String newRole = request.get("role");
-        log.info("AdminMemberController_changeRole 실행: " + email + " -> " + newRole);
-
-        adminMemberService.changeRole(email, newRole);
-
-        return Map.of("result", "success");
-    }
 }

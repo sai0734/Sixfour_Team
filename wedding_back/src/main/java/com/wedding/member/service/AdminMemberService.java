@@ -10,6 +10,4 @@ public interface AdminMemberService {
     PageResponseDTO<AdminMemberDTO> getMemberList(AdminMemberSearchDTO searchDTO);
 
     void changeStatus(String email, MemberStatusUpdateDTO updateDTO);
-
-    void changeRole(String email, String newRole);
 }

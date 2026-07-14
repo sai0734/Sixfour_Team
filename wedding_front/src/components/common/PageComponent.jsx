@@ -1,4 +1,9 @@
 const PageComponent = ({ serverData, movePage }) => {
+  // serverData가 없거나 필요한 데이터가 로드되지 않았다면 빈 화면을 보여줌
+  if (!serverData || !serverData.pageNumList) {
+    return null;
+  }
+
   return (
     <div className="my-6 flex justify-center items-center gap-1.5">
       {serverData.prev ? (
