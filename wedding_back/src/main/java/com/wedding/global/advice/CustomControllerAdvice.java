@@ -64,11 +64,4 @@ public class CustomControllerAdvice {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("msg", e.getMessage()));
 
     }
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    protected ResponseEntity<?> handleIllegalArgument(IllegalArgumentException e) {
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("msg", e.getMessage()));
-
-    }
 }

@@ -11,6 +11,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -27,6 +28,7 @@ import com.wedding.member.dto.KakaoAuthResultDTO;
 import com.wedding.member.dto.KakaoLinkConfirmDTO;
 import com.wedding.member.dto.KakaoSignupCompleteDTO;
 import com.wedding.member.dto.MemberDTO;
+import com.wedding.member.dto.MemberDetailDTO;
 import com.wedding.member.exception.MemberBlockedException;
 import com.wedding.member.dto.MemberModifyDTO;
 import com.wedding.member.dto.PasswordResetConfirmDTO;
@@ -418,6 +420,70 @@ public class MemberServiceImpl implements MemberService {
 
     memberRepository.save(member);
 
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public MemberDetailDTO getMemberDetail(String email) {
+
+    return memberDetailRepository.getByMemberEmail(email)
+            .map(d -> MemberDetailDTO.builder()
+                    .email(email)
+                    .name(d.getName())
+                    .phone(d.getPhone())
+                    .birthDate(d.getBirthDate())
+                    .zipCode(d.getZipCode())
+                    .address(d.getAddress())
+                    .addressDetail(d.getAddressDetail())
+                    .build())
+            .orElse(MemberDetailDTO.builder().email(email).build());
+  }
+
+  @Override
+  public void modifyMemberDetail(MemberDetailDTO memberDetailDTO) {
+
+    MemberDetail detail = memberDetailRepository.getByMemberEmail(memberDetailDTO.getEmail())
+            .orElseThrow(() -> new IllegalStateException("회원 상세정보를 찾을 수 없습니다."));
+
+    // 전화번호를 실제로 바꾸려는 경우에만(기존 값과 다를 때만) 중복/차단 체크.
+    // 안 그러면 본인이 원래 쓰던 번호 그대로 저장하려고 해도 "이미 사용 중"으로 막혀버림
+    if (memberDetailDTO.getPhone() != null && !memberDetailDTO.getPhone().equals(detail.getPhone())) {
+      String phoneStatus = getPhoneCheckStatusForUpdate(memberDetailDTO.getPhone(), memberDetailDTO.getEmail());
+
+      if ("BLOCKED".equals(phoneStatus)) {
+        throw new IllegalStateException("정지 또는 휴면 처리된 회원과 동일한 전화번호입니다. 관리자에게 문의해주세요.");
+      }
+
+      if ("UNAVAILABLE".equals(phoneStatus)) {
+        throw new IllegalStateException("이미 사용 중인 휴대폰 번호입니다.");
+      }
+    }
+
+    detail.changeName(memberDetailDTO.getName());
+    detail.changePhone(memberDetailDTO.getPhone());
+    detail.changeBirthDate(memberDetailDTO.getBirthDate());
+    detail.changeAddress(memberDetailDTO.getZipCode(), memberDetailDTO.getAddress(), memberDetailDTO.getAddressDetail());
+
+    memberDetailRepository.save(detail);
+  }
+
+  // getPhoneCheckStatus랑 로직은 같은데, "본인이 이미 갖고 있던 번호"는 중복으로 안 치게
+  // 본인 이메일 하나만 결과에서 제외하는 버전 (회원정보수정 전용)
+  private String getPhoneCheckStatusForUpdate(String phone, String excludeEmail) {
+
+    List<MemberDetail> details = memberDetailRepository.findAllByPhone(phone).stream()
+            .filter(d -> !d.getMember().getEmail().equals(excludeEmail))
+            .toList();
+
+    if (details.isEmpty()) {
+      return "AVAILABLE";
+    }
+
+    boolean blocked = details.stream()
+            .map(MemberDetail::getMember)
+            .anyMatch(m -> "BLACKLIST".equals(m.getStatus()) || "DORMANT".equals(m.getStatus()));
+
+    return blocked ? "BLOCKED" : "UNAVAILABLE";
   }
 
   @Override
