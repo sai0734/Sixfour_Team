@@ -61,16 +61,6 @@ export const putOne = async (cmno, company) => {
   return res.data;
 };
 
-export const updateDressDetail = async (cmno, dressData) => {
-  const res = await jwtAxios.put(`${host}/${cmno}/dress`, dressData);
-  return res.data;
-};
-
-export const updateMakeupDetail = async (cmno, makeupData) => {
-  const res = await jwtAxios.put(`${host}/${cmno}/makeup`, makeupData);
-  return res.data;
-};
-
 export const deleteOne = async (cmno) => {
   const res = await jwtAxios.delete(`${host}/${cmno}`);
   return res.data;
@@ -105,10 +95,11 @@ export const getCompanyImageUrl = (fileName, thumbnail = false) => {
     return normalizedFileName;
   }
 
-  if (
-    normalizedFileName.startsWith("/api/") ||
-    normalizedFileName.startsWith("/")
-  ) {
+  if (normalizedFileName.startsWith("/api/")) {
+    return `${API_SERVER_HOST}${normalizedFileName}`;
+  }
+
+  if (normalizedFileName.startsWith("/")) {
     return `${API_SERVER_HOST}${normalizedFileName}`;
   }
 
@@ -267,6 +258,18 @@ const sortCompanies = (list, sort) => {
   return copiedList.sort((a, b) => Number(b.cmno || 0) - Number(a.cmno || 0));
 };
 
+export const updateMakeupDetail = async (cmno, dto) => {
+  const res = await jwtAxios.put(`${host}/makeup/${cmno}`, dto);
+  return res.data;
+};
+
+export const updateDressDetail = async (cmno, dto) => {
+  const res = await jwtAxios.put(`${host}/dresses/${cmno}`, dto);
+  return res.data;
+};
+
+// ===== 업체 문의 담당자 임명 (관리자 전용) =====
+
 export const assignCompanyManager = async (cmno, managerEmail) => {
   const res = await jwtAxios.put(`${host}/${cmno}/manager`, { managerEmail });
   return res.data;
@@ -277,16 +280,13 @@ export const unassignCompanyManager = async (cmno) => {
   return res.data;
 };
 
-export const getMyManagedCompany = async () => {
-  const res = await jwtAxios.get(`${host}/my-managed`);
+// 로그인한 회원 본인이 담당하고 있는 업체가 있는지 확인 (없으면 isManager: false)
+export const getMyManagedCompany = async (email) => {
+  const res = await jwtAxios.get(`${host}/my-managed`, { params: { email } });
   return res.data;
 };
 
-export const getManagedCompanyByEmail = async (email) => {
-  const res = await jwtAxios.get(`${host}/managed-by`, { params: { email } });
-  return res.data;
-};
-
+// 관리자 - 담당자 지정된 업체 전체 목록 (회원관리 "담당자 탭"용)
 export const getManagedCompanies = async () => {
   const res = await jwtAxios.get(`${host}/managers`);
   return res.data;
