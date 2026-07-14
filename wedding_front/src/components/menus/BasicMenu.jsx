@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { getMyManagedCompany } from "../../api/companyApi";
+import useManagedCompany from "../../hooks/useManagedCompany";
 
 const BasicMenu = () => {
   const loginState = useSelector((state) => state.loginSlice);
@@ -15,32 +15,9 @@ const BasicMenu = () => {
   const isLoggedIn = !!loginState.email;
   const companyListPath = isAdmin ? "/admin/companies/list" : "/companies/list";
 
-  const [isManager, setIsManager] = useState(false);
-
-  useEffect(() => {
-    if (!isLoggedIn || isAdmin) {
-      setIsManager(false);
-      return;
-    }
-
-    let cancelled = false;
-
-    getMyManagedCompany()
-      .then((data) => {
-        if (!cancelled) {
-          setIsManager(Boolean(data?.isManager));
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setIsManager(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isLoggedIn, isAdmin]);
+  const { isManager } = useManagedCompany({
+    enabled: isLoggedIn && !isAdmin,
+  });
 
   const myPageLink = isManager ? "/manager/inquiries" : "/mypage";
   const myPageLabel = isManager ? "업체페이지" : "마이페이지";

@@ -281,8 +281,9 @@ export const unassignCompanyManager = async (cmno) => {
 };
 
 // 로그인한 회원 본인이 담당하고 있는 업체가 있는지 확인 (없으면 isManager: false)
-export const getMyManagedCompany = async (email) => {
-  const res = await jwtAxios.get(`${host}/my-managed`, { params: { email } });
+// 백엔드는 JWT 토큰의 이메일만 사용 — email 파라미터 불필요
+export const getMyManagedCompany = async () => {
+  const res = await jwtAxios.get(`${host}/my-managed`);
   return res.data;
 };
 

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getMyManagedCompany } from "../../api/companyApi";
 import { getCompanyInquiryRooms } from "../../api/companyInquiryApi";
 import CompanyChatModal from "../chat/CompanyChatModal";
 import useCustomLogin from "../../hooks/useCustomLogin";
+import useManagedCompany from "../../hooks/useManagedCompany";
 
 const ROOM_POLL_INTERVAL_MS = 5000;
 
@@ -37,49 +37,13 @@ const formatLastMessageAt = (value) => {
 const ManagerInquiryInbox = () => {
   const navigate = useNavigate();
   const { loginState } = useCustomLogin();
+  const { isManager, company, loading } = useManagedCompany({
+    enabled: Boolean(loginState.email),
+  });
 
-  const [company, setCompany] = useState(null);
-  const [isManager, setIsManager] = useState(false);
   const [rooms, setRooms] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [roomsLoading, setRoomsLoading] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
-
-  // 로그인한 매니저가 담당 중인 업체 조회
-  useEffect(() => {
-    if (!loginState.email) {
-      setLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-
-    const loadManagedCompany = async () => {
-      setLoading(true);
-      try {
-        const data = await getMyManagedCompany();
-        if (cancelled) return;
-
-        const manager = Boolean(data?.isManager);
-        setIsManager(manager);
-        setCompany(manager ? data.company : null);
-      } catch (err) {
-        console.error("담당 업체 조회 실패:", err);
-        if (!cancelled) {
-          setIsManager(false);
-          setCompany(null);
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    loadManagedCompany();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [loginState.email]);
 
   // 담당 업체의 문의방 목록 조회 + 폴링
   const loadRooms = useCallback(async () => {
