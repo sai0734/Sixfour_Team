@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { getMyManagedCompany } from "../api/companyApi";
+import useManagedCompany from "../hooks/useManagedCompany";
 
 const MENU_GROUPS = [
   {
@@ -17,7 +17,9 @@ const MyPageSidebar = () => {
   const location = useLocation();
   const activeRef = useRef(null);
   const loginState = useSelector((state) => state.loginSlice);
-  const [isManager, setIsManager] = useState(false);
+  const { isManager } = useManagedCompany({
+    enabled: Boolean(loginState.email),
+  });
 
   useEffect(() => {
     activeRef.current?.scrollIntoView({
@@ -26,32 +28,6 @@ const MyPageSidebar = () => {
       inline: "center",
     });
   }, [location.pathname]);
-
-  // 로그인한 회원이 업체 담당자(매니저)인지 확인
-  useEffect(() => {
-    if (!loginState.email) {
-      setIsManager(false);
-      return;
-    }
-
-    let cancelled = false;
-
-    getMyManagedCompany()
-      .then((data) => {
-        if (!cancelled) {
-          setIsManager(Boolean(data?.isManager));
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setIsManager(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [loginState.email]);
 
   const isActivePath = (path) => {
     if (path === "/mypage") return location.pathname === "/mypage";

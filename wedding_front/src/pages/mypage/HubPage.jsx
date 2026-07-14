@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSearchParams, Navigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { getMyManagedCompany } from "../../api/companyApi";
+import useManagedCompany from "../../hooks/useManagedCompany";
 import MyPageLayout from "../../layouts/MyPageLayout";
 import PlanComponent from "../../components/weddingplan/PlanComponent";
 import WishTab from "../../components/companywish/WishTab";
@@ -19,38 +18,7 @@ const TABS = [
 
 const HubPage = () => {
   const [searchParams] = useSearchParams();
-  const loginState = useSelector((state) => state.loginSlice);
-
-  const [managerChecked, setManagerChecked] = useState(false);
-  const [isManager, setIsManager] = useState(false);
-
-  useEffect(() => {
-    if (!loginState.email) {
-      setIsManager(false);
-      setManagerChecked(true);
-      return;
-    }
-
-    let cancelled = false;
-
-    getMyManagedCompany()
-      .then((data) => {
-        if (!cancelled) {
-          setIsManager(Boolean(data?.isManager));
-          setManagerChecked(true);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setIsManager(false);
-          setManagerChecked(true);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [loginState.email]);
+  const { isManager, checked: managerChecked } = useManagedCompany();
 
   const requestedTab = searchParams.get("tab");
   const initialTab = TABS.some((tab) => tab.key === requestedTab)
