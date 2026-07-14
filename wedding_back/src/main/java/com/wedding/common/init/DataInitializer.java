@@ -159,6 +159,10 @@ public class DataInitializer implements ApplicationRunner {
       }
     } else {
       relaxLegacyDetailColumns();
+      // 재원 추가 - normalizeMakeupPackageType() 정규화 로직이 생기기 전에 이미 DB에 들어간
+      // 레거시 packageType 값("TWO"/"THREE" 등)은 count()==0 조건에 안 걸려서 영영 안 고쳐짐.
+      // 서버 재시작할 때마다 자동으로 정리되도록 매번 실행 (이미 정상 값이면 그냥 0건 업데이트, 무해함)
+      normalizeLegacyMakeupPackageTypes();
       if (makeupPackageRepository.count() == 0) {
         log.info("===== Makeup package dummy seed start =====");
         insertMakeupDiscountPackages();
@@ -177,6 +181,28 @@ public class DataInitializer implements ApplicationRunner {
     relaxColumn("tbl_dress_detail", "company_cno");
     relaxColumn("tbl_makeup_detail", "company_cno");
     relaxColumn("tbl_studio_detail", "company_cno");
+  }
+
+  // 재원 추가 - tbl_makeup_package.package_type에 남아있는 레거시 값("TWO"/"THREE" 등)을
+  // 현재 MakeupPackageType enum 표준값(HAIR_MAKEUP/FULL 등)으로 자동 정규화.
+  // normalizeMakeupPackageType()은 "새로 시드할 때"만 적용되는 로직이라, 그보다 먼저
+  // DB에 들어간 레거시 값은 이걸로 매 기동 시마다 정리해줌 (이미 정상이면 0건 업데이트, 무해함).
+  private void normalizeLegacyMakeupPackageTypes() {
+    Map<String, String> legacyToStandard = new HashMap<>();
+    legacyToStandard.put("TWO", "HAIR_MAKEUP");
+    legacyToStandard.put("THREE", "FULL");
+    legacyToStandard.put("NAIL_MAKEUP", "FULL");
+    legacyToStandard.put("HAIR_ONLY", "HAIR");
+    legacyToStandard.put("MAKEUP_ONLY", "MAKEUP");
+
+    legacyToStandard.forEach((legacy, standard) -> {
+      int updated = jdbcTemplate.update(
+              "update tbl_makeup_package set package_type = ? where package_type = ?",
+              standard, legacy);
+      if (updated > 0) {
+        log.info("Normalized {} legacy makeup package_type '{}' -> '{}'.", updated, legacy, standard);
+      }
+    });
   }
 
   // 단일 컬럼 nullable 변경 헬퍼 (더미 데이터 없음)

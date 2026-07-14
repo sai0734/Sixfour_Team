@@ -241,13 +241,18 @@ const CompanyReadComponent = () => {
     setInquiryOpenRequest((prev) => prev + 1);
   };
 
-  const handleWishOptionSubmit = async (optionName) => {
+  const handleWishOptionSubmit = async (option) => {
     try {
       setFavoriteLoading(true);
-      await addCompanyWish(company.cmno, optionName);
+      await addCompanyWish(
+        company.cmno,
+        option.label,
+        option.price,
+        option.image,
+      );
       setLiked(true);
       setWishModalOpen(false);
-      alert(`"${optionName}" 옵션으로 찜했습니다.`);
+      alert(`"${option.label}" 옵션으로 찜했습니다.`);
     } catch (err) {
       console.error("업체 찜 처리 실패:", err);
       exceptionHandle(err);

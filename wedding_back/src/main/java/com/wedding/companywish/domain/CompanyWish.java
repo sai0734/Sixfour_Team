@@ -32,6 +32,17 @@ public class CompanyWish {
     @Column(name = "option_name")
     private String optionName = "";
 
+    // 재원 추가 - 옵션의 실제 가격/이미지를 찜 시점에 같이 저장.
+    // (마이페이지에서 "마제스틱 볼룸 2,500만원"처럼 옵션 자체의 가격/이미지를 보여줘야 하는데,
+    //  업체 대표가격(priceAvg)/대표이미지만으로는 어떤 옵션을 찜했는지와 안 맞을 수 있어서.
+    //  옵션이 없는 업체는 0 / null로 저장하고, 조회 시 업체 대표가격/이미지로 대체 표시함)
+    @Builder.Default
+    @Column(name = "option_amount")
+    private int optionAmount = 0;
+
+    @Column(name = "option_image")
+    private String optionImage;
+
     @Column(name = "reg_date", updatable = false)
     @Builder.Default
     private LocalDateTime regDate = LocalDateTime.now();

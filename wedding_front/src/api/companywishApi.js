@@ -11,14 +11,25 @@ export const checkCompanyWish = async (cmno) => {
 
 /**
  * 업체 찜 등록.
- * 재원 추가 - optionName을 넘기면 홀/드레스/메이크업 옵션과 함께 찜 등록.
+ * 재원 추가 - optionName과 함께 optionAmount(옵션 가격)/optionImage(옵션 이미지, 드레스용)를
+ * 넘기면 그 옵션 자체의 가격/이미지로 찜 등록됨 (업체 대표가격/이미지가 아니라).
  * 옵션 없이 호출하면 기존과 동일(스튜디오 등 옵션 없는 업체 하트 토글).
  */
-export const addCompanyWish = async (cmno, optionName) => {
+export const addCompanyWish = async (
+  cmno,
+  optionName,
+  optionAmount,
+  optionImage,
+) => {
+  const params = {};
+  if (optionName) params.optionName = optionName;
+  if (optionAmount) params.optionAmount = optionAmount;
+  if (optionImage) params.optionImage = optionImage;
+
   const res = await jwtAxios.post(
     `${prefix}/${cmno}`,
     null,
-    optionName ? { params: { optionName } } : undefined,
+    Object.keys(params).length ? { params } : undefined,
   );
   return res.data;
 };

@@ -38,17 +38,21 @@ public class CompanyWishController {
 
     /**
      * 업체 찜 등록.
-     * 재원 추가 - optionName 쿼리파라미터로 홀/드레스/메이크업 옵션과 함께 찜할 수 있음.
-     * 옵션 없이 호출하면 기존과 동일하게 동작(스튜디오 등 옵션 없는 업체).
+     * 재원 추가 - optionName/optionAmount/optionImage 쿼리파라미터로 홀/드레스/메이크업
+     * 옵션(가격/이미지 포함)과 함께 찜할 수 있음. 옵션 없이 호출하면 기존과 동일하게 동작
+     * (스튜디오 등 옵션 없는 업체).
      */
     @PostMapping("/{cmno}")
     public Map<String, Object> add(
             Authentication authentication,
             @PathVariable(name = "cmno") Long cmno,
-            @RequestParam(name = "optionName", required = false, defaultValue = "") String optionName) {
+            @RequestParam(name = "optionName", required = false, defaultValue = "") String optionName,
+            @RequestParam(name = "optionAmount", required = false, defaultValue = "0") int optionAmount,
+            @RequestParam(name = "optionImage", required = false) String optionImage) {
 
-        log.info("company wish add: email={}, cmno={}, optionName={}", authentication.getName(), cmno, optionName);
-        service.addWithOption(authentication.getName(), cmno, optionName);
+        log.info("company wish add: email={}, cmno={}, optionName={}, optionAmount={}",
+                authentication.getName(), cmno, optionName, optionAmount);
+        service.addWithOption(authentication.getName(), cmno, optionName, optionAmount, optionImage);
         return Map.of("result", "success", "liked", true);
     }
 

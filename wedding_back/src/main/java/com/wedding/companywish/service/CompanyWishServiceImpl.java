@@ -33,7 +33,7 @@ public class CompanyWishServiceImpl implements CompanyWishService {
 
     @Override
     public void add(String memberEmail, Long cmno) {
-        addWithOption(memberEmail, cmno, "");
+        addWithOption(memberEmail, cmno, "", 0, null);
     }
 
     @Override
@@ -58,7 +58,7 @@ public class CompanyWishServiceImpl implements CompanyWishService {
     // ↓↓↓ 재원 추가 - 옵션과 함께 찜하기
 
     @Override
-    public void addWithOption(String memberEmail, Long cmno, String optionName) {
+    public void addWithOption(String memberEmail, Long cmno, String optionName, int optionAmount, String optionImage) {
         String normalized = optionName == null ? "" : optionName;
 
         if (companyWishRepository.existsByMemberEmailAndCmnoAndOptionName(memberEmail, cmno, normalized)) {
@@ -70,10 +70,13 @@ public class CompanyWishServiceImpl implements CompanyWishService {
                 .memberEmail(memberEmail)
                 .cmno(cmno)
                 .optionName(normalized)
+                .optionAmount(optionAmount)
+                .optionImage(optionImage)
                 .build();
 
         companyWishRepository.save(companyWish);
-        log.info("업체 찜 등록 완료. memberEmail={}, cmno={}, optionName={}", memberEmail, cmno, normalized);
+        log.info("업체 찜 등록 완료. memberEmail={}, cmno={}, optionName={}, optionAmount={}",
+                memberEmail, cmno, normalized, optionAmount);
     }
 
     @Override
@@ -103,6 +106,8 @@ public class CompanyWishServiceImpl implements CompanyWishService {
                             .wishId(wish.getWishId())
                             .cmno(wish.getCmno())
                             .optionName(wish.getOptionName())
+                            .optionAmount(wish.getOptionAmount())
+                            .optionImage(wish.getOptionImage())
                             .regDate(wish.getRegDate())
                             .category(company.getCategory() != null ? company.getCategory().name() : null)
                             .name(company.getName())

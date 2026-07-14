@@ -235,7 +235,9 @@ const WishTab = () => {
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {wishList.map((item) => {
-              const mainImage = item.uploadFileNames?.[0];
+              // 재원 수정 - 드레스처럼 옵션마다 이미지가 다른 경우 업체 대표사진이 아니라
+              // 실제 찜한 옵션의 이미지를 우선 보여줌 (없으면 업체 대표사진으로 대체)
+              const mainImage = item.optionImage || item.uploadFileNames?.[0];
 
               return (
                 <article
@@ -309,10 +311,18 @@ const WishTab = () => {
                       </p>
                     )}
 
-                    {item.priceAvg && (
+                    {/* 재원 수정 - 옵션 가격이 있으면 그 옵션의 정확한 가격을(할인 반영된 최종가),
+                        없으면 기존처럼 업체 대표가격을 "~"와 함께 대략치로 표시 */}
+                    {item.optionAmount > 0 ? (
                       <p className="mt-3 text-base font-medium">
-                        {Number(item.priceAvg).toLocaleString()}원~
+                        {Number(item.optionAmount).toLocaleString()}원
                       </p>
+                    ) : (
+                      item.priceAvg && (
+                        <p className="mt-3 text-base font-medium">
+                          {Number(item.priceAvg).toLocaleString()}원~
+                        </p>
+                      )
                     )}
                   </div>
                 </article>
