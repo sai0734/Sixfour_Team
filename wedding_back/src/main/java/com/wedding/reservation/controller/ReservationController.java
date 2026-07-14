@@ -14,6 +14,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+// 승진 코드 추가
+import com.wedding.reservation.dto.ReservationBulkPaymentConfirmRequestDTO;
+import com.wedding.reservation.dto.ReservationBulkPaymentPrepareDTO;
+// 승진 코드 추가 끝
 import com.wedding.reservation.dto.ReservationDTO;
 import com.wedding.reservation.dto.ReservationPaymentConfirmRequestDTO;
 import com.wedding.reservation.service.ReservationService;
@@ -116,5 +120,42 @@ public class ReservationController {
     return Map.of("RESULT", "SUCCESS");
   }
   // ↑↑↑ 재원 추가
+
+  // 승진 코드 추가
+  // 묶음 결제 - 주문번호 발급
+  @PreAuthorize("hasAnyRole('USER')")
+  @PostMapping("/payment/bulk-prepare")
+  public ReservationBulkPaymentPrepareDTO prepareBulkPayment(Principal principal,
+                                                              @RequestBody List<Long> reservationIds) {
+
+    log.info("ReservationController_prepareBulkPayment 실행~~~~~~~~ ids={}", reservationIds);
+
+    return service.prepareBulkPayment(reservationIds, principal.getName());
+  }
+
+  // 묶음 결제 - 토스 승인
+  @PreAuthorize("hasAnyRole('USER')")
+  @PostMapping("/payment/bulk-confirm")
+  public List<ReservationDTO> confirmBulkPayment(Principal principal,
+                                                  @RequestBody ReservationBulkPaymentConfirmRequestDTO requestDTO) {
+
+    log.info("ReservationController_confirmBulkPayment 실행~~~~~~~~ orderNumber={}", requestDTO.getOrderNumber());
+
+    return service.confirmBulkPayment(principal.getName(), requestDTO);
+  }
+
+  // 묶음 결제 취소/실패 처리
+  @PreAuthorize("hasAnyRole('USER')")
+  @PostMapping("/payment/bulk-cancel")
+  public Map<String, String> cancelBulkPayment(Principal principal,
+                                                @RequestBody List<Long> reservationIds) {
+
+    log.info("ReservationController_cancelBulkPayment 실행~~~~~~~~ ids={}", reservationIds);
+
+    service.cancelBulkPayment(reservationIds, principal.getName());
+
+    return Map.of("RESULT", "SUCCESS");
+  }
+  // 승진 코드 추가 끝
 
 }
