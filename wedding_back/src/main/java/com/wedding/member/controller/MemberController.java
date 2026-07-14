@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,6 +15,7 @@ import jakarta.validation.Valid;
 
 import com.wedding.global.util.JWTUtil;
 import com.wedding.global.util.RedisTokenService;
+import com.wedding.member.dto.MemberDetailDTO;
 import com.wedding.member.dto.SocialLinkDTO;
 import com.wedding.member.dto.WithdrawDTO;
 import com.wedding.member.service.MemberService;
@@ -88,6 +90,19 @@ public class MemberController {
   public Map<String, List<String>> getSocialAccounts(@RequestParam String email) {
 
     return Map.of("providers", memberService.getLinkedProviders(email));
+  }
+
+  // 마이페이지 회원정보수정 - 이름/전화번호/생년월일/주소 조회
+  @GetMapping("/detail")
+  public MemberDetailDTO getDetail(@RequestParam String email) {
+    return memberService.getMemberDetail(email);
+  }
+
+  // 마이페이지 회원정보수정 - 이름/전화번호/생년월일/주소 저장
+  @PutMapping("/detail")
+  public Map<String, String> modifyDetail(@Valid @RequestBody MemberDetailDTO memberDetailDTO) {
+    memberService.modifyMemberDetail(memberDetailDTO);
+    return Map.of("RESULT", "SUCCESS");
   }
 
 }

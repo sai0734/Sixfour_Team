@@ -9,6 +9,7 @@ import com.wedding.member.dto.KakaoAuthResultDTO;
 import com.wedding.member.dto.KakaoLinkConfirmDTO;
 import com.wedding.member.dto.KakaoSignupCompleteDTO;
 import com.wedding.member.dto.MemberDTO;
+import com.wedding.member.dto.MemberDetailDTO;
 import com.wedding.member.dto.MemberModifyDTO;
 import com.wedding.member.dto.PasswordResetConfirmDTO;
 import com.wedding.member.dto.PasswordResetRequestDTO;
@@ -27,6 +28,10 @@ public interface MemberService {
     java.util.Map<String, Object> confirmKakaoEmailLink(KakaoLinkConfirmDTO dto);
 
     void modifyMember(MemberModifyDTO memberModifyDTO);
+
+    // 마이페이지 회원정보수정에서 이름/전화번호/생년월일/주소 조회·수정
+    MemberDetailDTO getMemberDetail(String email);
+    void modifyMemberDetail(MemberDetailDTO memberDetailDTO);
     void join(JoinDTO joinDTO);
     boolean checkEmailAvailable(String email);
     boolean checkNicknameAvailable(String nickname);

@@ -88,9 +88,11 @@ public class JWTCheckFilter extends OncePerRequestFilter{
         }
 
         if(request.getMethod().equals("GET") && path.startsWith("/api/companies/")
-                && !path.equals("/api/companies/managers")){
+                && !path.equals("/api/companies/managers")
+                && !path.equals("/api/companies/my-managed")
+                && !path.equals("/api/companies/managed-by")){
             return true; // 회사 목록/상세/더미 조회가 JWT 필터에 막혀 프론트 공개 조회가 실패하던 문제 수정
-            // (/managers는 관리자 전용이라 예외 - JWT를 반드시 검증해야 @PreAuthorize("hasRole('ADMIN')")가 작동함)
+            // (/managers, /my-managed, /managed-by는 로그인/권한 필요 - JWT를 반드시 검증해야 함)
         }
 
         // 게시판 목록/상세 조회는 비로그인 사용자도 볼 수 있어야 함 (커뮤니티 글은 공개 조회)

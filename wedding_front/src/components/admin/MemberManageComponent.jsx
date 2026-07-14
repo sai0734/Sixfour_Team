@@ -9,7 +9,7 @@ import {
   getList as getCompanyList,
   assignCompanyManager,
   unassignCompanyManager,
-  getMyManagedCompany,
+  getManagedCompanyByEmail,
   getManagedCompanies,
 } from "../../api/companyApi";
 import PageComponent from "../common/PageComponent";
@@ -176,7 +176,7 @@ const MemberManageComponent = () => {
         companyOptions.length > 0
           ? Promise.resolve({ dtoList: companyOptions })
           : getCompanyList({ page: 1, size: 200 }),
-        getMyManagedCompany(member.email),
+        getManagedCompanyByEmail(member.email),
       ]);
 
       if (companyOptions.length === 0) {
