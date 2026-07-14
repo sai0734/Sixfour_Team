@@ -61,8 +61,15 @@ public class CompanyWishServiceImpl implements CompanyWishService {
     public void addWithOption(String memberEmail, Long cmno, String optionName, int optionAmount, String optionImage) {
         String normalized = optionName == null ? "" : optionName;
 
-        if (companyWishRepository.existsByMemberEmailAndCmnoAndOptionName(memberEmail, cmno, normalized)) {
-            log.info("이미 찜한 옵션입니다. memberEmail={}, cmno={}, optionName={}", memberEmail, cmno, normalized);
+        var existing = companyWishRepository
+                .findByMemberEmailAndCmnoAndOptionName(memberEmail, cmno, normalized);
+
+        if (existing.isPresent()) {
+            CompanyWish wish = existing.get();
+            wish.changeOptionInfo(optionAmount, optionImage);
+            companyWishRepository.save(wish);
+            log.info("기존 찜 옵션 가격 갱신. memberEmail={}, cmno={}, optionName={}, optionAmount={}",
+                    memberEmail, cmno, normalized, optionAmount);
             return;
         }
 
