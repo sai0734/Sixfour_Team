@@ -29,7 +29,11 @@ import com.wedding.company.repository.MakeupDetailRepository;
 import com.wedding.company.repository.MakeupPackageRepository;
 import com.wedding.company.repository.StudioDetailRepository;
 import com.wedding.global.dto.PageResponseDTO;
+import com.wedding.member.domain.Member;
+import com.wedding.member.domain.MemberRole;
+import com.wedding.member.repository.MemberRepository;
 import java.util.List;
+import java.util.NoSuchElementException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Page;
@@ -53,6 +57,7 @@ public class CompanyServiceImpl implements CompanyService {
   private final MakeupDetailRepository makeupDetailRepository;
   private final MakeupPackageRepository makeupPackageRepository;
   private final StudioDetailRepository studioDetailRepository;
+  private final MemberRepository memberRepository;
 
   @Override
   @Transactional(readOnly = true)
@@ -123,18 +128,62 @@ public class CompanyServiceImpl implements CompanyService {
   @Override
   public void assignManager(Long cmno, String managerEmail) {
     // 한 회원은 업체 1곳만 담당 - 이 회원이 이미 다른 업체를 담당 중이면 그쪽부터 해제
+    // (이 회원은 새 업체를 담당하게 되므로 MANAGER 권한은 유지, 이전 업체만 해제)
     companyRepository.findByManagerEmail(managerEmail)
             .filter(existing -> !existing.getCmno().equals(cmno))
             .ifPresent(Company::unassignManager);
 
     Company company = companyRepository.selectOne(cmno).orElseThrow();
+
+    // 이 업체를 이미 담당하던 다른 회원이 있다면, 그 회원은 더 이상 담당 업체가 없으므로 MANAGER 권한 해제
+    String previousManagerEmail = company.getManagerEmail();
+    if (previousManagerEmail != null && !previousManagerEmail.equals(managerEmail)) {
+      downgradeIfNoOtherCompany(previousManagerEmail);
+    }
+
     company.assignManager(managerEmail);
+
+    // 새로 임명된 회원에게 MANAGER 권한 부여 (기존에 이 부분이 누락되어 DB에 권한이 반영되지 않았음)
+    grantManagerRole(managerEmail);
   }
 
   @Override
   public void unassignManager(Long cmno) {
     Company company = companyRepository.selectOne(cmno).orElseThrow();
+    String managerEmail = company.getManagerEmail();
     company.unassignManager();
+
+    if (managerEmail != null) {
+      downgradeIfNoOtherCompany(managerEmail);
+    }
+  }
+
+  // 해당 회원에게 MANAGER 권한을 부여한다.
+  // 매니저는 "업체 문의 답변" 기능만 쓸 수 있어야 하므로, 일반 회원(USER) 권한은 함께 회수한다.
+  // (ADMIN이 매니저로 겸직하는 경우는 굳이 USER를 뺏지 않음 - 관리자 기능 보호 차원)
+  private void grantManagerRole(String managerEmail) {
+    Member member = memberRepository.getWithRoles(managerEmail);
+    if (member == null) {
+      throw new NoSuchElementException("해당 회원을 찾을 수 없습니다: " + managerEmail);
+    }
+    member.addRole(MemberRole.MANAGER);
+    if (!member.getMemberRoleList().contains(MemberRole.ADMIN)) {
+      member.removeRole(MemberRole.USER);
+    }
+    memberRepository.save(member);
+  }
+
+  // 해당 회원이 더 이상 담당 중인 업체가 없다면 MANAGER 권한을 회수하고, 일반 회원(USER) 권한을 되돌려준다
+  private void downgradeIfNoOtherCompany(String managerEmail) {
+    boolean stillManaging = companyRepository.findByManagerEmail(managerEmail).isPresent();
+    if (!stillManaging) {
+      Member member = memberRepository.getWithRoles(managerEmail);
+      if (member != null) {
+        member.removeRole(MemberRole.MANAGER);
+        member.addRole(MemberRole.USER);
+        memberRepository.save(member);
+      }
+    }
   }
 
   @Override

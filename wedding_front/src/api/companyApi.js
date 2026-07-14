@@ -68,7 +68,6 @@ export const deleteOne = async (cmno) => {
 
 export const uploadCompanyImages = async (files) => {
   const formData = new FormData();
-
   Array.from(files || []).forEach((file) => {
     formData.append("files", file);
   });
@@ -80,7 +79,6 @@ export const uploadCompanyImages = async (files) => {
   const res = await jwtAxios.post(`${imageHost}/upload`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
-
   return res.data.uploadFileNames || [];
 };
 
@@ -88,17 +86,13 @@ export const getCompanyImageUrl = (fileName, thumbnail = false) => {
   if (!fileName) {
     return "";
   }
-
   const normalizedFileName = String(fileName).trim();
-
   if (/^(https?:)?\/\//.test(normalizedFileName)) {
     return normalizedFileName;
   }
-
   if (normalizedFileName.startsWith("/api/")) {
     return `${API_SERVER_HOST}${normalizedFileName}`;
   }
-
   if (normalizedFileName.startsWith("/")) {
     return `${API_SERVER_HOST}${normalizedFileName}`;
   }
@@ -107,7 +101,6 @@ export const getCompanyImageUrl = (fileName, thumbnail = false) => {
     thumbnail && !normalizedFileName.startsWith("s_")
       ? `s_${normalizedFileName}`
       : normalizedFileName;
-
   return `${imageHost}/view/${encodeURIComponent(viewFileName)}`;
 };
 
@@ -123,11 +116,9 @@ export const getDummyList = async (pageParam = {}) => {
   } = pageParam;
   const res = await axios.get(`${host}/dummy`);
   let list = normalizeDummyCompanies(res.data);
-
   if (category) {
     list = list.filter((company) => company.category === category);
   }
-
   if (keyword) {
     const loweredKeyword = keyword.toLowerCase();
     list = list.filter((company) =>
@@ -139,13 +130,11 @@ export const getDummyList = async (pageParam = {}) => {
       ),
     );
   }
-
   if (minPrice) {
     list = list.filter(
       (company) => Number(company.priceAvg || 0) >= Number(minPrice),
     );
   }
-
   if (maxPrice) {
     list = list.filter(
       (company) => Number(company.priceAvg || 0) <= Number(maxPrice),
@@ -153,7 +142,6 @@ export const getDummyList = async (pageParam = {}) => {
   }
 
   list = sortCompanies(list, sort);
-
   const totalCount = list.length;
   const start = (page - 1) * size;
   const dtoList = list.slice(start, start + size);
@@ -162,7 +150,6 @@ export const getDummyList = async (pageParam = {}) => {
     { length: totalPage },
     (_, index) => index + 1,
   );
-
   return {
     dtoList,
     pageNumList,
@@ -182,11 +169,9 @@ export const getDummyOne = async (cmno) => {
   const company = normalizeDummyCompanies(res.data).find(
     (item) => String(item.cmno) === String(cmno),
   );
-
   if (!company) {
     throw new Error(`Dummy company not found. cmno=${cmno}`);
   }
-
   return company;
 };
 
@@ -194,7 +179,6 @@ const normalizeDummyCompanies = (data) => {
   const list = Array.isArray(data)
     ? data
     : data?.companies || data?.dtoList || data?.list || [];
-
   return list
     .filter(
       (item) =>
@@ -218,7 +202,6 @@ const normalizeCompany = (company = {}) => {
       )
       .filter(Boolean) ||
     [];
-
   return {
     ...company,
     cmno: company.cmno || company.companyId || company.id,
@@ -242,19 +225,16 @@ const normalizeCompany = (company = {}) => {
 
 const sortCompanies = (list, sort) => {
   const copiedList = [...list];
-
   if (sort === "name") {
     return copiedList.sort((a, b) =>
       String(a.name || "").localeCompare(String(b.name || "")),
     );
   }
-
   if (sort === "price") {
     return copiedList.sort(
       (a, b) => Number(a.priceAvg || 0) - Number(b.priceAvg || 0),
     );
   }
-
   return copiedList.sort((a, b) => Number(b.cmno || 0) - Number(a.cmno || 0));
 };
 
@@ -290,13 +270,5 @@ export const getMyManagedCompany = async () => {
 // 관리자 - 담당자 지정된 업체 전체 목록 (회원관리 "담당자 탭"용)
 export const getManagedCompanies = async () => {
   const res = await jwtAxios.get(`${host}/managers`);
-  return res.data;
-};
-
-export const updateMemberRole = async (email, role) => {
-  const res = await jwtAxios.put(
-    `${API_SERVER_HOST}/api/members/role/${email}`,
-    { role },
-  );
   return res.data;
 };

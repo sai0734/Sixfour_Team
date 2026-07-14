@@ -2,7 +2,6 @@ package com.wedding.member.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.*;
@@ -11,12 +10,11 @@ import com.wedding.member.domain.Member;
 
 public interface MemberRepository extends JpaRepository<Member, String> {
 
-  @EntityGraph(attributePaths = {"memberRoleList"})
-  @Query("select m from Member m where m.email = :email")
+  // JOIN FETCH를 사용하여 권한 리스트를 즉시 로딩하도록 강제
+  @Query("select m from Member m left join fetch m.memberRoleList where m.email = :email")
   Member getWithRoles(@Param("email") String email);
 
   boolean existsByNickname(String nickname);
-
 
   @EntityGraph(attributePaths = {"memberRoleList"})
   @Query("select m from Member m " +
@@ -28,9 +26,7 @@ public interface MemberRepository extends JpaRepository<Member, String> {
                              @Param("status") String status,
                              Pageable pageable);
 
-
   @Query("select m from Member m where m.status = 'BLACKLIST' " +
           "and m.suspendUntil is not null and m.suspendUntil <= :now")
   List<Member> findExpiredSuspensions(@Param("now") LocalDateTime now);
-
 }
