@@ -26,6 +26,8 @@ public interface CompanyWishRepository extends JpaRepository<CompanyWish, Long> 
     /** 특정 옵션으로 이미 찜했는지 확인 (중복 찜 방지) */
     boolean existsByMemberEmailAndCmnoAndOptionName(String memberEmail, Long cmno, String optionName);
 
+    Optional<CompanyWish> findByMemberEmailAndCmnoAndOptionName(String memberEmail, Long cmno, String optionName);
+
     /** 특정 옵션의 찜 삭제 */
     void deleteByMemberEmailAndCmnoAndOptionName(String memberEmail, Long cmno, String optionName);
 

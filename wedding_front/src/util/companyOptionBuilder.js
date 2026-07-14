@@ -57,66 +57,97 @@ export const buildCompanyOptions = (company) => {
     const detail = company.makeupDetail;
     const packages = (detail?.packages || []).filter(Boolean);
 
-    if (packages.length > 0) {
-      const priceMap = {
-        hair: Number(detail.hairPrice || 0),
-        makeup: Number(detail.makeupPrice || 0),
-        nail: Number(detail.nailPrice || 0),
-      };
-      const keysByType = {
-        HAIR: ["hair"],
-        MAKEUP: ["makeup"],
-        NAIL: ["nail"],
-        HAIR_MAKEUP: ["hair", "makeup"],
-        HAIR_NAIL: ["hair", "nail"],
-        MAKEUP_NAIL: ["makeup", "nail"],
-        FULL: ["hair", "makeup", "nail"],
-      };
-      return packages.map((pkg, idx) => {
-        const keys = keysByType[pkg.packageType] || [];
-        const basePrice = keys.reduce((sum, k) => sum + (priceMap[k] || 0), 0);
-        const rate = Number(pkg.discountRate || 0);
-        const discountRate = rate > 1 ? rate / 100 : rate;
-        const finalPrice =
-          basePrice > 0 && discountRate > 0
-            ? Math.round(basePrice * (1 - discountRate))
-            : basePrice;
-        return {
-          key: `makeup-pkg-${idx}`,
-          label:
-            packageTypeLabel[pkg.packageType] ||
-            pkg.packageType ||
-            `패키지 ${idx + 1}`,
+    const services = [
+      { key: "hair", label: "헤어", price: Number(detail?.hairPrice || 0) },
+      {
+        key: "makeup",
+        label: "메이크업",
+        price: Number(detail?.makeupPrice || 0),
+      },
+      { key: "nail", label: "네일", price: Number(detail?.nailPrice || 0) },
+    ].filter((service) => service.price > 0);
+
+    if (services.length === 0) return [];
+
+    // 할인율은 백엔드 더미데이터의 TWO/THREE 타입과
+    // 명시적인 조합 타입(HAIR_MAKEUP 등)을 모두 지원한다.
+    const normalizeRate = (value) => {
+      const rate = Number(value || 0);
+      return rate > 1 ? rate / 100 : rate;
+    };
+
+    const packageRateMap = new Map(
+      packages.map((pkg) => [pkg.packageType, normalizeRate(pkg.discountRate)]),
+    );
+
+    const getPairRate = (firstKey, secondKey) => {
+      const explicitType = {
+        "hair|makeup": "HAIR_MAKEUP",
+        "hair|nail": "HAIR_NAIL",
+        "makeup|nail": "MAKEUP_NAIL",
+      }[[firstKey, secondKey].sort().join("|")];
+
+      return packageRateMap.get(explicitType) ?? packageRateMap.get("TWO") ?? 0;
+    };
+
+    const getTripleRate = () =>
+      packageRateMap.get("FULL") ?? packageRateMap.get("THREE") ?? 0;
+
+    const applyDiscount = (basePrice, discountRate) =>
+      discountRate > 0 ? Math.round(basePrice * (1 - discountRate)) : basePrice;
+
+    const options = [];
+
+    // 1) 실제 취급하는 서비스는 각각 단품으로 항상 선택 가능
+    services.forEach((service) => {
+      options.push({
+        key: `makeup-single-${service.key}`,
+        label: service.label,
+        detail: "단품",
+        price: service.price,
+      });
+    });
+
+    // 2) 실제 취급 서비스 중 가능한 모든 2개 조합 생성
+    for (let i = 0; i < services.length; i += 1) {
+      for (let j = i + 1; j < services.length; j += 1) {
+        const first = services[i];
+        const second = services[j];
+        const discountRate = getPairRate(first.key, second.key);
+        const basePrice = first.price + second.price;
+
+        options.push({
+          key: `makeup-pair-${first.key}-${second.key}`,
+          label: `${first.label}+${second.label} 패키지`,
           detail:
             discountRate > 0
               ? `${Math.round(discountRate * 100)}% 할인 적용가`
               : "",
-          price: finalPrice,
-        };
+          price: applyDiscount(basePrice, discountRate),
+        });
+      }
+    }
+
+    // 3) 3개를 모두 취급하는 업체는 전체 패키지도 생성
+    if (services.length === 3) {
+      const discountRate = getTripleRate();
+      const basePrice = services.reduce(
+        (sum, service) => sum + service.price,
+        0,
+      );
+
+      options.push({
+        key: "makeup-triple-hair-makeup-nail",
+        label: `${services.map((service) => service.label).join("+")} 패키지`,
+        detail:
+          discountRate > 0
+            ? `${Math.round(discountRate * 100)}% 할인 적용가`
+            : "",
+        price: applyDiscount(basePrice, discountRate),
       });
     }
 
-    // 패키지가 없으면 단품 가격이라도 노출
-    const single = [];
-    if (detail?.hairPrice)
-      single.push({
-        key: "hair",
-        label: "헤어",
-        price: Number(detail.hairPrice),
-      });
-    if (detail?.makeupPrice)
-      single.push({
-        key: "makeup",
-        label: "메이크업",
-        price: Number(detail.makeupPrice),
-      });
-    if (detail?.nailPrice)
-      single.push({
-        key: "nail",
-        label: "네일",
-        price: Number(detail.nailPrice),
-      });
-    return single.map((s) => ({ ...s, key: `makeup-${s.key}`, detail: "" }));
+    return options;
   }
 
   // STUDIO 등 별도 아이템 가격이 없는 카테고리 - 대표 가격(priceAvg) 하나로 대체
