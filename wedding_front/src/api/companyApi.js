@@ -272,3 +272,10 @@ export const getManagedCompanies = async () => {
   const res = await jwtAxios.get(`${host}/managers`);
   return res.data;
 };
+
+// 관리자 - 특정 회원(target)이 이미 담당 중인 업체가 있는지 조회
+// (회원관리 "담당자 임명" 모달에서, 대상 회원의 기존 담당 업체를 미리 보여줄 때 사용)
+export const getManagedCompanyByEmail = async (email) => {
+  const res = await jwtAxios.get(`${host}/managed-by`, { params: { email } });
+  return res.data;
+};
