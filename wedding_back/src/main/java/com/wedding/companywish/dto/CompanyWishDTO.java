@@ -23,6 +23,10 @@ public class CompanyWishDTO {
     // 재원 추가
     private String optionName;
 
+    private int optionAmount;
+
+    private String optionImage;
+
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime regDate;
 }

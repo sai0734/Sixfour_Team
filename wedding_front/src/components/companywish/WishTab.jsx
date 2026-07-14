@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { getMyCompanyWishes, removeCompanyWish } from "../../api/companywishApi";
+import {
+  getMyCompanyWishes,
+  removeCompanyWishByWishId,
+} from "../../api/companywishApi";
 import {
   getListByMember as getProductWishList,
   deleteWish as deleteProductWish,
@@ -39,6 +42,8 @@ const WishTab = () => {
   };
 
   // ── 업체 찜 상태 ──
+  // 재원 수정 - 옵션(홀/드레스/메이크업)별로 같은 업체를 여러 건 찜할 수 있게 되면서
+  // cmno 대신 wishId를 선택/삭제 기준 키로 사용
   const [wishList, setWishList] = useState([]);
   const [companyLoading, setCompanyLoading] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
@@ -56,7 +61,9 @@ const WishTab = () => {
     setCompanyLoading(true);
     getMyCompanyWishes()
       .then((data) => {
-        const list = Array.isArray(data) ? data : data?.dtoList ?? data?.content ?? [];
+        const list = Array.isArray(data)
+          ? data
+          : (data?.dtoList ?? data?.content ?? []);
         setWishList(list);
         setSelectedIds(new Set());
       })
@@ -76,17 +83,17 @@ const WishTab = () => {
     });
   }, [loginState.email, productRefresh]);
 
-  // ── 업체 찜 해제 (단건) ──
-  const handleRemoveCompanyWish = async (event, cmno) => {
+  // ── 업체 찜 해제 (단건, wishId 기준) ──
+  const handleRemoveCompanyWish = async (event, wishId) => {
     event.stopPropagation();
     if (!window.confirm("찜한 업체에서 삭제하시겠습니까?")) return;
 
     try {
-      await removeCompanyWish(cmno);
-      setWishList((prev) => prev.filter((c) => c.cmno !== cmno));
+      await removeCompanyWishByWishId(wishId);
+      setWishList((prev) => prev.filter((c) => c.wishId !== wishId));
       setSelectedIds((prev) => {
         const next = new Set(prev);
-        next.delete(cmno);
+        next.delete(wishId);
         return next;
       });
     } catch (e) {
@@ -95,11 +102,11 @@ const WishTab = () => {
     }
   };
 
-  // ── 업체 찜 선택/전체선택 ──
-  const toggleSelect = (cmno) => {
+  // ── 업체 찜 선택/전체선택 (wishId 기준) ──
+  const toggleSelect = (wishId) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      next.has(cmno) ? next.delete(cmno) : next.add(cmno);
+      next.has(wishId) ? next.delete(wishId) : next.add(wishId);
       return next;
     });
   };
@@ -108,17 +115,20 @@ const WishTab = () => {
     setSelectedIds((prev) =>
       prev.size === wishList.length
         ? new Set()
-        : new Set(wishList.map((c) => c.cmno)),
+        : new Set(wishList.map((c) => c.wishId)),
     );
   };
 
-  // ── 업체 찜 선택 삭제 ──
+  // ── 업체 찜 선택 삭제 (wishId 기준) ──
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return;
-    if (!window.confirm(`선택한 ${selectedIds.size}곳을 찜 취소하시겠습니까?`)) return;
+    if (!window.confirm(`선택한 ${selectedIds.size}건을 찜 취소하시겠습니까?`))
+      return;
 
     try {
-      await Promise.all([...selectedIds].map((cmno) => removeCompanyWish(cmno)));
+      await Promise.all(
+        [...selectedIds].map((wishId) => removeCompanyWishByWishId(wishId)),
+      );
       setCompanyRefresh((r) => !r);
     } catch (e) {
       console.error("선택 삭제 실패:", e);
@@ -145,7 +155,8 @@ const WishTab = () => {
 
   const handleBulkDeleteProduct = () => {
     if (selectedPnos.size === 0) return;
-    if (!window.confirm(`선택한 ${selectedPnos.size}개를 찜 취소하시겠습니까?`)) return;
+    if (!window.confirm(`선택한 ${selectedPnos.size}개를 찜 취소하시겠습니까?`))
+      return;
 
     Promise.all([...selectedPnos].map((pno) => deleteProductWish(pno)))
       .then(() => setProductRefresh((r) => !r))
@@ -183,7 +194,10 @@ const WishTab = () => {
                 <label className="flex items-center gap-1.5 text-xs text-ink-soft cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={wishList.length > 0 && selectedIds.size === wishList.length}
+                    checked={
+                      wishList.length > 0 &&
+                      selectedIds.size === wishList.length
+                    }
                     onChange={toggleSelectAll}
                     className="accent-brand"
                   />
@@ -203,9 +217,7 @@ const WishTab = () => {
           </div>
 
           {companyLoading && (
-            <div className="text-center text-ink-faint py-16">
-              로딩 중...
-            </div>
+            <div className="text-center text-ink-faint py-16">로딩 중...</div>
           )}
 
           {!companyLoading && wishList.length === 0 && (
@@ -222,32 +234,34 @@ const WishTab = () => {
           )}
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {wishList.map((company) => {
-              const mainImage = company.uploadFileNames?.[0];
+            {wishList.map((item) => {
+              // 재원 수정 - 드레스처럼 옵션마다 이미지가 다른 경우 업체 대표사진이 아니라
+              // 실제 찜한 옵션의 이미지를 우선 보여줌 (없으면 업체 대표사진으로 대체)
+              const mainImage = item.optionImage || item.uploadFileNames?.[0];
 
               return (
                 <article
-                  key={company.cmno}
+                  key={item.wishId}
                   className="relative bg-white rounded-2xl border border-line overflow-hidden transition hover:border-brand hover:shadow-md cursor-pointer"
-                  onClick={() => navigate(`/companies/read/${company.cmno}`)}
+                  onClick={() => navigate(`/companies/read/${item.cmno}`)}
                 >
-                  {/* 체크박스 */}
+                  {/* 체크박스 - 카드 우측 상단, 조금 더 크게 */}
                   <input
                     type="checkbox"
-                    checked={selectedIds.has(company.cmno)}
+                    checked={selectedIds.has(item.wishId)}
                     onChange={(e) => {
                       e.stopPropagation();
-                      toggleSelect(company.cmno);
+                      toggleSelect(item.wishId);
                     }}
                     onClick={(e) => e.stopPropagation()}
-                    className="absolute top-3 left-3 w-4 h-4 accent-brand z-10"
+                    className="absolute top-3 right-3 w-5 h-5 accent-brand z-10"
                   />
 
                   {/* 대표 이미지 */}
                   {mainImage ? (
                     <img
                       src={getCompanyImageUrl(mainImage)}
-                      alt={company.name}
+                      alt={item.name}
                       className="h-44 w-full object-cover"
                     />
                   ) : (
@@ -259,41 +273,56 @@ const WishTab = () => {
                   <div className="p-4">
                     <div className="mb-2 flex items-center justify-between gap-2">
                       <span className="rounded-full bg-blush-100 px-2.5 py-1 text-xs text-brand-deep">
-                        {categoryLabel[company.category] || company.category}
+                        {categoryLabel[item.category] || item.category}
                       </span>
 
                       {/* 찜 해제 버튼 */}
                       <button
                         type="button"
-                        onClick={(e) => handleRemoveCompanyWish(e, company.cmno)}
+                        onClick={(e) => handleRemoveCompanyWish(e, item.wishId)}
                         className="text-lg text-rose-500 transition hover:scale-110"
                         title="찜 해제"
-                        aria-label={`${company.name} 찜 해제`}
+                        aria-label={`${item.name} 찜 해제`}
                       >
                         ♥
                       </button>
                     </div>
 
                     <p className="truncate text-base font-semibold text-ink">
-                      {company.name}
+                      {item.name}
                     </p>
 
-                    {company.address && (
+                    {/* 재원 추가 - 옵션과 함께 찜한 경우 어떤 옵션인지 표시 */}
+                    {item.optionName && (
+                      <p className="mt-1 truncate text-xs font-medium text-brand">
+                        찜한 옵션: {item.optionName}
+                      </p>
+                    )}
+
+                    {item.address && (
                       <p className="mt-2 line-clamp-2 text-sm text-ink-muted">
-                        📍 {company.address}
+                        📍 {item.address}
                       </p>
                     )}
 
-                    {company.phone && (
+                    {item.phone && (
                       <p className="mt-1 text-sm text-ink-muted">
-                        📞 {company.phone}
+                        📞 {item.phone}
                       </p>
                     )}
 
-                    {company.priceAvg && (
+                    {/* 재원 수정 - 옵션 가격이 있으면 그 옵션의 정확한 가격을(할인 반영된 최종가),
+                        없으면 기존처럼 업체 대표가격을 "~"와 함께 대략치로 표시 */}
+                    {item.optionAmount > 0 ? (
                       <p className="mt-3 text-base font-medium">
-                        {Number(company.priceAvg).toLocaleString()}원~
+                        {Number(item.optionAmount).toLocaleString()}원
                       </p>
+                    ) : (
+                      item.priceAvg && (
+                        <p className="mt-3 text-base font-medium">
+                          {Number(item.priceAvg).toLocaleString()}원~
+                        </p>
+                      )
                     )}
                   </div>
                 </article>
@@ -353,7 +382,7 @@ const WishTab = () => {
                   type="checkbox"
                   checked={selectedPnos.has(item.pno)}
                   onChange={() => toggleSelectProduct(item.pno)}
-                  className="absolute top-4 left-4 w-4 h-4 accent-brand z-10"
+                  className="absolute top-3 right-3 w-5 h-5 accent-brand z-10"
                 />
 
                 <Link

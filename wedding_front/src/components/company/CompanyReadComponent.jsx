@@ -228,13 +228,28 @@ const CompanyReadComponent = () => {
     }
   };
 
-  const handleWishOptionSubmit = async (optionName) => {
+  // 용현 추가 문의하기 클릭 — 로그인 확인 후 채팅 시작
+  const handleInquiryClick = () => {
+    if (!loginState.email) {
+      alert("로그인이 필요한 기능입니다.");
+      navigate("/auth/login");
+      return;
+    }
+    setInquiryOpenRequest((prev) => prev + 1);
+  };
+
+  const handleWishOptionSubmit = async (option) => {
     try {
       setFavoriteLoading(true);
-      await addCompanyWish(company.cmno, optionName);
+      await addCompanyWish(
+        company.cmno,
+        option.label,
+        option.price,
+        option.image,
+      );
       setLiked(true);
       setWishModalOpen(false);
-      alert(`"${optionName}" 옵션으로 찜했습니다.`);
+      alert(`"${option.label}" 옵션으로 찜했습니다.`);
     } catch (err) {
       console.error("업체 찜 처리 실패:", err);
       exceptionHandle(err);

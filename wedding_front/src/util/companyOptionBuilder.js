@@ -47,6 +47,9 @@ export const buildCompanyOptions = (company) => {
       label: item.itemName || `드레스 옵션 ${idx + 1}`,
       detail: item.sizeRange || "",
       price: Number(item.price || 0),
+      // 재원 추가 - 드레스는 아이템마다 이미지가 달라서, 찜할 때 이 옵션 이미지를 같이 저장해야
+      // 마이페이지 찜 목록에서 실제 고른 드레스 사진이 보임 (업체 대표사진이 아니라)
+      image: item.imageUrl || null,
     }));
   }
 

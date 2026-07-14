@@ -15,7 +15,9 @@ const CompanyWishOptionModal = ({
   const handleConfirm = () => {
     const selected = options.find((o) => o.key === selectedKey);
     if (!selected) return;
-    onSubmit(selected.label);
+    // 재원 수정 - 라벨만 넘기던 걸 옵션 객체 전체(가격/이미지 포함)로 변경.
+    // 마이페이지 찜 목록에서 이 옵션의 실제 가격/이미지를 보여주려면 필요함.
+    onSubmit(selected);
   };
 
   return (
