@@ -43,6 +43,12 @@ public class InquiryRoom extends BaseTimeEntity {
     @Builder.Default
     private InquiryRoomStatus status = InquiryRoomStatus.OPEN;
 
+    // 회원이 메시지를 마지막으로 확인한 시각
+    private LocalDateTime memberLastReadAt;
+
+    // 매니저가 메시지를 마지막으로 확인한 시각
+    private LocalDateTime managerLastReadAt;
+
     // 메시지 전송 시 LastMessageAt 갱신
     public void updateLastMessageAt(LocalDateTime time) {
         this.lastMessageAt = time;
@@ -51,4 +57,15 @@ public class InquiryRoom extends BaseTimeEntity {
     public void close() {
         this.status = InquiryRoomStatus.CLOSED;
     }
+
+    // 회원이 메시지를 읽은 시각 갱신
+    public void markReadByMember(LocalDateTime time) {
+        this.memberLastReadAt = time;
+    }
+
+    // 매니저가 메시지를 읽은 시각 갱신
+    public void markReadByManager(LocalDateTime time) {
+        this.managerLastReadAt = time;
+    }
+
 }

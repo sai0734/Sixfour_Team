@@ -14,9 +14,17 @@ public class OpenAiRequestDTO {
 
     private List<OpenAiMessageDTO> messages;
 
-    public OpenAiRequestDTO(String model,List<OpenAiMessageDTO> messages) {
+    private List<OpenAiToolDTO> tools;
+
+    public OpenAiRequestDTO(String model, List<OpenAiMessageDTO> messages) {
         this.model = model;
         this.messages = messages;
+    }
+
+    public OpenAiRequestDTO(String model, List<OpenAiMessageDTO> messages, List<OpenAiToolDTO> tools) {
+        this.model = model;
+        this.messages = messages;
+        this.tools = tools;
     }
 
 }

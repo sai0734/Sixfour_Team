@@ -18,4 +18,7 @@ public interface InquiryService {
 
     // 메시지 전송 — 저장 + 방의 lastMessageAt 갱신
     InquiryMessageDTO sendMessage(Long roomId, String senderEmail, String content);
+
+    // 회원 화면 — 내가 연 모든 문의방 목록 (안읽음 뱃지 폴링용)
+    List<InquiryRoomDTO> listRoomsByMember(String callerEmail);
 }

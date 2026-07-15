@@ -7,10 +7,36 @@ import {
 
 const POLL_INTERVAL_MS = 3000;
 
+// 날짜 구분선 표시용 — 메시지 목록에서 날짜가 바뀔 때 사이에 넣는다
+const formatDateSeparator = (regDate) => {
+  if (!regDate) return "";
+  const date = new Date(regDate);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "short",
+  });
+};
+
+// 두 시각이 같은 날짜인지 비교
+const isSameDate = (a, b) => {
+  if (!a || !b) return false;
+  const dateA = new Date(a);
+  const dateB = new Date(b);
+  return (
+    dateA.getFullYear() === dateB.getFullYear() &&
+    dateA.getMonth() === dateB.getMonth() &&
+    dateA.getDate() === dateB.getDate()
+  );
+};
+
 const CompanyChatModal = ({
   companyName,
   roomId,
   onMinimize,
+  onLeave,
   subtitle = "업체 문의",
 }) => {
   const email = useSelector((state) => state.loginSlice?.email);
@@ -42,7 +68,8 @@ const CompanyChatModal = ({
     }
   }, [roomId]);
 
-  // 모달 열릴 때 메시지 로드 + 폴링 시작
+  // 모달 열릴 때 메시지 로드 + 폴링 시작 - 탭이 백그라운드면 폴링 요청은 건너뛰고,
+  // 다시 포그라운드로 돌아오면 즉시 한 번 갱신
   useEffect(() => {
     if (!roomId) return;
 
@@ -50,10 +77,21 @@ const CompanyChatModal = ({
     loadMessages();
 
     const timer = setInterval(() => {
+      if (document.hidden) return;
       loadMessages();
     }, POLL_INTERVAL_MS);
 
-    return () => clearInterval(timer);
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        loadMessages();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [roomId, loadMessages]);
 
   // 새 메시지 오면 맨 아래로 스크롤
@@ -109,6 +147,16 @@ const CompanyChatModal = ({
     }
   };
 
+  // 채팅방 나가기 — 목록에서 완전히 제거 (서버 대화 기록은 유지)
+  const handleLeaveClick = () => {
+    const confirmed = window.confirm(
+      `${companyName} 문의 채팅을 나가시겠습니까?\n대화 내용은 남아있고, 나중에 다시 문의하면 이어서 볼 수 있습니다.`,
+    );
+    if (confirmed) {
+      onLeave();
+    }
+  };
+
   // 내 메시지인지 판별 (말풍선 좌/우 구분)
   const isMine = (senderEmail) => senderEmail === email;
 
@@ -127,14 +175,25 @@ const CompanyChatModal = ({
             <p className="text-sm font-semibold text-ink">{companyName}</p>
             <p className="text-xs text-ink-muted">{subtitle}</p>
           </div>
-          <button
-            type="button"
-            className="flex h-8 w-8 items-center justify-center rounded-full text-ink-muted transition hover:bg-surface hover:text-ink"
-            onClick={onMinimize}
-            aria-label="채팅 최소화"
-          >
-            ✕
-          </button>
+          <div className="flex items-center gap-1">
+            {onLeave && (
+              <button
+                type="button"
+                className="rounded-full px-3 py-1.5 text-xs text-ink-muted transition hover:bg-blush-50 hover:text-brand"
+                onClick={handleLeaveClick}
+              >
+                나가기
+              </button>
+            )}
+            <button
+              type="button"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-ink-muted transition hover:bg-surface hover:text-ink"
+              onClick={onMinimize}
+              aria-label="채팅 최소화"
+            >
+              ✕
+            </button>
+          </div>
         </div>
         {/* 메시지 목록 */}
         <div
@@ -148,38 +207,56 @@ const CompanyChatModal = ({
               문의 내용을 남겨주세요.
             </p>
           ) : (
-            messages.map((message) => (
-              <div
-                key={message.messageId}
-                className={`flex ${isMine(message.senderEmail) ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`max-w-[75%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed ${
-                    isMine(message.senderEmail)
-                      ? "rounded-br-md bg-brand text-white"
-                      : "rounded-bl-md border border-line bg-white text-ink"
-                  }`}
-                >
-                  <p className="whitespace-pre-wrap break-words">
-                    {message.content}
-                  </p>
-                  <p
-                    className={`mt-1 text-[10px] ${
-                      isMine(message.senderEmail)
-                        ? "text-white/70"
-                        : "text-ink-muted"
-                    }`}
+            messages.map((message, index) => {
+              const previousMessage = messages[index - 1];
+              const showDateSeparator =
+                !previousMessage ||
+                !isSameDate(previousMessage.regDate, message.regDate);
+
+              return (
+                <React.Fragment key={message.messageId}>
+                  {showDateSeparator && (
+                    <div className="flex justify-center py-1">
+                      <span className="rounded-full bg-surface px-3 py-1 text-[11px] text-ink-muted">
+                        {formatDateSeparator(message.regDate)}
+                      </span>
+                    </div>
+                  )}
+                  <div
+                    className={`flex ${isMine(message.senderEmail) ? "justify-end" : "justify-start"}`}
                   >
-                    {message.regDate
-                      ? new Date(message.regDate).toLocaleTimeString("ko-KR", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })
-                      : ""}
-                  </p>
-                </div>
-              </div>
-            ))
+                    <div
+                      className={`max-w-[75%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed ${
+                        isMine(message.senderEmail)
+                          ? "rounded-br-md bg-brand text-white"
+                          : "rounded-bl-md border border-line bg-white text-ink"
+                      }`}
+                    >
+                      <p className="whitespace-pre-wrap break-words">
+                        {message.content}
+                      </p>
+                      <p
+                        className={`mt-1 text-[10px] ${
+                          isMine(message.senderEmail)
+                            ? "text-white/70"
+                            : "text-ink-muted"
+                        }`}
+                      >
+                        {message.regDate
+                          ? new Date(message.regDate).toLocaleTimeString(
+                              "ko-KR",
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              },
+                            )
+                          : ""}
+                      </p>
+                    </div>
+                  </div>
+                </React.Fragment>
+              );
+            })
           )}
           <div ref={messageEndRef} />
         </div>

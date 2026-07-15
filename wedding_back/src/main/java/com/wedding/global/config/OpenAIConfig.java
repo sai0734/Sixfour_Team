@@ -19,8 +19,6 @@ public class OpenAIConfig {
 
                     request.getHeaders().add("Authorization", "Bearer " + apiKey);
 
-                    request.getHeaders().add("Content-Type", "application/json");
-
                     return execution.execute(request, body);
                 }))
                 .build();

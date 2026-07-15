@@ -67,4 +67,12 @@ public class InquiryController {
                 memberDTO.getEmail(),
                 requestDTO.getContent());
     }
+
+    // 회원 화면 — 내가 연 모든 문의방 목록 (플로팅 버튼 안읽음 뱃지 폴링용)
+    @GetMapping("/my-rooms")
+    public List<InquiryRoomDTO> listMyRooms(
+            @AuthenticationPrincipal MemberDTO memberDTO) {
+        log.info("InquiryController_listMyRooms_실행~~~~~~~~");
+        return inquiryService.listRoomsByMember(memberDTO.getEmail());
+    }
 }
