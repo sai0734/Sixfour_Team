@@ -4,6 +4,7 @@ package com.wedding.reservation.service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 // 승진 코드 추가 끝
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -38,6 +39,35 @@ public class ReservationServiceImpl implements ReservationService {
   // 공용 유틸(global.util.TossPaymentClient)만 재사용
   private final TossPaymentClient tossPaymentClient;
 
+  // 재원 추가 - 결제 최소 기한: 예식일(weddingDate) 기준 며칠 전까지만 결제 가능한지
+  // (업계 관행상 잔금 결제가 본식 1~2주 전에 몰리는 편이라 2주로 설정)
+  private static final long PAYMENT_DEADLINE_DAYS = 14;
+
+  // 예식일 - 14일 = 결제 가능한 마지막 날짜 (예식일이 없으면 마감일 없음)
+  private LocalDate calculatePaymentDeadline(Reservation reservation) {
+    if (reservation.getWeddingDate() == null) {
+      return null;
+    }
+    return reservation.getWeddingDate().minusDays(PAYMENT_DEADLINE_DAYS);
+  }
+
+  // 마감일이 지났으면 결제 차단
+  private void validatePaymentDeadline(Reservation reservation) {
+    LocalDate deadline = calculatePaymentDeadline(reservation);
+    if (deadline != null && LocalDate.now().isAfter(deadline)) {
+      throw new IllegalStateException(
+              "결제 가능 기한(예식일 " + PAYMENT_DEADLINE_DAYS + "일 전)이 지나 결제할 수 없습니다.");
+    }
+  }
+
+  // ReservationDTO 변환 시 paymentDeadline까지 같이 채워서 반환 (프론트에서 마감일 표시용)
+  private ReservationDTO toDTO(Reservation reservation) {
+    ReservationDTO dto = modelMapper.map(reservation, ReservationDTO.class);
+    dto.setPaymentDeadline(calculatePaymentDeadline(reservation));
+    return dto;
+  }
+  // 재원 추가 끝
+
   @Override
   public Long register(ReservationDTO reservationDTO) {
 
@@ -57,7 +87,7 @@ public class ReservationServiceImpl implements ReservationService {
 
     Reservation reservation = result.orElseThrow();
 
-    return modelMapper.map(reservation, ReservationDTO.class);
+    return toDTO(reservation);
   }
 
   @Override
@@ -70,7 +100,7 @@ public class ReservationServiceImpl implements ReservationService {
 
     // 승진 코드 추가 - 결제대기(amount>0 & 미결제/결제취소) 상태에서는 수정 불가
     if (reservation.getAmount() > 0
-        && ("NONE".equals(reservation.getPayStatus())
+            && ("NONE".equals(reservation.getPayStatus())
             || "CANCELLED".equals(reservation.getPayStatus()))) {
       throw new IllegalStateException("결제대기 상태에서는 수정할 수 없습니다.");
     }
@@ -82,8 +112,8 @@ public class ReservationServiceImpl implements ReservationService {
     // 승진 코드 추가 - 옵션/금액 수정 (상태는 사용자가 변경하지 않음)
     if (reservationDTO.getOptionName() != null) {
       reservation.changeOptionInfo(
-          reservationDTO.getOptionName(),
-          reservationDTO.getAmount()
+              reservationDTO.getOptionName(),
+              reservationDTO.getAmount()
       );
     }
     // 승진 코드 추가 끝
@@ -104,7 +134,7 @@ public class ReservationServiceImpl implements ReservationService {
             reservationRepository.findByMemberEmailOrderByReservationIdDesc(memberEmail);
 
     return result.stream()
-            .map(r -> modelMapper.map(r, ReservationDTO.class))
+            .map(this::toDTO)
             .collect(Collectors.toList());
   }
 
@@ -123,6 +153,9 @@ public class ReservationServiceImpl implements ReservationService {
       throw new IllegalStateException("이미 결제가 완료된 예약입니다.");
     }
 
+    // 재원 추가 - 결제 최소 기한 체크 (예식일 14일 전 지나면 결제 차단)
+    validatePaymentDeadline(reservation);
+
     // 승진 코드 추가 - 결제 취소/실패 후 재결제 시 payStatus 복구
     reservation.resetPayStatusForRetry();
     // 승진 코드 추가 끝
@@ -134,7 +167,7 @@ public class ReservationServiceImpl implements ReservationService {
 
     log.info("reservation preparePayment - orderNumber: " + orderNumber);
 
-    return modelMapper.map(reservation, ReservationDTO.class);
+    return toDTO(reservation);
   }
 
   @Override
@@ -156,6 +189,9 @@ public class ReservationServiceImpl implements ReservationService {
       throw new IllegalStateException("결제 금액이 일치하지 않습니다.");
     }
 
+    // 재원 추가 - prepare 이후 시간이 지나 마감일을 넘겨버린 경우까지 이중 방어
+    validatePaymentDeadline(reservation);
+
     // 토스페이먼츠 서버-서버 승인 (checkout 패키지와 동일한 공용 유틸 사용)
     tossPaymentClient.confirmPayment(
             requestDTO.getPaymentKey(), requestDTO.getOrderNumber(), requestDTO.getAmount());
@@ -165,7 +201,7 @@ public class ReservationServiceImpl implements ReservationService {
 
     log.info("reservation confirmPayment 완료 - reservationId: " + reservationId);
 
-    return modelMapper.map(reservation, ReservationDTO.class);
+    return toDTO(reservation);
   }
 
   @Override
@@ -179,6 +215,12 @@ public class ReservationServiceImpl implements ReservationService {
 
     reservation.cancelPayment();
     reservationRepository.save(reservation);
+  }
+
+  // 업체 상세페이지 "결제 횟수" 표시용 - 결제 완료(PAID) 건만 카운트
+  @Override
+  public long getPaymentCount(Long cmno) {
+    return reservationRepository.countByCmnoAndPayStatus(cmno, "PAID");
   }
   // ↑↑↑ 재원 추가
 
@@ -196,7 +238,7 @@ public class ReservationServiceImpl implements ReservationService {
 
     for (Long reservationId : reservationIds) {
       Reservation r = reservationRepository.findById(reservationId)
-          .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다: " + reservationId));
+              .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다: " + reservationId));
 
       if (!r.getMemberEmail().equals(memberEmail)) {
         throw new IllegalStateException("본인의 예약만 결제할 수 있습니다.");
@@ -221,10 +263,10 @@ public class ReservationServiceImpl implements ReservationService {
     log.info("prepareBulkPayment - orderNumber: {}, totalAmount: {}", orderNumber, totalAmount);
 
     return ReservationBulkPaymentPrepareDTO.builder()
-        .orderNumber(orderNumber)
-        .totalAmount(totalAmount)
-        .reservationIds(reservationIds)
-        .build();
+            .orderNumber(orderNumber)
+            .totalAmount(totalAmount)
+            .reservationIds(reservationIds)
+            .build();
   }
 
   @Override
@@ -243,7 +285,7 @@ public class ReservationServiceImpl implements ReservationService {
         throw new IllegalStateException("본인의 예약만 결제할 수 있습니다.");
       }
       if (r.getOrderNumber() != null
-          && !r.getOrderNumber().equals(requestDTO.getOrderNumber())) {
+              && !r.getOrderNumber().equals(requestDTO.getOrderNumber())) {
         throw new IllegalStateException("주문 정보가 일치하지 않습니다.");
       }
       expectedTotal += r.getAmount();
@@ -254,7 +296,7 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     tossPaymentClient.confirmPayment(
-        requestDTO.getPaymentKey(), requestDTO.getOrderNumber(), requestDTO.getAmount());
+            requestDTO.getPaymentKey(), requestDTO.getOrderNumber(), requestDTO.getAmount());
 
     LocalDateTime now = LocalDateTime.now();
     List<ReservationDTO> result = new ArrayList<>();

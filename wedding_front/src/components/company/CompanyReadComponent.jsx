@@ -19,6 +19,7 @@ import {
   addCompanyWish,
   removeCompanyWish,
 } from "../../api/companywishApi";
+import { getPaymentCount } from "../../api/reservationApi";
 import CompanyWishOptionModal from "../companywish/CompanyWishOptionModal";
 import { buildCompanyOptions } from "../../util/companyOptionBuilder";
 import FetchingModal from "../common/FetchingModal";
@@ -204,6 +205,20 @@ const CompanyReadComponent = () => {
       });
   }, [cmno, isLoggedIn]);
 
+  // 재원 추가 - 업체 상세페이지 "결제 횟수" 표시 (결제 완료 건만 카운트)
+  const [paymentCount, setPaymentCount] = useState(null);
+
+  useEffect(() => {
+    if (!cmno) return;
+    getPaymentCount(cmno)
+      .then((count) => setPaymentCount(count))
+      .catch((err) => {
+        console.error("결제 횟수 조회 실패:", err);
+        setPaymentCount(null);
+      });
+  }, [cmno]);
+  // 재원 추가 끝
+
   const handleFavoriteClick = async () => {
     if (!company.cmno || favoriteLoading) return;
 
@@ -356,9 +371,20 @@ const CompanyReadComponent = () => {
           </span>
 
           {/* 업체명 */}
-          <p className="font-['Gowun_Batang'] text-2xl sm:text-3xl mb-4 leading-snug">
+          <p className="font-['Gowun_Batang'] text-2xl sm:text-3xl mb-1 leading-snug">
             {company.name || "업체명 로딩 중..."}
           </p>
+
+          {/* 재원 추가 - 결제 완료 건수 (인기 업체 참고 지표) */}
+          {paymentCount != null && paymentCount > 0 && (
+            <p className="text-xs text-ink-faint mb-3">
+              결제 완료 {paymentCount}건
+            </p>
+          )}
+          {(paymentCount == null || paymentCount === 0) && (
+            <div className="mb-4" />
+          )}
+          {/* 재원 추가 끝 */}
 
           {/* 기본 정보 */}
           <div className="space-y-2.5 border-t border-line pt-4 mb-5 text-sm text-ink-muted">
@@ -411,7 +437,7 @@ const CompanyReadComponent = () => {
               >
                 {favoriteLoading ? "…" : liked ? "♥" : "♡"}
               </button>
-              {/* 승진 코드 추가 - 예약하기 / 결제하기 분리 */}
+              {/* 승진 코드 추가 - 예약하기 */}
               <button
                 className="flex-1 h-[46px] rounded-full border border-line bg-white text-sm font-medium transition hover:border-brand hover:text-brand"
                 type="button"
@@ -426,26 +452,24 @@ const CompanyReadComponent = () => {
               >
                 예약하기
               </button>
-              <button
-                className="flex-1 h-[46px] rounded-full bg-brand text-white text-sm font-medium transition hover:bg-brand-deep"
-                type="button"
-                onClick={() => {
-                  if (!loginState.email) {
-                    alert("로그인이 필요한 기능입니다.");
-                    navigate("/auth/login");
-                    return;
-                  }
-                  navigate(`/companies/reserve/${company.cmno}?mode=pay`);
-                }}
-              >
-                결제하기
-              </button>
               {/* 승진 코드 추가 끝 */}
+              {/* 재원 수정 - "결제하기" 버튼 제거함. 매니저 승인 없이 바로 결제로 들어가는 흐름이라
+                  실제 서비스 플로우(예약 → 매니저 승인 → 결제)와 맞지 않아 삭제.
+                  결제는 마이페이지 > 예약 현황에서 승인된 예약에 한해 진행하는 걸로 정리됨.
+                  대신 그 자리에 문의하기 버튼을 배치 (기존엔 아래 두번째 줄에 있었음) */}
+              {!canManageCompany && !isManagedByMe && (
+                <button
+                  className="flex-1 h-[46px] rounded-full border border-brand bg-brand text-sm font-medium text-white transition hover:opacity-90"
+                  type="button"
+                  onClick={handleInquiryClick}
+                >
+                  문의하기
+                </button>
+              )}
+              {/* 재원 수정 끝 */}
             </div>
 
-            {(isManagedByMe ||
-              (!canManageCompany && !isManagedByMe) ||
-              canManageCompany) && (
+            {(isManagedByMe || canManageCompany) && (
               <div className="flex gap-2.5">
                 {isManagedByMe && (
                   <button
@@ -454,15 +478,6 @@ const CompanyReadComponent = () => {
                     onClick={() => navigate("/manager/inquiries")}
                   >
                     업체페이지
-                  </button>
-                )}
-                {!canManageCompany && !isManagedByMe && (
-                  <button
-                    className="flex-1 h-[46px] rounded-full border border-brand bg-brand text-sm font-medium text-white transition hover:opacity-90"
-                    type="button"
-                    onClick={handleInquiryClick}
-                  >
-                    문의하기
                   </button>
                 )}
                 {canManageCompany && (

@@ -1,3 +1,4 @@
+import axios from "axios";
 import jwtAxios from "../util/jwtUtil";
 
 // 서버 주소 - 다른 api 파일들도 이 값을 가져다 씀, 이름/위치 바꾸지 말 것
@@ -63,12 +64,22 @@ export const cancelPayment = async (reservationId) => {
 
   return res.data;
 };
+
+// 업체 상세페이지 "결제 횟수" 표시용 - 비로그인 사용자도 볼 수 있어야 하므로 axios(비인증) 사용
+export const getPaymentCount = async (cmno) => {
+  const res = await axios.get(`${prefix}/company/${cmno}/payment-count`);
+
+  return res.data.paymentCount;
+};
 // ↑↑↑ 재원 추가
 
 // 승진 코드 추가
 // 묶음 결제 - 주문번호 발급 (reservationIds: number[])
 export const prepareBulkPayment = async (reservationIds) => {
-  const res = await jwtAxios.post(`${prefix}/payment/bulk-prepare`, reservationIds);
+  const res = await jwtAxios.post(
+    `${prefix}/payment/bulk-prepare`,
+    reservationIds,
+  );
 
   return res.data;
 };
@@ -82,7 +93,10 @@ export const confirmBulkPayment = async (payload) => {
 
 // 묶음 결제 취소/실패 처리 (reservationIds: number[])
 export const cancelBulkPayment = async (reservationIds) => {
-  const res = await jwtAxios.post(`${prefix}/payment/bulk-cancel`, reservationIds);
+  const res = await jwtAxios.post(
+    `${prefix}/payment/bulk-cancel`,
+    reservationIds,
+  );
 
   return res.data;
 };
