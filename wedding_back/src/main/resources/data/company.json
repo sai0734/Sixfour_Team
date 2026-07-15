@@ -20,7 +20,8 @@
         "fileName": "dress_1_2.jpg",
         "ord": 1
       }
-    ]
+    ],
+    "purchaseCount": 52
   },
   {
     "cmno": 2,
@@ -43,7 +44,8 @@
         "fileName": "dress_2_2.jpg",
         "ord": 1
       }
-    ]
+    ],
+    "purchaseCount": 89
   },
   {
     "cmno": 3,
@@ -66,7 +68,8 @@
         "fileName": "dress_3_2.jpg",
         "ord": 1
       }
-    ]
+    ],
+    "purchaseCount": 126
   },
   {
     "cmno": 4,
@@ -89,7 +92,8 @@
         "fileName": "dress_4_2.jpg",
         "ord": 1
       }
-    ]
+    ],
+    "purchaseCount": 33
   },
   {
     "cmno": 5,
@@ -112,7 +116,8 @@
         "fileName": "dress_5_2.jpg",
         "ord": 1
       }
-    ]
+    ],
+    "purchaseCount": 70
   },
   {
     "cmno": 6,
@@ -135,7 +140,8 @@
         "fileName": "dress_6_2.jpg",
         "ord": 1
       }
-    ]
+    ],
+    "purchaseCount": 107
   },
   {
     "cmno": 7,
@@ -158,7 +164,8 @@
         "fileName": "dress_7_2.jpg",
         "ord": 1
       }
-    ]
+    ],
+    "purchaseCount": 144
   },
   {
     "cmno": 8,
@@ -181,7 +188,8 @@
         "fileName": "dress_8_2.jpg",
         "ord": 1
       }
-    ]
+    ],
+    "purchaseCount": 51
   },
   {
     "cmno": 9,
@@ -204,7 +212,8 @@
         "fileName": "dress_9_2.jpg",
         "ord": 1
       }
-    ]
+    ],
+    "purchaseCount": 88
   },
   {
     "cmno": 10,
@@ -227,7 +236,8 @@
         "fileName": "dress_10_2.jpg",
         "ord": 1
       }
-    ]
+    ],
+    "purchaseCount": 125
   },
   {
     "cmno": 11,
@@ -250,7 +260,8 @@
         "fileName": "웨딩홀_더라움_그라스가든_main.jpg",
         "ord": 1
       }
-    ]
+    ],
+    "purchaseCount": 32
   },
   {
     "cmno": 12,
@@ -273,7 +284,8 @@
         "fileName": "웨딩홀_그랜드 인터컨티넨탈_오키드볼룸_main.png",
         "ord": 1
       }
-    ]
+    ],
+    "purchaseCount": 69
   },
   {
     "cmno": 13,
@@ -296,7 +308,8 @@
         "fileName": "웨딩홀_르비르모어_어두운 홀_main.png",
         "ord": 1
       }
-    ]
+    ],
+    "purchaseCount": 106
   },
   {
     "cmno": 14,
@@ -315,7 +328,8 @@
         "fileName": "웨딩홀_아펠가모 선릉_채플홀_main.png",
         "ord": 0
       }
-    ]
+    ],
+    "purchaseCount": 143
   },
   {
     "cmno": 15,
@@ -338,7 +352,8 @@
         "fileName": "웨딩홀_그랜드힐 컨벤션_사브리나_main.png",
         "ord": 1
       }
-    ]
+    ],
+    "purchaseCount": 50
   },
   {
     "cmno": 16,
@@ -361,7 +376,8 @@
         "fileName": "웨딩홀_노블 발렌티나 대치_하우스홀_main.jpg",
         "ord": 1
       }
-    ]
+    ],
+    "purchaseCount": 87
   },
   {
     "cmno": 17,
@@ -380,7 +396,8 @@
         "fileName": "웨딩홀_토브헤세드_플로렌스홀_main.png",
         "ord": 0
       }
-    ]
+    ],
+    "purchaseCount": 124
   },
   {
     "cmno": 18,
@@ -399,7 +416,8 @@
         "fileName": "웨딩홀_아르베_루프탑홀_main.png",
         "ord": 0
       }
-    ]
+    ],
+    "purchaseCount": 31
   },
   {
     "cmno": 19,
@@ -418,7 +436,8 @@
         "fileName": "웨딩홀_소노펠리체 컨벤션_다이아몬드홀_main.png",
         "ord": 0
       }
-    ]
+    ],
+    "purchaseCount": 68
   },
   {
     "cmno": 20,
@@ -437,7 +456,8 @@
         "fileName": "웨딩홀_더휴 웨딩홀_스몰홀_main.png",
         "ord": 0
       }
-    ]
+    ],
+    "purchaseCount": 105
   },
   {
     "cmno": 21,
@@ -460,7 +480,8 @@
         "fileName": "studio2.jpg",
         "ord": 1
       }
-    ]
+    ],
+    "purchaseCount": 142
   },
   {
     "cmno": 22,
@@ -483,7 +504,8 @@
         "fileName": "studio4.jpg",
         "ord": 1
       }
-    ]
+    ],
+    "purchaseCount": 49
   },
   {
     "cmno": 23,
@@ -506,7 +528,8 @@
         "fileName": "studio6.jpg",
         "ord": 1
       }
-    ]
+    ],
+    "purchaseCount": 86
   },
   {
     "cmno": 24,
@@ -529,7 +552,8 @@
         "fileName": "studio8.jpg",
         "ord": 1
       }
-    ]
+    ],
+    "purchaseCount": 123
   },
   {
     "cmno": 25,
@@ -552,7 +576,8 @@
         "fileName": "studio10.jpg",
         "ord": 1
       }
-    ]
+    ],
+    "purchaseCount": 30
   },
   {
     "cmno": 26,
@@ -575,7 +600,8 @@
         "fileName": "studio12.jpg",
         "ord": 1
       }
-    ]
+    ],
+    "purchaseCount": 67
   },
   {
     "cmno": 27,
@@ -598,7 +624,8 @@
         "fileName": "studio14.jpg",
         "ord": 1
       }
-    ]
+    ],
+    "purchaseCount": 104
   },
   {
     "cmno": 28,
@@ -621,7 +648,8 @@
         "fileName": "studio16.jpg",
         "ord": 1
       }
-    ]
+    ],
+    "purchaseCount": 141
   },
   {
     "cmno": 29,
@@ -644,7 +672,8 @@
         "fileName": "studio18.jpg",
         "ord": 1
       }
-    ]
+    ],
+    "purchaseCount": 48
   },
   {
     "cmno": 30,
@@ -667,7 +696,8 @@
         "fileName": "studio20.jpg",
         "ord": 1
       }
-    ]
+    ],
+    "purchaseCount": 85
   },
   {
     "cmno": 31,
@@ -694,7 +724,8 @@
         "fileName": "네일_네일1.png",
         "ord": 2
       }
-    ]
+    ],
+    "purchaseCount": 122
   },
   {
     "cmno": 32,
@@ -717,7 +748,8 @@
         "fileName": "헤어_헤어2.jpg",
         "ord": 1
       }
-    ]
+    ],
+    "purchaseCount": 29
   },
   {
     "cmno": 33,
@@ -744,7 +776,8 @@
         "fileName": "네일_네일3.png",
         "ord": 2
       }
-    ]
+    ],
+    "purchaseCount": 66
   },
   {
     "cmno": 34,
@@ -763,7 +796,8 @@
         "fileName": "메이크업_메이크업4.png",
         "ord": 0
       }
-    ]
+    ],
+    "purchaseCount": 103
   },
   {
     "cmno": 35,
@@ -790,7 +824,8 @@
         "fileName": "네일_네일5.png",
         "ord": 2
       }
-    ]
+    ],
+    "purchaseCount": 140
   },
   {
     "cmno": 36,
@@ -809,7 +844,8 @@
         "fileName": "헤어_헤어6.png",
         "ord": 0
       }
-    ]
+    ],
+    "purchaseCount": 47
   },
   {
     "cmno": 37,
@@ -832,7 +868,8 @@
         "fileName": "네일_네일7.png",
         "ord": 1
       }
-    ]
+    ],
+    "purchaseCount": 84
   },
   {
     "cmno": 38,
@@ -859,7 +896,8 @@
         "fileName": "네일_네일8.png",
         "ord": 2
       }
-    ]
+    ],
+    "purchaseCount": 121
   },
   {
     "cmno": 39,
@@ -878,7 +916,8 @@
         "fileName": "네일_네일9.png",
         "ord": 0
       }
-    ]
+    ],
+    "purchaseCount": 28
   },
   {
     "cmno": 40,
@@ -905,6 +944,7 @@
         "fileName": "네일_네일10.png",
         "ord": 2
       }
-    ]
+    ],
+    "purchaseCount": 65
   }
 ]

@@ -71,6 +71,15 @@ export const getPaymentCount = async (cmno) => {
 
   return res.data.paymentCount;
 };
+
+// 예약 날짜 중복 확인 - 같은 업체+같은 옵션+같은 날짜 예약이 이미 있는지 (비로그인도 확인 가능)
+export const checkAvailability = async (cmno, optionName, weddingDate) => {
+  const res = await axios.get(`${prefix}/company/${cmno}/availability`, {
+    params: { optionName, weddingDate },
+  });
+
+  return res.data.taken;
+};
 // ↑↑↑ 재원 추가
 
 // 승진 코드 추가

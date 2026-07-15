@@ -124,6 +124,11 @@ public class JWTCheckFilter extends OncePerRequestFilter{
             return true;
         }
 
+        // 재원 추가 - 예약 날짜 중복 확인도 비로그인 사용자가 예약 화면 들어가기 전에 볼 수 있어야 함
+        if(method.equals("GET") && path.matches("/api/reservations/company/\\d+/availability")) {
+            return true;
+        }
+
         return false;
     }
 
