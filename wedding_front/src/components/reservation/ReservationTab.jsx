@@ -3,11 +3,12 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   getListByMember,
-  postAdd,
   putOne,
   deleteOne,
   prepareBulkPayment,
   cancelBulkPayment,
+  preparePayment,
+  cancelPayment,
 } from "../../api/reservationApi";
 import { getOne as getCompanyOne } from "../../api/companyApi";
 import { TOSS_CLIENT_KEY } from "../../api/tossConfig";
@@ -16,10 +17,31 @@ import useCustomLogin from "../../hooks/useCustomLogin";
 import ReservationFormModal from "./ReservationFormModal";
 
 const STATUS_STYLE = {
-  대기: "bg-amber-50 text-amber-700",
+  예약대기: "bg-amber-50 text-amber-700",
+  결제대기: "bg-blue-50 text-blue-700",
   확정: "bg-green-50 text-green-700",
   취소: "bg-red-50 text-red-600",
 };
+
+// 승진 코드 추가 - 예약대기/결제대기 구분
+const isPaymentPending = (r) =>
+  r.amount > 0 && (r.payStatus === "NONE" || r.payStatus === "CANCELLED");
+
+const getReservationPhase = (r) =>
+  isPaymentPending(r) ? "결제대기" : "예약대기";
+
+const canEditReservation = (r) => getReservationPhase(r) === "예약대기";
+
+const getPayBadge = (r) => {
+  if (isPaymentPending(r)) {
+    return { label: "미결제", style: PAY_STYLE.NONE };
+  }
+  return {
+    label: PAY_LABEL[r.payStatus] || "미결제",
+    style: PAY_STYLE[r.payStatus] || PAY_STYLE.NONE,
+  };
+};
+// 승진 코드 추가 끝
 
 const PAY_STYLE = {
   NONE: "bg-zinc-100 text-zinc-500",
@@ -64,6 +86,7 @@ const ReservationTab = () => {
 
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [paying, setPaying] = useState(false);
+  const [payingId, setPayingId] = useState(null);
 
   const tossRef = useRef(null);
 
@@ -98,24 +121,27 @@ const ReservationTab = () => {
   }, []);
 
   // 모달
-  const openAdd = () => { setEditTarget(null); setModalMode("add"); };
-  const openEdit = (r) => { setEditTarget(r); setModalMode("edit"); };
+  const openEdit = (r) => {
+    if (!canEditReservation(r)) {
+      alert("결제대기 상태에서는 일정을 변경할 수 없습니다.");
+      return;
+    }
+    setEditTarget(r);
+    setModalMode("edit");
+  };
   const closeModal = () => { setModalMode(null); setEditTarget(null); };
 
   const handleSubmit = (formValues) => {
-    if (modalMode === "add") {
-      postAdd({ ...formValues, memberEmail: loginState.email })
-        .then(() => { closeModal(); setRefresh((r) => !r); })
-        .catch((e) => console.error(e));
-    } else {
-      putOne({ ...editTarget, ...formValues })
-        .then(() => { closeModal(); setRefresh((r) => !r); })
-        .catch((e) => console.error(e));
-    }
+    putOne({ ...editTarget, ...formValues })
+      .then(() => { closeModal(); setRefresh((r) => !r); })
+      .catch((e) => {
+        console.error(e);
+        alert(e?.response?.data?.message || "예약 수정에 실패했습니다.");
+      });
   };
 
   const handleDelete = (reservationId) => {
-    if (!window.confirm("예약을 삭제하시겠습니까?")) return;
+    if (!window.confirm("예약을 취소하시겠습니까?")) return;
     deleteOne(reservationId)
       .then(() => setRefresh((r) => !r))
       .catch((e) => console.error(e));
@@ -125,9 +151,9 @@ const ReservationTab = () => {
   const displayReservations = reservations.filter((r) => r.payStatus !== "PAID");
   // 승진 코드 추가 끝
 
-  // 체크박스 (displayReservations = 이미 PAID 제외)
+  // 체크박스 (결제대기 = 미결제·결제취소 후 재결제 대상)
   const payableIds = displayReservations
-    .filter((r) => r.amount > 0)
+    .filter((r) => isPaymentPending(r))
     .map((r) => r.reservationId);
 
   const toggleSelect = (id) => {
@@ -174,10 +200,46 @@ const ReservationTab = () => {
         await cancelBulkPayment([...selectedIds]).catch(() => {});
       } else {
         console.error("묶음 결제 오류:", err);
-        alert("결제 처리 중 오류가 발생했습니다.");
+        const msg =
+          err?.response?.data?.message ||
+          err?.response?.data?.error ||
+          err?.message ||
+          "결제 처리 중 오류가 발생했습니다.";
+        alert(msg);
       }
     } finally {
       setPaying(false);
+    }
+  };
+
+  // 단건 결제
+  const handleSinglePay = async (r) => {
+    if (paying || payingId) return;
+    try {
+      setPayingId(r.reservationId);
+      if (!tossRef.current) {
+        await loadTossScript();
+        tossRef.current = window.TossPayments(TOSS_CLIENT_KEY);
+      }
+      const prepared = await preparePayment(r.reservationId);
+      const company = companyMap[r.cmno];
+      await tossRef.current.requestPayment("카드", {
+        amount: prepared.amount || r.amount,
+        orderId: prepared.orderNumber,
+        orderName: `${company?.name || "업체"} - ${r.optionName || "예약"}`,
+        customerName: loginState.nickname || loginState.email,
+        successUrl: `${window.location.origin}/companies/reserve/${r.cmno}/success?reservationId=${r.reservationId}`,
+        failUrl: `${window.location.origin}/companies/reserve/${r.cmno}/fail?reservationId=${r.reservationId}`,
+      });
+    } catch (err) {
+      if (err?.code === "USER_CANCEL") {
+        await cancelPayment(r.reservationId).catch(() => {});
+      } else {
+        console.error("결제 오류:", err);
+        alert("결제 처리 중 오류가 발생했습니다.");
+      }
+    } finally {
+      setPayingId(null);
     }
   };
 
@@ -208,23 +270,20 @@ const ReservationTab = () => {
           )}
         </div>
         <div className="flex gap-2">
-          {selectedIds.size > 0 && (
+          {payableIds.length > 0 && (
             <button
               type="button"
               onClick={handleBulkPay}
-              disabled={paying}
-              className="h-9 px-4 rounded-full bg-rose-500 text-white text-xs font-medium hover:bg-rose-600 transition disabled:opacity-60"
+              disabled={paying || selectedIds.size === 0}
+              className="h-9 px-4 rounded-full bg-rose-500 text-white text-xs font-medium hover:bg-rose-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {paying ? "결제 중..." : `선택 결제 (${selectedIds.size}건)`}
+              {paying
+                ? "결제 중..."
+                : selectedIds.size > 0
+                  ? `일괄 결제 (${selectedIds.size}건)`
+                  : "일괄 결제"}
             </button>
           )}
-          <button
-            type="button"
-            onClick={openAdd}
-            className="h-9 px-4 rounded-full bg-brand text-white text-xs font-medium hover:bg-brand-dark"
-          >
-            + 예약 등록
-          </button>
         </div>
       </div>
 
@@ -249,7 +308,8 @@ const ReservationTab = () => {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {displayReservations.map((r) => {
           const company = companyMap[r.cmno];
-          const canPay = r.payStatus !== "PAID" && r.amount > 0;
+          const canPay = isPaymentPending(r);
+          const payBadge = getPayBadge(r);
           const catIcon = CATEGORY_ICON[company?.category] || "🏢";
           const catName = categoryLabel[company?.category] || "업체";
 
@@ -288,9 +348,9 @@ const ReservationTab = () => {
                   </div>
                   {/* 결제 상태 뱃지 */}
                   <span
-                    className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full font-medium ${PAY_STYLE[r.payStatus] || PAY_STYLE.NONE}`}
+                    className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full font-medium ${payBadge.style}`}
                   >
-                    {PAY_LABEL[r.payStatus] || "미결제"}
+                    {payBadge.label}
                   </span>
                 </div>
 
@@ -326,25 +386,39 @@ const ReservationTab = () => {
                 onClick={(e) => e.stopPropagation()}
               >
                 <span
-                  className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${STATUS_STYLE[r.status] || STATUS_STYLE["대기"]}`}
+                  className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${STATUS_STYLE[getReservationPhase(r)] || STATUS_STYLE["예약대기"]}`}
                 >
-                  {r.status || "대기"}
+                  {getReservationPhase(r)}
                 </span>
                 <div className="flex gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => openEdit(r)}
-                    className="h-7 px-3 rounded-full border border-line-soft text-[11px] text-ink-soft hover:bg-white transition"
-                  >
-                    수정
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(r.reservationId)}
-                    className="h-7 px-3 rounded-full border border-line-soft text-[11px] text-red-400 hover:bg-white transition"
-                  >
-                    삭제
-                  </button>
+                  {getReservationPhase(r) === "결제대기" && (
+                    <button
+                      type="button"
+                      onClick={() => handleSinglePay(r)}
+                      disabled={payingId === r.reservationId}
+                      className="h-7 px-3 rounded-full bg-brand text-[11px] font-medium text-white hover:bg-brand-deep transition disabled:opacity-50"
+                    >
+                      {payingId === r.reservationId ? "결제 중..." : "결제"}
+                    </button>
+                  )}
+                  {canEditReservation(r) && (
+                    <button
+                      type="button"
+                      onClick={() => openEdit(r)}
+                      className="h-7 px-3 rounded-full border border-line-soft text-[11px] text-ink-soft hover:bg-white transition"
+                    >
+                      일정변경
+                    </button>
+                  )}
+                  {getReservationPhase(r) === "결제대기" && (
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(r.reservationId)}
+                      className="h-7 px-3 rounded-full border border-line-soft text-[11px] text-red-400 hover:bg-white transition"
+                    >
+                      예약 취소
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -352,10 +426,11 @@ const ReservationTab = () => {
         })}
       </div>
 
-      {modalMode && (
+      {modalMode === "edit" && editTarget && (
         <ReservationFormModal
-          mode={modalMode}
+          mode="edit"
           editTarget={editTarget}
+          company={companyMap[editTarget.cmno]}
           onSubmit={handleSubmit}
           onClose={closeModal}
         />

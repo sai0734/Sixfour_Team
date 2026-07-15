@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useSearchParams, Navigate } from "react-router-dom";
 import useManagedCompany from "../../hooks/useManagedCompany";
 import MyPageLayout from "../../layouts/MyPageLayout";
@@ -17,18 +16,27 @@ const TABS = [
 ];
 
 const HubPage = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { isManager, checked: managerChecked } = useManagedCompany();
 
   const requestedTab = searchParams.get("tab");
-  const initialTab = TABS.some((tab) => tab.key === requestedTab)
+  // 승진 코드 추가 - 탭 미지정 시 항상 플랜 탭
+  const activeTab = TABS.some((tab) => tab.key === requestedTab)
     ? requestedTab
     : "plan";
 
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const setActiveTab = (key) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set("tab", key);
+        return next;
+      },
+      { replace: true },
+    );
+  };
+  // 승진 코드 추가 끝
 
-  // "계정 설정" 탭은 회원정보수정(/auth/modify)으로 통합됨 -
-  // 옛날 링크(?tab=account)로 들어오는 경우를 위해 그쪽으로 보내줌
   if (requestedTab === "account") {
     return <Navigate replace to="/auth/modify" />;
   }
