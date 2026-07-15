@@ -119,6 +119,11 @@ public class JWTCheckFilter extends OncePerRequestFilter{
             return true;
         }
 
+        // 재원 추가 - 업체 상세페이지 "결제 횟수" 표시는 비로그인 사용자도 볼 수 있어야 함
+        if(method.equals("GET") && path.matches("/api/reservations/company/\\d+/payment-count")) {
+            return true;
+        }
+
         return false;
     }
 

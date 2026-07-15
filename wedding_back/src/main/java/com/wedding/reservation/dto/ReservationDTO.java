@@ -40,5 +40,9 @@ public class ReservationDTO {
 
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
   private java.time.LocalDateTime paidAt;
+
+  // 결제 가능한 마지막 날짜 (예식일 - 14일). 서버에서 계산해서 내려줌 - 프론트는 그대로 표시만.
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+  private LocalDate paymentDeadline;
   // ↑↑↑ 재원 추가
 }

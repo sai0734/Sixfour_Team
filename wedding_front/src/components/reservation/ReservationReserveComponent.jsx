@@ -55,6 +55,28 @@ const ReservationReserveComponent = () => {
 
   const mainImage = company?.uploadFileNames?.[0];
 
+  // 재원 추가 - 결제 최소 기한(예식일 14일 전) 미리보기 - 서버 값과 동일한 규칙,
+  // 날짜 선택 단계에서 미리 안내하기 위한 클라이언트 계산 (최종 판단은 서버가 함).
+  // 결제는 업체 확인(결제대기 전환) 이후 마이페이지에서 진행되지만, 가격 있는 옵션을
+  // 고르는 시점에 미리 마감일을 보여줘야 사용자가 예약 자체를 이 날짜로 할지 판단할 수 있음
+  const PAYMENT_DEADLINE_DAYS = 14;
+  const paymentDeadlinePreview = useMemo(() => {
+    if (!weddingDate) return null;
+    const d = new Date(weddingDate);
+    d.setDate(d.getDate() - PAYMENT_DEADLINE_DAYS);
+    return d;
+  }, [weddingDate]);
+  const isPastPaymentDeadline = paymentDeadlinePreview
+    ? paymentDeadlinePreview < new Date(new Date().toDateString())
+    : false;
+  const formatDate = (d) =>
+    d
+      ? `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(
+          d.getDate(),
+        ).padStart(2, "0")}`
+      : "";
+  // 재원 추가 끝
+
   const handleClickSubmit = async () => {
     if (!weddingDate) {
       alert("예약 날짜를 선택해주세요.");
@@ -128,6 +150,19 @@ const ReservationReserveComponent = () => {
           onChange={(e) => setWeddingDate(e.target.value)}
           className="h-11 px-4 border border-line-soft rounded-lg text-sm w-full focus:outline-none focus:border-brand"
         />
+        {/* 재원 추가 - 결제 최소 기한 안내 (가격 있는 옵션을 골랐을 때만 의미가 있음) */}
+        {weddingDate && selectedOption && selectedOption.price > 0 && (
+          <p
+            className={`mt-2 text-xs ${
+              isPastPaymentDeadline ? "text-red-600" : "text-ink-faint"
+            }`}
+          >
+            {isPastPaymentDeadline
+              ? "선택하신 예식일은 결제 가능 기한(예식일 14일 전)이 이미 지났어요. 업체 확인 후에도 결제가 제한될 수 있어요."
+              : `결제는 업체 확인 후 ${formatDate(paymentDeadlinePreview)}까지 가능해요.`}
+          </p>
+        )}
+        {/* 재원 추가 끝 */}
       </div>
 
       <div className="bg-white rounded-2xl p-5 shadow-[0_8px_24px_-12px_rgba(58,54,47,0.15)] mb-5">
@@ -176,7 +211,9 @@ const ReservationReserveComponent = () => {
                       {opt.originalPrice.toLocaleString()}원
                     </p>
                   )}
-                  <p className={`text-sm font-semibold ${opt.discountRate > 0 ? "text-rose-500" : "text-ink"}`}>
+                  <p
+                    className={`text-sm font-semibold ${opt.discountRate > 0 ? "text-rose-500" : "text-ink"}`}
+                  >
                     {opt.price > 0 ? `${opt.price.toLocaleString()}원` : "-"}
                   </p>
                 </div>

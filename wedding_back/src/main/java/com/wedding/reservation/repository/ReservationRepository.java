@@ -10,8 +10,10 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     List<Reservation> findByMemberEmailOrderByReservationIdDesc(String memberEmail);
 
-    // 승진 코드 추가 - 업체 예약관리 목록
+    // 재원 추가 - 업체 상세페이지 "결제 횟수" 표시용 (인기 업체 패키지 구성 참고 지표)
+    long countByCmnoAndPayStatus(Long cmno, String payStatus);
+
+    // 승진 추가 - 업체 예약관리 목록
     List<Reservation> findByCmnoOrderByReservationIdDesc(Long cmno);
-    // 승진 코드 추가 끝
 
 }

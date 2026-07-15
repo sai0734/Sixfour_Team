@@ -165,6 +165,13 @@ public class ReservationController {
 
     return Map.of("RESULT", "SUCCESS");
   }
+
+  // 업체 상세페이지 "결제 횟수" 표시용 - 로그인 불필요 (업체 상세는 비로그인도 조회 가능)
+  @GetMapping("/company/{cmno}/payment-count")
+  public Map<String, Long> getPaymentCount(@PathVariable(name = "cmno") Long cmno) {
+
+    return Map.of("paymentCount", service.getPaymentCount(cmno));
+  }
   // ↑↑↑ 재원 추가
 
   // 승진 코드 추가
@@ -172,7 +179,7 @@ public class ReservationController {
   @PreAuthorize("hasAnyRole('USER')")
   @PostMapping("/payment/bulk-prepare")
   public ReservationBulkPaymentPrepareDTO prepareBulkPayment(Principal principal,
-                                                              @RequestBody List<Long> reservationIds) {
+                                                             @RequestBody List<Long> reservationIds) {
 
     log.info("ReservationController_prepareBulkPayment 실행~~~~~~~~ ids={}", reservationIds);
 
@@ -183,7 +190,7 @@ public class ReservationController {
   @PreAuthorize("hasAnyRole('USER')")
   @PostMapping("/payment/bulk-confirm")
   public List<ReservationDTO> confirmBulkPayment(Principal principal,
-                                                  @RequestBody ReservationBulkPaymentConfirmRequestDTO requestDTO) {
+                                                 @RequestBody ReservationBulkPaymentConfirmRequestDTO requestDTO) {
 
     log.info("ReservationController_confirmBulkPayment 실행~~~~~~~~ orderNumber={}", requestDTO.getOrderNumber());
 
@@ -194,7 +201,7 @@ public class ReservationController {
   @PreAuthorize("hasAnyRole('USER')")
   @PostMapping("/payment/bulk-cancel")
   public Map<String, String> cancelBulkPayment(Principal principal,
-                                                @RequestBody List<Long> reservationIds) {
+                                               @RequestBody List<Long> reservationIds) {
 
     log.info("ReservationController_cancelBulkPayment 실행~~~~~~~~ ids={}", reservationIds);
 
