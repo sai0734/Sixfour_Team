@@ -78,6 +78,28 @@ public class CompanyWishController {
         return Map.of("RESULT", "SUCCESS");
     }
 
+    // 재원 추가 - 업체 상세페이지 옵션 하트(찜) 표시용 - 이 업체에서 내가 찜한 옵션명 전체
+    @GetMapping("/{cmno}/wished-options")
+    public List<String> getWishedOptionNames(
+            Authentication authentication,
+            @PathVariable(name = "cmno") Long cmno) {
+
+        return service.getWishedOptionNames(authentication.getName(), cmno);
+    }
+
+    // 재원 추가 - 옵션 하트 토글 시 "찜 해제"용 - 같은 업체의 다른 옵션 찜은 그대로 두고 이 옵션만 지움
+    @DeleteMapping("/{cmno}/option")
+    public Map<String, Object> removeOption(
+            Authentication authentication,
+            @PathVariable(name = "cmno") Long cmno,
+            @RequestParam(name = "optionName") String optionName) {
+
+        log.info("company wish option remove: email={}, cmno={}, optionName={}",
+                authentication.getName(), cmno, optionName);
+        service.removeOption(authentication.getName(), cmno, optionName);
+        return Map.of("result", "success", "liked", false);
+    }
+
     /**
      * 마이페이지 - 로그인 사용자의 찜 업체 목록 조회.
      * 재원 수정 - 옵션별로 여러 건 찜이 가능해지면서 wishId/optionName이 필요해져

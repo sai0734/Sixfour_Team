@@ -46,6 +46,21 @@ export const removeCompanyWishByWishId = async (wishId) => {
   return res.data;
 };
 
+// 업체 상세페이지 옵션 하트(찜) 표시용 - 이 업체에서 내가 찜한 옵션명 전체
+export const getWishedOptionNames = async (cmno) => {
+  const res = await jwtAxios.get(`${prefix}/${cmno}/wished-options`);
+  return res.data;
+};
+
+// 옵션 하트를 다시 눌러 찜 해제 - 같은 업체의 다른 옵션 찜은 유지하고 이 옵션만 지움
+export const removeCompanyWishOption = async (cmno, optionName) => {
+  const res = await jwtAxios.delete(`${prefix}/${cmno}/option`, {
+    params: { optionName },
+  });
+  return res.data;
+};
+// ↑↑↑ 재원 추가
+
 /**
  * 마이페이지 - 로그인 사용자의 찜 업체 목록 조회.
  * 재원 수정 - 백엔드 응답이 CompanyDTO 배열 → CompanyWishItemDTO 배열(wishId/optionName 포함)로 바뀜.

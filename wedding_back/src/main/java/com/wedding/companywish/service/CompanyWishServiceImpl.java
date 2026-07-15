@@ -98,6 +98,23 @@ public class CompanyWishServiceImpl implements CompanyWishService {
         log.info("업체 찜 해제 완료(wishId). memberEmail={}, wishId={}", memberEmail, wishId);
     }
 
+    // 업체 상세페이지 옵션 하트 표시용 - 이 업체에서 내가 찜한 옵션명만 뽑아서 반환
+    @Override
+    @Transactional(readOnly = true)
+    public List<String> getWishedOptionNames(String memberEmail, Long cmno) {
+        return companyWishRepository.findAllByMemberEmailAndCmno(memberEmail, cmno).stream()
+                .map(CompanyWish::getOptionName)
+                .collect(Collectors.toList());
+    }
+
+    // 옵션 하트를 다시 눌러 찜 해제할 때 - 그 옵션 하나만 정확히 지움 (같은 업체의 다른 옵션 찜은 유지)
+    @Override
+    public void removeOption(String memberEmail, Long cmno, String optionName) {
+        String normalized = optionName == null ? "" : optionName;
+        companyWishRepository.deleteByMemberEmailAndCmnoAndOptionName(memberEmail, cmno, normalized);
+        log.info("업체 찜 옵션 해제 완료. memberEmail={}, cmno={}, optionName={}", memberEmail, cmno, normalized);
+    }
+
     @Override
     @Transactional(readOnly = true)
     public List<CompanyWishItemDTO> getMyCompanyWishItems(String memberEmail) {

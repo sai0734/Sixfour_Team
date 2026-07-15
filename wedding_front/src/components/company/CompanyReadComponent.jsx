@@ -18,6 +18,8 @@ import {
   checkCompanyWish,
   addCompanyWish,
   removeCompanyWish,
+  getWishedOptionNames,
+  removeCompanyWishOption,
 } from "../../api/companywishApi";
 import { getPaymentCount } from "../../api/reservationApi";
 import CompanyWishOptionModal from "../companywish/CompanyWishOptionModal";
@@ -219,6 +221,71 @@ const CompanyReadComponent = () => {
   }, [cmno]);
   // 재원 추가 끝
 
+  // 재원 추가 - 옵션 상세("크게 보기") 모달의 찜하기 버튼을 토글(찜하기 ↔ 찜 해제)로 동작시키기 위해
+  // 이 업체에서 내가 이미 찜한 옵션명 목록을 별도로 들고 있음
+  const [wishedOptionNames, setWishedOptionNames] = useState(new Set());
+
+  useEffect(() => {
+    if (!cmno || !isLoggedIn) {
+      setWishedOptionNames(new Set());
+      return;
+    }
+    getWishedOptionNames(cmno)
+      .then((names) => setWishedOptionNames(new Set(names)))
+      .catch((err) => {
+        console.error("찜한 옵션 목록 조회 실패:", err);
+        setWishedOptionNames(new Set());
+      });
+  }, [cmno, isLoggedIn]);
+
+  const handleToggleWishOption = async (option) => {
+    if (!isLoggedIn) {
+      alert("로그인 후 찜하기를 이용할 수 있습니다.");
+      navigate("/auth/login");
+      return;
+    }
+
+    const alreadyWished = wishedOptionNames.has(option.label);
+
+    try {
+      setFavoriteLoading(true);
+      if (alreadyWished) {
+        await removeCompanyWishOption(company.cmno, option.label);
+        setWishedOptionNames((prev) => {
+          const next = new Set(prev);
+          next.delete(option.label);
+          setLiked(next.size > 0);
+          return next;
+        });
+      } else {
+        await addCompanyWish(
+          company.cmno,
+          option.label,
+          option.price,
+          option.image,
+        );
+        setWishedOptionNames((prev) => {
+          const next = new Set(prev);
+          next.add(option.label);
+          setLiked(true);
+          return next;
+        });
+      }
+    } catch (err) {
+      console.error("업체 찜 옵션 토글 실패:", err);
+      exceptionHandle(err);
+    } finally {
+      setFavoriteLoading(false);
+    }
+  };
+
+  // "크게 보기" 모달에 내려줄 찜 상태/토글 핸들러 묶음
+  const wish = {
+    isWished: (label) => wishedOptionNames.has(label),
+    toggle: handleToggleWishOption,
+  };
+  // 재원 추가 끝
+
   const handleFavoriteClick = async () => {
     if (!company.cmno || favoriteLoading) return;
 
@@ -236,6 +303,7 @@ const CompanyReadComponent = () => {
         setFavoriteLoading(true);
         await removeCompanyWish(company.cmno);
         setLiked(false);
+        setWishedOptionNames(new Set()); // 재원 추가 - 옵션 하트 상태도 같이 초기화
       } catch (err) {
         console.error("업체 찜 처리 실패:", err);
         exceptionHandle(err);
@@ -293,6 +361,9 @@ const CompanyReadComponent = () => {
       );
       setLiked(true);
       setWishModalOpen(false);
+      // 재원 추가 - "크게 보기" 모달의 하트 상태와 일관되도록 여기서도 세트에 반영
+      setWishedOptionNames((prev) => new Set(prev).add(option.label));
+      // 재원 추가 끝
       alert(`"${option.label}" 옵션으로 찜했습니다.`);
     } catch (err) {
       console.error("업체 찜 처리 실패:", err);
@@ -582,7 +653,7 @@ const CompanyReadComponent = () => {
           company={company}
           canManageCompany={canManageCompany}
           onRefresh={handleRefresh}
-          onWishOption={handleWishOptionSubmit}
+          wish={wish}
         />
       </div>
 
@@ -599,12 +670,7 @@ const CompanyReadComponent = () => {
   );
 };
 
-const CategoryDetail = ({
-  company,
-  canManageCompany,
-  onRefresh,
-  onWishOption,
-}) => {
+const CategoryDetail = ({ company, canManageCompany, onRefresh, wish }) => {
   if (company.category === "MAKEUP") {
     return (
       <MakeupDetail
@@ -622,14 +688,12 @@ const CategoryDetail = ({
         cmno={company.cmno}
         canManageCompany={canManageCompany}
         onRefresh={onRefresh}
-        onWishOption={onWishOption}
+        wish={wish}
       />
     );
   }
   if (company.category === "HALL") {
-    return (
-      <HallDetail detail={company.hallDetail} onWishOption={onWishOption} />
-    );
+    return <HallDetail detail={company.hallDetail} wish={wish} />;
   }
   if (company.category === "STUDIO") {
     return <StudioDetail detail={company.studioDetail} />;
@@ -1025,7 +1089,7 @@ const DressItemViewModal = ({
   currentIdx,
   onNavigate,
   onClose,
-  onWishItem,
+  wish,
 }) => {
   const imageSrc = item.imageUrl ? getCompanyImageUrl(item.imageUrl) : null;
   const isSuitItem = isSuitFn(item);
@@ -1166,21 +1230,31 @@ const DressItemViewModal = ({
 
             {/* 하단 - 찜하기 + 네비게이션 */}
             <div className="mt-6 flex flex-col gap-3">
-              {onWishItem && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    onWishItem({
-                      label: item.itemName,
-                      price: Number(item.price || 0),
-                      image: item.imageUrl || null,
-                    })
-                  }
-                  className="w-full rounded-lg bg-rose-500 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-rose-600"
-                >
-                  ♥ 이 {isSuitItem ? "슈트" : "드레스"} 찜하기
-                </button>
-              )}
+              {wish &&
+                (() => {
+                  const isWished = wish.isWished(item.itemName);
+                  return (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        wish.toggle({
+                          label: item.itemName,
+                          price: Number(item.price || 0),
+                          image: item.imageUrl || null,
+                        })
+                      }
+                      className={`w-full rounded-lg py-2.5 text-sm font-semibold transition-colors ${
+                        isWished
+                          ? "border border-rose-300 bg-white text-rose-500 hover:bg-rose-50"
+                          : "bg-rose-500 text-white hover:bg-rose-600"
+                      }`}
+                    >
+                      {isWished
+                        ? `♥ 찜 해제`
+                        : `♡ 이 ${isSuitItem ? "슈트" : "드레스"} 찜하기`}
+                    </button>
+                  );
+                })()}
               <div className="flex items-center justify-between">
                 <button
                   type="button"
@@ -1428,13 +1502,7 @@ const DressItemModal = ({ modalData, isSuitFn, onSave, onDelete, onClose }) => {
   );
 };
 
-const DressDetail = ({
-  detail,
-  cmno,
-  canManageCompany,
-  onRefresh,
-  onWishOption,
-}) => {
+const DressDetail = ({ detail, cmno, canManageCompany, onRefresh, wish }) => {
   const [activeTab, setActiveTab] = useState("DRESS");
   const [dressPage, setDressPage] = useState(0);
   const [suitPage, setSuitPage] = useState(0);
@@ -1663,7 +1731,7 @@ const DressDetail = ({
           currentIdx={viewModalIdx}
           onNavigate={(nextIdx) => setViewModalIdx(nextIdx)}
           onClose={() => setViewModalIdx(null)}
-          onWishItem={onWishOption}
+          wish={wish}
         />
       )}
 
@@ -1875,7 +1943,7 @@ const HallItemViewModal = ({
   currentIdx,
   onNavigate,
   onClose,
-  onWishItem,
+  wish,
 }) => {
   const imageSrc = item.imageUrl ? getCompanyImageUrl(item.imageUrl) : null;
   const hasPrev = currentIdx > 0;
@@ -1994,21 +2062,29 @@ const HallItemViewModal = ({
 
             {/* 하단 - 찜하기 + 네비게이션 */}
             <div className="mt-6 flex flex-col gap-3">
-              {onWishItem && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    onWishItem({
-                      label: item.itemName,
-                      price: Number(item.price || 0),
-                      image: item.imageUrl || null,
-                    })
-                  }
-                  className="w-full rounded-lg bg-rose-500 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-rose-600"
-                >
-                  ♥ 이 홀 옵션 찜하기
-                </button>
-              )}
+              {wish &&
+                (() => {
+                  const isWished = wish.isWished(item.itemName);
+                  return (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        wish.toggle({
+                          label: item.itemName,
+                          price: Number(item.price || 0),
+                          image: item.imageUrl || null,
+                        })
+                      }
+                      className={`w-full rounded-lg py-2.5 text-sm font-semibold transition-colors ${
+                        isWished
+                          ? "border border-rose-300 bg-white text-rose-500 hover:bg-rose-50"
+                          : "bg-rose-500 text-white hover:bg-rose-600"
+                      }`}
+                    >
+                      {isWished ? "♥ 찜 해제" : "♡ 이 홀 옵션 찜하기"}
+                    </button>
+                  );
+                })()}
               <div className="flex items-center justify-between">
                 <button
                   type="button"
@@ -2036,7 +2112,7 @@ const HallItemViewModal = ({
   );
 };
 
-const HallDetail = ({ detail, onWishOption }) => {
+const HallDetail = ({ detail, wish }) => {
   const [viewModalIdx, setViewModalIdx] = useState(null);
 
   if (!detail) return null;
@@ -2051,7 +2127,7 @@ const HallDetail = ({ detail, onWishOption }) => {
           currentIdx={viewModalIdx}
           onNavigate={(nextIdx) => setViewModalIdx(nextIdx)}
           onClose={() => setViewModalIdx(null)}
-          onWishItem={onWishOption}
+          wish={wish}
         />
       )}
 
