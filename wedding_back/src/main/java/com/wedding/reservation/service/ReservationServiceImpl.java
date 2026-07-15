@@ -21,6 +21,8 @@ import com.wedding.reservation.dto.ReservationDTO;
 import com.wedding.reservation.dto.ReservationPaymentConfirmRequestDTO;
 import com.wedding.reservation.repository.ReservationRepository;
 import com.wedding.global.util.TossPaymentClient;
+import com.wedding.company.dto.CompanyDTO;
+import com.wedding.company.service.CompanyService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -38,12 +40,20 @@ public class ReservationServiceImpl implements ReservationService {
   // 공용 유틸(global.util.TossPaymentClient)만 재사용
   private final TossPaymentClient tossPaymentClient;
 
+  // 승진 코드 추가 - 업체 예약관리 권한 검증
+  private final ReservationAccessService reservationAccessService;
+  private final CompanyService companyService;
+  // 승진 코드 추가 끝
+
   @Override
   public Long register(ReservationDTO reservationDTO) {
 
     log.info("reservation register.........");
 
     Reservation reservation = modelMapper.map(reservationDTO, Reservation.class);
+    // 승진 코드 추가 - 등록 시 항상 예약대기(대기) 상태로 시작
+    reservation.changeStatus("대기");
+    // 승진 코드 추가 끝
 
     Reservation saved = reservationRepository.save(reservation);
 
@@ -68,10 +78,8 @@ public class ReservationServiceImpl implements ReservationService {
 
     Reservation reservation = result.orElseThrow();
 
-    // 승진 코드 추가 - 결제대기(amount>0 & 미결제/결제취소) 상태에서는 수정 불가
-    if (reservation.getAmount() > 0
-        && ("NONE".equals(reservation.getPayStatus())
-            || "CANCELLED".equals(reservation.getPayStatus()))) {
+    // 승진 코드 추가 - 결제대기(status=결제대기) 상태에서는 수정 불가
+    if ("결제대기".equals(reservation.getStatus())) {
       throw new IllegalStateException("결제대기 상태에서는 수정할 수 없습니다.");
     }
     // 승진 코드 추가 끝
@@ -122,6 +130,15 @@ public class ReservationServiceImpl implements ReservationService {
     if ("PAID".equals(reservation.getPayStatus())) {
       throw new IllegalStateException("이미 결제가 완료된 예약입니다.");
     }
+
+    // 승진 코드 추가 - 업체 확인(결제대기) 후에만 결제 가능
+    if (!"결제대기".equals(reservation.getStatus())) {
+      throw new IllegalStateException("업체 확인 후 결제할 수 있습니다.");
+    }
+    if (reservation.getAmount() <= 0) {
+      throw new IllegalStateException("결제 금액이 없는 예약입니다.");
+    }
+    // 승진 코드 추가 끝
 
     // 승진 코드 추가 - 결제 취소/실패 후 재결제 시 payStatus 복구
     reservation.resetPayStatusForRetry();
@@ -203,6 +220,9 @@ public class ReservationServiceImpl implements ReservationService {
       }
       if ("PAID".equals(r.getPayStatus())) {
         throw new IllegalStateException("이미 결제된 예약입니다: " + reservationId);
+      }
+      if (!"결제대기".equals(r.getStatus())) {
+        throw new IllegalStateException("업체 확인 후 결제할 수 있습니다: " + reservationId);
       }
       if (r.getAmount() <= 0) {
         throw new IllegalStateException("결제 금액이 없는 예약입니다: " + reservationId);
@@ -286,6 +306,56 @@ public class ReservationServiceImpl implements ReservationService {
       r.cancelPayment();
       reservationRepository.save(r);
     }
+  }
+  // 승진 코드 추가 끝
+
+  // 승진 코드 추가 - 업체 예약관리
+  @Override
+  public List<ReservationDTO> listByCompany(Long cmno, String callerEmail) {
+
+    reservationAccessService.requireCanManageCompanyReservations(callerEmail, cmno);
+
+    return reservationRepository.findByCmnoOrderByReservationIdDesc(cmno).stream()
+        .map(r -> modelMapper.map(r, ReservationDTO.class))
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<ReservationDTO> listMyManagedCompany(String callerEmail) {
+
+    CompanyDTO company = companyService.getManagedCompany(callerEmail);
+    if (company == null || company.getCmno() == null) {
+      throw new IllegalStateException("담당 업체가 없습니다.");
+    }
+
+    return listByCompany(company.getCmno(), callerEmail);
+  }
+
+  @Override
+  @Transactional
+  public ReservationDTO confirmByManager(Long reservationId, String callerEmail) {
+
+    Reservation reservation = reservationRepository.findById(reservationId).orElseThrow();
+
+    reservationAccessService.requireCanManageCompanyReservations(
+        callerEmail, reservation.getCmno());
+
+    if (!"대기".equals(reservation.getStatus())) {
+      throw new IllegalStateException("예약대기 상태만 확인할 수 있습니다.");
+    }
+
+    if (reservation.getAmount() > 0) {
+      reservation.confirmForPayment();
+    } else {
+      reservation.changeStatus("확정");
+    }
+
+    reservationRepository.save(reservation);
+
+    log.info("confirmByManager - reservationId: {}, status: {}",
+        reservationId, reservation.getStatus());
+
+    return modelMapper.map(reservation, ReservationDTO.class);
   }
   // 승진 코드 추가 끝
 

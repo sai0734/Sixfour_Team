@@ -43,4 +43,12 @@ public interface ReservationService {
     void cancelBulkPayment(List<Long> reservationIds, String memberEmail);
     // 승진 코드 추가 끝
 
+    // 승진 코드 추가 - 업체 예약관리
+    List<ReservationDTO> listByCompany(Long cmno, String callerEmail);
+
+    List<ReservationDTO> listMyManagedCompany(String callerEmail);
+
+    ReservationDTO confirmByManager(Long reservationId, String callerEmail);
+    // 승진 코드 추가 끝
+
 }

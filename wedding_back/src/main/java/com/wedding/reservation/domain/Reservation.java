@@ -60,6 +60,12 @@ public class Reservation {
     this.status = status;
   }
 
+  // 승진 코드 추가 - 업체 확인 후 결제대기로 전환
+  public void confirmForPayment() {
+    this.status = "결제대기";
+  }
+  // 승진 코드 추가 끝
+
   public void changeMemo(String memo) {
     this.memo = memo;
   }

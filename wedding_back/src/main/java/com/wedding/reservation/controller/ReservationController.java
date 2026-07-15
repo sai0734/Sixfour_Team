@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,6 +23,8 @@ import com.wedding.reservation.dto.ReservationDTO;
 import com.wedding.reservation.dto.ReservationPaymentConfirmRequestDTO;
 import com.wedding.reservation.service.ReservationService;
 
+import com.wedding.member.dto.MemberDTO;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
@@ -33,17 +36,60 @@ public class ReservationController {
 
   private final ReservationService service;
 
-  @GetMapping("/{reservationId}")
-  public ReservationDTO get(@PathVariable(name = "reservationId") Long reservationId) {
-
-    return service.get(reservationId);
-  }
-
   // 회원의 예약 전체 조회 (마이페이지 "예약 현황" 탭용)
   @GetMapping("/member/{memberEmail}")
   public List<ReservationDTO> listByMember(@PathVariable(name = "memberEmail") String memberEmail) {
 
     return service.listByMember(memberEmail);
+  }
+
+  // 승진 코드 추가 - 업체 예약관리 (경로 충돌 방지를 위해 /{reservationId}보다 위에 배치)
+  @GetMapping("/company/{cmno}")
+  public List<ReservationDTO> listByCompany(
+      @AuthenticationPrincipal MemberDTO memberDTO,
+      @PathVariable(name = "cmno") Long cmno) {
+
+    log.info("ReservationController_listByCompany 실행~~~~~~~~ cmno={}", cmno);
+
+    if (memberDTO == null) {
+      throw new IllegalStateException("로그인이 필요합니다.");
+    }
+
+    return service.listByCompany(cmno, memberDTO.getEmail());
+  }
+
+  @GetMapping("/manager/mine")
+  public List<ReservationDTO> listMyManagedCompany(
+      @AuthenticationPrincipal MemberDTO memberDTO) {
+
+    log.info("ReservationController_listMyManagedCompany 실행~~~~~~~~");
+
+    if (memberDTO == null) {
+      throw new IllegalStateException("로그인이 필요합니다.");
+    }
+
+    return service.listMyManagedCompany(memberDTO.getEmail());
+  }
+
+  @PutMapping("/{reservationId}/manager-confirm")
+  public ReservationDTO confirmByManager(
+      @AuthenticationPrincipal MemberDTO memberDTO,
+      @PathVariable(name = "reservationId") Long reservationId) {
+
+    log.info("ReservationController_confirmByManager 실행~~~~~~~~ id={}", reservationId);
+
+    if (memberDTO == null) {
+      throw new IllegalStateException("로그인이 필요합니다.");
+    }
+
+    return service.confirmByManager(reservationId, memberDTO.getEmail());
+  }
+  // 승진 코드 추가 끝
+
+  @GetMapping("/{reservationId}")
+  public ReservationDTO get(@PathVariable(name = "reservationId") Long reservationId) {
+
+    return service.get(reservationId);
   }
 
   // D파트 업체탐색 "예약하기" 버튼에서도 이 엔드포인트를 그대로 호출
