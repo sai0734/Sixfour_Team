@@ -246,6 +246,13 @@ const CompanyListComponent = () => {
                 {opt.label}
               </button>
             ))}
+            <button
+              type="button"
+              onClick={() => navigate(`${companyPathPrefix}/packages`)}
+              className="rounded-full border border-line px-3.5 py-1.5 text-[13px] text-ink-muted transition hover:border-brand hover:text-brand-deep"
+            >
+              패키지
+            </button>
           </div>
           <div className="flex flex-wrap gap-1.5">
             {SORT_OPTIONS.map((opt) => (
