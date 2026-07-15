@@ -34,13 +34,17 @@ const MyPageSidebar = () => {
     if (path === "/manager/inquiries") {
       return location.pathname.startsWith("/manager/inquiries");
     }
+    if (path === "/manager/reservations") {
+      return location.pathname.startsWith("/manager/reservations");
+    }
     return location.pathname.startsWith(path);
   };
 
-  // 매니저면 "마이페이지" 대신 "업체페이지"로 교체
+  // 매니저면 "마이페이지" 대신 업체 메뉴로 교체
   const menuItems = isManager
     ? [
-        { name: "업체페이지", path: "/manager/inquiries", enabled: true },
+        { name: "업체 문의", path: "/manager/inquiries", enabled: true },
+        { name: "예약 관리", path: "/manager/reservations", enabled: true },
         { name: "회원정보 수정", path: "/auth/modify", enabled: true },
       ]
     : [
