@@ -22,4 +22,8 @@ public interface InquiryRoomRepository extends JpaRepository<InquiryRoom, Long> 
     @Query("SELECT r FROM InquiryRoom r WHERE r.cmno = :cmno ORDER BY r.lastMessageAt DESC")
     List<InquiryRoom> findByCmnoOrderByLastMessageAtDesc(@Param("cmno") Long cmno);
 
+    // 회원 화면: 내가 연 모든 문의방 (최근 대화순) — 플로팅 버튼 안읽음 뱃지 폴링용
+    @Query("SELECT r FROM InquiryRoom r WHERE r.memberEmail = :memberEmail ORDER BY r.lastMessageAt DESC")
+    List<InquiryRoom> findByMemberEmailOrderByLastMessageAtDesc(@Param("memberEmail") String memberEmail);
+
 }

@@ -17,6 +17,12 @@ export const getCompanyInquiryRooms = async (cmno) => {
   return res.data;
 };
 
+// 회원 화면 - 내가 연 모든 문의방 목록 (안 읽음 뱃지 폴링용)
+export const getMyInquiryRooms = async () => {
+  const res = await jwtAxios.get(`${prefix}/my-rooms`);
+  return res.data;
+};
+
 // 채팅창 열 때 / 폴링 — 메시지 목록 조회
 export const getInquiryMessages = async (roomId) => {
   const res = await jwtAxios.get(`${prefix}/rooms/${roomId}/messages`);

@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -38,13 +39,24 @@ public class ChatService {
     private static final int HISTORY_LIMIT = 20;
 
     private static final String SYSTEM_PROMPT =
-            "당신은 웨딩 준비 전문 AI 비서입니다. 당신의 목적은 오직 결혼 준비 관련 질문에 답변하는 것입니다. " +
-                    "사용자가 결혼과 관련 없는 질문(예: 음식 추천, 일상 대화 등)을 하면, 반드시 '결혼 준비와 관련된 질문만 답변해 드릴 수 있습니다.'라고 정중하게 거절하세요. " +
-                    "다른 대답은 하지 마세요. 사용자가 드레스 상품을 찾거나 추천을 원하면 search_dresses 함수를, " +
-                    "웨딩홀/드레스업체/스튜디오/메이크업 등 업체(느낌, 분위기, 가격, 지역 포함)를 찾거나 추천을 원하면 " +
-                    "search_companies 함수를 사용해서 실제 등록된 데이터 중에서 답변하세요.";
+            "당신은 웨딩 준비 전문 AI 비서입니다. 결혼 준비와 관련된 질문에만 답변합니다.\n\n" +
+                    "질문은 아래 세 가지 중 하나로 판단해서 답변하세요.\n\n" +
+                    "1) 결혼과 전혀 관련 없는 질문(예: 음식 추천, 날씨, 다른 주제의 일상 대화)\n" +
+                    "   -> 반드시 '결혼 준비와 관련된 질문만 답변해 드릴 수 있습니다.'라고만 정중하게 답하고, 다른 내용은 덧붙이지 마세요.\n\n" +
+                    "2) 결혼 준비와 관련된 일반 지식/조언 질문(예: 결혼식 예절, 청첩장 문구, 결혼을 많이 하는 달/계절, " +
+                    "예산 짜는 법, 웨딩 준비 순서, 스몰웨딩 팁 등 우리 서비스의 상품·업체 데이터와 무관한 질문)\n" +
+                    "   -> 함수를 호출하지 말고, 당신이 알고 있는 일반 지식으로 직접 친절하고 자연스럽게 답변하세요. " +
+                    "이런 질문을 거절하거나 얼버무리지 마세요.\n\n" +
+                    "3) 우리 사이트에 등록된 드레스 상품이나 웨딩 업체(홀/드레스업체/스튜디오/메이크업)를 찾거나 추천받고 싶어하는 질문\n" +
+                    "   -> 드레스 상품이면 search_dresses 함수를, 웨딩홀/드레스업체/스튜디오/메이크업 업체(느낌, 분위기, 가격, 지역 포함)면 " +
+                    "search_companies 함수를 사용해서 실제 등록된 데이터 중에서만 답변하세요. 데이터에 없는 내용을 지어내지 마세요.";
 
+    // 수정시작
+    // DB save/delete가 saveAndTrim 안에서 이어지는데, deleteOlderThan은 @Modifying 쿼리라
+    // 트랜잭션 없이 호출되면 "Executing an update/delete query" 에러가 남 - 여기서 감싸줌
+    @Transactional
     public String getAnswer(String memberEmail, String question) {
+        // 수정끝
 
         // 1) 회원의 최근 대화(최대 HISTORY_LIMIT개, 최신순)를 불러와서 문맥으로 사용할 메시지 목록 구성
         List<ChatMessage> history = chatMessageRepository

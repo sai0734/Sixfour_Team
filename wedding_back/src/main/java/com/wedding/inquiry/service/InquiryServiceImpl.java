@@ -32,14 +32,14 @@ public class InquiryServiceImpl implements InquiryService {
         inquiryAccessService.requireCanOpenRoom(memberEmail, cmno);
 
         return inquiryRoomRepository.findByMemberEmailAndCmno(memberEmail, cmno)
-                .map(InquiryRoomDTO::from)
+                .map(room -> InquiryRoomDTO.from(room, memberEmail))
                 .orElseGet(() -> {
                     InquiryRoom newRoom = InquiryRoom.builder()
                             .memberEmail(memberEmail)
                             .cmno(cmno)
                             .build();
                     InquiryRoom saved = inquiryRoomRepository.save(newRoom);
-                    return InquiryRoomDTO.from(saved);
+                    return InquiryRoomDTO.from(saved, memberEmail);
                 });
     }
 
@@ -53,17 +53,36 @@ public class InquiryServiceImpl implements InquiryService {
 
         return inquiryRoomRepository.findByCmnoOrderByLastMessageAtDesc(cmno)
                 .stream()
-                .map(InquiryRoomDTO::from)
+                .map(room -> InquiryRoomDTO.from(room, callerEmail))
+                .toList();
+    }
+
+    // 회원 화면 - 내가 연 모든 문의방 목록 (안읽음 뱃지 폴링용)
+    @Override
+    @Transactional(readOnly = true)
+    public List<InquiryRoomDTO> listRoomsByMember(String callerEmail) {
+        log.info("InquiryServiceImpl_listRoomsByMember_실행~~~~~~~~~~~");
+
+        return inquiryRoomRepository.findByMemberEmailOrderByLastMessageAtDesc(callerEmail)
+                .stream()
+                .map(room -> InquiryRoomDTO.from(room, callerEmail))
                 .toList();
     }
 
     // 채팅창 열 때 / 풀링할 때 특정 방의 메시지 목록 (시간순)
     @Override
-    @Transactional(readOnly = true)
+    // 조회와 동시에 읽음 시각을 갱신해야 해서 readOnly 트랜잭션에서 제외
     public List<InquiryMessageDTO> getMessages(Long roomId, String callerEmail) {
         log.info("InquiryServiceImpl_getMessages_실행~~~~~~~~~~~");
 
-        inquiryAccessService.requireAccessibleRoom(callerEmail, roomId);
+        InquiryRoom room = inquiryAccessService.requireAccessibleRoom(callerEmail, roomId);
+
+        LocalDateTime now = LocalDateTime.now();
+        if (callerEmail.equals(room.getMemberEmail())) {
+            room.markReadByMember(now);
+        } else {
+            room.markReadByManager(now);
+        }
 
         return inquiryMessageRepository.findByRoomIdOrderByRegDateAsc(roomId)
                 .stream()
