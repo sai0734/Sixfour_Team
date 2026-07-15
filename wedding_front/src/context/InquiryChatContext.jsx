@@ -7,7 +7,11 @@ import {
   useState,
 } from "react";
 import { useSelector } from "react-redux";
-import { getMyInquiryRooms, openInquiryRoom } from "../api/companyInquiryApi";
+import {
+  getMyInquiryRooms,
+  openInquiryRoom,
+  sendInquiryMessage,
+} from "../api/companyInquiryApi";
 
 const STORAGE_PREFIX = "wedding_inquiry_sessions_";
 const UNREAD_POLL_INTERVAL_MS = 20000;
@@ -55,6 +59,8 @@ export const InquiryChatProvider = ({ children }) => {
   const [sessions, setSessions] = useState([]);
   const [openingCmno, setOpeningCmno] = useState(null);
   const [activeRoomId, setActiveRoomId] = useState(null);
+  // "문의하기"는 눌렀지만 아직 메시지를 한 번도 안 보낸 상태 - 서버에 방을 안 만들고 여기만 채워둠
+  const [draftInquiry, setDraftInquiry] = useState(null);
   const [isListOpen, setIsListOpen] = useState(false);
 
   useEffect(() => {
@@ -126,24 +132,40 @@ export const InquiryChatProvider = ({ children }) => {
     };
   }, [email, sessions.length, activeRoomId]);
 
+  // "문의하기" 클릭 - 이미 대화중인 업체면 그 방을 열고, 처음이면 draft만 열어둠(서버 호출 없음)
   const startInquiry = useCallback(
-    async (cmno, companyName) => {
+    (cmno, companyName) => {
       if (!email || !cmno) return false;
 
       const existing = sessions.find(
         (session) => session.cmno === Number(cmno),
       );
       if (existing) {
+        setDraftInquiry(null);
         setActiveRoomId(existing.roomId);
         setIsListOpen(false);
         return true;
       }
 
-      if (openingCmno === cmno) return false;
+      setDraftInquiry({ cmno: Number(cmno), companyName });
+      setActiveRoomId(null);
+      setIsListOpen(false);
+      return true;
+    },
+    [email, sessions],
+  );
+
+  // draft 상태에서 첫 메시지를 실제로 보낼 때 - 방 생성 + 메시지 전송을 순서대로 하고,
+  // 둘 다 성공해야 그때 sessions(목록)에 추가한다
+  const startNewRoomWithMessage = useCallback(
+    async (cmno, companyName, text) => {
+      if (openingCmno === cmno) return null;
 
       setOpeningCmno(cmno);
       try {
         const room = await openInquiryRoom(cmno);
+        await sendInquiryMessage(room.roomId, text);
+
         setSessions((prev) => {
           const next = prev.filter((session) => session.roomId !== room.roomId);
           return [
@@ -156,21 +178,21 @@ export const InquiryChatProvider = ({ children }) => {
           ];
         });
         setActiveRoomId(room.roomId);
-        setIsListOpen(false);
-        return true;
+        setDraftInquiry(null);
+        return room.roomId;
       } catch (err) {
-        console.error("문의방 열기 실패:", err);
-        alert("문의 채팅을 시작할 수 없습니다. 다시 시도해주세요.");
-        return false;
+        console.error("문의방 생성/첫 메시지 전송 실패:", err);
+        throw err;
       } finally {
         setOpeningCmno(null);
       }
     },
-    [email, openingCmno, sessions],
+    [openingCmno],
   );
 
   // 목록에서 방을 선택 — 그 방을 열고 목록은 닫는다
   const openInquiry = useCallback((roomId) => {
+    setDraftInquiry(null);
     setActiveRoomId(roomId);
     setIsListOpen(false);
     setSessions((prev) =>
@@ -182,6 +204,7 @@ export const InquiryChatProvider = ({ children }) => {
 
   const minimizeInquiry = useCallback(() => {
     setActiveRoomId(null);
+    setDraftInquiry(null);
   }, []);
 
   const closeInquiry = useCallback((roomId) => {
@@ -201,11 +224,13 @@ export const InquiryChatProvider = ({ children }) => {
     () => ({
       sessions,
       activeRoomId,
+      draftInquiry,
       isListOpen,
       closeInquiry,
       openList,
       closeList,
       startInquiry,
+      startNewRoomWithMessage,
       openInquiry,
       minimizeInquiry,
       isOpening: openingCmno != null,
@@ -213,11 +238,13 @@ export const InquiryChatProvider = ({ children }) => {
     [
       sessions,
       activeRoomId,
+      draftInquiry,
       isListOpen,
       closeInquiry,
       openList,
       closeList,
       startInquiry,
+      startNewRoomWithMessage,
       openInquiry,
       minimizeInquiry,
       openingCmno,

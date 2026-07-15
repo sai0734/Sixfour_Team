@@ -20,12 +20,14 @@ const GlobalInquiryChatHost = () => {
   const {
     sessions,
     activeRoomId,
+    draftInquiry,
     isListOpen,
     openInquiry,
     minimizeInquiry,
     closeInquiry,
     openList,
     closeList,
+    startNewRoomWithMessage,
   } = useInquiryChat();
 
   const [isAiChatOpen, setIsAiChatOpen] = useState(false);
@@ -90,12 +92,27 @@ const GlobalInquiryChatHost = () => {
 
   return (
     <>
-      {activeSession && (
+      {/* 기존 방이 열린 경우뿐 아니라, 아직 메시지 안 보낸 draft 상태에서도 채팅창을 띄운다 */}
+      {(activeSession || draftInquiry) && (
         <CompanyChatModal
-          companyName={activeSession.companyName}
-          roomId={activeSession.roomId}
+          companyName={
+            activeSession ? activeSession.companyName : draftInquiry.companyName
+          }
+          roomId={activeSession ? activeSession.roomId : null}
           onMinimize={minimizeInquiry}
-          onLeave={() => closeInquiry(activeSession.roomId)}
+          onLeave={
+            activeSession ? () => closeInquiry(activeSession.roomId) : undefined
+          }
+          onFirstSend={
+            !activeSession
+              ? (text) =>
+                  startNewRoomWithMessage(
+                    draftInquiry.cmno,
+                    draftInquiry.companyName,
+                    text,
+                  )
+              : undefined
+          }
         />
       )}
 
@@ -124,13 +141,16 @@ const GlobalInquiryChatHost = () => {
         {canUseAiChat && !isAiChatOpen && (
           <AiChatbotFloatingButton onOpen={() => setIsAiChatOpen(true)} />
         )}
-        {!activeSession && !isListOpen && sessions.length > 0 && (
-          <CompanyChatFloatingButton
-            label="문의 채팅"
-            unread={hasUnread}
-            onOpen={handleIconClick}
-          />
-        )}
+        {!activeSession &&
+          !draftInquiry &&
+          !isListOpen &&
+          sessions.length > 0 && (
+            <CompanyChatFloatingButton
+              label="문의 채팅"
+              unread={hasUnread}
+              onOpen={handleIconClick}
+            />
+          )}
       </div>
     </>
   );

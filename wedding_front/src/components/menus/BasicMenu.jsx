@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import useManagedCompany from "../../hooks/useManagedCompany";
+import useCustomCart from "../../hooks/useCustomCart";
 
 const BasicMenu = () => {
   const loginState = useSelector((state) => state.loginSlice);
@@ -18,6 +19,13 @@ const BasicMenu = () => {
   const { isManager } = useManagedCompany({
     enabled: isLoggedIn && !isAdmin,
   });
+
+  // 장바구니 배지 - 로그인/비로그인(게스트) 모두 같은 cartSlice를 쓰므로 cartItems.length로 바로 표시 가능
+  const { cartItems, refreshCart } = useCustomCart();
+
+  useEffect(() => {
+    if (isLoggedIn) refreshCart();
+  }, [isLoggedIn]);
 
   const myPageLink = isManager ? "/manager/inquiries" : "/mypage";
   const myPageLabel = isManager ? "업체페이지" : "마이페이지";
@@ -217,6 +225,7 @@ const BasicMenu = () => {
                 <circle cx="20" cy="21" r="1" />
                 <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
               </svg>
+              <span className="cart-badge">{cartItems.length}</span>
             </Link>
             <Link to="/auth/join" className="nav-signup">
               회원가입
@@ -267,7 +276,7 @@ const BasicMenu = () => {
                 <circle cx="20" cy="21" r="1" />
                 <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
               </svg>
-              <span className="cart-badge">0</span>
+              <span className="cart-badge">{cartItems.length}</span>
             </Link>
             <Link to={myPageLink} className="nav-mypage">
               {myPageLabel}
