@@ -52,6 +52,9 @@ const CompanyReadPage = lazy(() => import("../pages/company/CompanyReadPage"));
 const ManagerInquiryPage = lazy(
   () => import("../pages/manager/ManagerInquiryPage"),
 );
+const ManagerReservationPage = lazy(
+  () => import("../pages/manager/ManagerReservationPage"),
+);
 
 const appRoutes = [
   {
@@ -231,6 +234,14 @@ const appRoutes = [
     element: (
       <Suspense fallback={Loading}>
         <ManagerInquiryPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/manager/reservations",
+    element: (
+      <Suspense fallback={Loading}>
+        <ManagerReservationPage />
       </Suspense>
     ),
   },

@@ -23,16 +23,26 @@ const STATUS_STYLE = {
   취소: "bg-red-50 text-red-600",
 };
 
-// 승진 코드 추가 - 예약대기/결제대기 구분
+// 승진 코드 추가 - 예약대기/결제대기 구분 (status 기준)
 const isPaymentPending = (r) =>
-  r.amount > 0 && (r.payStatus === "NONE" || r.payStatus === "CANCELLED");
+  r.status === "결제대기" &&
+  r.amount > 0 &&
+  (r.payStatus === "NONE" || r.payStatus === "CANCELLED");
 
-const getReservationPhase = (r) =>
-  isPaymentPending(r) ? "결제대기" : "예약대기";
+const getReservationPhase = (r) => {
+  if (isPaymentPending(r)) return "결제대기";
+  if (r.status === "대기") return "예약대기";
+  if (r.status === "확정" || r.payStatus === "PAID") return "확정";
+  if (r.status === "취소") return "취소";
+  return "예약대기";
+};
 
-const canEditReservation = (r) => getReservationPhase(r) === "예약대기";
+const canEditReservation = (r) => r.status === "대기";
 
 const getPayBadge = (r) => {
+  if (r.status === "대기") {
+    return { label: "업체 확인중", style: "bg-amber-50 text-amber-600" };
+  }
   if (isPaymentPending(r)) {
     return { label: "미결제", style: PAY_STYLE.NONE };
   }
@@ -243,9 +253,9 @@ const ReservationTab = () => {
     }
   };
 
-  const unpaidCount = displayReservations.filter((r) => r.amount > 0).length;
+  const unpaidCount = displayReservations.filter((r) => isPaymentPending(r)).length;
   const totalUnpaid = displayReservations
-    .filter((r) => r.amount > 0)
+    .filter((r) => isPaymentPending(r))
     .reduce((s, r) => s + (r.amount || 0), 0);
 
   return (
