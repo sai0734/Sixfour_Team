@@ -3,7 +3,6 @@ import PrepLayout from "../../layouts/PrepLayout";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import { getByMember as getWeddingPlan } from "../../api/weddingplanApi";
 import { getListByMember as getChecklist } from "../../api/checklistApi";
-import { getListByMember as getHallPayments } from "../../api/hallPaymentApi";
 import {
   getListByMember as getDdayEvents,
   postAdd,
@@ -15,7 +14,6 @@ import DdayEventFormModal from "../../components/ddayevent/DdayEventFormModal";
 const TYPE_STYLE = {
   예식일: "bg-brand text-white",
   체크리스트: "bg-blue-50 text-blue-700",
-  납부: "bg-orange-50 text-orange-700",
   커스텀: "bg-purple-50 text-purple-700",
 };
 
@@ -44,9 +42,8 @@ const DdayPage = () => {
     Promise.all([
       getWeddingPlan(loginState.email).catch(() => null),
       getChecklist(loginState.email).catch(() => []),
-      getHallPayments(loginState.email).catch(() => []),
       getDdayEvents(loginState.email).catch(() => []),
-    ]).then(([plan, checklist, payments, ddayEvents]) => {
+    ]).then(([plan, checklist, ddayEvents]) => {
       const combined = [];
 
       if (plan?.weddingDate) {
@@ -65,17 +62,6 @@ const DdayPage = () => {
             date: c.dueDate,
             type: "체크리스트",
             title: c.title,
-            editable: false,
-          });
-        });
-
-      payments
-        .filter((p) => p.dueDate && p.status === "대기")
-        .forEach((p) => {
-          combined.push({
-            date: p.dueDate,
-            type: "납부",
-            title: `${p.paymentType} (업체 #${p.cmno})`,
             editable: false,
           });
         });
@@ -213,8 +199,8 @@ const DdayPage = () => {
         <>
           <div className="flex items-center justify-between mb-6">
             <p className="text-sm text-ink-muted">
-              체크리스트 마감일·납부 기한·예식일을 자동으로 모아 보여줘요. 직접
-              일정도 추가할 수 있어요.
+              체크리스트 마감일·예식일을 자동으로 모아 보여줘요. 직접 일정도
+              추가할 수 있어요.
             </p>
             <button
               type="button"

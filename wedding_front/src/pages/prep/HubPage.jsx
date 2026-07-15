@@ -6,7 +6,6 @@ import useCustomLogin from "../../hooks/useCustomLogin";
 import { getListByMember as getChecklist } from "../../api/checklistApi";
 import { getListByMember as getBudget } from "../../api/budgetApi";
 import { getByMember as getWeddingPlan } from "../../api/weddingplanApi";
-import { getListByMember as getHallPayments } from "../../api/hallPaymentApi";
 
 const HubPage = () => {
   const { loginState } = useCustomLogin();
@@ -14,7 +13,6 @@ const HubPage = () => {
   const [checklist, setChecklist] = useState([]);
   const [budgetList, setBudgetList] = useState([]);
   const [plan, setPlan] = useState(null);
-  const [payments, setPayments] = useState([]);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -24,12 +22,10 @@ const HubPage = () => {
       getChecklist(loginState.email),
       getBudget(loginState.email),
       getWeddingPlan(loginState.email).catch(() => null),
-      getHallPayments(loginState.email).catch(() => []),
-    ]).then(([checklistData, budgetData, planData, paymentData]) => {
+    ]).then(([checklistData, budgetData, planData]) => {
       setChecklist(checklistData);
       setBudgetList(budgetData);
       setPlan(planData);
-      setPayments(paymentData);
       setLoaded(true);
     });
   }, [loginState.email]);
@@ -82,12 +78,6 @@ const HubPage = () => {
           (1000 * 60 * 60 * 24),
       )
     : null;
-
-  const pendingPayments = payments.filter((p) => p.status === "대기");
-  const pendingAmount = pendingPayments.reduce(
-    (s, p) => s + (p.amount || 0),
-    0,
-  );
 
   return (
     <PrepLayout
@@ -157,19 +147,6 @@ const HubPage = () => {
       </TapeLabel>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Link
-          to="/prep/payment"
-          className="bg-white rounded-2xl border border-line p-6 hover:border-brand transition-colors"
-        >
-          <p className="text-xs text-ink-muted mb-2">납부 관리</p>
-          <p className="text-2xl font-medium text-ink mb-1">
-            {pendingAmount.toLocaleString()}원
-          </p>
-          <p className="text-xs text-ink-faint">
-            대기중인 납부 {pendingPayments.length}건
-          </p>
-        </Link>
-
         <div className="bg-white rounded-2xl border border-line p-6 opacity-60">
           <p className="text-sm font-medium text-ink mb-1">AI 드레스</p>
           <p className="text-xs text-ink-faint">준비 중인 기능입니다</p>
