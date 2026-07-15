@@ -10,6 +10,7 @@ import com.wedding.checkout.domain.OrderItem;
 import com.wedding.checkout.domain.Orders;
 import com.wedding.checkout.repository.OrderRepository;
 import com.wedding.company.domain.Company;
+import com.wedding.company.domain.CompanyPackage;
 import com.wedding.company.domain.DressDetail;
 import com.wedding.company.domain.DressItem;
 import com.wedding.company.domain.DressItemType;
@@ -21,6 +22,7 @@ import com.wedding.company.domain.MakeupPackage;
 import com.wedding.company.domain.MakeupPackageType;
 import com.wedding.company.domain.MealType;
 import com.wedding.company.domain.StudioDetail;
+import com.wedding.company.repository.CompanyPackageRepository;
 import com.wedding.company.repository.CompanyRepository;
 import com.wedding.company.repository.DressDetailRepository;
 import com.wedding.company.repository.DressItemRepository;
@@ -72,6 +74,7 @@ public class DataInitializer implements ApplicationRunner {
   private static final String ADMIN_EMAIL = "user1@naver.com";
 
   private final CompanyRepository companyRepository;
+  private final CompanyPackageRepository companyPackageRepository;
   private final MakeupPackageRepository makeupPackageRepository;
   private final HallDetailRepository hallDetailRepository;
   private final HallItemRepository hallItemRepository;
@@ -103,6 +106,7 @@ public class DataInitializer implements ApplicationRunner {
   // 5) data/commerce_dummy.json  → tbl_orders, tbl_order_item, tbl_review, tbl_qna
   // 6) data/faq.json             → tbl_faq
   // 7) data/makeup.json          → tbl_makeup_package (업체 DB 있을 때만)
+  // 8) data/companyPackage.json  → tbl_company_package (업체 DB 신규 삽입 시에만)
   @Override
   @Transactional
   public void run(ApplicationArguments args) throws Exception {
@@ -156,6 +160,10 @@ public class DataInitializer implements ApplicationRunner {
         insertStudioDetails(companyMap);
         insertMakeupDetails(companyMap);
         log.info("===== Company detail dummy seed complete =====");
+
+        log.info("===== Company package dummy seed start =====");
+        insertCompanyPackages(companyMap);
+        log.info("===== Company package dummy seed complete. count={} =====", companyPackageRepository.count());
       }
     } else {
       relaxLegacyDetailColumns();
@@ -403,6 +411,38 @@ public class DataInitializer implements ApplicationRunner {
             makeupDetailRepository.count(), makeupPackageRepository.count());
   }
 
+  // data/companyPackage.json → tbl_company_package
+  // 홀+드레스+스튜디오+메이크업(스드메) 4개 업체를 묶은 패키지 더미 시드.
+  // insertCompanies()가 만든 companyMap(jsonCmno → 저장된 Company)을 그대로 재사용함.
+  private void insertCompanyPackages(Map<Long, Company> companyMap) throws Exception {
+    List<Map<String, Object>> list = readJsonArray("data/companyPackage.json");
+
+    for (Map<String, Object> m : list) {
+      Company hallCompany = companyMap.get(toLongObject(m.get("hallCmno")));
+      Company dressCompany = companyMap.get(toLongObject(m.get("dressCmno")));
+      Company studioCompany = companyMap.get(toLongObject(m.get("studioCmno")));
+      Company makeupCompany = companyMap.get(toLongObject(m.get("makeupCmno")));
+
+      if (hallCompany == null || dressCompany == null || studioCompany == null || makeupCompany == null) {
+        log.warn("Skip company package '{}'. referenced company not found in seed map.", m.get("name"));
+        continue;
+      }
+
+      companyPackageRepository.save(CompanyPackage.builder()
+              .name((String) m.get("name"))
+              .description((String) m.get("description"))
+              .hallCompany(hallCompany)
+              .dressCompany(dressCompany)
+              .studioCompany(studioCompany)
+              .makeupCompany(makeupCompany)
+              .totalPrice(toBigDecimal(m.get("totalPrice")))
+              .discountRate(m.get("discountRate") == null ? null : ((Number) m.get("discountRate")).doubleValue())
+              .packagePrice(toBigDecimal(m.get("packagePrice")))
+              .distanceKm(m.get("distanceKm") == null ? null : ((Number) m.get("distanceKm")).doubleValue())
+              .purchaseCount(((Number) m.getOrDefault("purchaseCount", 0)).intValue())
+              .build());
+    }
+  }
 
   private void insertMakeupDiscountPackages() throws Exception {
     List<Map<String, Object>> list = readJsonArray("data/makeup.json");
