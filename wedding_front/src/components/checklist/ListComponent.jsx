@@ -1,15 +1,21 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   getListByMember,
   postAdd,
   putOne,
   deleteOne,
 } from "../../api/checklistApi";
+// 재원 추가 - 체크리스트에 결제 예정(예약 기반) 항목도 같이 보여주기 위해 가져옴
+import { getListByMember as getReservations } from "../../api/reservationApi";
+import { getOne as getCompanyOne } from "../../api/companyApi";
+// 재원 추가 끝
 import useCustomLogin from "../../hooks/useCustomLogin";
 import ChecklistFormModal, { STAGE_LABELS } from "./ChecklistFormModal";
 
 const ListComponent = () => {
   const { loginState } = useCustomLogin();
+  const navigate = useNavigate();
 
   const [checklist, setChecklist] = useState([]);
   const [refresh, setRefresh] = useState(false);
@@ -17,6 +23,40 @@ const ListComponent = () => {
   const [modalMode, setModalMode] = useState(null); // null | "add" | "edit"
   const [editTarget, setEditTarget] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
+
+  // 재원 추가 - 결제 예정(예약 기반) 목록
+  const [pendingPayments, setPendingPayments] = useState([]);
+
+  useEffect(() => {
+    if (!loginState.email) return;
+
+    getReservations(loginState.email)
+      .then(async (reservations) => {
+        const pending = reservations.filter(
+          (r) => r.amount > 0 && r.payStatus !== "PAID" && r.paymentDeadline,
+        );
+        const uniqueCmnos = [...new Set(pending.map((r) => r.cmno))];
+        const results = await Promise.allSettled(
+          uniqueCmnos.map((cmno) => getCompanyOne(cmno)),
+        );
+        const companyMap = {};
+        results.forEach((res, i) => {
+          if (res.status === "fulfilled")
+            companyMap[uniqueCmnos[i]] = res.value;
+        });
+
+        setPendingPayments(
+          pending
+            .map((r) => ({ ...r, companyName: companyMap[r.cmno]?.name }))
+            .sort(
+              (a, b) =>
+                new Date(a.paymentDeadline) - new Date(b.paymentDeadline),
+            ),
+        );
+      })
+      .catch((e) => console.error(e));
+  }, [loginState.email, refresh]);
+  // 재원 추가 끝
 
   useEffect(() => {
     if (!loginState.email) {
@@ -186,6 +226,49 @@ const ListComponent = () => {
           </p>
         </div>
       </div>
+
+      {/* 재원 추가 - 결제 예정 (예약 기반, 체크리스트 항목이 아니라 자동 생성된 안내) */}
+      {pendingPayments.length > 0 && (
+        <div className="mb-8">
+          <p className="text-sm font-medium text-ink mb-2">결제 예정</p>
+          <div className="flex flex-col gap-2">
+            {pendingPayments.map((r) => {
+              const isPast =
+                new Date(r.paymentDeadline) <
+                new Date(new Date().toDateString());
+              return (
+                <div
+                  key={r.reservationId}
+                  className="flex items-center justify-between bg-white rounded-2xl border border-line px-5 py-4"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm text-ink truncate">
+                      {r.companyName || `업체 #${r.cmno}`} 결제
+                    </p>
+                    <p
+                      className={`text-xs mt-0.5 ${
+                        isPast ? "text-red-600 font-medium" : "text-ink-faint"
+                      }`}
+                    >
+                      {isPast
+                        ? `결제 기한 지남 (${r.paymentDeadline})`
+                        : `${r.paymentDeadline}까지 결제`}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/mypage?tab=reservation")}
+                    className="shrink-0 h-8 px-4 rounded-full border border-line-soft text-xs text-ink-soft hover:bg-cream"
+                  >
+                    마이페이지에서 보기
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+      {/* 재원 추가 끝 */}
 
       {total === 0 && (
         <div className="text-center text-ink-faint py-16 bg-white rounded-2xl border border-line">
