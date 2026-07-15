@@ -56,7 +56,7 @@ const ReservationBulkPaymentSuccessPage = () => {
         <div className="max-w-[600px] mx-auto px-6 py-24 text-center">
           <p className="text-sm text-ink-soft mb-6">{errorMsg}</p>
           <button
-            onClick={() => navigate("/mypage")}
+            onClick={() => navigate("/mypage?tab=plan")}
             className="h-11 px-6 rounded-full border border-line-soft text-sm"
           >
             마이페이지로

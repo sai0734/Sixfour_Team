@@ -39,8 +39,7 @@ public class Reservation {
   @Builder.Default
   private int amount = 0;
 
-  // 토스페이먼츠 주문번호 (prepare 시 발급, MariaDB InnoDB는 UNIQUE 컬럼에 NULL 다건 허용됨)
-  @Column(unique = true)
+  // 토스페이먼츠 주문번호 (prepare 시 발급, 일괄결제 시 동일 번호 공유 가능)
   private String orderNumber;
 
   // 토스페이먼츠 결제 승인키 (confirm 성공 시 저장)
@@ -65,6 +64,13 @@ public class Reservation {
     this.memo = memo;
   }
 
+  // 승진 코드 추가 - 예약 수정 시 옵션/금액 변경
+  public void changeOptionInfo(String optionName, int amount) {
+    this.optionName = optionName;
+    this.amount = amount;
+  }
+  // 승진 코드 추가 끝
+
   // 재원 추가 - 결제 관련 상태 변경 메서드
   public void assignOrder(String orderNumber) {
     this.orderNumber = orderNumber;
@@ -80,5 +86,13 @@ public class Reservation {
   public void cancelPayment() {
     this.payStatus = "CANCELLED";
   }
+
+  // 승진 코드 추가 - 결제 취소/실패 후 재결제 시 NONE으로 복구
+  public void resetPayStatusForRetry() {
+    if ("CANCELLED".equals(this.payStatus)) {
+      this.payStatus = "NONE";
+    }
+  }
+  // 승진 코드 추가 끝
 
 }

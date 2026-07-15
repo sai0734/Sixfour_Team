@@ -44,7 +44,7 @@ const ReservationBulkPaymentFailPage = () => {
             다시 시도
           </button>
           <button
-            onClick={() => navigate("/mypage")}
+            onClick={() => navigate("/mypage?tab=plan")}
             className="h-11 px-8 rounded-full border border-line-soft text-sm hover:border-brand hover:text-brand transition"
           >
             마이페이지로
