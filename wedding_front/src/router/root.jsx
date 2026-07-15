@@ -49,6 +49,8 @@ const CompanyModifyPage = lazy(
   () => import("../pages/company/CompanyModifyPage"),
 );
 const CompanyReadPage = lazy(() => import("../pages/company/CompanyReadPage"));
+const PackageListPage = lazy(() => import("../pages/company/PackageListPage"));
+const PackageReadPage = lazy(() => import("../pages/company/PackageReadPage"));
 const ManagerInquiryPage = lazy(
   () => import("../pages/manager/ManagerInquiryPage"),
 );
@@ -193,6 +195,26 @@ const appRoutes = [
       <AdminOnly>
         <Suspense fallback={Loading}>
           <CompanyReadPage />
+        </Suspense>
+      </AdminOnly>
+    ),
+  },
+  {
+    path: "admin/companies/packages",
+    element: (
+      <AdminOnly>
+        <Suspense fallback={Loading}>
+          <PackageListPage />
+        </Suspense>
+      </AdminOnly>
+    ),
+  },
+  {
+    path: "admin/companies/packages/read/:packageId",
+    element: (
+      <AdminOnly>
+        <Suspense fallback={Loading}>
+          <PackageReadPage />
         </Suspense>
       </AdminOnly>
     ),
