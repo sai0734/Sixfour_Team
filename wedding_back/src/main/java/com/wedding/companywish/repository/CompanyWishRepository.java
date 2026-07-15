@@ -33,6 +33,9 @@ public interface CompanyWishRepository extends JpaRepository<CompanyWish, Long> 
 
     /** 마이페이지에서 wishId로 정확히 찍어서 삭제 (본인 소유 확인 겸용) */
     void deleteByWishIdAndMemberEmail(Long wishId, String memberEmail);
+
+    /** 업체 상세페이지 옵션 하트 표시용 - 이 업체에서 내가 찜한 항목 전체 (옵션별로 여러 건일 수 있음) */
+    List<CompanyWish> findAllByMemberEmailAndCmno(String memberEmail, Long cmno);
     // ↑↑↑ 재원 추가
 
 }
