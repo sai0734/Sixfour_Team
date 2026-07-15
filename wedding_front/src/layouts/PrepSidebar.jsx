@@ -32,12 +32,6 @@ const MENU_GROUPS = [
         enabled: true,
       },
       {
-        name: "납부 관리",
-        shortName: "납부",
-        path: "/prep/payment",
-        enabled: true,
-      },
-      {
         name: "AI 드레스",
         shortName: "AI 드레스",
         path: "/prep/ai-dress",

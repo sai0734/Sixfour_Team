@@ -213,9 +213,25 @@ const CompanyReadComponent = () => {
       return;
     }
 
-    // 옵션이 있는 업체(홀/드레스/메이크업)는 어떤 옵션에 관심있는지 고르고 찜하도록
-    // 모달을 띄움. 여러 옵션을 각각 찜해둘 수 있어서, 이미 찜한 상태라도 다시 누르면
-    // 다른 옵션을 추가로 찜할 수 있게 함. 특정 옵션만 찜 해제하는 건 마이페이지에서.
+    // 재원 수정 - 이미 찜한 상태(liked)에서 하트를 다시 누르면 옵션 유무 상관없이
+    // 이 업체에 대한 찜을 전부 해제한다 (여러 옵션을 찜해뒀어도 하트는 "켜기/끄기" 하나로 동작).
+    // 특정 옵션 하나만 남기고 나머지만 지우는 세밀한 조작은 마이페이지 찜 목록에서.
+    if (liked) {
+      try {
+        setFavoriteLoading(true);
+        await removeCompanyWish(company.cmno);
+        setLiked(false);
+      } catch (err) {
+        console.error("업체 찜 처리 실패:", err);
+        exceptionHandle(err);
+      } finally {
+        setFavoriteLoading(false);
+      }
+      return;
+    }
+
+    // 아직 안 찜한 상태 - 옵션이 있는 업체(홀/드레스/메이크업/스튜디오)는 어떤 옵션에
+    // 관심있는지 고르고 찜하도록 모달을 띄움.
     if (wishOptions.length > 0) {
       setWishModalOpen(true);
       return;
@@ -223,13 +239,8 @@ const CompanyReadComponent = () => {
 
     try {
       setFavoriteLoading(true);
-      if (liked) {
-        await removeCompanyWish(company.cmno);
-        setLiked(false);
-      } else {
-        await addCompanyWish(company.cmno);
-        setLiked(true);
-      }
+      await addCompanyWish(company.cmno);
+      setLiked(true);
     } catch (err) {
       console.error("업체 찜 처리 실패:", err);
       exceptionHandle(err);
@@ -249,6 +260,14 @@ const CompanyReadComponent = () => {
   };
 
   const handleWishOptionSubmit = async (option) => {
+    // 재원 추가 - 드레스/홀 아이템 "크게 보기" 모달의 찜 버튼처럼 옵션 선택 모달을
+    // 거치지 않고 바로 이 함수가 호출되는 경로가 생겨서, 로그인 체크를 여기로도 추가
+    if (!isLoggedIn) {
+      alert("로그인 후 찜하기를 이용할 수 있습니다.");
+      navigate("/auth/login");
+      return;
+    }
+
     try {
       setFavoriteLoading(true);
       await addCompanyWish(
@@ -548,6 +567,7 @@ const CompanyReadComponent = () => {
           company={company}
           canManageCompany={canManageCompany}
           onRefresh={handleRefresh}
+          onWishOption={handleWishOptionSubmit}
         />
       </div>
 
@@ -564,7 +584,12 @@ const CompanyReadComponent = () => {
   );
 };
 
-const CategoryDetail = ({ company, canManageCompany, onRefresh }) => {
+const CategoryDetail = ({
+  company,
+  canManageCompany,
+  onRefresh,
+  onWishOption,
+}) => {
   if (company.category === "MAKEUP") {
     return (
       <MakeupDetail
@@ -582,11 +607,14 @@ const CategoryDetail = ({ company, canManageCompany, onRefresh }) => {
         cmno={company.cmno}
         canManageCompany={canManageCompany}
         onRefresh={onRefresh}
+        onWishOption={onWishOption}
       />
     );
   }
   if (company.category === "HALL") {
-    return <HallDetail detail={company.hallDetail} />;
+    return (
+      <HallDetail detail={company.hallDetail} onWishOption={onWishOption} />
+    );
   }
   if (company.category === "STUDIO") {
     return <StudioDetail detail={company.studioDetail} />;
@@ -982,6 +1010,7 @@ const DressItemViewModal = ({
   currentIdx,
   onNavigate,
   onClose,
+  onWishItem,
 }) => {
   const imageSrc = item.imageUrl ? getCompanyImageUrl(item.imageUrl) : null;
   const isSuitItem = isSuitFn(item);
@@ -1120,25 +1149,42 @@ const DressItemViewModal = ({
               )}
             </div>
 
-            {/* 하단 네비게이션 힌트 */}
-            <div className="mt-6 flex items-center justify-between">
-              <button
-                type="button"
-                disabled={!hasPrev}
-                onClick={() => onNavigate(currentIdx - 1)}
-                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-500 hover:bg-slate-50 disabled:opacity-30 transition-colors"
-              >
-                ◀ 이전
-              </button>
-              <span className="text-xs text-slate-400">← → 키로 이동</span>
-              <button
-                type="button"
-                disabled={!hasNext}
-                onClick={() => onNavigate(currentIdx + 1)}
-                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-500 hover:bg-slate-50 disabled:opacity-30 transition-colors"
-              >
-                다음 ▶
-              </button>
+            {/* 하단 - 찜하기 + 네비게이션 */}
+            <div className="mt-6 flex flex-col gap-3">
+              {onWishItem && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    onWishItem({
+                      label: item.itemName,
+                      price: Number(item.price || 0),
+                      image: item.imageUrl || null,
+                    })
+                  }
+                  className="w-full rounded-lg bg-rose-500 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-rose-600"
+                >
+                  ♥ 이 {isSuitItem ? "슈트" : "드레스"} 찜하기
+                </button>
+              )}
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  disabled={!hasPrev}
+                  onClick={() => onNavigate(currentIdx - 1)}
+                  className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-500 hover:bg-slate-50 disabled:opacity-30 transition-colors"
+                >
+                  ◀ 이전
+                </button>
+                <span className="text-xs text-slate-400">← → 키로 이동</span>
+                <button
+                  type="button"
+                  disabled={!hasNext}
+                  onClick={() => onNavigate(currentIdx + 1)}
+                  className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-500 hover:bg-slate-50 disabled:opacity-30 transition-colors"
+                >
+                  다음 ▶
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1367,7 +1413,13 @@ const DressItemModal = ({ modalData, isSuitFn, onSave, onDelete, onClose }) => {
   );
 };
 
-const DressDetail = ({ detail, cmno, canManageCompany, onRefresh }) => {
+const DressDetail = ({
+  detail,
+  cmno,
+  canManageCompany,
+  onRefresh,
+  onWishOption,
+}) => {
   const [activeTab, setActiveTab] = useState("DRESS");
   const [dressPage, setDressPage] = useState(0);
   const [suitPage, setSuitPage] = useState(0);
@@ -1596,6 +1648,7 @@ const DressDetail = ({ detail, cmno, canManageCompany, onRefresh }) => {
           currentIdx={viewModalIdx}
           onNavigate={(nextIdx) => setViewModalIdx(nextIdx)}
           onClose={() => setViewModalIdx(null)}
+          onWishItem={onWishOption}
         />
       )}
 
@@ -1800,11 +1853,193 @@ const DressDetail = ({ detail, cmno, canManageCompany, onRefresh }) => {
   );
 };
 
-const HallDetail = ({ detail }) => {
+// 재원 추가 - 드레스 아이템의 "크게 보기" 모달과 동일한 패턴을 홀 아이템에도 적용
+const HallItemViewModal = ({
+  item,
+  allItems,
+  currentIdx,
+  onNavigate,
+  onClose,
+  onWishItem,
+}) => {
+  const imageSrc = item.imageUrl ? getCompanyImageUrl(item.imageUrl) : null;
+  const hasPrev = currentIdx > 0;
+  const hasNext = currentIdx < allItems.length - 1;
+
+  const handleKeyDown = (e) => {
+    if (e.key === "ArrowLeft" && hasPrev) onNavigate(currentIdx - 1);
+    if (e.key === "ArrowRight" && hasNext) onNavigate(currentIdx + 1);
+    if (e.key === "Escape") onClose();
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 overflow-y-auto"
+      style={{
+        backdropFilter: "blur(6px)",
+        backgroundColor: "rgba(0,0,0,0.75)",
+      }}
+      onKeyDown={handleKeyDown}
+      tabIndex={-1}
+      ref={(el) => el?.focus()}
+    >
+      <div
+        className="flex min-h-full items-center justify-center p-4"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) onClose();
+        }}
+      >
+        <div className="relative flex w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl sm:flex-row my-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute right-3 top-3 z-10 rounded-full bg-black/40 p-1.5 text-white hover:bg-black/60 transition-colors leading-none text-sm"
+          >
+            ✕
+          </button>
+
+          {/* 이미지 영역 */}
+          <div className="relative flex items-center justify-center bg-slate-900 sm:w-[55%]">
+            {hasPrev && (
+              <button
+                type="button"
+                onClick={() => onNavigate(currentIdx - 1)}
+                className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/40 p-2 text-white hover:bg-black/60 transition-colors z-10"
+              >
+                ◀
+              </button>
+            )}
+            {imageSrc ? (
+              <img
+                src={imageSrc}
+                alt={item.itemName || "웨딩홀 이미지"}
+                className="max-h-[45vh] sm:max-h-[70vh] w-full object-contain"
+              />
+            ) : (
+              <div className="flex h-48 sm:h-80 w-full items-center justify-center text-slate-500">
+                <span className="text-4xl">🏛</span>
+              </div>
+            )}
+            {hasNext && (
+              <button
+                type="button"
+                onClick={() => onNavigate(currentIdx + 1)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/40 p-2 text-white hover:bg-black/60 transition-colors z-10"
+              >
+                ▶
+              </button>
+            )}
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/40 px-3 py-1 text-xs text-white">
+              {currentIdx + 1} / {allItems.length}
+            </div>
+          </div>
+
+          {/* 정보 영역 */}
+          <div className="flex flex-1 flex-col justify-between p-6">
+            <div>
+              <span className="mb-3 inline-block rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+                웨딩홀
+              </span>
+              <h2 className="mt-2 text-xl font-bold text-slate-800 leading-snug">
+                {item.itemName || "이름 없음"}
+              </h2>
+
+              {item.price && (
+                <div className="mt-4">
+                  <p className="text-xs font-medium text-slate-400 uppercase tracking-wide">
+                    가격
+                  </p>
+                  <p className="mt-1 text-2xl font-bold text-rose-500">
+                    {Number(item.price).toLocaleString()}원
+                  </p>
+                </div>
+              )}
+
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-xs font-medium text-slate-400 uppercase tracking-wide">
+                    수용 인원
+                  </p>
+                  <p className="mt-1 text-sm text-slate-700">
+                    {item.capacity
+                      ? `${Number(item.capacity).toLocaleString()}명`
+                      : "-"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-slate-400 uppercase tracking-wide">
+                    식사 유형
+                  </p>
+                  <p className="mt-1 text-sm text-slate-700">
+                    {mealTypeLabel[item.mealType] || item.mealType || "-"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 하단 - 찜하기 + 네비게이션 */}
+            <div className="mt-6 flex flex-col gap-3">
+              {onWishItem && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    onWishItem({
+                      label: item.itemName,
+                      price: Number(item.price || 0),
+                      image: item.imageUrl || null,
+                    })
+                  }
+                  className="w-full rounded-lg bg-rose-500 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-rose-600"
+                >
+                  ♥ 이 홀 옵션 찜하기
+                </button>
+              )}
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  disabled={!hasPrev}
+                  onClick={() => onNavigate(currentIdx - 1)}
+                  className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-500 hover:bg-slate-50 disabled:opacity-30 transition-colors"
+                >
+                  ◀ 이전
+                </button>
+                <span className="text-xs text-slate-400">← → 키로 이동</span>
+                <button
+                  type="button"
+                  disabled={!hasNext}
+                  onClick={() => onNavigate(currentIdx + 1)}
+                  className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-500 hover:bg-slate-50 disabled:opacity-30 transition-colors"
+                >
+                  다음 ▶
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const HallDetail = ({ detail, onWishOption }) => {
+  const [viewModalIdx, setViewModalIdx] = useState(null);
+
   if (!detail) return null;
   const items = detail.items || detail.hallItems || [];
+
   return (
     <DetailSection title="웨딩홀 상세">
+      {viewModalIdx !== null && (
+        <HallItemViewModal
+          item={items[viewModalIdx] ?? {}}
+          allItems={items}
+          currentIdx={viewModalIdx}
+          onNavigate={(nextIdx) => setViewModalIdx(nextIdx)}
+          onClose={() => setViewModalIdx(null)}
+          onWishItem={onWishOption}
+        />
+      )}
+
       <div className="grid gap-3 sm:grid-cols-2">
         <InfoRow label="홀명" value={detail.hallName || "-"} />
         <InfoRow
@@ -1814,7 +2049,12 @@ const HallDetail = ({ detail }) => {
       </div>
       <div className="mt-4 grid gap-3 md:grid-cols-2">
         {items.map((item, index) => (
-          <ItemCard key={`${item.itemName}-${index}`} title={item.itemName}>
+          <ItemCard
+            key={`${item.itemName}-${index}`}
+            title={item.itemName}
+            imageUrl={item.imageUrl}
+            onImageClick={() => setViewModalIdx(index)}
+          >
             <InfoLine label="가격" value={formatPrice(item.price)} />
             <InfoLine
               label="수용 인원"
@@ -1861,12 +2101,41 @@ const DetailSection = ({ title, children, headerAction }) => (
   </div>
 );
 
-const ItemCard = ({ title, children }) => (
-  <div className="rounded-md border border-slate-100 p-4">
-    <div className="mb-2 text-sm font-semibold text-slate-800">
-      {title || "항목"}
+// 재원 수정 - imageUrl 있으면 카드 상단에 이미지 표시. onImageClick 있으면 드레스와
+// 동일하게 클릭 시 확대보기(크게보기) 모달을 열 수 있도록 호버 오버레이/커서 적용
+const ItemCard = ({ title, imageUrl, onImageClick, children }) => (
+  <div className="overflow-hidden rounded-md border border-slate-100">
+    {imageUrl &&
+      (onImageClick ? (
+        <button
+          type="button"
+          onClick={onImageClick}
+          className="group relative block w-full cursor-zoom-in overflow-hidden"
+        >
+          <img
+            src={getCompanyImageUrl(imageUrl)}
+            alt={title || "항목 이미지"}
+            className="h-40 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/10">
+            <span className="rounded-full bg-black/50 px-2 py-1 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
+              🔍 크게 보기
+            </span>
+          </div>
+        </button>
+      ) : (
+        <img
+          src={getCompanyImageUrl(imageUrl)}
+          alt={title || "항목 이미지"}
+          className="h-40 w-full object-cover"
+        />
+      ))}
+    <div className="p-4">
+      <div className="mb-2 text-sm font-semibold text-slate-800">
+        {title || "항목"}
+      </div>
+      <div className="space-y-1">{children}</div>
     </div>
-    <div className="space-y-1">{children}</div>
   </div>
 );
 

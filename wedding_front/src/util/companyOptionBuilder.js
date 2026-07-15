@@ -36,6 +36,9 @@ export const buildCompanyOptions = (company) => {
         .filter(Boolean)
         .join(" · "),
       price: Number(item.price || 0),
+      // 재원 추가 - 홀도 아이템별 사진이 있어서, 찜할 때 이 옵션 이미지를 같이 저장
+      // (아이템 상세 "크게 보기" 모달의 찜하기 버튼과 동일한 이미지가 저장되도록)
+      image: item.imageUrl || null,
     }));
   }
 

@@ -56,7 +56,7 @@ public class CompanyWishController {
         return Map.of("result", "success", "liked", true);
     }
 
-    /** 업체 찜 해제 (옵션 없는 업체 - 기존 하트 토글용) */
+    /** 업체 찜 해제 (하트 토글 - 옵션 상관없이 해당 업체 찜 전부 삭제) */
     @DeleteMapping("/{cmno}")
     public Map<String, Object> remove(
             Authentication authentication,
