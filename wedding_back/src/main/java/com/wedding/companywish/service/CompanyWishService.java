@@ -13,7 +13,7 @@ public interface CompanyWishService {
     /** 찜 등록 - 옵션 없는 업체용 (이미 찜한 경우 무시) */
     void add(String memberEmail, Long cmno);
 
-    /** 찜 해제 - 옵션 없는 업체용 */
+    /** 찜 해제 - 하트 버튼용. 옵션 상관없이 해당 업체에 대한 찜을 전부 삭제 */
     void remove(String memberEmail, Long cmno);
 
     /** 마이페이지 찜 업체 목록 조회 (업체 상세 정보 포함) */

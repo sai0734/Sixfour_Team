@@ -36,10 +36,16 @@ public class CompanyWishServiceImpl implements CompanyWishService {
         addWithOption(memberEmail, cmno, "", 0, null);
     }
 
+    /**
+     * 재원 수정 - 하트 버튼으로 "찜 해제"할 때는 어떤 옵션을 찜했는지 프론트가 알 수 없으므로
+     * (여러 옵션을 각각 찜해뒀을 수도 있음), 옵션 상관없이 이 업체에 대한 찜을 전부 지운다.
+     * 특정 옵션 하나만 정확히 지우고 싶으면 마이페이지에서 wishId로 지우는
+     * removeByWishId()를 쓴다.
+     */
     @Override
     public void remove(String memberEmail, Long cmno) {
-        companyWishRepository.deleteByMemberEmailAndCmnoAndOptionName(memberEmail, cmno, "");
-        log.info("업체 찜 해제 완료. memberEmail={}, cmno={}", memberEmail, cmno);
+        companyWishRepository.deleteByMemberEmailAndCmno(memberEmail, cmno);
+        log.info("업체 찜 전체 해제 완료. memberEmail={}, cmno={}", memberEmail, cmno);
     }
 
     @Override
