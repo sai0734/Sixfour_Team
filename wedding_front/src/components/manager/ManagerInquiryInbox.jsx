@@ -153,9 +153,22 @@ const ManagerInquiryInbox = () => {
                 }`}
               >
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-ink">
-                    {room.memberEmail || "알 수 없는 회원"}
-                  </p>
+                  <div className="flex items-center gap-1.5">
+                    {room.unread && (
+                      <span
+                        className="h-2 w-2 shrink-0 rounded-full bg-red-500"
+                        aria-hidden="true"
+                        title="읽지 않은 메시지"
+                      />
+                    )}
+                    <p
+                      className={`truncate text-sm text-ink ${
+                        room.unread ? "font-semibold" : "font-medium"
+                      }`}
+                    >
+                      {room.memberEmail || "알 수 없는 회원"}
+                    </p>
+                  </div>
                   <p className="mt-1 text-xs text-ink-muted">
                     {room.status === "CLOSED" ? "종료됨" : "진행 중"}
                   </p>

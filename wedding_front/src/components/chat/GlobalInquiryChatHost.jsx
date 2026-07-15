@@ -14,6 +14,10 @@ const nextAiMessageId = () => {
   return aiMessageIdCounter;
 };
 
+// 백엔드도 AI 대화 문맥을 최근 20턴까지만 기억하니(HISTORY_LIMIT), 화면 이력도 그 이상 오래된 건
+// 의미가 없어서 같이 정리한다 - 최근 20개 메시지(user+assistant 합산)만 유지
+const MAX_AI_MESSAGES = 20;
+
 const GlobalInquiryChatHost = () => {
   const email = useSelector((state) => state.loginSlice?.email);
   const roleNames = useSelector((state) => state.loginSlice?.roleNames);
@@ -42,35 +46,44 @@ const GlobalInquiryChatHost = () => {
     ["USER", "ROLE_USER"].includes(roleName),
   );
 
-  const handleSendAiMessage = useCallback(async (text) => {
-    if (isSendingRef.current) return;
-    isSendingRef.current = true;
-    setAiMessages((prev) => [
-      ...prev,
-      { id: nextAiMessageId(), role: "user", content: text },
-    ]);
-    setAiSending(true);
-    try {
-      const answer = await sendChatMessage(text);
-      setAiMessages((prev) => [
-        ...prev,
-        { id: nextAiMessageId(), role: "assistant", content: answer },
-      ]);
-    } catch (err) {
-      console.error("AI 챗봇 응답 실패:", err);
-      setAiMessages((prev) => [
-        ...prev,
-        {
+  // 메시지를 추가하면서 MAX_AI_MESSAGES를 넘으면 오래된 것부터 잘라낸다
+  const appendAiMessage = useCallback((message) => {
+    setAiMessages((prev) => {
+      const next = [...prev, message];
+      return next.length > MAX_AI_MESSAGES
+        ? next.slice(next.length - MAX_AI_MESSAGES)
+        : next;
+    });
+  }, []);
+
+  const handleSendAiMessage = useCallback(
+    async (text) => {
+      if (isSendingRef.current) return;
+      isSendingRef.current = true;
+      appendAiMessage({ id: nextAiMessageId(), role: "user", content: text });
+      setAiSending(true);
+      try {
+        const { answer, references } = await sendChatMessage(text);
+        appendAiMessage({
+          id: nextAiMessageId(),
+          role: "assistant",
+          content: answer,
+          references,
+        });
+      } catch (err) {
+        console.error("AI 챗봇 응답 실패:", err);
+        appendAiMessage({
           id: nextAiMessageId(),
           role: "assistant",
           content: "답변을 가져오지 못했어요. 잠시 후 다시 시도해주세요.",
-        },
-      ]);
-    } finally {
-      setAiSending(false);
-      isSendingRef.current = false;
-    }
-  }, []);
+        });
+      } finally {
+        setAiSending(false);
+        isSendingRef.current = false;
+      }
+    },
+    [appendAiMessage],
+  );
 
   if (!email) {
     return null;

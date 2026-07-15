@@ -1,7 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import useManagedCompany from "../hooks/useManagedCompany";
+import { getCompanyInquiryRooms } from "../api/companyInquiryApi";
 
 const MENU_GROUPS = [
   {
@@ -13,13 +14,17 @@ const MENU_GROUPS = [
   },
 ];
 
+// 문의함(ManagerInquiryInbox)의 5초 폴링보다는 느슨하게 - 사이드바는 안읽음 유무만 확인하면 됨
+const MANAGER_UNREAD_POLL_INTERVAL_MS = 15000;
+
 const MyPageSidebar = () => {
   const location = useLocation();
   const activeRef = useRef(null);
   const loginState = useSelector((state) => state.loginSlice);
-  const { isManager } = useManagedCompany({
+  const { isManager, company } = useManagedCompany({
     enabled: Boolean(loginState.email),
   });
+  const [hasUnreadInquiry, setHasUnreadInquiry] = useState(false);
 
   useEffect(() => {
     activeRef.current?.scrollIntoView({
@@ -28,6 +33,29 @@ const MyPageSidebar = () => {
       inline: "center",
     });
   }, [location.pathname]);
+
+  // 담당 업체에 안읽은 문의가 있는지 주기적으로 확인해서 "업체 문의" 메뉴에 표시
+  useEffect(() => {
+    if (!isManager || !company?.cmno) {
+      setHasUnreadInquiry(false);
+      return;
+    }
+
+    const checkUnread = async () => {
+      try {
+        const rooms = await getCompanyInquiryRooms(company.cmno);
+        setHasUnreadInquiry(
+          Array.isArray(rooms) && rooms.some((room) => room.unread),
+        );
+      } catch (err) {
+        console.error("업체 문의 안읽음 상태 조회 실패:", err);
+      }
+    };
+
+    checkUnread();
+    const timer = setInterval(checkUnread, MANAGER_UNREAD_POLL_INTERVAL_MS);
+    return () => clearInterval(timer);
+  }, [isManager, company?.cmno]);
 
   const isActivePath = (path) => {
     if (path === "/mypage") return location.pathname === "/mypage";
@@ -69,6 +97,8 @@ const MyPageSidebar = () => {
           <nav className="flex gap-2 overflow-x-auto scroll-smooth pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:flex-col lg:gap-1 lg:overflow-visible lg:pb-0">
             {menuItems.map((item) => {
               const isActive = isActivePath(item.path);
+              const showUnreadDot =
+                item.path === "/manager/inquiries" && hasUnreadInquiry;
 
               return (
                 <Link
@@ -81,7 +111,16 @@ const MyPageSidebar = () => {
                       : "bg-[#F7F2EA] text-[#4A3F38] hover:bg-[#E6EBDD] lg:bg-transparent"
                   }`}
                 >
-                  {item.name}
+                  <span className="flex items-center gap-1.5">
+                    {item.name}
+                    {showUnreadDot && (
+                      <span
+                        className="h-1.5 w-1.5 shrink-0 rounded-full bg-red-500"
+                        aria-hidden="true"
+                        title="읽지 않은 문의 있음"
+                      />
+                    )}
+                  </span>
                 </Link>
               );
             })}

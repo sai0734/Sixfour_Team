@@ -29,9 +29,8 @@ public class ChatController {
 
         log.info("ChatController_chat 실행~~~~~~~~");
 
-        String answer = chatService.getAnswer(principal.getName(), chatRequestDTO.getMessage());
+        ChatResponseDTO response = chatService.getAnswer(principal.getName(), chatRequestDTO.getMessage());
 
-        return ResponseEntity.ok(ChatResponseDTO.of(answer));
+        return ResponseEntity.ok(response);
     }
-    // 추가끝
 }

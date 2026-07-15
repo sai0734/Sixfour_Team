@@ -24,10 +24,16 @@ public class OpenAiClient {
     private String model;
 
     public OpenAiResponseDTO getChatCompletions(List<OpenAiMessageDTO> messages, List<OpenAiToolDTO> tools) {
+        return getChatCompletions(messages, tools, null);
+    }
+
+    // toolChoice="required"를 넘기면 tools 중 하나를 반드시 호출해야 함 - 모델이 아무 함수도
+    // 호출하지 않고 바로 텍스트로만 답하는 경우를 막고 싶을 때 사용
+    public OpenAiResponseDTO getChatCompletions(List<OpenAiMessageDTO> messages, List<OpenAiToolDTO> tools, String toolChoice) {
 
         OpenAiRequestDTO request = tools == null
                 ? new OpenAiRequestDTO(model, messages)
-                : new OpenAiRequestDTO(model, messages, tools);
+                : new OpenAiRequestDTO(model, messages, tools, toolChoice);
 
         ResponseEntity<OpenAiResponseDTO> chatResponse = restTemplate.postForEntity(
                 apiUrl,
@@ -41,6 +47,5 @@ public class OpenAiClient {
 
         return chatResponse.getBody();
     }
-    // 수정끝
 
 }
