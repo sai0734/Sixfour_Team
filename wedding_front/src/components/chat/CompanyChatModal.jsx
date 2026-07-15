@@ -37,6 +37,7 @@ const CompanyChatModal = ({
   roomId,
   onMinimize,
   onLeave,
+  onFirstSend,
   subtitle = "업체 문의",
 }) => {
   const email = useSelector((state) => state.loginSlice?.email);
@@ -70,8 +71,12 @@ const CompanyChatModal = ({
 
   // 모달 열릴 때 메시지 로드 + 폴링 시작 - 탭이 백그라운드면 폴링 요청은 건너뛰고,
   // 다시 포그라운드로 돌아오면 즉시 한 번 갱신
+  // roomId가 아직 없는 draft 상태(방 생성 전)면 불러올 게 없으니 로딩만 끄고 대기
   useEffect(() => {
-    if (!roomId) return;
+    if (!roomId) {
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     loadMessages();
@@ -116,14 +121,20 @@ const CompanyChatModal = ({
   }, [roomId]);
 
   // 메시지 전송
+  // roomId가 없으면(draft) 첫 메시지 전송 시점에 방 생성부터 해야 하므로 onFirstSend로 위임
   const handleSend = async () => {
     const text = input.trim();
     if (!text || sending) return;
     setSending(true);
     try {
-      await sendInquiryMessage(roomId, text);
-      setInput("");
-      await loadMessages();
+      if (!roomId) {
+        await onFirstSend(text);
+        setInput("");
+      } else {
+        await sendInquiryMessage(roomId, text);
+        setInput("");
+        await loadMessages();
+      }
     } catch (err) {
       console.error("메시지 전송 실패:", err);
       alert("메시지 전송에 실패했습니다.");

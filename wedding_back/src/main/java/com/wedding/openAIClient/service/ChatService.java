@@ -4,7 +4,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wedding.company.domain.Company;
 import com.wedding.company.domain.CompanyCategory;
+import com.wedding.company.dto.CompanyDTO;
+import com.wedding.company.dto.DressDetailDTO;
+import com.wedding.company.dto.HallDetailDTO;
+import com.wedding.company.dto.MakeupDetailDTO;
+import com.wedding.company.dto.StudioDetailDTO;
 import com.wedding.company.repository.CompanyRepository;
+import com.wedding.company.service.CompanyService;
 import com.wedding.global.util.OpenAiClient;
 import com.wedding.openAIClient.controller.ChatMessageRepository;
 import com.wedding.openAIClient.domain.ChatMessage;
@@ -33,11 +39,17 @@ public class ChatService {
     private final ChatMessageRepository chatMessageRepository;
     private final ProductRepository productRepository;
     private final CompanyRepository companyRepository;
+    private final CompanyService companyService;
     private final ObjectMapper objectMapper;
 
     // 회원별로 대화를 이만큼만 DB에 남기고, 문맥으로도 이만큼만 사용
     private static final int HISTORY_LIMIT = 20;
 
+    // search_dresses -> search_gifts로 이름/설명 변경: productRepository가 실제로 조회하는 tbl_product는
+    // 답례품(곡물/식품, 과자/한과, 디퓨저/향수 등) 테이블이고 "드레스" 카테고리는 존재하지 않음.
+    // 진짜 드레스는 company 테이블의 category=DRESS(드레스샵)로만 존재하므로, 드레스 질문은 반드시
+    // search_companies로 라우팅되게 프롬프트를 명확히 분리함.
+    // get_company_detail 함수 추가 - 업체 하나의 세부 상품(드레스 아이템/홀 옵션/메이크업 패키지)까지 조회
     private static final String SYSTEM_PROMPT =
             "당신은 웨딩 준비 전문 AI 비서입니다. 결혼 준비와 관련된 질문에만 답변합니다.\n\n" +
                     "질문은 아래 세 가지 중 하나로 판단해서 답변하세요.\n\n" +
@@ -47,16 +59,22 @@ public class ChatService {
                     "예산 짜는 법, 웨딩 준비 순서, 스몰웨딩 팁 등 우리 서비스의 상품·업체 데이터와 무관한 질문)\n" +
                     "   -> 함수를 호출하지 말고, 당신이 알고 있는 일반 지식으로 직접 친절하고 자연스럽게 답변하세요. " +
                     "이런 질문을 거절하거나 얼버무리지 마세요.\n\n" +
-                    "3) 우리 사이트에 등록된 드레스 상품이나 웨딩 업체(홀/드레스업체/스튜디오/메이크업)를 찾거나 추천받고 싶어하는 질문\n" +
-                    "   -> 드레스 상품이면 search_dresses 함수를, 웨딩홀/드레스업체/스튜디오/메이크업 업체(느낌, 분위기, 가격, 지역 포함)면 " +
-                    "search_companies 함수를 사용해서 실제 등록된 데이터 중에서만 답변하세요. 데이터에 없는 내용을 지어내지 마세요.";
+                    "3) 우리 사이트에 등록된 실제 데이터를 조회해야 하는 질문 - 아래 함수들 중 정확히 맞는 것을 사용하세요.\n" +
+                    "   - 답례품/하객 선물(그릇, 수건, 디퓨저, 차, 과자, 비누 등)을 찾거나 추천받고 싶어하면 " +
+                    "search_gifts 함수를 사용하세요.\n" +
+                    "   - 웨딩드레스(대여/구매/드레스샵 포함), 웨딩홀, 스튜디오, 메이크업 업체를 찾거나 추천받고 싶어하면 " +
+                    "search_companies 함수를 사용하세요. 드레스는 상품이 아니라 category=DRESS인 업체(드레스샵)로 등록되어 있으므로, " +
+                    "드레스 관련 질문에는 절대 search_gifts를 쓰지 말고 반드시 search_companies를 사용하세요.\n" +
+                    "   - 사용자가 특정 업체 하나를 콕 집어서 그 업체의 세부 상품/가격/옵션(드레스 아이템 목록, 홀 대관 옵션, " +
+                    "메이크업 패키지 등)을 알고 싶어하면 get_company_detail 함수를 사용하세요. cmno(업체번호)를 모르면 " +
+                    "먼저 search_companies로 그 업체를 찾아서 결과에 있는 업체번호를 확인한 뒤 get_company_detail을 호출하세요. " +
+                    "스튜디오는 세부 상품 목록이 없고 테마 태그 정보만 있습니다.\n" +
+                    "   모든 경우에 실제 등록된 데이터 중에서만 답변하고, 데이터에 없는 내용을 지어내지 마세요.";
 
-    // 수정시작
     // DB save/delete가 saveAndTrim 안에서 이어지는데, deleteOlderThan은 @Modifying 쿼리라
     // 트랜잭션 없이 호출되면 "Executing an update/delete query" 에러가 남 - 여기서 감싸줌
     @Transactional
     public String getAnswer(String memberEmail, String question) {
-        // 수정끝
 
         // 1) 회원의 최근 대화(최대 HISTORY_LIMIT개, 최신순)를 불러와서 문맥으로 사용할 메시지 목록 구성
         List<ChatMessage> history = chatMessageRepository
@@ -73,9 +91,9 @@ public class ChatService {
 
         messages.add(OpenAiMessageDTO.of("user", question));
 
-        // 2) 1차 호출 - 상품 검색 + 업체 검색 함수를 tools로 같이 전달
+        // 2) 1차 호출 - 답례품 검색 + 업체 검색 + 업체 상세 함수를 tools로 같이 전달
         OpenAiResponseDTO firstResponse = openAiClient.getChatCompletions(
-                messages, List.of(searchDressesTool(), searchCompaniesTool()));
+                messages, List.of(searchGiftsTool(), searchCompaniesTool(), getCompanyDetailTool()));
 
         OpenAiMessageDTO assistantMessage = firstResponse.getChoices().getFirst().getMessage();
 
@@ -112,20 +130,21 @@ public class ChatService {
         return finalAnswer;
     }
 
-    // 함수가 2개가 됐으니 이름으로 분기
+    // 함수가 3개가 됐으니 이름으로 분기
     private String executeToolCall(OpenAiMessageDTO.ToolCallDTO toolCall) {
 
         String functionName = toolCall.getFunction().getName();
 
         return switch (functionName) {
-            case "search_dresses" -> executeSearchProducts(toolCall);
+            case "search_gifts" -> executeSearchGifts(toolCall);
             case "search_companies" -> executeSearchCompanies(toolCall);
+            case "get_company_detail" -> executeGetCompanyDetail(toolCall);
             default -> "지원하지 않는 함수입니다: " + functionName;
         };
     }
 
-    // 상품(답례품) 검색 실행
-    private String executeSearchProducts(OpenAiMessageDTO.ToolCallDTO toolCall) {
+    // 답례품 검색 실행 - tbl_product는 답례품(곡물/식품, 과자/한과, 디퓨저/향수 등) 전용이며 드레스는 없음
+    private String executeSearchGifts(OpenAiMessageDTO.ToolCallDTO toolCall) {
 
         try {
             JsonNode args = objectMapper.readTree(toolCall.getFunction().getArguments());
@@ -149,7 +168,7 @@ public class ChatService {
                     .collect(Collectors.toList());
 
             if (products.isEmpty()) {
-                return "조건에 맞는 드레스를 찾지 못했습니다.";
+                return "조건에 맞는 답례품을 찾지 못했습니다.";
             }
 
             return products.stream()
@@ -158,7 +177,7 @@ public class ChatService {
                     .collect(Collectors.joining("\n"));
 
         } catch (Exception e) {
-            return "상품 검색 중 오류가 발생했습니다.";
+            return "답례품 검색 중 오류가 발생했습니다.";
         }
     }
 
@@ -192,10 +211,11 @@ public class ChatService {
                 return "조건에 맞는 업체를 찾지 못했습니다.";
             }
 
+            // cmno를 결과에 포함시켜서, AI가 이어서 get_company_detail(cmno)를 호출할 수 있게 함
             return companies.stream()
                     .map(c -> String.format(
-                            "- %s (%s) | 주소: %s | 평균가격: %s원\n  설명: %s",
-                            c.getName(), c.getCategory(), c.getAddress(),
+                            "- %s (%s, 업체번호 %d) | 주소: %s | 평균가격: %s원\n  설명: %s",
+                            c.getName(), c.getCategory(), c.getCmno(), c.getAddress(),
                             c.getPriceAvg() != null ? c.getPriceAvg().toPlainString() : "정보없음",
                             c.getDescription() != null ? c.getDescription() : "설명 없음"))
                     .collect(Collectors.joining("\n"));
@@ -205,11 +225,93 @@ public class ChatService {
         }
     }
 
-    // search_dresses 함수 스펙 - 기존 searchProductList가 이미 받는 파라미터 그대로 노출
-    private OpenAiToolDTO searchDressesTool() {
+    // 업체 하나의 세부 상품/옵션 조회 - 카테고리별로 실제 하위 데이터가 다르므로 분기해서 포맷팅
+    private String executeGetCompanyDetail(OpenAiMessageDTO.ToolCallDTO toolCall) {
+
+        try {
+            JsonNode args = objectMapper.readTree(toolCall.getFunction().getArguments());
+
+            if (!args.hasNonNull("cmno")) {
+                return "업체번호(cmno)가 필요합니다. 먼저 search_companies로 업체를 찾아주세요.";
+            }
+
+            Long cmno = args.get("cmno").asLong();
+            CompanyDTO company = companyService.get(cmno);
+
+            if (company == null) {
+                return "해당 업체번호의 업체를 찾을 수 없습니다.";
+            }
+
+            StringBuilder sb = new StringBuilder();
+            sb.append(String.format("%s (%s) | 주소: %s | 평균가격: %s원\n",
+                    company.getName(), company.getCategory(), company.getAddress(),
+                    company.getPriceAvg() != null ? company.getPriceAvg().toPlainString() : "정보없음"));
+
+            switch (company.getCategory()) {
+                case DRESS -> {
+                    DressDetailDTO detail = company.getDressDetail();
+                    if (detail == null || detail.getItems() == null || detail.getItems().isEmpty()) {
+                        sb.append("등록된 드레스 아이템이 없습니다.");
+                    } else {
+                        detail.getItems().forEach(item -> sb.append(String.format(
+                                "- %s (%,d원, 타입: %s, 스타일: %s, 사이즈: %s)\n",
+                                item.getItemName(),
+                                item.getPrice() != null ? item.getPrice().longValue() : 0L,
+                                item.getItemType(),
+                                item.getStyleTags() != null ? item.getStyleTags() : "정보없음",
+                                item.getSizeRange() != null ? item.getSizeRange() : "정보없음")));
+                    }
+                }
+                case HALL -> {
+                    HallDetailDTO detail = company.getHallDetail();
+                    if (detail == null || detail.getItems() == null || detail.getItems().isEmpty()) {
+                        sb.append("등록된 홀 대관 옵션이 없습니다.");
+                    } else {
+                        detail.getItems().forEach(item -> sb.append(String.format(
+                                "- %s (%,d원, 수용인원: %s명, 식사타입: %s)\n",
+                                item.getItemName(),
+                                item.getPrice() != null ? item.getPrice().longValue() : 0L,
+                                item.getCapacity() != null ? item.getCapacity() : "정보없음",
+                                item.getMealType())));
+                    }
+                }
+                case MAKEUP -> {
+                    MakeupDetailDTO detail = company.getMakeupDetail();
+                    if (detail == null || detail.getPackages() == null || detail.getPackages().isEmpty()) {
+                        sb.append("등록된 메이크업 패키지가 없습니다.");
+                    } else {
+                        detail.getPackages().forEach(pkg -> sb.append(String.format(
+                                "- %s 패키지 (할인율 %s%%)\n",
+                                pkg.getPackageType(),
+                                pkg.getDiscountRate() != null ? pkg.getDiscountRate().toPlainString() : "0")));
+                    }
+                }
+                case STUDIO -> {
+                    StudioDetailDTO detail = company.getStudioDetail();
+                    sb.append("이 업체는 세부 상품 목록이 없고, 테마 태그만 등록되어 있습니다: ")
+                            .append(detail != null && detail.getThemeTags() != null ? detail.getThemeTags() : "정보없음");
+                }
+            }
+
+            return sb.toString();
+
+        } catch (Exception e) {
+            return "업체 상세 조회 중 오류가 발생했습니다.";
+        }
+    }
+
+    // search_gifts 함수 스펙 - 답례품 전용. category enum은 2026-07-15 기준 실제 DB에 등록된 값
+    // (곡물/식품, 과자/한과, 디퓨저/향수, 비누/핸드워시, 생활/건강, 식기/머그, 차/커피, 타월).
+    // 새 카테고리가 추가되면 이 목록도 같이 갱신해야 함.
+    private OpenAiToolDTO searchGiftsTool() {
 
         Map<String, Object> properties = Map.of(
-                "category", Map.of("type", "string", "description", "드레스 카테고리 (예: 미니, 머메이드, 벨라인)"),
+                "category", Map.of(
+                        "type", "string",
+                        "description", "답례품 카테고리",
+                        "enum", List.of(
+                                "곡물/식품", "과자/한과", "디퓨저/향수", "비누/핸드워시",
+                                "생활/건강", "식기/머그", "차/커피", "타월")),
                 "keyword", Map.of("type", "string", "description", "상품명/설명에서 찾을 키워드"),
                 "minPrice", Map.of("type", "integer", "description", "최소 가격(원)"),
                 "maxPrice", Map.of("type", "integer", "description", "최대 가격(원)"),
@@ -224,8 +326,9 @@ public class ChatService {
 
         return OpenAiToolDTO.builder()
                 .function(OpenAiToolDTO.FunctionSpec.builder()
-                        .name("search_dresses")
-                        .description("조건에 맞는 웨딩 드레스 상품을 검색합니다.")
+                        .name("search_gifts")
+                        .description("결혼식 답례품(하객 선물)을 검색합니다. 드레스는 여기서 찾지 말고 " +
+                                "search_companies(category=DRESS)를 사용하세요.")
                         .parameters(parameters)
                         .build())
                 .build();
@@ -254,7 +357,32 @@ public class ChatService {
                 .function(OpenAiToolDTO.FunctionSpec.builder()
                         .name("search_companies")
                         .description("웨딩홀/드레스업체/스튜디오/메이크업 업체를 조건에 맞게 검색합니다. " +
-                                "설명(description)까지 함께 반환되니 분위기/느낌에 맞는 곳을 판단해서 추천하세요.")
+                                "설명(description)과 업체번호(cmno)까지 함께 반환되니, 분위기/느낌에 맞는 곳을 판단해서 추천하고 " +
+                                "세부 상품이 궁금하면 그 업체번호로 get_company_detail을 호출하세요.")
+                        .parameters(parameters)
+                        .build())
+                .build();
+    }
+
+    // get_company_detail 함수 스펙 - 업체 하나의 세부 상품/옵션(드레스 아이템, 홀 대관 옵션, 메이크업 패키지) 조회
+    private OpenAiToolDTO getCompanyDetailTool() {
+
+        Map<String, Object> properties = Map.of(
+                "cmno", Map.of("type", "integer", "description", "조회할 업체의 업체번호 (search_companies 결과에서 확인)")
+        );
+
+        Map<String, Object> parameters = Map.of(
+                "type", "object",
+                "properties", properties,
+                "required", List.of("cmno")
+        );
+
+        return OpenAiToolDTO.builder()
+                .function(OpenAiToolDTO.FunctionSpec.builder()
+                        .name("get_company_detail")
+                        .description("업체번호(cmno)로 특정 업체 하나의 세부 상품/옵션을 조회합니다. " +
+                                "드레스업체면 드레스 아이템 목록, 웨딩홀이면 대관 옵션 목록, 메이크업이면 패키지 목록을 반환합니다. " +
+                                "스튜디오는 세부 상품이 없고 테마 태그만 반환됩니다.")
                         .parameters(parameters)
                         .build())
                 .build();
