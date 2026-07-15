@@ -46,6 +46,11 @@ import com.wedding.product.repository.ProductOptionRepository;
 import com.wedding.product.repository.ProductRepository;
 import com.wedding.product.repository.QnaRepository;
 import com.wedding.product.repository.ReviewRepository;
+// 재원 추가 - 업체 상세페이지 "결제 완료 N건" 인기도 지표가 서비스 초기부터 자연스럽게 보이도록
+// 업체별 더미 결제완료(PAID) 예약을 심어두기 위해 가져옴
+import com.wedding.reservation.domain.Reservation;
+import com.wedding.reservation.repository.ReservationRepository;
+// 재원 추가 끝
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -94,6 +99,11 @@ public class DataInitializer implements ApplicationRunner {
   private final JdbcTemplate jdbcTemplate;
   private final BoardRepository boardRepository;
   private final CommentRepository commentRepository;
+  // 재원 추가 - 업체별 더미 결제완료(PAID) 예약 시딩용
+  private final ReservationRepository reservationRepository;
+  // insertCompanies()에서 company.json의 purchaseCount를 읽어 담아두고, insertReservationPurchaseDummy()에서 사용
+  private Map<Long, Integer> companyPurchaseCountMap;
+  // 재원 추가 끝
   // 재원 수정 - FAQ 더미데이터를 faq/config/FaqDummyDataLoader.java(별도 CommandLineRunner,
   // 하드코딩된 Java 데이터)에서 다른 도메인들과 동일한 방식(data/*.json + DataInitializer)으로 통일
   private final FaqRepository faqRepository;
@@ -164,6 +174,13 @@ public class DataInitializer implements ApplicationRunner {
         log.info("===== Company package dummy seed start =====");
         insertCompanyPackages(companyMap);
         log.info("===== Company package dummy seed complete. count={} =====", companyPackageRepository.count());
+
+        // 재원 추가 - 업체별 "결제 완료 N건" 더미 시딩 (패키지의 purchaseCount와는 별개로,
+        // 개별 업체 상세페이지에서 쓰는 실제 카운트 쿼리(getPaymentCount)에 기준치를 만들어줌)
+        log.info("===== Company purchase-count dummy seed start =====");
+        insertReservationPurchaseDummy(companyMap);
+        log.info("===== Company purchase-count dummy seed complete =====");
+        // 재원 추가 끝
       }
     } else {
       relaxLegacyDetailColumns();
@@ -236,6 +253,9 @@ public class DataInitializer implements ApplicationRunner {
   private Map<Long, Company> insertCompanies() throws Exception {
     List<Map<String, Object>> list = readJsonArray("data/company.json");
     Map<Long, Company> companyMap = new HashMap<>();
+    // 재원 추가 - company.json의 purchaseCount를 같이 읽어서, 나중에 더미 결제 건수 시딩에 재사용
+    companyPurchaseCountMap = new HashMap<>();
+    // 재원 추가 끝
 
     for (Map<String, Object> m : list) {
       Long jsonCmno = toLongObject(m.get("cmno"));
@@ -262,6 +282,10 @@ public class DataInitializer implements ApplicationRunner {
       Company saved = companyRepository.save(company);
       if (jsonCmno != null) {
         companyMap.put(jsonCmno, saved);
+        // 재원 추가 - purchaseCount 보관 (없으면 0)
+        companyPurchaseCountMap.put(
+                saved.getCmno(), toIntegerObject(m.get("purchaseCount")) == null ? 0 : toIntegerObject(m.get("purchaseCount")));
+        // 재원 추가 끝
       }
     }
 
@@ -443,6 +467,45 @@ public class DataInitializer implements ApplicationRunner {
               .build());
     }
   }
+
+  // 재원 추가 - 업체별 "결제 완료 N건" 더미 시딩.
+  // getPaymentCount(cmno)는 tbl_reservation에서 payStatus='PAID'인 실제 행 개수를 그대로 세기
+  // 때문에, 미리 보여줄 기준치를 만들려면 결제 로직(preparePayment/confirmPayment)을 거치지 않고
+  // 바로 PAID 상태인 예약 행을 심어두는 방법뿐임. 개수는 data/company.json의 purchaseCount 값을
+  // 그대로 따름 (다른 더미데이터와 동일하게 JSON에서 관리 - Java에 값을 하드코딩하지 않음).
+  // optionName/weddingDate 값 자체는 집계에 쓰이지 않으므로 의미 없는 고정값으로 둠.
+  // (CompanyPackage.purchaseCount는 패키지 자체의 더미 지표라 이것과는 별개)
+  // 이후 실제 사용자가 결제를 완료하면 이 기준치 위에 자연스럽게 누적됨.
+  private void insertReservationPurchaseDummy(Map<Long, Company> companyMap) {
+    if (reservationRepository.count() > 0) {
+      return;
+    }
+
+    LocalDate baseDate = LocalDate.now().minusMonths(6);
+    int i = 0;
+
+    for (Company company : companyMap.values()) {
+      int purchaseCount = companyPurchaseCountMap.getOrDefault(company.getCmno(), 0);
+
+      for (int n = 0; n < purchaseCount; n++) {
+        Reservation dummy = Reservation.builder()
+                .cmno(company.getCmno())
+                .memberEmail("dummy" + (n % 20) + "@wedding.demo")
+                .weddingDate(baseDate.plusDays((i * 3) % 180))
+                .status("확정")
+                .optionName("-")
+                .amount(company.getPriceAvg() != null ? company.getPriceAvg().intValue() : 100000)
+                .payStatus("PAID")
+                .build();
+        reservationRepository.save(dummy);
+        i++;
+      }
+    }
+
+    log.info("Inserted {} dummy PAID reservations for company purchase-count seeding.",
+            reservationRepository.count());
+  }
+  // 재원 추가 끝
 
   private void insertMakeupDiscountPackages() throws Exception {
     List<Map<String, Object>> list = readJsonArray("data/makeup.json");
