@@ -80,6 +80,18 @@ public class ReservationServiceImpl implements ReservationService {
 
     log.info("reservation register.........");
 
+    // 재원 추가 - 같은 업체+같은 옵션+같은 예식일 예약이 이미 있으면 차단 (중복 예약 방지)
+    // 옵션 없이 문의만 하는 예약(optionName 비어있음)은 배타적일 이유가 없어 대상에서 제외
+    if (reservationDTO.getOptionName() != null
+            && !reservationDTO.getOptionName().isBlank()
+            && isDateTaken(
+            reservationDTO.getCmno(),
+            reservationDTO.getOptionName(),
+            reservationDTO.getWeddingDate())) {
+      throw new IllegalStateException("이미 예약된 날짜입니다. 다른 날짜를 선택해주세요.");
+    }
+    // 재원 추가 끝
+
     Reservation reservation = modelMapper.map(reservationDTO, Reservation.class);
     // 승진 코드 추가 - 등록 시 항상 예약대기(대기) 상태로 시작
     reservation.changeStatus("대기");
@@ -238,6 +250,16 @@ public class ReservationServiceImpl implements ReservationService {
   @Override
   public long getPaymentCount(Long cmno) {
     return reservationRepository.countByCmnoAndPayStatus(cmno, "PAID");
+  }
+
+  // 예약 날짜 선택 시 미리 확인 - 같은 업체+같은 옵션+같은 날짜 예약이 이미 있는지
+  @Override
+  public boolean isDateTaken(Long cmno, String optionName, LocalDate weddingDate) {
+    if (cmno == null || optionName == null || optionName.isBlank() || weddingDate == null) {
+      return false;
+    }
+    return reservationRepository.existsByCmnoAndOptionNameAndWeddingDate(
+            cmno, optionName, weddingDate);
   }
   // ↑↑↑ 재원 추가
 
