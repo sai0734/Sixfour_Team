@@ -1,3 +1,6 @@
+import { useState } from "react";
+import { getCompanyImageUrl } from "../../api/companyApi";
+
 const formatWon = (value) => {
   if (value === null || value === undefined) return "-";
   return `${Number(value).toLocaleString()}원`;
@@ -7,18 +10,20 @@ const SOURCE_LABEL = {
   PACKAGE: "패키지 할인가",
   INDIVIDUAL_COMBO: "개별 조합",
   AI_COMBO: "AI 추천",
+  AI_FALLBACK: "개별 조합",
+  SESSION_COMBO: "다듬은 조합",
 };
 
 // 슬롯(홀/드레스/스튜디오/메이크업) 상태를 항상 보여주는 사이드 패널.
-// 지금은 "선택됨" 고정 상태만 표시 - 확정/제외/재검토를 실제로 바꾸는 건
-// 리파인 대화(6단계)에서 AiPlanSession과 연결한 다음에 붙일 예정.
 const SidePanel = ({ combo }) => {
   const rows = [
     { label: "홀", name: combo.hallName },
     { label: "드레스", name: combo.dressName },
     { label: "스튜디오", name: combo.studioName },
     { label: "메이크업", name: combo.makeupName },
-  ];
+  ].filter((row) => row.name);
+
+  if (rows.length === 0) return null;
 
   return (
     <div className="mb-6 rounded-2xl border border-line bg-surface p-5">
@@ -42,16 +47,63 @@ const SidePanel = ({ combo }) => {
   );
 };
 
+// 이미지가 없거나 깨지면 브라우저 깨진 아이콘 대신 "이미지 없음" placeholder를 보여줌.
+// thumbnail=false로 원본 화질 요청 + aspect-square w-full이라 카드 폭에 맞춰 자동으로 커짐.
+const SlotThumb = ({ fileName, alt }) => {
+  const [hasError, setHasError] = useState(false);
+  const url = fileName ? getCompanyImageUrl(fileName, false) : "";
+
+  if (!url || hasError) {
+    return (
+      <div className="flex aspect-square w-full items-center justify-center rounded-xl bg-slate-50 text-xs text-slate-400">
+        이미지 없음
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={url}
+      alt={alt}
+      onError={() => setHasError(true)}
+      className="aspect-square w-full rounded-xl object-cover"
+    />
+  );
+};
+
+// 이 슬롯이 리파인 대화에서 EXCLUDED로 빠졌으면 name이 null로 옴 - 그럴 땐 아예 렌더링 안 함.
+const SlotCard = ({ label, name, imageUrl, reason }) => {
+  if (!name) return null;
+
+  return (
+    <div>
+      <SlotThumb fileName={imageUrl} alt={name} />
+      <p className="mt-2 truncate text-sm text-ink-soft">
+        {label} · {name}
+      </p>
+      {reason && <span className="block text-xs text-ink-faint">{reason}</span>}
+    </div>
+  );
+};
+
 const ResultCards = ({ result }) => {
   if (!result) return null;
 
   const { candidates = [], message } = result;
   const soleCombo =
     candidates.length === 1 &&
-    (candidates[0].sourceType === "INDIVIDUAL_COMBO" ||
-      candidates[0].sourceType === "AI_COMBO")
+    ["INDIVIDUAL_COMBO", "AI_COMBO", "AI_FALLBACK", "SESSION_COMBO"].includes(
+      candidates[0].sourceType,
+    )
       ? candidates[0]
       : null;
+
+  // 조합이 1개일 때(다듬은 조합/AI조합 등)는 위의 "현재 조합 현황" 박스와 폭을 맞추기 위해
+  // md:grid-cols-2를 안 씀 - 안 그러면 카드가 절반 폭에 갇히고 오른쪽에 빈 칸이 생김.
+  // 패키지가 여러 개 뜨는 빠르게 모드에서만 2열로 나열함.
+  const gridClass = soleCombo
+    ? "grid grid-cols-1 gap-5"
+    : "grid grid-cols-1 gap-5 md:grid-cols-2";
 
   return (
     <div>
@@ -68,7 +120,7 @@ const ResultCards = ({ result }) => {
           추천할 수 있는 조합을 찾지 못했어요.
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+        <div className={gridClass}>
           {candidates.map((c, idx) => (
             <div
               key={c.pno ?? `combo-${idx}`}
@@ -88,40 +140,32 @@ const ResultCards = ({ result }) => {
                 <p className="mb-3 text-xs text-ink-faint">{c.description}</p>
               )}
 
-              <ul className="mb-3 space-y-1 text-sm text-ink-soft">
-                <li>
-                  홀 · {c.hallName}
-                  {c.hallReason && (
-                    <span className="block text-xs text-ink-faint">
-                      {c.hallReason}
-                    </span>
-                  )}
-                </li>
-                <li>
-                  드레스 · {c.dressName}
-                  {c.dressReason && (
-                    <span className="block text-xs text-ink-faint">
-                      {c.dressReason}
-                    </span>
-                  )}
-                </li>
-                <li>
-                  스튜디오 · {c.studioName}
-                  {c.studioReason && (
-                    <span className="block text-xs text-ink-faint">
-                      {c.studioReason}
-                    </span>
-                  )}
-                </li>
-                <li>
-                  메이크업 · {c.makeupName}
-                  {c.makeupReason && (
-                    <span className="block text-xs text-ink-faint">
-                      {c.makeupReason}
-                    </span>
-                  )}
-                </li>
-              </ul>
+              <div className="mb-3 grid grid-cols-2 gap-3 text-sm text-ink-soft">
+                <SlotCard
+                  label="홀"
+                  name={c.hallName}
+                  imageUrl={c.hallImageUrl}
+                  reason={c.hallReason}
+                />
+                <SlotCard
+                  label="드레스"
+                  name={c.dressName}
+                  imageUrl={c.dressImageUrl}
+                  reason={c.dressReason}
+                />
+                <SlotCard
+                  label="스튜디오"
+                  name={c.studioName}
+                  imageUrl={c.studioImageUrl}
+                  reason={c.studioReason}
+                />
+                <SlotCard
+                  label="메이크업"
+                  name={c.makeupName}
+                  imageUrl={c.makeupImageUrl}
+                  reason={c.makeupReason}
+                />
+              </div>
 
               <p className="border-t border-line pt-3 text-xs text-ink-muted">
                 {c.reason}

@@ -22,3 +22,17 @@ export const getAiRecommendations = async (payload) => {
 
   return res.data;
 };
+
+// 6단계 - 결과 화면에서 자유 발화로 다듬기
+export const refineRecommendation = async (payload) => {
+  const res = await axios.post(`${prefix}/refine`, payload);
+
+  return res.data;
+};
+
+// 6단계 - 바로 직전 턴으로 되돌리기
+export const rollbackRecommendation = async (sessionId) => {
+  const res = await axios.post(`${prefix}/rollback/${sessionId}`);
+
+  return res.data;
+};
