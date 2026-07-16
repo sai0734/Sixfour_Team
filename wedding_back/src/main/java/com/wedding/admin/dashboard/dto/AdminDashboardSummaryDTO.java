@@ -20,6 +20,10 @@ public class AdminDashboardSummaryDTO {
     private ReservationStats reservationStats;
     private InquiryStats inquiryStats;
     private ProductStats productStats;
+    // 업체 현황 카드 4개 - 웨딩홀/드레스/스튜디오/메이크업 순서로 카테고리별 매출 1위·평균·꼴찌
+    private List<CategoryRevenueCard> categoryRevenueCards;
+    // 카테고리 구분 없이 4개 카테고리 업체 전체를 매출 기준으로 줄세운 TOP 10
+    private List<CompanyRankingItem> topCompaniesOverall;
 
     // 최근 6개월 매출 추이 (오래된 달 -> 최신 달 순)
     private List<MonthlyRevenuePoint> monthlyRevenue;
@@ -118,6 +122,34 @@ public class AdminDashboardSummaryDTO {
         private Long pno;
         private String pname;
         private int stockQty;
+    }
+
+    // 업체 카테고리 1개(웨딩홀 등) 기준 - 결제완료 예약 금액 합산 매출 1위/평균/꼴찌
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class CategoryRevenueCard {
+        private String category; // HALL / DRESS / STUDIO / MAKEUP
+        private String categoryLabel; // "웨딩홀" 등
+        private String topCompanyName;
+        private long topAmount;
+        private long averageAmount;
+        private String bottomCompanyName;
+        private long bottomAmount;
+    }
+
+    // "업체 매출 전체 순위" 카드 1행 - 카테고리 구분 없이 매출 기준 랭킹
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class CompanyRankingItem {
+        private int rank;
+        private String companyName;
+        private String category; // HALL / DRESS / STUDIO / MAKEUP
+        private String categoryLabel; // "웨딩홀" 등
+        private long amount;
     }
 
     @Data

@@ -2,17 +2,20 @@ package com.wedding.admin.dashboard.service;
 
 import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO;
 import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO.BoardStats;
+import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO.CategoryRevenueCard;
 import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO.InquiryStats;
 import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO.LowStockProduct;
 import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO.MemberStats;
 import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO.MonthlyRevenuePoint;
 import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO.OrderStats;
+import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO.CompanyRankingItem;
 import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO.ProductStats;
 import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO.ReservationStats;
 import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO.TodoBreakdownItem;
 import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO.TodoItem;
 import com.wedding.board.repository.BoardRepository;
 import com.wedding.checkout.repository.OrderRepository;
+import com.wedding.company.domain.CompanyCategory;
 import com.wedding.inquiry.domain.InquiryRoomStatus;
 import com.wedding.inquiry.repository.InquiryRoomRepository;
 import com.wedding.member.repository.MemberRepository;
@@ -29,6 +32,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -36,6 +41,13 @@ import org.springframework.stereotype.Service;
 public class AdminDashboardServiceImpl implements AdminDashboardService {
 
     private static final int LOW_STOCK_THRESHOLD = 5;
+
+    private static final Map<CompanyCategory, String> CATEGORY_LABELS = Map.of(
+            CompanyCategory.HALL, "웨딩홀",
+            CompanyCategory.DRESS, "드레스",
+            CompanyCategory.STUDIO, "스튜디오",
+            CompanyCategory.MAKEUP, "메이크업"
+    );
 
     private final MemberRepository memberRepository;
     private final OrderRepository orderRepository;
@@ -58,6 +70,8 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
         ReservationStats reservationStats = buildReservationStats();
         InquiryStats inquiryStats = buildInquiryStats();
         ProductStats productStats = buildProductStats();
+        List<CategoryRevenueCard> categoryRevenueCards = buildCategoryRevenueCards();
+        List<CompanyRankingItem> topCompaniesOverall = buildTopCompaniesOverall();
 
         List<TodoItem> todos = buildTodos(orderStats, productStats);
 
@@ -68,6 +82,8 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
                 .reservationStats(reservationStats)
                 .inquiryStats(inquiryStats)
                 .productStats(productStats)
+                .categoryRevenueCards(categoryRevenueCards)
+                .topCompaniesOverall(topCompaniesOverall)
                 .monthlyRevenue(toMonthlyRevenuePoints(monthlyRevenueMap))
                 .todos(todos)
                 .build();
@@ -187,6 +203,62 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
                 .lowStockCount(productRepository.countByDelFlagFalseAndStockQtyLessThanEqual(LOW_STOCK_THRESHOLD))
                 .lowStockProducts(lowStockProducts)
                 .build();
+    }
+
+    // 업체 현황 카드 4개 - 웨딩홀/드레스/스튜디오/메이크업 순서로, 카테고리별 결제완료 예약 금액 합산 기준
+    // 매출 1위/평균/꼴찌 업체를 계산 (평균 = 카테고리 내 매출 있는 업체 총합 / 업체 수)
+    private List<CategoryRevenueCard> buildCategoryRevenueCards() {
+        List<CompanyCategory> orderedCategories = List.of(
+                CompanyCategory.HALL, CompanyCategory.DRESS, CompanyCategory.STUDIO, CompanyCategory.MAKEUP);
+
+        return orderedCategories.stream()
+                .map(this::buildCategoryRevenueCard)
+                .toList();
+    }
+
+    private CategoryRevenueCard buildCategoryRevenueCard(CompanyCategory category) {
+        Pageable top1 = PageRequest.of(0, 1);
+
+        List<Object[]> topRows = reservationRepository.sumAmountByCompanyInCategoryDesc(category, top1);
+        List<Object[]> bottomRows = reservationRepository.sumAmountByCompanyInCategoryAsc(category, top1);
+
+        long totalAmount = reservationRepository.sumAmountInCategory(category);
+        long companyCount = reservationRepository.countDistinctCompaniesInCategoryWithPaidReservation(category);
+        long averageAmount = companyCount == 0 ? 0 : totalAmount / companyCount;
+
+        return CategoryRevenueCard.builder()
+                .category(category.name())
+                .categoryLabel(CATEGORY_LABELS.get(category))
+                .topCompanyName(topRows.isEmpty() ? "-" : (String) topRows.get(0)[0])
+                .topAmount(topRows.isEmpty() ? 0 : ((Number) topRows.get(0)[1]).longValue())
+                .averageAmount(averageAmount)
+                .bottomCompanyName(bottomRows.isEmpty() ? "-" : (String) bottomRows.get(0)[0])
+                .bottomAmount(bottomRows.isEmpty() ? 0 : ((Number) bottomRows.get(0)[1]).longValue())
+                .build();
+    }
+
+    // 업체 매출 전체 순위 - 4개 카테고리(웨딩홀/드레스/스튜디오/메이크업) 구분 없이 결제완료 예약 금액
+    // 합산 기준 TOP 10
+    private List<CompanyRankingItem> buildTopCompaniesOverall() {
+        List<Object[]> rows = reservationRepository.sumAmountByCompanyOverallDesc(PageRequest.of(0, 10));
+
+        List<CompanyRankingItem> ranking = new ArrayList<>();
+        int rank = 1;
+        for (Object[] row : rows) {
+            String companyName = (String) row[0];
+            CompanyCategory category = (CompanyCategory) row[1];
+            long amount = ((Number) row[2]).longValue();
+
+            ranking.add(CompanyRankingItem.builder()
+                    .rank(rank++)
+                    .companyName(companyName)
+                    .category(category.name())
+                    .categoryLabel(CATEGORY_LABELS.get(category))
+                    .amount(amount)
+                    .build());
+        }
+
+        return ranking;
     }
 
     // "오늘의 할 일"은 관리자가 실제로 상태를 바꿔줘야 하는 항목만 넣음 (정보성 통계는 다른 패널에서 확인).
