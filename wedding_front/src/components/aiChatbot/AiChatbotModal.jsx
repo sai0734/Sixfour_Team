@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import { getCompanyImageUrl } from "../../api/companyApi";
 
 // 브라우저 지원 여부는 모듈 로드 시 한 번만 확인 (크롬 계열만 지원, 나머지는 마이크 버튼 자체를 숨김)
 const SpeechRecognitionClass =
@@ -6,14 +8,58 @@ const SpeechRecognitionClass =
     ? window.SpeechRecognition || window.webkitSpeechRecognition
     : null;
 
+// AI 답변에 딸려온 카드(업체/드레스아이템/답례품 등) - 누르면 해당 상세페이지로 이동
+const ReferenceCards = ({ references }) => {
+  if (!references || references.length === 0) return null;
+
+  return (
+    <div className="mt-2 flex max-w-[90%] gap-2 overflow-x-auto pb-1">
+      {references.map((ref) => (
+        <Link
+          key={`${ref.type}-${ref.id}`}
+          to={ref.link}
+          className="flex w-28 shrink-0 flex-col overflow-hidden rounded-xl border border-line bg-white shadow-sm transition hover:shadow-md"
+        >
+          <div className="h-20 w-full bg-surface">
+            {ref.imageUrl ? (
+              <img
+                src={getCompanyImageUrl(ref.imageUrl)}
+                alt={ref.name}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-2xl text-ink-faint">
+                🏢
+              </div>
+            )}
+          </div>
+          <div className="px-2 py-1.5">
+            <p className="truncate text-xs font-medium text-ink">{ref.name}</p>
+            <p className="truncate text-[10px] text-ink-muted">
+              {ref.priceLabel}
+            </p>
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
+};
+
 const AiChatbotModal = ({ messages, onSend, sending, onClose }) => {
   const [input, setInput] = useState("");
   const [isListening, setIsListening] = useState(false);
   const messageEndRef = useRef(null);
   const recognitionRef = useRef(null);
+  const hasScrolledOnceRef = useRef(false);
 
-  // 새 메시지 오면 맨 아래로 스크롤
+  // 모달을 열 때는 이력이 길어도 애니메이션 없이 즉시 맨 아래로 이동시키고,
+  // 이미 열려있는 상태에서 새 메시지가 올 때만 부드럽게 스크롤
   useEffect(() => {
+    if (!hasScrolledOnceRef.current) {
+      messageEndRef.current?.scrollIntoView({ behavior: "auto" });
+      hasScrolledOnceRef.current = true;
+      return;
+    }
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, sending]);
 
@@ -133,7 +179,7 @@ const AiChatbotModal = ({ messages, onSend, sending, onClose }) => {
             messages.map((message) => (
               <div
                 key={message.id}
-                className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                className={`flex flex-col ${message.role === "user" ? "items-end" : "items-start"}`}
               >
                 <div
                   className={`max-w-[75%] whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-sm leading-relaxed ${
@@ -144,6 +190,9 @@ const AiChatbotModal = ({ messages, onSend, sending, onClose }) => {
                 >
                   {message.content}
                 </div>
+                {message.role === "assistant" && (
+                  <ReferenceCards references={message.references} />
+                )}
               </div>
             ))
           )}

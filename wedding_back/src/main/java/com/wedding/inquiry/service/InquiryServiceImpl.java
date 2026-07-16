@@ -8,6 +8,7 @@ import com.wedding.inquiry.repository.InquiryMessageRepository;
 import com.wedding.inquiry.repository.InquiryRoomRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +24,9 @@ public class InquiryServiceImpl implements InquiryService {
     private final InquiryRoomRepository inquiryRoomRepository;
     private final InquiryMessageRepository inquiryMessageRepository;
     private final InquiryAccessService inquiryAccessService;
+    private final SimpMessagingTemplate messagingTemplate;
+
+    private static final String MANAGER_VIEWER_MARKER = "__MANAGER_VIEW__";
 
     // 문의하기 클릭 시 — 기존 방 있으면 반환, 없으면 새로 생성
     @Override
@@ -80,8 +84,12 @@ public class InquiryServiceImpl implements InquiryService {
         LocalDateTime now = LocalDateTime.now();
         if (callerEmail.equals(room.getMemberEmail())) {
             room.markReadByMember(now);
+            InquiryRoomDTO memberView = InquiryRoomDTO.from(room, room.getMemberEmail());
+            messagingTemplate.convertAndSend("/topic/inquiries/member/" + room.getMemberEmail(), memberView);
         } else {
             room.markReadByManager(now);
+            InquiryRoomDTO managerView = InquiryRoomDTO.from(room, MANAGER_VIEWER_MARKER);
+            messagingTemplate.convertAndSend("/topic/inquiries/company/" + room.getCmno(), managerView);
         }
 
         return inquiryMessageRepository.findByRoomIdOrderByRegDateAsc(roomId)
@@ -108,7 +116,22 @@ public class InquiryServiceImpl implements InquiryService {
                 .content(content.trim())
                 .build();
         InquiryMessage saved = inquiryMessageRepository.save(message);
+
         room.updateLastMessageAt(now);
-        return InquiryMessageDTO.from(saved);
+
+        InquiryMessageDTO messageDTO = InquiryMessageDTO.from(saved);
+
+        // 채팅창이 열려있는 쪽(방을 구독 중인 클라이언트)에게 새 메시지를 즉시 밀어줌
+        messagingTemplate.convertAndSend("/topic/inquiries/room/" + roomId, messageDTO);
+
+        // 회원/매니저 양쪽 뱃지·목록용 토픽에도 갱신된 방 상태를 밀어줌 (누가 보냈든 둘 다 lastMessageAt이 바뀌었으므로)
+        InquiryRoomDTO memberView = InquiryRoomDTO.from(room, room.getMemberEmail());
+        messagingTemplate.convertAndSend("/topic/inquiries/member/" + room.getMemberEmail(), memberView);
+
+        InquiryRoomDTO managerView = InquiryRoomDTO.from(room, MANAGER_VIEWER_MARKER);
+        messagingTemplate.convertAndSend("/topic/inquiries/company/" + room.getCmno(), managerView);
+
+        return messageDTO;
+
     }
 }

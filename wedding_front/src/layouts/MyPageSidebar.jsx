@@ -1,7 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import useManagedCompany from "../hooks/useManagedCompany";
+import { getCompanyInquiryRooms } from "../api/companyInquiryApi";
+import { subscribeInquiryTopic } from "../util/inquiryWsClient";
 
 const MENU_GROUPS = [
   {
@@ -17,9 +19,13 @@ const MyPageSidebar = () => {
   const location = useLocation();
   const activeRef = useRef(null);
   const loginState = useSelector((state) => state.loginSlice);
-  const { isManager } = useManagedCompany({
+  const { isManager, company } = useManagedCompany({
     enabled: Boolean(loginState.email),
   });
+  // 수정시작
+  // 방 하나하나의 안읽음 여부를 맵으로 들고 있다가, 하나라도 true면 뱃지 표시
+  const [roomUnreadMap, setRoomUnreadMap] = useState({});
+  // 수정끝
 
   useEffect(() => {
     activeRef.current?.scrollIntoView({
@@ -28,6 +34,49 @@ const MyPageSidebar = () => {
       inline: "center",
     });
   }, [location.pathname]);
+
+  // 최초 1회 REST로 현재 상태를 불러오고, 이후 갱신은 WebSocket 구독으로 받는다
+  useEffect(() => {
+    if (!isManager || !company?.cmno) {
+      setRoomUnreadMap({});
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadInitial = async () => {
+      try {
+        const rooms = await getCompanyInquiryRooms(company.cmno);
+        if (cancelled) return;
+
+        const map = {};
+        (Array.isArray(rooms) ? rooms : []).forEach((room) => {
+          map[room.roomId] = Boolean(room.unread);
+        });
+        setRoomUnreadMap(map);
+      } catch (err) {
+        console.error("업체 문의 안읽음 상태 조회 실패:", err);
+      }
+    };
+    loadInitial();
+
+    const unsubscribe = subscribeInquiryTopic(
+      `/topic/inquiries/company/${company.cmno}`,
+      (roomUpdate) => {
+        setRoomUnreadMap((prev) => ({
+          ...prev,
+          [roomUpdate.roomId]: Boolean(roomUpdate.unread),
+        }));
+      },
+    );
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, [isManager, company?.cmno]);
+
+  const hasUnreadInquiry = Object.values(roomUnreadMap).some(Boolean);
 
   const isActivePath = (path) => {
     if (path === "/mypage") return location.pathname === "/mypage";
@@ -69,6 +118,8 @@ const MyPageSidebar = () => {
           <nav className="flex gap-2 overflow-x-auto scroll-smooth pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:flex-col lg:gap-1 lg:overflow-visible lg:pb-0">
             {menuItems.map((item) => {
               const isActive = isActivePath(item.path);
+              const showUnreadDot =
+                item.path === "/manager/inquiries" && hasUnreadInquiry;
 
               return (
                 <Link
@@ -81,7 +132,16 @@ const MyPageSidebar = () => {
                       : "bg-[#F7F2EA] text-[#4A3F38] hover:bg-[#E6EBDD] lg:bg-transparent"
                   }`}
                 >
-                  {item.name}
+                  <span className="flex items-center gap-1.5">
+                    {item.name}
+                    {showUnreadDot && (
+                      <span
+                        className="h-1.5 w-1.5 shrink-0 rounded-full bg-red-500"
+                        aria-hidden="true"
+                        title="읽지 않은 문의 있음"
+                      />
+                    )}
+                  </span>
                 </Link>
               );
             })}

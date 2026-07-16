@@ -7,14 +7,14 @@ import {
   useState,
 } from "react";
 import { useSelector } from "react-redux";
+import { openInquiryRoom, sendInquiryMessage } from "../api/companyInquiryApi";
 import {
-  getMyInquiryRooms,
-  openInquiryRoom,
-  sendInquiryMessage,
-} from "../api/companyInquiryApi";
+  connectInquiryWs,
+  disconnectInquiryWs,
+  subscribeInquiryTopic,
+} from "../util/inquiryWsClient";
 
 const STORAGE_PREFIX = "wedding_inquiry_sessions_";
-const UNREAD_POLL_INTERVAL_MS = 20000;
 
 const InquiryChatContext = createContext(null);
 
@@ -78,26 +78,31 @@ export const InquiryChatProvider = ({ children }) => {
     persistSessions(email, sessions);
   }, [email, sessions]);
 
+  // 로그인 상태가 바뀌면 WebSocket 연결도 같이 시작/종료
+  useEffect(() => {
+    if (!email) {
+      disconnectInquiryWs();
+      return;
+    }
+    connectInquiryWs();
+  }, [email]);
+
+  // 내 문의방들의 안읽음/최근 대화 상태를 실시간으로 반영 (기존 20초 폴링 대체)
   useEffect(() => {
     if (!email) return;
-    if (sessions.length === 0) return;
-    if (activeRoomId != null) return;
 
-    const pollUnread = async () => {
-      if (document.hidden) return;
-
-      try {
-        const rooms = await getMyInquiryRooms();
+    const unsubscribe = subscribeInquiryTopic(
+      `/topic/inquiries/member/${email}`,
+      (roomUpdate) => {
         setSessions((prev) => {
           let changed = false;
           const next = prev.map((session) => {
-            const match = rooms.find((room) => room.roomId === session.roomId);
-            if (!match) return session;
+            if (session.roomId !== roomUpdate.roomId) return session;
 
-            const nextUnread = Boolean(match.unread);
+            const nextUnread = Boolean(roomUpdate.unread);
             if (
               nextUnread === Boolean(session.unread) &&
-              match.lastMessageAt === session.lastMessageAt
+              roomUpdate.lastMessageAt === session.lastMessageAt
             ) {
               return session;
             }
@@ -106,31 +111,16 @@ export const InquiryChatProvider = ({ children }) => {
             return {
               ...session,
               unread: nextUnread,
-              lastMessageAt: match.lastMessageAt,
+              lastMessageAt: roomUpdate.lastMessageAt,
             };
           });
           return changed ? next : prev;
         });
-      } catch (err) {
-        console.error("문의방 안읽음 상태 조회 실패:", err);
-      }
-    };
+      },
+    );
 
-    pollUnread();
-    const timer = setInterval(pollUnread, UNREAD_POLL_INTERVAL_MS);
-
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        pollUnread();
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      clearInterval(timer);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [email, sessions.length, activeRoomId]);
+    return unsubscribe;
+  }, [email]);
 
   // "문의하기" 클릭 - 이미 대화중인 업체면 그 방을 열고, 처음이면 draft만 열어둠(서버 호출 없음)
   const startInquiry = useCallback(
