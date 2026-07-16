@@ -52,6 +52,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>{
   List<String> findDistinctCategories();
 
   // 관리자용 상풍 리스트 조회 (숨김 상품도 전부 포함)
+  // 재고부족 상품은 검색/필터/정렬과 무관하게 항상 최상단에 오도록 1차 정렬로 고정, 그 안에서 선택한 정렬을 2차로 적용
   @Query("select p, pi from Product p left join p.imageList pi " +
           "where (pi.ord = 0 or pi is null) " +
           "and (:keyword is null or :keyword = '' or p.pname like concat('%', :keyword, '%')) " +
@@ -59,10 +60,12 @@ public interface ProductRepository extends JpaRepository<Product, Long>{
           "and (:saleStatus is null or :saleStatus = '' " +
           "     or (:saleStatus = 'HIDDEN' and p.delFlag = true) " +
           "     or (:saleStatus = 'SOLD_OUT' and p.delFlag = false and p.stockQty <= 0) " +
-          "     or (:saleStatus = 'ON_SALE' and p.delFlag = false and p.stockQty > 0))")
+          "     or (:saleStatus = 'ON_SALE' and p.delFlag = false and p.stockQty > 0)) " +
+          "order by case when p.delFlag = false and p.stockQty > 0 and p.stockQty <= :lowStockThreshold then 0 else 1 end asc")
   Page<Object[]> adminSearchProductList(@Param("keyword") String keyword,
                                         @Param("category") String category,
                                         @Param("saleStatus") String saleStatus,
+                                        @Param("lowStockThreshold") int lowStockThreshold,
                                         Pageable pageable);
 
   // 관리자 대시보드용 집계
