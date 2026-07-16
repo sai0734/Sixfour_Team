@@ -35,3 +35,8 @@ export const sendInquiryMessage = async (roomId, content) => {
   });
   return res.data;
 };
+
+// 채팅창을 열어둔 채로 실시간 메시지를 받았을 때 — 목록을 다시 안 불러오고 읽음 시각만 갱신
+export const markInquiryRead = async (roomId) => {
+  await jwtAxios.post(`${prefix}/rooms/${roomId}/read`);
+};
