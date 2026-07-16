@@ -9,6 +9,7 @@ import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO.MonthlyRevenuePo
 import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO.OrderStats;
 import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO.ProductStats;
 import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO.ReservationStats;
+import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO.TodoBreakdownItem;
 import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO.TodoItem;
 import com.wedding.board.repository.BoardRepository;
 import com.wedding.checkout.repository.OrderRepository;
@@ -195,25 +196,29 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
 
         List<TodoItem> todos = new ArrayList<>();
 
+        // 결제완료/배송준비/교환신청/환불신청 대기 주문을 카드 하나로 묶음 (모두 /admin/orders에서 처리)
+        long paidCount = orderStats.getPaid();
+        long shippingReadyCount = orderRepository.countByOrderStatus("SHIPPING_READY");
+        long exchangeRequestedCount = orderRepository.countByOrderStatus("EXCHANGE_REQUESTED");
+        long refundRequestedCount = orderRepository.countByOrderStatus("REFUND_REQUESTED");
+        long orderActionTotal = paidCount + shippingReadyCount + exchangeRequestedCount + refundRequestedCount;
         todos.add(TodoItem.builder()
-                .label("결제 완료, 발송 대기 중인 주문")
-                .count(orderStats.getPaid())
-                .tone(orderStats.getPaid() > 0 ? "warning" : "info")
+                .label("처리 필요 주문")
+                .count(orderActionTotal)
+                .tone(orderActionTotal > 0 ? "danger" : "info")
                 .link("/admin/orders")
-                .build());
-
-        long pendingExchangeOrRefund = orderRepository.countPendingExchangeOrRefund();
-        todos.add(TodoItem.builder()
-                .label("환불/교환 요청 대기 중인 주문")
-                .count(pendingExchangeOrRefund)
-                .tone(pendingExchangeOrRefund > 0 ? "danger" : "info")
-                .link("/admin/orders")
+                .breakdown(List.of(
+                        TodoBreakdownItem.builder().label("결제완료").count(paidCount).build(),
+                        TodoBreakdownItem.builder().label("배송준비").count(shippingReadyCount).build(),
+                        TodoBreakdownItem.builder().label("교환신청").count(exchangeRequestedCount).build(),
+                        TodoBreakdownItem.builder().label("환불신청").count(refundRequestedCount).build()
+                ))
                 .build());
 
         todos.add(TodoItem.builder()
                 .label("재고 부족 상품 (답례품 등)")
                 .count(productStats.getLowStockCount())
-                .tone(productStats.getLowStockCount() > 0 ? "warning" : "info")
+                .tone(productStats.getLowStockCount() > 0 ? "danger" : "info")
                 .link("/admin/products")
                 .build());
 
@@ -221,7 +226,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
         todos.add(TodoItem.builder()
                 .label("답변 안 된 상품 Q&A")
                 .count(unansweredQuestions)
-                .tone("info")
+                .tone(unansweredQuestions > 0 ? "danger" : "info")
                 .link("/admin/qna")
                 .build());
 

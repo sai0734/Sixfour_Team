@@ -34,13 +34,13 @@ const categoryColors = {
 
 const ORDER_STATUS_COLORS = ["#3b82f6", "#f59e0b", "#a855f7"];
 
-// 오늘 발생량에 따른 카드 그라데이션 - 1건 이상이면 빨강, 0건이면 노랑
+// 상단 KPI 카드 고정 색상 (빨강/파랑은 "오늘의 할 일" 톤과 겹치지 않도록 제외)
 const KPI_GRADIENTS = {
-  up: "from-[#f87171] to-[#dc2626]",
-  flat: "from-[#fbbf24] to-[#eab308]",
+  pink: "from-[#f472b6] to-[#ec4899]",
+  purple: "from-[#a855f7] to-[#8b5cf6]",
+  green: "from-[#34d399] to-[#10b981]",
+  amber: "from-[#fbbf24] to-[#f97316]",
 };
-
-const trendGradient = (todayValue) => (todayValue > 0 ? "up" : "flat");
 
 const toneStyle = {
   info: "border-blue-400 bg-blue-50 text-blue-700",
@@ -169,28 +169,28 @@ const AdminDashboardComponent = () => {
       {/* ===== 전체 핵심 지표 (전체 회원이 맨 위) ===== */}
       <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <GradientKpi
-          gradient={summary ? trendGradient(summary.memberStats.newToday) : "flat"}
+          gradient="pink"
           icon={<UsersIcon />}
           value={summary ? `${summary.memberStats.total}명` : "-"}
           label="전체 회원"
           desc={`오늘 신규 ${summary?.memberStats.newToday ?? 0}명`}
         />
         <GradientKpi
-          gradient={summary ? trendGradient(summary.orderStats.todayRevenue) : "flat"}
+          gradient="purple"
           icon={<WalletIcon />}
           value={summary ? `${Number(summary.orderStats.totalRevenue).toLocaleString()}원` : "-"}
           label="누적 매출"
           desc={summary ? <RevenueChangeBadge orderStats={summary.orderStats} light /> : "-"}
         />
         <GradientKpi
-          gradient={summary ? trendGradient(summary.boardStats.todayCount) : "flat"}
+          gradient="green"
           icon={<DocumentIcon />}
           value={summary ? `${summary.boardStats.total}건` : "-"}
           label="전체 게시글"
           desc={`오늘 ${summary?.boardStats.todayCount ?? 0}건 작성`}
         />
         <GradientKpi
-          gradient={summary ? trendGradient(summary.orderStats.todayCount) : "flat"}
+          gradient="amber"
           icon={<OrderIcon />}
           value={
             summary
@@ -249,8 +249,24 @@ const AdminDashboardComponent = () => {
                   todo.link ? "cursor-pointer hover:opacity-80" : "cursor-default"
                 }`}
               >
-                <div className="text-xl font-semibold">{todo.count}건</div>
-                <div className="mt-1 text-sm font-medium">{todo.label}</div>
+                {todo.breakdown?.length ? (
+                  <>
+                    <div className="mb-2 text-sm font-medium">{todo.label}</div>
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                      {todo.breakdown.map((row) => (
+                        <div key={row.label} className="flex items-baseline justify-between gap-1">
+                          <span className="text-xs opacity-80">{row.label}</span>
+                          <span className="text-sm font-semibold">{row.count}건</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-xl font-semibold">{todo.count}건</div>
+                    <div className="mt-1 text-sm font-medium">{todo.label}</div>
+                  </>
+                )}
               </button>
             ))}
           </div>
