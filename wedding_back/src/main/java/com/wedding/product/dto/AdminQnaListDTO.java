@@ -16,6 +16,7 @@ public class AdminQnaListDTO {
     private Long qno;
     private Long pno;
     private String pname;
+    private String thumbnail;
     private String memberEmail;
     private String nickname;
     private String content;

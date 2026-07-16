@@ -4,6 +4,7 @@ import com.wedding.global.dto.PageRequestDTO;
 import com.wedding.global.dto.PageResponseDTO;
 import com.wedding.member.domain.Member;
 import com.wedding.product.domain.Product;
+import com.wedding.product.domain.ProductImage;
 import com.wedding.product.domain.Qna;
 import com.wedding.product.dto.AdminQnaListDTO;
 import com.wedding.product.dto.QnaDTO;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
@@ -74,6 +76,7 @@ public class QnaServiceImpl implements QnaService {
                 .qno(q.getQno())
                 .pno(q.getProduct().getPno())
                 .pname(q.getProduct().getPname())
+                .thumbnail(firstImageFileName(q.getProduct()))
                 .memberEmail(q.getMember().getEmail())
                 .nickname(q.getMember().getNickname())
                 .content(q.getContent())
@@ -86,6 +89,14 @@ public class QnaServiceImpl implements QnaService {
                 .pageRequestDTO(requestDTO)
                 .totalCount(result.getTotalElements())
                 .build();
+    }
+
+    // 상품 대표 이미지(ord 가장 낮은 것) 파일명. 이미지가 없으면 null
+    private String firstImageFileName(Product product) {
+        return product.getImageList().stream()
+                .min(Comparator.comparingInt(ProductImage::getOrd))
+                .map(ProductImage::getFileName)
+                .orElse(null);
     }
 
     // 질문 등록 (로그인 회원 누구나 가능)
