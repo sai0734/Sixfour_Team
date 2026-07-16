@@ -50,7 +50,8 @@ public class AiPlanCandidateBuilder {
     // 예산의 110%까지는 "적합한 패키지"로 인정
     private static final double PACKAGE_FIT_TOLERANCE = 1.1;
 
-    // 개별 조합 시 카테고리별 예산 배분 비율 - 데모용 임의 가정치 (AiPlanAiServiceImpl에서도 재사용)
+    // 개별 조합 시 카테고리별 예산 배분 비율 - 데모용 임의 가정치
+    // (AiPlanAiServiceImpl / AiPlanRefineServiceImpl에서도 재사용)
     static final double HALL_RATIO = 0.45;
     static final double DRESS_RATIO = 0.25;
     static final double STUDIO_RATIO = 0.15;
@@ -152,12 +153,16 @@ public class AiPlanCandidateBuilder {
                 .distanceKm(p.getDistanceKm())
                 .hallCmno(p.getHallCompany().getCmno())
                 .hallName(p.getHallCompany().getName())
+                .hallImageUrl(firstImage(p.getHallCompany()))
                 .dressCmno(p.getDressCompany().getCmno())
                 .dressName(p.getDressCompany().getName())
+                .dressImageUrl(dressOptionImage(p.getDressCompany()))
                 .studioCmno(p.getStudioCompany().getCmno())
                 .studioName(p.getStudioCompany().getName())
+                .studioImageUrl(firstImage(p.getStudioCompany()))
                 .makeupCmno(p.getMakeupCompany().getCmno())
                 .makeupName(p.getMakeupCompany().getName())
+                .makeupImageUrl(firstImage(p.getMakeupCompany()))
                 .reason(buildPackageReason(p, budget))
                 .sourceType("PACKAGE")
                 .build();
@@ -213,12 +218,16 @@ public class AiPlanCandidateBuilder {
                 .distanceKm(null)
                 .hallCmno(hall.company.getCmno())
                 .hallName(hall.company.getName())
+                .hallImageUrl(firstImage(hall.company))
                 .dressCmno(dress.company.getCmno())
                 .dressName(dress.company.getName())
+                .dressImageUrl(dressOptionImage(dress.company))
                 .studioCmno(studio.company.getCmno())
                 .studioName(studio.company.getName())
+                .studioImageUrl(firstImage(studio.company))
                 .makeupCmno(makeup.company.getCmno())
                 .makeupName(makeup.company.getName())
+                .makeupImageUrl(firstImage(makeup.company))
                 .reason(buildComboReason(totalPrice, budget))
                 .sourceType("INDIVIDUAL_COMBO")
                 .build();
@@ -247,6 +256,31 @@ public class AiPlanCandidateBuilder {
         return budget != null && budget > 0 ? Math.round(budget * ratio) : null;
     }
 
+    // 홀/스튜디오/메이크업 대표 이미지 - 업체 대표 이미지 첫 장 (Company.imageList ord=0).
+    static String firstImage(Company company) {
+        if (company == null || company.getImageList() == null || company.getImageList().isEmpty()) {
+            return null;
+        }
+        return company.getImageList().get(0).getFileName();
+    }
+
+    // 드레스는 업체 대표 이미지가 아니라 "옵션(드레스 아이템) 이미지" - 그 업체 드레스 아이템 중 ord가 가장 앞선 것.
+    String dressOptionImage(Company dressCompany) {
+        if (dressCompany == null) {
+            return null;
+        }
+        return dressItemRepository.findByCompany_CmnoOrderByOrdAsc(dressCompany.getCmno()).stream()
+                .findFirst()
+                .map(DressItem::getImageUrl)
+                .orElse(null);
+    }
+
+    // 6단계 리파인 대화에서 카테고리 하나만 다시 찾을 때 씀 - 폴백 플래그는 필요 없어서 Company만 반환.
+    Company pickOne(CompanyCategory category, String region, Long budgetForCategory, AiPlanCategoryPreferences prefs) {
+        Pick pick = pickBestCompany(category, region, budgetForCategory, prefs);
+        return pick == null ? null : pick.company;
+    }
+
     // 카테고리별로 취향이 있으면 취향 우선 탐색, 없으면 바로 기본(지역/예산) 탐색으로
     private Pick pickBestCompany(CompanyCategory category, String region, Long allocatedBudget,
                                  AiPlanCategoryPreferences prefs) {
@@ -266,7 +300,6 @@ public class AiPlanCandidateBuilder {
                 return new Pick(styled, false, false);
             }
 
-            // 취향 조건으로 지역까지 걸었다가 안 나왔으면, 지역만 풀고 취향은 유지해서 한 번 더 시도
             if (region != null) {
                 Company styledNoRegion = findStyled(category, null, maxPrice, prefs);
                 if (styledNoRegion != null) {
@@ -275,7 +308,6 @@ public class AiPlanCandidateBuilder {
             }
         }
 
-        // 취향에 맞는 곳이 아예 없으면(또는 취향 자체가 없으면) 기본(지역/예산) 로직으로
         Pick plain = pickBestCompanyPlain(category, region, allocatedBudget);
 
         if (plain == null) {
@@ -314,7 +346,6 @@ public class AiPlanCandidateBuilder {
         };
     }
 
-    // 카테고리+지역+예산 순으로 시도하다가 안 되면 조건을 하나씩 풀어서 최후엔 전체 중 가장 저렴한 곳을 반환
     private Pick pickBestCompanyPlain(CompanyCategory category, String region, Long allocatedBudget) {
 
         BigDecimal maxPrice = allocatedBudget != null ? BigDecimal.valueOf(allocatedBudget) : null;
@@ -348,7 +379,6 @@ public class AiPlanCandidateBuilder {
         return content.isEmpty() ? null : content.get(0);
     }
 
-    // DressItem은 업체 단위가 아니라 상품 단위라 같은 업체가 여러 번 나올 수 있음 - 처음 등장한 업체로 dedupe
     private Company findFirstDistinctCompany(List<DressItem> items) {
 
         Map<Long, Company> byCmno = new LinkedHashMap<>();

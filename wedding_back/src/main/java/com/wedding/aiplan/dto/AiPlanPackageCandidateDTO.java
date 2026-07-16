@@ -48,4 +48,11 @@ public class AiPlanPackageCandidateDTO {
     private String studioReason;
     private String dressReason;
     private String makeupReason;
+
+    // 카드에 보여줄 대표 이미지 - 파일명만 담음(프론트에서 getCompanyImageUrl로 완성된 URL 만듦).
+    // 홀/스튜디오/메이크업은 업체 대표 이미지, 드레스는 업체가 아니라 "옵션(드레스 아이템)" 이미지.
+    private String hallImageUrl;
+    private String studioImageUrl;
+    private String dressImageUrl;
+    private String makeupImageUrl;
 }
