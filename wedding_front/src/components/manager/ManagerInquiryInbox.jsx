@@ -136,10 +136,10 @@ const ManagerInquiryInbox = () => {
   };
 
   // 목록에서 바로 "나가기" — 채팅창을 열지 않고 그 방만 숨긴다
-  const handleLeaveFromList = (e, roomId, memberEmail) => {
+  const handleLeaveFromList = (e, roomId, memberLabel) => {
     e.stopPropagation();
     const confirmed = window.confirm(
-      `${memberEmail || "이 회원"} 문의를 목록에서 나가시겠습니까?\n대화 내용은 서버에 남아있고, 새 메시지가 오면 다시 표시됩니다.`,
+      `${memberLabel || "이 회원"} 문의를 목록에서 나가시겠습니까?\n대화 내용은 서버에 남아있고, 새 메시지가 오면 다시 표시됩니다.`,
     );
     if (confirmed) {
       handleLeaveRoom(roomId);
@@ -226,6 +226,7 @@ const ManagerInquiryInbox = () => {
                   setSelectedRoom({
                     roomId: room.roomId,
                     memberEmail: room.memberEmail,
+                    memberNickname: room.memberNickname,
                   })
                 }
                 className={`flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition sm:px-6 ${
@@ -246,7 +247,7 @@ const ManagerInquiryInbox = () => {
                         room.unread ? "font-semibold" : "font-medium"
                       }`}
                     >
-                      {room.memberEmail || "알 수 없는 회원"}
+                      {room.memberNickname || room.memberEmail || "알 수 없는 회원"}
                     </p>
                   </div>
                   <p className="mt-1 text-xs text-ink-muted">
@@ -264,11 +265,19 @@ const ManagerInquiryInbox = () => {
                     role="button"
                     tabIndex={0}
                     onClick={(e) =>
-                      handleLeaveFromList(e, room.roomId, room.memberEmail)
+                      handleLeaveFromList(
+                        e,
+                        room.roomId,
+                        room.memberNickname || room.memberEmail,
+                      )
                     }
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
-                        handleLeaveFromList(e, room.roomId, room.memberEmail);
+                        handleLeaveFromList(
+                          e,
+                          room.roomId,
+                          room.memberNickname || room.memberEmail,
+                        );
                       }
                     }}
                     className="shrink-0 rounded-full px-3 py-1.5 text-xs text-ink-muted transition hover:bg-blush-50 hover:text-brand"
@@ -285,8 +294,8 @@ const ManagerInquiryInbox = () => {
       {/* 선택한 방 채팅 모달 */}
       {selectedRoom && (
         <CompanyChatModal
-          companyName={selectedRoom.memberEmail}
-          subtitle={`${company.name} 문의 답변`}
+          companyName={selectedRoom.memberNickname || selectedRoom.memberEmail}
+          subtitle={selectedRoom.memberEmail}
           roomId={selectedRoom.roomId}
           onMinimize={() => setSelectedRoom(null)}
           onLeave={() => handleLeaveRoom(selectedRoom.roomId)}
