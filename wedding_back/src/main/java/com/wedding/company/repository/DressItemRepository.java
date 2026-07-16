@@ -17,10 +17,12 @@ public interface DressItemRepository extends JpaRepository<DressItem, Long> {
 
   // AI 웨딩플랜 자세히 모드 - 드레스 스타일(styleTags) 취향 매칭용. 업체가 아니라 상품 단위 태그라
   // 같은 업체 아이템이 여러 개 나올 수 있음 - 서비스단에서 업체 기준으로 중복 제거/정렬함.
-  @Query("select di from DressItem di where di.styleTags like %:keyword% and di.company.delFlag = false "
-          + "and (:region is null or di.company.address like %:region%) "
-          + "and (:maxPrice is null or di.company.priceAvg <= :maxPrice)")
-  List<DressItem> searchByStyleKeyword(@Param("keyword") String keyword,
-                                       @Param("region") String region,
-                                       @Param("maxPrice") BigDecimal maxPrice);
+  @Query("select di from DressItem di where di.styleTags like concat('%', :keyword, '%') "
+      + "and di.company.delFlag = false "
+      + "and (:region is null or di.company.address like concat('%', :region, '%')) "
+      + "and (:maxPrice is null or di.company.priceAvg <= :maxPrice)")
+  List<DressItem> searchByStyleKeyword(
+      @Param("keyword") String keyword,
+      @Param("region") String region,
+      @Param("maxPrice") BigDecimal maxPrice);
 }
