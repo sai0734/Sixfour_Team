@@ -16,7 +16,7 @@ const slides = [
     title: "예산과 날짜만 알면\nAI가 웨딩플랜을 짜드려요",
     desc: "예산, 날짜, 하객 수, 원하는 스타일을 입력하면\n일정과 예산 배분까지 자동으로 설계해드립니다",
     cta: "AI 웨딩플랜 만들어보기 →",
-    linkTo: "#",
+    linkTo: "/aiplan",
   },
   {
     eyebrow: "02 — PREPARATION",

@@ -4,6 +4,7 @@ import productRouter from "./productRouter";
 import authRouter from "./authRouter";
 import dressItemRouter from "./dressItemRouter";
 import companyRouter from "./companyRouter";
+import aiPlanRouter from "./aiPlanRouter";
 import AppShell from "../layouts/AppShell";
 import AdminOnly from "../components/common/AdminOnly";
 
@@ -49,12 +50,15 @@ const CompanyModifyPage = lazy(
   () => import("../pages/company/CompanyModifyPage"),
 );
 const CompanyReadPage = lazy(() => import("../pages/company/CompanyReadPage"));
+const PackageListPage = lazy(() => import("../pages/company/PackageListPage"));
+const PackageReadPage = lazy(() => import("../pages/company/PackageReadPage"));
 const ManagerInquiryPage = lazy(
   () => import("../pages/manager/ManagerInquiryPage"),
 );
 const ManagerReservationPage = lazy(
   () => import("../pages/manager/ManagerReservationPage"),
 );
+const AiPlanRouter = lazy(() => import("../pages/aiplan/IndexPage"));
 
 const appRoutes = [
   {
@@ -102,6 +106,15 @@ const appRoutes = [
   {
     path: "companies",
     children: companyRouter(),
+  },
+  {
+    path: "aiplan",
+    element: (
+      <Suspense fallback={Loading}>
+        <AiPlanRouter />
+      </Suspense>
+    ),
+    children: aiPlanRouter(),
   },
   {
     path: "admin",
@@ -193,6 +206,26 @@ const appRoutes = [
       <AdminOnly>
         <Suspense fallback={Loading}>
           <CompanyReadPage />
+        </Suspense>
+      </AdminOnly>
+    ),
+  },
+  {
+    path: "admin/companies/packages",
+    element: (
+      <AdminOnly>
+        <Suspense fallback={Loading}>
+          <PackageListPage />
+        </Suspense>
+      </AdminOnly>
+    ),
+  },
+  {
+    path: "admin/companies/packages/read/:packageId",
+    element: (
+      <AdminOnly>
+        <Suspense fallback={Loading}>
+          <PackageReadPage />
         </Suspense>
       </AdminOnly>
     ),

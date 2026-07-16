@@ -29,6 +29,12 @@ public interface CompanyWishService {
 
     /** 마이페이지 찜 업체 목록 조회 - wishId/optionName 포함 (옵션별로 여러 건 표시) */
     List<CompanyWishItemDTO> getMyCompanyWishItems(String memberEmail);
+
+    /** 업체 상세페이지에서 옵션별 하트(찜) 표시용 - 이 업체에서 내가 찜한 옵션명 목록 */
+    List<String> getWishedOptionNames(String memberEmail, Long cmno);
+
+    /** 특정 옵션 하나만 찜 해제 (업체 상세페이지 옵션 하트 토글용) */
+    void removeOption(String memberEmail, Long cmno, String optionName);
     // ↑↑↑ 재원 추가
 
 }

@@ -7,6 +7,8 @@ const CompanyList = lazy(() => import("../pages/company/CompanyListPage"));
 const CompanyAdd = lazy(() => import("../pages/company/CompanyAddPage"));
 const CompanyModify = lazy(() => import("../pages/company/CompanyModifyPage"));
 const CompanyRead = lazy(() => import("../pages/company/CompanyReadPage"));
+const PackageList = lazy(() => import("../pages/company/PackageListPage"));
+const PackageRead = lazy(() => import("../pages/company/PackageReadPage"));
 // 재원 추가 - 업체 상세페이지 "예약" 버튼 → 날짜/옵션 선택 → 결제
 const ReservationReserve = lazy(
   () => import("../pages/reservation/ReservationReservePage"),
@@ -58,6 +60,22 @@ const companyRouter = () => {
             <CompanyModify />
           </Suspense>
         </AdminOnly>
+      ),
+    },
+    {
+      path: "packages",
+      element: (
+        <Suspense fallback={Loading}>
+          <PackageList />
+        </Suspense>
+      ),
+    },
+    {
+      path: "packages/read/:packageId",
+      element: (
+        <Suspense fallback={Loading}>
+          <PackageRead />
+        </Suspense>
       ),
     },
     {

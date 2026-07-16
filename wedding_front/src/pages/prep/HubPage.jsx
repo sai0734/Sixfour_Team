@@ -6,6 +6,9 @@ import useCustomLogin from "../../hooks/useCustomLogin";
 import { getListByMember as getChecklist } from "../../api/checklistApi";
 import { getListByMember as getBudget } from "../../api/budgetApi";
 import { getByMember as getWeddingPlan } from "../../api/weddingplanApi";
+// 재원 추가 - "더 챙겨볼 것들"에 결제 예정(예약 기반) 카드를 보여주기 위해 가져옴
+import { getListByMember as getReservations } from "../../api/reservationApi";
+// 재원 추가 끝
 
 const HubPage = () => {
   const { loginState } = useCustomLogin();
@@ -13,6 +16,7 @@ const HubPage = () => {
   const [checklist, setChecklist] = useState([]);
   const [budgetList, setBudgetList] = useState([]);
   const [plan, setPlan] = useState(null);
+  const [reservations, setReservations] = useState([]); // 재원 추가
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -22,10 +26,12 @@ const HubPage = () => {
       getChecklist(loginState.email),
       getBudget(loginState.email),
       getWeddingPlan(loginState.email).catch(() => null),
-    ]).then(([checklistData, budgetData, planData]) => {
+      getReservations(loginState.email).catch(() => []), // 재원 추가
+    ]).then(([checklistData, budgetData, planData, reservationData]) => {
       setChecklist(checklistData);
       setBudgetList(budgetData);
       setPlan(planData);
+      setReservations(reservationData); // 재원 추가
       setLoaded(true);
     });
   }, [loginState.email]);
@@ -78,6 +84,18 @@ const HubPage = () => {
           (1000 * 60 * 60 * 24),
       )
     : null;
+
+  // 재원 추가 - "더 챙겨볼 것들"용 결제 예정 요약
+  const pendingPayments = reservations.filter(
+    (r) => r.amount > 0 && r.payStatus !== "PAID" && r.paymentDeadline,
+  );
+  const overduePayments = pendingPayments.filter(
+    (r) => new Date(r.paymentDeadline) < new Date(new Date().toDateString()),
+  );
+  const nearestDeadline = pendingPayments
+    .map((r) => r.paymentDeadline)
+    .sort()[0];
+  // 재원 추가 끝
 
   return (
     <PrepLayout
@@ -147,6 +165,30 @@ const HubPage = () => {
       </TapeLabel>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {/* 재원 추가 - 결제 예정 (예약 기반) */}
+        {pendingPayments.length > 0 && (
+          <Link
+            to="/mypage?tab=reservation"
+            className="bg-white rounded-2xl border border-line p-6 hover:border-brand transition-colors"
+          >
+            <p className="text-xs text-ink-muted mb-2">결제 예정</p>
+            <p
+              className={`text-2xl font-medium mb-1 ${
+                overduePayments.length > 0 ? "text-red-600" : "text-ink"
+              }`}
+            >
+              {pendingPayments.length}건
+            </p>
+            <p className="text-xs text-ink-faint">
+              {overduePayments.length > 0
+                ? `기한 지남 ${overduePayments.length}건 포함`
+                : nearestDeadline
+                  ? `가장 가까운 마감 ${nearestDeadline}`
+                  : ""}
+            </p>
+          </Link>
+        )}
+        {/* 재원 추가 끝 */}
         <div className="bg-white rounded-2xl border border-line p-6 opacity-60">
           <p className="text-sm font-medium text-ink mb-1">AI 드레스</p>
           <p className="text-xs text-ink-faint">준비 중인 기능입니다</p>

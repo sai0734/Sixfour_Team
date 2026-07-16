@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { getCompanyImageUrl } from "../../api/companyApi";
 import { buildCompanyOptions, categoryLabel } from "../../util/companyOptionBuilder";
-
 export const STATUS_OPTIONS = ["대기", "확정", "취소"];
 
 const initState = {
@@ -45,6 +45,41 @@ const ReservationFormModal = ({
   };
 
   const selectedOption = options.find((o) => o.key === selectedKey);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    const scrollY = window.scrollY;
+    const { style } = document.body;
+    const prevOverflow = style.overflow;
+    const prevPosition = style.position;
+    const prevTop = style.top;
+    const prevWidth = style.width;
+
+    style.overflow = "hidden";
+    style.position = "fixed";
+    style.top = `-${scrollY}px`;
+    style.width = "100%";
+
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        onCloseRef.current();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      style.overflow = prevOverflow;
+      style.position = prevPosition;
+      style.top = prevTop;
+      style.width = prevWidth;
+      window.scrollTo(0, scrollY);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   const handleSubmit = () => {
     if (mode === "add") {
@@ -74,8 +109,14 @@ const ReservationFormModal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md p-6 max-h-[85vh] overflow-y-auto">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
         <p className="text-lg font-medium text-ink mb-1">
           {mode === "add" ? "예약 등록" : "예약 수정"}
         </p>
@@ -148,22 +189,38 @@ const ReservationFormModal = ({
                   {options.map((opt) => (
                     <label
                       key={opt.key}
-                      className={`flex items-center justify-between gap-3 rounded-xl border px-4 py-3 cursor-pointer transition ${
+                      className={`flex cursor-pointer items-center justify-between gap-3 rounded-xl border px-4 py-3 transition ${
                         selectedKey === opt.key
                           ? "border-brand bg-blush-50"
                           : "border-line-soft hover:border-brand"
                       }`}
                     >
-                      <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex min-w-0 items-center gap-3">
                         <input
                           type="radio"
                           name="option"
                           checked={selectedKey === opt.key}
                           onChange={() => setSelectedKey(opt.key)}
                         />
-                        <p className="text-sm font-medium text-ink truncate">
-                          {opt.label}
-                        </p>
+                        {opt.image && (
+                          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-surface">
+                            <img
+                              alt={opt.label}
+                              className="h-full w-full object-cover"
+                              src={getCompanyImageUrl(opt.image, true)}
+                            />
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-ink">
+                            {opt.label}
+                          </p>
+                          {opt.detail && (
+                            <p className="truncate text-xs text-ink-faint">
+                              {opt.detail}
+                            </p>
+                          )}
+                        </div>
                       </div>
                       {opt.price > 0 && (
                         <span className="shrink-0 text-sm text-ink-soft">
@@ -172,8 +229,7 @@ const ReservationFormModal = ({
                       )}
                     </label>
                   ))}
-                </div>
-              )}
+                </div>              )}
             </div>
           )}
           {/* 승진 코드 추가 끝 */}

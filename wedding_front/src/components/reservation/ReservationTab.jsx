@@ -10,9 +10,9 @@ import {
   preparePayment,
   cancelPayment,
 } from "../../api/reservationApi";
-import { getOne as getCompanyOne } from "../../api/companyApi";
+import { getOne as getCompanyOne, getCompanyImageUrl } from "../../api/companyApi";
 import { TOSS_CLIENT_KEY } from "../../api/tossConfig";
-import { categoryLabel } from "../../util/companyOptionBuilder";
+import { buildCompanyOptions, categoryLabel } from "../../util/companyOptionBuilder";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import ReservationFormModal from "./ReservationFormModal";
 
@@ -23,11 +23,20 @@ const STATUS_STYLE = {
   취소: "bg-red-50 text-red-600",
 };
 
+// 재원 추가 - 결제 최소 기한(paymentDeadline)이 지났는지 판별
+const isPaymentDeadlinePassed = (r) =>
+  Boolean(
+    r.paymentDeadline &&
+    new Date(r.paymentDeadline) < new Date(new Date().toDateString()),
+  );
+// 재원 추가 끝
+
 // 승진 코드 추가 - 예약대기/결제대기 구분 (status 기준)
 const isPaymentPending = (r) =>
   r.status === "결제대기" &&
   r.amount > 0 &&
-  (r.payStatus === "NONE" || r.payStatus === "CANCELLED");
+  (r.payStatus === "NONE" || r.payStatus === "CANCELLED") &&
+  !isPaymentDeadlinePassed(r); // 재원 추가 - 기한 지난 건 결제/일괄결제 대상에서 제외
 
 const getReservationPhase = (r) => {
   if (isPaymentPending(r)) return "결제대기";
@@ -43,6 +52,11 @@ const getPayBadge = (r) => {
   if (r.status === "대기") {
     return { label: "업체 확인중", style: "bg-amber-50 text-amber-600" };
   }
+  // 재원 추가 - 결제대기인데 마감일이 지난 경우
+  if (r.status === "결제대기" && isPaymentDeadlinePassed(r)) {
+    return { label: "결제기한 만료", style: "bg-red-50 text-red-600" };
+  }
+  // 재원 추가 끝
   if (isPaymentPending(r)) {
     return { label: "미결제", style: PAY_STYLE.NONE };
   }
@@ -60,12 +74,19 @@ const PAY_STYLE = {
 };
 const PAY_LABEL = { NONE: "미결제", PAID: "결제완료", CANCELLED: "결제취소" };
 
-// 카테고리별 아이콘
-const CATEGORY_ICON = {
-  HALL: "🏛",
-  DRESS: "👗",
-  MAKEUP: "💄",
-  STUDIO: "📷",
+const getReservationImage = (company, optionName) => {
+  if (!company) return null;
+
+  if (optionName) {
+    const matchedOption = buildCompanyOptions(company).find(
+      (option) => option.label === optionName,
+    );
+    if (matchedOption?.image) {
+      return matchedOption.image;
+    }
+  }
+
+  return company.mainImage || company.uploadFileNames?.[0] || null;
 };
 
 // Toss 스크립트 singleton
@@ -107,7 +128,9 @@ const ReservationTab = () => {
     getListByMember(loginState.email)
       .then(async (data) => {
         setReservations(data);
-        const uniqueCmnos = [...new Set(data.map((r) => r.cmno).filter(Boolean))];
+        const uniqueCmnos = [
+          ...new Set(data.map((r) => r.cmno).filter(Boolean)),
+        ];
         const results = await Promise.allSettled(
           uniqueCmnos.map((cmno) => getCompanyOne(cmno)),
         );
@@ -125,7 +148,8 @@ const ReservationTab = () => {
   useEffect(() => {
     loadTossScript()
       .then(() => {
-        if (window.TossPayments) tossRef.current = window.TossPayments(TOSS_CLIENT_KEY);
+        if (window.TossPayments)
+          tossRef.current = window.TossPayments(TOSS_CLIENT_KEY);
       })
       .catch((e) => console.error("Toss 스크립트 로드 실패:", e));
   }, []);
@@ -139,11 +163,17 @@ const ReservationTab = () => {
     setEditTarget(r);
     setModalMode("edit");
   };
-  const closeModal = () => { setModalMode(null); setEditTarget(null); };
+  const closeModal = () => {
+    setModalMode(null);
+    setEditTarget(null);
+  };
 
   const handleSubmit = (formValues) => {
     putOne({ ...editTarget, ...formValues })
-      .then(() => { closeModal(); setRefresh((r) => !r); })
+      .then(() => {
+        closeModal();
+        setRefresh((r) => !r);
+      })
       .catch((e) => {
         console.error(e);
         alert(e?.response?.data?.message || "예약 수정에 실패했습니다.");
@@ -158,7 +188,9 @@ const ReservationTab = () => {
   };
 
   // 승진 코드 추가 - PAID 예약은 결제내역으로 이동, 예약현황에서 제외
-  const displayReservations = reservations.filter((r) => r.payStatus !== "PAID");
+  const displayReservations = reservations.filter(
+    (r) => r.payStatus !== "PAID",
+  );
   // 승진 코드 추가 끝
 
   // 체크박스 (결제대기 = 미결제·결제취소 후 재결제 대상)
@@ -181,7 +213,10 @@ const ReservationTab = () => {
 
   // 묶음 결제
   const handleBulkPay = async () => {
-    if (selectedIds.size === 0) { alert("결제할 예약을 선택해주세요."); return; }
+    if (selectedIds.size === 0) {
+      alert("결제할 예약을 선택해주세요.");
+      return;
+    }
     if (paying) return;
     try {
       setPaying(true);
@@ -191,7 +226,9 @@ const ReservationTab = () => {
       }
       const ids = [...selectedIds];
       const { orderNumber, totalAmount } = await prepareBulkPayment(ids);
-      const selectedList = reservations.filter((r) => ids.includes(r.reservationId));
+      const selectedList = reservations.filter((r) =>
+        ids.includes(r.reservationId),
+      );
       const orderName =
         selectedList.length === 1
           ? `${companyMap[selectedList[0].cmno]?.name || "업체"} 예약`
@@ -253,7 +290,9 @@ const ReservationTab = () => {
     }
   };
 
-  const unpaidCount = displayReservations.filter((r) => isPaymentPending(r)).length;
+  const unpaidCount = displayReservations.filter((r) =>
+    isPaymentPending(r),
+  ).length;
   const totalUnpaid = displayReservations
     .filter((r) => isPaymentPending(r))
     .reduce((s, r) => s + (r.amount || 0), 0);
@@ -263,15 +302,22 @@ const ReservationTab = () => {
       {/* ── 상단 요약 + 액션 ── */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
         <div className="flex items-center gap-3 flex-wrap">
-          <span className="text-sm text-ink-muted">전체 {displayReservations.length}건</span>
+          <span className="text-sm text-ink-muted">
+            전체 {displayReservations.length}건
+          </span>
           {unpaidCount > 0 && (
-            <span className="text-sm font-medium text-amber-600">미결제 {unpaidCount}건</span>
+            <span className="text-sm font-medium text-amber-600">
+              미결제 {unpaidCount}건
+            </span>
           )}
           {payableIds.length > 0 && (
             <label className="flex items-center gap-1.5 text-xs text-ink-soft cursor-pointer select-none">
               <input
                 type="checkbox"
-                checked={selectedIds.size === payableIds.length && payableIds.length > 0}
+                checked={
+                  selectedIds.size === payableIds.length &&
+                  payableIds.length > 0
+                }
                 onChange={toggleSelectAll}
                 className="w-3.5 h-3.5 accent-brand"
               />
@@ -302,7 +348,9 @@ const ReservationTab = () => {
         <div className="flex gap-4 mb-5 px-4 py-3 bg-white rounded-xl border border-line text-xs text-ink-muted">
           <span>
             미결제{" "}
-            <strong className="text-amber-600 text-sm">{totalUnpaid.toLocaleString()}원</strong>
+            <strong className="text-amber-600 text-sm">
+              {totalUnpaid.toLocaleString()}원
+            </strong>
           </span>
         </div>
       )}
@@ -315,74 +363,104 @@ const ReservationTab = () => {
       )}
 
       {/* ── 카드 그리드 ── */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {displayReservations.map((r) => {
           const company = companyMap[r.cmno];
           const canPay = isPaymentPending(r);
           const payBadge = getPayBadge(r);
-          const catIcon = CATEGORY_ICON[company?.category] || "🏢";
           const catName = categoryLabel[company?.category] || "업체";
+          const mainImage = getReservationImage(company, r.optionName);
 
           return (
-            <div
+            <article
               key={r.reservationId}
-              className={`relative bg-white rounded-2xl border transition ${
+              className={`relative overflow-hidden rounded-2xl border bg-white transition ${
                 selectedIds.has(r.reservationId)
                   ? "border-brand shadow-sm"
-                  : "border-line hover:border-brand/40"
+                  : "border-line hover:border-brand hover:shadow-md"
               }`}
             >
-              {/* 체크박스 (결제 가능한 예약만) */}
-              {canPay && (
-                <input
-                  type="checkbox"
-                  checked={selectedIds.has(r.reservationId)}
-                  onChange={() => toggleSelect(r.reservationId)}
-                  className="absolute top-3.5 left-3.5 w-4 h-4 accent-brand z-10"
-                />
-              )}
-
-              {/* 카드 내용 */}
               <div
-                className="p-4 cursor-pointer"
+                className="relative cursor-pointer"
                 onClick={() => company && navigate(`/companies/read/${r.cmno}`)}
               >
-                {/* 상단: 카테고리 + 업체명 */}
-                <div className={`flex items-start gap-2 ${canPay ? "pl-6" : ""}`}>
-                  <span className="text-xl leading-none mt-0.5">{catIcon}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-brand-deep">{catName}</p>
-                    <p className="text-sm font-semibold text-ink truncate">
-                      {company?.name || `업체 #${r.cmno}`}
-                    </p>
+                {canPay && (
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(r.reservationId)}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      toggleSelect(r.reservationId);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="absolute left-3 top-3 z-10 h-5 w-5 accent-brand"
+                  />
+                )}
+
+                {mainImage ? (
+                  <img
+                    src={getCompanyImageUrl(mainImage)}
+                    alt={company?.name || `업체 #${r.cmno}`}
+                    className="h-44 w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-44 items-center justify-center bg-blush-50 text-sm text-ink-faint">
+                    대표 이미지 없음
                   </div>
-                  {/* 결제 상태 뱃지 */}
+                )}
+              </div>
+
+              <div
+                className="cursor-pointer p-4"
+                onClick={() => company && navigate(`/companies/read/${r.cmno}`)}
+              >
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <span className="rounded-full bg-blush-100 px-2.5 py-1 text-xs text-brand-deep">
+                    {catName}
+                  </span>
                   <span
-                    className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full font-medium ${payBadge.style}`}
+                    className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${payBadge.style}`}
                   >
                     {payBadge.label}
                   </span>
                 </div>
 
-                {/* 구분선 */}
-                <div className="my-3 border-t border-line" />
+                <p className="truncate text-base font-semibold text-ink">
+                  {company?.name || `업체 #${r.cmno}`}
+                </p>
 
-                {/* 중간: 옵션 + 날짜 */}
-                <div className="flex flex-col gap-1 text-xs text-ink-muted">
-                  <div className="flex justify-between">
-                    <span className="text-ink-soft">옵션</span>
-                    <span className="font-medium text-ink truncate max-w-[60%] text-right">
-                      {r.optionName || "미정"}
+                {r.optionName && (
+                  <p className="mt-1 truncate text-xs font-medium text-brand">
+                    예약 옵션: {r.optionName}
+                  </p>
+                )}
+
+                <div className="mt-3 flex flex-col gap-1 text-xs text-ink-muted">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-ink-soft">예약 날짜</span>
+                    <span className="font-medium text-ink">
+                      {r.weddingDate || "미정"}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-ink-soft">날짜</span>
-                    <span>{r.weddingDate || "미정"}</span>
-                  </div>
+                  {r.amount > 0 && r.paymentDeadline && (
+                    <div className="flex justify-between gap-2">
+                      <span className="text-ink-soft">결제 마감</span>
+                      <span
+                        className={
+                          isPaymentDeadlinePassed(r)
+                            ? "font-medium text-red-600"
+                            : "text-ink"
+                        }
+                      >
+                        {r.paymentDeadline}
+                        {isPaymentDeadlinePassed(r) ? " (지남)" : "까지"}
+                      </span>
+                    </div>
+                  )}
                   {r.amount > 0 && (
-                    <div className="flex justify-between">
+                    <div className="flex justify-between gap-2">
                       <span className="text-ink-soft">금액</span>
-                      <span className="font-semibold text-ink">
+                      <span className="text-sm font-semibold text-ink">
                         {Number(r.amount).toLocaleString()}원
                       </span>
                     </div>
@@ -390,9 +468,8 @@ const ReservationTab = () => {
                 </div>
               </div>
 
-              {/* 하단: 예약 상태 + 버튼 */}
               <div
-                className="flex items-center justify-between px-4 py-2.5 bg-surface rounded-b-2xl border-t border-line"
+                className="flex items-center justify-between rounded-b-2xl border-t border-line bg-surface px-4 py-2.5"
                 onClick={(e) => e.stopPropagation()}
               >
                 <span
@@ -401,16 +478,25 @@ const ReservationTab = () => {
                   {getReservationPhase(r)}
                 </span>
                 <div className="flex gap-1.5">
-                  {getReservationPhase(r) === "결제대기" && (
-                    <button
-                      type="button"
-                      onClick={() => handleSinglePay(r)}
-                      disabled={payingId === r.reservationId}
-                      className="h-7 px-3 rounded-full bg-brand text-[11px] font-medium text-white hover:bg-brand-deep transition disabled:opacity-50"
-                    >
-                      {payingId === r.reservationId ? "결제 중..." : "결제"}
-                    </button>
-                  )}
+                  {/* 재원 추가 - 결제대기인데 마감일이 지난 경우: 결제 버튼 대신 안내만 표시 */}
+                  {getReservationPhase(r) === "결제대기" &&
+                    isPaymentDeadlinePassed(r) && (
+                      <span className="text-[11px] text-red-600 font-medium">
+                        결제 기한이 지났어요. 업체에 문의해주세요.
+                      </span>
+                    )}
+                  {/* 재원 추가 끝 */}
+                  {getReservationPhase(r) === "결제대기" &&
+                    !isPaymentDeadlinePassed(r) && (
+                      <button
+                        type="button"
+                        onClick={() => handleSinglePay(r)}
+                        disabled={payingId === r.reservationId}
+                        className="h-7 px-3 rounded-full bg-brand text-[11px] font-medium text-white hover:bg-brand-deep transition disabled:opacity-50"
+                      >
+                        {payingId === r.reservationId ? "결제 중..." : "결제"}
+                      </button>
+                    )}
                   {canEditReservation(r) && (
                     <button
                       type="button"
@@ -420,7 +506,8 @@ const ReservationTab = () => {
                       일정변경
                     </button>
                   )}
-                  {getReservationPhase(r) === "결제대기" && (
+                  {(canEditReservation(r) ||
+                    getReservationPhase(r) === "결제대기") && (
                     <button
                       type="button"
                       onClick={() => handleDelete(r.reservationId)}
@@ -431,7 +518,7 @@ const ReservationTab = () => {
                   )}
                 </div>
               </div>
-            </div>
+            </article>
           );
         })}
       </div>
