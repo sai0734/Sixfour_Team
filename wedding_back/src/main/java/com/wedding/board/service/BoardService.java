@@ -26,4 +26,7 @@ public interface BoardService {
 
     List<BoardDTO> listBest();
 
+    // 게시글 AI 한줄요약 - 이미 생성된 게 있으면 그대로 반환(캐시), 없으면 새로 생성해서 저장
+    String getAiSummary(Long boardId);
+
 }

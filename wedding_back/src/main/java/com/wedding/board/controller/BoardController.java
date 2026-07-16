@@ -63,6 +63,13 @@ public class BoardController {
         return service.get(boardId);
     }
 
+    // AI 한줄요약 - 캐시된 게 있으면 그대로, 없으면 생성해서 반환 (로그인 불필요, 조회와 동일한 공개 API)
+    @GetMapping("/{boardId}/summary")
+    public Map<String, String> getAiSummary(@PathVariable(name = "boardId") Long boardId) {
+
+        return Map.of("aiSummary", service.getAiSummary(boardId));
+    }
+
     @PreAuthorize("hasAnyRole('USER')")
     @PostMapping("/")
     public Map<String, Long> register(@RequestBody BoardDTO boardDTO, Principal principal) {

@@ -34,7 +34,7 @@ public class Board {
     @Lob
     private String content;
 
-    // AI 3줄 요약 - AI 기능 붙일 때 채워짐, 지금은 필드만
+    // AI 한줄요약 (BoardServiceImpl.getAiSummary에서 생성/캐시)
     @Lob
     private String aiSummary;
 
