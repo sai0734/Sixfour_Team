@@ -10,9 +10,9 @@ import {
   preparePayment,
   cancelPayment,
 } from "../../api/reservationApi";
-import { getOne as getCompanyOne } from "../../api/companyApi";
+import { getOne as getCompanyOne, getCompanyImageUrl } from "../../api/companyApi";
 import { TOSS_CLIENT_KEY } from "../../api/tossConfig";
-import { categoryLabel } from "../../util/companyOptionBuilder";
+import { buildCompanyOptions, categoryLabel } from "../../util/companyOptionBuilder";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import ReservationFormModal from "./ReservationFormModal";
 
@@ -74,12 +74,19 @@ const PAY_STYLE = {
 };
 const PAY_LABEL = { NONE: "미결제", PAID: "결제완료", CANCELLED: "결제취소" };
 
-// 카테고리별 아이콘
-const CATEGORY_ICON = {
-  HALL: "🏛",
-  DRESS: "👗",
-  MAKEUP: "💄",
-  STUDIO: "📷",
+const getReservationImage = (company, optionName) => {
+  if (!company) return null;
+
+  if (optionName) {
+    const matchedOption = buildCompanyOptions(company).find(
+      (option) => option.label === optionName,
+    );
+    if (matchedOption?.image) {
+      return matchedOption.image;
+    }
+  }
+
+  return company.mainImage || company.uploadFileNames?.[0] || null;
 };
 
 // Toss 스크립트 singleton
@@ -356,83 +363,93 @@ const ReservationTab = () => {
       )}
 
       {/* ── 카드 그리드 ── */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {displayReservations.map((r) => {
           const company = companyMap[r.cmno];
           const canPay = isPaymentPending(r);
           const payBadge = getPayBadge(r);
-          const catIcon = CATEGORY_ICON[company?.category] || "🏢";
           const catName = categoryLabel[company?.category] || "업체";
+          const mainImage = getReservationImage(company, r.optionName);
 
           return (
-            <div
+            <article
               key={r.reservationId}
-              className={`relative bg-white rounded-2xl border transition ${
+              className={`relative overflow-hidden rounded-2xl border bg-white transition ${
                 selectedIds.has(r.reservationId)
                   ? "border-brand shadow-sm"
-                  : "border-line hover:border-brand/40"
+                  : "border-line hover:border-brand hover:shadow-md"
               }`}
             >
-              {/* 체크박스 (결제 가능한 예약만) */}
-              {canPay && (
-                <input
-                  type="checkbox"
-                  checked={selectedIds.has(r.reservationId)}
-                  onChange={() => toggleSelect(r.reservationId)}
-                  className="absolute top-3.5 left-3.5 w-4 h-4 accent-brand z-10"
-                />
-              )}
-
-              {/* 카드 내용 */}
               <div
-                className="p-4 cursor-pointer"
+                className="relative cursor-pointer"
                 onClick={() => company && navigate(`/companies/read/${r.cmno}`)}
               >
-                {/* 상단: 카테고리 + 업체명 */}
-                <div
-                  className={`flex items-start gap-2 ${canPay ? "pl-6" : ""}`}
-                >
-                  <span className="text-xl leading-none mt-0.5">{catIcon}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-brand-deep">
-                      {catName}
-                    </p>
-                    <p className="text-sm font-semibold text-ink truncate">
-                      {company?.name || `업체 #${r.cmno}`}
-                    </p>
+                {canPay && (
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(r.reservationId)}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      toggleSelect(r.reservationId);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="absolute left-3 top-3 z-10 h-5 w-5 accent-brand"
+                  />
+                )}
+
+                {mainImage ? (
+                  <img
+                    src={getCompanyImageUrl(mainImage)}
+                    alt={company?.name || `업체 #${r.cmno}`}
+                    className="h-44 w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-44 items-center justify-center bg-blush-50 text-sm text-ink-faint">
+                    대표 이미지 없음
                   </div>
-                  {/* 결제 상태 뱃지 */}
+                )}
+              </div>
+
+              <div
+                className="cursor-pointer p-4"
+                onClick={() => company && navigate(`/companies/read/${r.cmno}`)}
+              >
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <span className="rounded-full bg-blush-100 px-2.5 py-1 text-xs text-brand-deep">
+                    {catName}
+                  </span>
                   <span
-                    className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full font-medium ${payBadge.style}`}
+                    className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${payBadge.style}`}
                   >
                     {payBadge.label}
                   </span>
                 </div>
 
-                {/* 구분선 */}
-                <div className="my-3 border-t border-line" />
+                <p className="truncate text-base font-semibold text-ink">
+                  {company?.name || `업체 #${r.cmno}`}
+                </p>
 
-                {/* 중간: 옵션 + 날짜 */}
-                <div className="flex flex-col gap-1 text-xs text-ink-muted">
-                  <div className="flex justify-between">
-                    <span className="text-ink-soft">옵션</span>
-                    <span className="font-medium text-ink truncate max-w-[60%] text-right">
-                      {r.optionName || "미정"}
+                {r.optionName && (
+                  <p className="mt-1 truncate text-xs font-medium text-brand">
+                    예약 옵션: {r.optionName}
+                  </p>
+                )}
+
+                <div className="mt-3 flex flex-col gap-1 text-xs text-ink-muted">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-ink-soft">예약 날짜</span>
+                    <span className="font-medium text-ink">
+                      {r.weddingDate || "미정"}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-ink-soft">날짜</span>
-                    <span>{r.weddingDate || "미정"}</span>
-                  </div>
-                  {/* 재원 추가 - 결제 마감일 표시 (금액 있는 예약만 의미 있음) */}
                   {r.amount > 0 && r.paymentDeadline && (
-                    <div className="flex justify-between">
+                    <div className="flex justify-between gap-2">
                       <span className="text-ink-soft">결제 마감</span>
                       <span
                         className={
                           isPaymentDeadlinePassed(r)
                             ? "font-medium text-red-600"
-                            : ""
+                            : "text-ink"
                         }
                       >
                         {r.paymentDeadline}
@@ -440,11 +457,10 @@ const ReservationTab = () => {
                       </span>
                     </div>
                   )}
-                  {/* 재원 추가 끝 */}
                   {r.amount > 0 && (
-                    <div className="flex justify-between">
+                    <div className="flex justify-between gap-2">
                       <span className="text-ink-soft">금액</span>
-                      <span className="font-semibold text-ink">
+                      <span className="text-sm font-semibold text-ink">
                         {Number(r.amount).toLocaleString()}원
                       </span>
                     </div>
@@ -452,9 +468,8 @@ const ReservationTab = () => {
                 </div>
               </div>
 
-              {/* 하단: 예약 상태 + 버튼 */}
               <div
-                className="flex items-center justify-between px-4 py-2.5 bg-surface rounded-b-2xl border-t border-line"
+                className="flex items-center justify-between rounded-b-2xl border-t border-line bg-surface px-4 py-2.5"
                 onClick={(e) => e.stopPropagation()}
               >
                 <span
@@ -491,7 +506,8 @@ const ReservationTab = () => {
                       일정변경
                     </button>
                   )}
-                  {getReservationPhase(r) === "결제대기" && (
+                  {(canEditReservation(r) ||
+                    getReservationPhase(r) === "결제대기") && (
                     <button
                       type="button"
                       onClick={() => handleDelete(r.reservationId)}
@@ -502,7 +518,7 @@ const ReservationTab = () => {
                   )}
                 </div>
               </div>
-            </div>
+            </article>
           );
         })}
       </div>
