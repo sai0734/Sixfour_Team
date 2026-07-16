@@ -25,4 +25,9 @@ public interface QnaRepository extends JpaRepository<Qna, Long> {
     @Query("select q from Qna q where q.qno = :qno and q.product.pno = :pno")
     Optional<Qna> findOneByProduct(@Param("qno") Long qno, @Param("pno") Long pno);
 
+    // 관리자 대시보드용 집계 - 답변 없는 질문 개수 (질문인데 자신을 참조하는 답변 row가 없는 것)
+    @Query("select count(q) from Qna q where q.qna is null " +
+            "and not exists (select 1 from Qna a where a.qna = q)")
+    long countUnansweredQuestions();
+
 }

@@ -48,6 +48,10 @@ public interface OrderRepository extends JpaRepository<Orders, Long> {
 
     long countByOrderStatusNotAndRegDateAfter(String excludedStatus, java.time.LocalDateTime dateTime);
 
+    // 관리자 대시보드용 집계 - 환불/교환 요청 접수됐는데 아직 처리 안 된 주문
+    @Query("select count(o) from Orders o where o.orderStatus in ('EXCHANGE_REQUESTED', 'REFUND_REQUESTED')")
+    long countPendingExchangeOrRefund();
+
     // 월별 매출 추이 + 전월대비 비교 계산용 원본 데이터 (날짜, 금액). 집계는 서비스단에서 월별로 묶음.
     @Query("select o.regDate, o.totalPrice from Orders o " +
             "where o.orderStatus not in ('PENDING', 'REFUNDED', 'CANCELLED') and o.regDate >= :since")
