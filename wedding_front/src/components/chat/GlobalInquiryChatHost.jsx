@@ -111,6 +111,7 @@ const GlobalInquiryChatHost = () => {
           companyName={
             activeSession ? activeSession.companyName : draftInquiry.companyName
           }
+          cmno={activeSession ? activeSession.cmno : draftInquiry.cmno}
           roomId={activeSession ? activeSession.roomId : null}
           onMinimize={minimizeInquiry}
           onLeave={

@@ -21,4 +21,7 @@ public interface InquiryService {
 
     // 회원 화면 — 내가 연 모든 문의방 목록 (안읽음 뱃지 폴링용)
     List<InquiryRoomDTO> listRoomsByMember(String callerEmail);
+
+    // 채팅창을 열어둔 채로 실시간 메시지를 받았을 때 — 목록을 다시 안 불러오고 읽음 시각만 갱신
+    void markRead(Long roomId, String callerEmail);
 }
