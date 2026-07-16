@@ -22,7 +22,15 @@ import com.wedding.company.domain.MakeupPackage;
 import com.wedding.company.domain.MakeupPackageType;
 import com.wedding.company.domain.MealType;
 import com.wedding.company.domain.StudioDetail;
-import com.wedding.company.repository.*;
+import com.wedding.company.repository.CompanyPackageRepository;
+import com.wedding.company.repository.CompanyRepository;
+import com.wedding.company.repository.DressDetailRepository;
+import com.wedding.company.repository.DressItemRepository;
+import com.wedding.company.repository.HallDetailRepository;
+import com.wedding.company.repository.HallItemRepository;
+import com.wedding.company.repository.MakeupDetailRepository;
+import com.wedding.company.repository.MakeupPackageRepository;
+import com.wedding.company.repository.StudioDetailRepository;
 import com.wedding.faq.domain.Faq;
 import com.wedding.faq.repository.FaqRepository;
 import com.wedding.member.domain.Member;
@@ -47,12 +55,14 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.boot.ApplicationArguments;
@@ -748,6 +758,7 @@ public class DataInitializer implements ApplicationRunner {
       for (Map<String, Object> o : orders) {
         saveOrderFromJson(o, orderItemMap);
       }
+      spreadOrderRegDates();
     }
 
     List<Map<String, Object>> reviews = castList(root.get("reviews"));
@@ -768,6 +779,69 @@ public class DataInitializer implements ApplicationRunner {
 
     log.info("Commerce dummy seeded. orders={}, reviews={}, qnas={}",
             orderRepository.count(), reviewRepository.count(), qnaRepository.count());
+  }
+
+  // commerce_dummy.json 주문은 JPA Auditing(@CreatedDate) 때문에 전부 "기동 시각"으로 regdate가
+  // 찍혀서, 월별 매출 추이 대시보드가 이번 달에만 몰리고 나머지 달은 텅 비어버림.
+  // 그래서 삽입 직후 raw SQL로 최근 6개월(이번 달 포함)에 걸쳐 무작위로 재분배함.
+  // 최근 달일수록 주문이 더 많도록 가중치를 둬서(성장 추세) 실제 서비스처럼 보이게 함.
+  private void spreadOrderRegDates() {
+    List<Long> orderIds = jdbcTemplate.queryForList("select ono from tbl_orders", Long.class);
+    if (orderIds.isEmpty()) {
+      return;
+    }
+
+    int monthsBack = 5; // 이번 달 포함 총 6개월
+    YearMonth currentMonth = YearMonth.now();
+    List<YearMonth> months = new ArrayList<>();
+    for (int i = monthsBack; i >= 0; i--) {
+      months.add(currentMonth.minusMonths(i));
+    }
+
+    // 오래된 달일수록 가중치 낮게, 최근 달일수록 높게 (1,2,3,4,5,6)
+    List<Integer> weights = new ArrayList<>();
+    for (int i = 1; i <= months.size(); i++) {
+      weights.add(i);
+    }
+    int totalWeight = weights.stream().mapToInt(Integer::intValue).sum();
+
+    Random random = new Random();
+
+    for (Long ono : orderIds) {
+      YearMonth month = pickWeightedMonth(months, weights, totalWeight, random);
+      LocalDateTime regDate = randomDateTimeInMonth(month, random);
+
+      jdbcTemplate.update("update tbl_orders set regdate = ? where ono = ?", regDate, ono);
+    }
+
+    log.info("Spread {} order regdate values across {} months ({} ~ {}).",
+            orderIds.size(), months.size(), months.get(0), months.get(months.size() - 1));
+  }
+
+  private YearMonth pickWeightedMonth(List<YearMonth> months, List<Integer> weights, int totalWeight, Random random) {
+    int roll = random.nextInt(totalWeight);
+    int cumulative = 0;
+    for (int i = 0; i < months.size(); i++) {
+      cumulative += weights.get(i);
+      if (roll < cumulative) {
+        return months.get(i);
+      }
+    }
+    return months.get(months.size() - 1);
+  }
+
+  // 해당 월 안에서 무작위 날짜/시각 생성. 이번 달이면 미래 날짜가 나오지 않도록 오늘까지로 제한.
+  private LocalDateTime randomDateTimeInMonth(YearMonth month, Random random) {
+    int lastDay = month.equals(YearMonth.now())
+            ? LocalDate.now().getDayOfMonth()
+            : month.lengthOfMonth();
+
+    int day = 1 + random.nextInt(lastDay);
+    int hour = random.nextInt(24);
+    int minute = random.nextInt(60);
+    int second = random.nextInt(60);
+
+    return month.atDay(day).atTime(hour, minute, second);
   }
 
   // commerce_dummy.json orders[] 1건 → tbl_orders, tbl_order_item 저장 및 OrderItem 맵 등록

@@ -26,4 +26,7 @@ public interface InquiryRoomRepository extends JpaRepository<InquiryRoom, Long> 
     @Query("SELECT r FROM InquiryRoom r WHERE r.memberEmail = :memberEmail ORDER BY r.lastMessageAt DESC")
     List<InquiryRoom> findByMemberEmailOrderByLastMessageAtDesc(@Param("memberEmail") String memberEmail);
 
+    // 관리자 대시보드용 집계
+    long countByStatus(com.wedding.inquiry.domain.InquiryRoomStatus status);
+
 }
