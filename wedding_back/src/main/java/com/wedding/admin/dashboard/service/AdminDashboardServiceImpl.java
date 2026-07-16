@@ -9,6 +9,7 @@ import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO.MonthlyRevenuePo
 import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO.OrderStats;
 import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO.ProductStats;
 import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO.ReservationStats;
+import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO.TodoBreakdownItem;
 import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO.TodoItem;
 import com.wedding.board.repository.BoardRepository;
 import com.wedding.checkout.repository.OrderRepository;
@@ -188,12 +189,6 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
                 .build();
     }
 
-    // 정지기간 만료됐는데 아직 BLACKLIST 상태로 남아있는 회원 - 관리자가 수동으로 해제해줘야 하는 항목
-    // (자동 해제 배치가 따로 없어서, 매일 대시보드에서 확인하고 처리하는 방식 전제)
-    private long countExpiredSuspensions() {
-        return memberRepository.findExpiredSuspensions(LocalDateTime.now()).size();
-    }
-
     // "오늘의 할 일"은 관리자가 실제로 상태를 바꿔줘야 하는 항목만 넣음 (정보성 통계는 다른 패널에서 확인).
     // 예약 확정(manager-confirm)/문의 응대는 업체 매니저 화면에서 처리하는 영역이라 admin 할 일에서는 제외.
     // 0건이어도 항목 자체는 항상 보여줌 (몇 개나 있는지 목록으로 파악 가능하도록).
@@ -201,33 +196,29 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
 
         List<TodoItem> todos = new ArrayList<>();
 
-        long expiredSuspensions = countExpiredSuspensions();
+        // 결제완료/배송준비/교환신청/환불신청 대기 주문을 카드 하나로 묶음 (모두 /admin/orders에서 처리)
+        long paidCount = orderStats.getPaid();
+        long shippingReadyCount = orderRepository.countByOrderStatus("SHIPPING_READY");
+        long exchangeRequestedCount = orderRepository.countByOrderStatus("EXCHANGE_REQUESTED");
+        long refundRequestedCount = orderRepository.countByOrderStatus("REFUND_REQUESTED");
+        long orderActionTotal = paidCount + shippingReadyCount + exchangeRequestedCount + refundRequestedCount;
         todos.add(TodoItem.builder()
-                .label("정지 기간이 끝났는데 아직 해제 안 된 회원")
-                .count(expiredSuspensions)
-                .tone(expiredSuspensions > 0 ? "warning" : "info")
-                .link("/admin/members")
-                .build());
-
-        todos.add(TodoItem.builder()
-                .label("결제 완료, 발송 대기 중인 주문")
-                .count(orderStats.getPaid())
-                .tone(orderStats.getPaid() > 0 ? "warning" : "info")
+                .label("처리 필요 주문")
+                .count(orderActionTotal)
+                .tone(orderActionTotal > 0 ? "danger" : "info")
                 .link("/admin/orders")
-                .build());
-
-        long pendingExchangeOrRefund = orderRepository.countPendingExchangeOrRefund();
-        todos.add(TodoItem.builder()
-                .label("환불/교환 요청 대기 중인 주문")
-                .count(pendingExchangeOrRefund)
-                .tone(pendingExchangeOrRefund > 0 ? "danger" : "info")
-                .link("/admin/orders")
+                .breakdown(List.of(
+                        TodoBreakdownItem.builder().label("결제완료").count(paidCount).build(),
+                        TodoBreakdownItem.builder().label("배송준비").count(shippingReadyCount).build(),
+                        TodoBreakdownItem.builder().label("교환신청").count(exchangeRequestedCount).build(),
+                        TodoBreakdownItem.builder().label("환불신청").count(refundRequestedCount).build()
+                ))
                 .build());
 
         todos.add(TodoItem.builder()
                 .label("재고 부족 상품 (답례품 등)")
                 .count(productStats.getLowStockCount())
-                .tone(productStats.getLowStockCount() > 0 ? "warning" : "info")
+                .tone(productStats.getLowStockCount() > 0 ? "danger" : "info")
                 .link("/admin/products")
                 .build());
 
@@ -235,8 +226,8 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
         todos.add(TodoItem.builder()
                 .label("답변 안 된 상품 Q&A")
                 .count(unansweredQuestions)
-                .tone("info")
-                .link("/admin/products")
+                .tone(unansweredQuestions > 0 ? "danger" : "info")
+                .link("/admin/qna")
                 .build());
 
         return todos;

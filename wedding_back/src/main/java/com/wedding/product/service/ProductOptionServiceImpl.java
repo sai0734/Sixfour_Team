@@ -4,7 +4,6 @@ import com.wedding.product.domain.Product;
 import com.wedding.product.domain.ProductOption;
 import com.wedding.product.dto.ProductOptionDTO;
 import com.wedding.product.repository.ProductOptionRepository;
-import com.wedding.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
@@ -20,8 +19,6 @@ import java.util.stream.Collectors;
 public class ProductOptionServiceImpl implements ProductOptionService{
 
     private final ProductOptionRepository productOptionRepository;
-
-    private final ProductRepository productRepository;
 
     // 상품 옵션 리스트 조회
     @Override
@@ -86,28 +83,6 @@ public class ProductOptionServiceImpl implements ProductOptionService{
         productOptionRepository.deleteById(pono);
 
         return pono;
-    }
-
-    // 옵션 선택 및 수량으로 값 매기기
-    @Override
-    public int calculatePrice(Long pno, Long pono, int qty) {
-
-        Product product = productRepository.findById(pno)
-                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 상품입니다. pno=" + pno));
-
-        int extraPrice = 0;
-
-        if (pono != null) {
-            ProductOption productOption = productOptionRepository.findOption(pono, pno)
-                    .orElseThrow(() ->new NoSuchElementException("옵션이 존재하지 않습니다. pono=" + pono));
-
-            extraPrice = productOption.getExtraPrice();
-        }
-
-        int result = (product.getPrice() + extraPrice) * qty;
-
-        return result;
-
     }
 
 }

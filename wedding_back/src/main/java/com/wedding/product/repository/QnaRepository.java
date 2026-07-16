@@ -1,6 +1,8 @@
 package com.wedding.product.repository;
 
 import com.wedding.product.domain.Qna;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -29,5 +31,13 @@ public interface QnaRepository extends JpaRepository<Qna, Long> {
     @Query("select count(q) from Qna q where q.qna is null " +
             "and not exists (select 1 from Qna a where a.qna = q)")
     long countUnansweredQuestions();
+
+    // 관리자용 - 답변 없는 질문 목록 (상품/작성자 정보 즉시 로딩)
+    @EntityGraph(attributePaths = {"member", "product"})
+    @Query(value = "select q from Qna q where q.qna is null " +
+            "and not exists (select 1 from Qna a where a.qna = q)",
+            countQuery = "select count(q) from Qna q where q.qna is null " +
+                    "and not exists (select 1 from Qna a where a.qna = q)")
+    Page<Qna> findUnansweredQuestions(Pageable pageable);
 
 }

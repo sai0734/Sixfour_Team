@@ -74,17 +74,4 @@ public class ProductOptionController {
         return Map.of("pono", result);
     }
 
-    // 옵션 선택 및 수량으로 값 매기기
-    @GetMapping("/{pno}/options/price")
-    public Map<String, Integer> calculatePrice(@PathVariable Long pno,
-                                               @RequestParam(required = false) Long pono,
-                                               @RequestParam int qty) {
-
-        log.info("ProductOptionController_calculatePrice 실행~~~~~~~~");
-
-        int price = productOptionService.calculatePrice(pno, pono, qty);
-
-        return Map.of("price", price);
-    }
-
 }

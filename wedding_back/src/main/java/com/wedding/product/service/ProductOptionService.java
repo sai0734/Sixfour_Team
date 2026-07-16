@@ -19,7 +19,4 @@ public interface ProductOptionService {
 
     // 상품 옵션 삭제
     Long remove(Long pno, Long pono);
-
-    // 옵션 선택 및 수량으로 값 매기긱
-    int calculatePrice(Long pno, Long pono, int qty);
 }

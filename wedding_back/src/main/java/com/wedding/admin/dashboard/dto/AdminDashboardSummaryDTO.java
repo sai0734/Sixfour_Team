@@ -131,5 +131,16 @@ public class AdminDashboardSummaryDTO {
         private String tone;
         // 프론트 라우팅용 (예: "/admin/orders?status=PAID")
         private String link;
+        // 카드 하나에 여러 세부 항목을 같이 보여줄 때 사용 (없으면 null)
+        private List<TodoBreakdownItem> breakdown;
+    }
+
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class TodoBreakdownItem {
+        private String label;
+        private long count;
     }
 }
