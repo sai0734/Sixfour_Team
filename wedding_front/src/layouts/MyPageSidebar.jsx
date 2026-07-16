@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import useManagedCompany from "../hooks/useManagedCompany";
 import { getCompanyInquiryRooms } from "../api/companyInquiryApi";
+import { subscribeInquiryTopic } from "../util/inquiryWsClient";
 
 const MENU_GROUPS = [
   {
@@ -14,9 +15,6 @@ const MENU_GROUPS = [
   },
 ];
 
-// 문의함(ManagerInquiryInbox)의 5초 폴링보다는 느슨하게 - 사이드바는 안읽음 유무만 확인하면 됨
-const MANAGER_UNREAD_POLL_INTERVAL_MS = 15000;
-
 const MyPageSidebar = () => {
   const location = useLocation();
   const activeRef = useRef(null);
@@ -24,7 +22,10 @@ const MyPageSidebar = () => {
   const { isManager, company } = useManagedCompany({
     enabled: Boolean(loginState.email),
   });
-  const [hasUnreadInquiry, setHasUnreadInquiry] = useState(false);
+  // 수정시작
+  // 방 하나하나의 안읽음 여부를 맵으로 들고 있다가, 하나라도 true면 뱃지 표시
+  const [roomUnreadMap, setRoomUnreadMap] = useState({});
+  // 수정끝
 
   useEffect(() => {
     activeRef.current?.scrollIntoView({
@@ -34,28 +35,48 @@ const MyPageSidebar = () => {
     });
   }, [location.pathname]);
 
-  // 담당 업체에 안읽은 문의가 있는지 주기적으로 확인해서 "업체 문의" 메뉴에 표시
+  // 최초 1회 REST로 현재 상태를 불러오고, 이후 갱신은 WebSocket 구독으로 받는다
   useEffect(() => {
     if (!isManager || !company?.cmno) {
-      setHasUnreadInquiry(false);
+      setRoomUnreadMap({});
       return;
     }
 
-    const checkUnread = async () => {
+    let cancelled = false;
+
+    const loadInitial = async () => {
       try {
         const rooms = await getCompanyInquiryRooms(company.cmno);
-        setHasUnreadInquiry(
-          Array.isArray(rooms) && rooms.some((room) => room.unread),
-        );
+        if (cancelled) return;
+
+        const map = {};
+        (Array.isArray(rooms) ? rooms : []).forEach((room) => {
+          map[room.roomId] = Boolean(room.unread);
+        });
+        setRoomUnreadMap(map);
       } catch (err) {
         console.error("업체 문의 안읽음 상태 조회 실패:", err);
       }
     };
+    loadInitial();
 
-    checkUnread();
-    const timer = setInterval(checkUnread, MANAGER_UNREAD_POLL_INTERVAL_MS);
-    return () => clearInterval(timer);
+    const unsubscribe = subscribeInquiryTopic(
+      `/topic/inquiries/company/${company.cmno}`,
+      (roomUpdate) => {
+        setRoomUnreadMap((prev) => ({
+          ...prev,
+          [roomUpdate.roomId]: Boolean(roomUpdate.unread),
+        }));
+      },
+    );
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
   }, [isManager, company?.cmno]);
+
+  const hasUnreadInquiry = Object.values(roomUnreadMap).some(Boolean);
 
   const isActivePath = (path) => {
     if (path === "/mypage") return location.pathname === "/mypage";

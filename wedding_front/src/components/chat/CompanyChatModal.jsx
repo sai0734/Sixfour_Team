@@ -4,8 +4,7 @@ import {
   getInquiryMessages,
   sendInquiryMessage,
 } from "../../api/companyInquiryApi";
-
-const POLL_INTERVAL_MS = 3000;
+import { subscribeInquiryTopic } from "../../util/inquiryWsClient";
 
 // 날짜 구분선 표시용 — 메시지 목록에서 날짜가 바뀔 때 사이에 넣는다
 const formatDateSeparator = (regDate) => {
@@ -55,7 +54,7 @@ const CompanyChatModal = ({
     onMinimizeRef.current = onMinimize;
   }, [onMinimize]);
 
-  // 메시지 목록 조회
+  // 메시지 목록 조회 (최초 진입 시 과거 대화 이력을 불러오는 용도 - 실시간 수신은 WS가 담당)
   const loadMessages = useCallback(async () => {
     if (!roomId) return;
 
@@ -69,8 +68,7 @@ const CompanyChatModal = ({
     }
   }, [roomId]);
 
-  // 모달 열릴 때 메시지 로드 + 폴링 시작 - 탭이 백그라운드면 폴링 요청은 건너뛰고,
-  // 다시 포그라운드로 돌아오면 즉시 한 번 갱신
+  // 모달 열릴 때 과거 이력을 한 번 불러오고, 이후 새 메시지는 WebSocket 구독으로 실시간 수신.
   // roomId가 아직 없는 draft 상태(방 생성 전)면 불러올 게 없으니 로딩만 끄고 대기
   useEffect(() => {
     if (!roomId) {
@@ -81,22 +79,20 @@ const CompanyChatModal = ({
     setLoading(true);
     loadMessages();
 
-    const timer = setInterval(() => {
-      if (document.hidden) return;
-      loadMessages();
-    }, POLL_INTERVAL_MS);
+    const unsubscribe = subscribeInquiryTopic(
+      `/topic/inquiries/room/${roomId}`,
+      (incomingMessage) => {
+        setMessages((prev) => {
+          // 같은 메시지가 중복으로 들어오는 경우 방지 (재연결 등으로 인한 안전장치)
+          if (prev.some((m) => m.messageId === incomingMessage.messageId)) {
+            return prev;
+          }
+          return [...prev, incomingMessage];
+        });
+      },
+    );
 
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        loadMessages();
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      clearInterval(timer);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
+    return unsubscribe;
   }, [roomId, loadMessages]);
 
   // 새 메시지 오면 맨 아래로 스크롤
@@ -131,9 +127,10 @@ const CompanyChatModal = ({
         await onFirstSend(text);
         setInput("");
       } else {
+        // 전송 성공하면 서버가 같은 방 토픽으로 브로드캐스트해줘서 이 화면에도 자동 반영되므로,
+        // 예전처럼 loadMessages()를 다시 부를 필요가 없어짐
         await sendInquiryMessage(roomId, text);
         setInput("");
-        await loadMessages();
       }
     } catch (err) {
       console.error("메시지 전송 실패:", err);

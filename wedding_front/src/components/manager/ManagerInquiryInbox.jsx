@@ -4,8 +4,7 @@ import { getCompanyInquiryRooms } from "../../api/companyInquiryApi";
 import CompanyChatModal from "../chat/CompanyChatModal";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import useManagedCompany from "../../hooks/useManagedCompany";
-
-const ROOM_POLL_INTERVAL_MS = 5000;
+import { subscribeInquiryTopic } from "../../util/inquiryWsClient";
 
 // 날짜 포맷 — 목록에서 마지막 대화 시각 표시용
 const formatLastMessageAt = (value) => {
@@ -34,6 +33,23 @@ const formatLastMessageAt = (value) => {
   });
 };
 
+// WS로 방 하나의 갱신 정보가 오면, 이미 목록에 있으면 덮어쓰고 없으면 새로 추가한 뒤
+// 최근 대화순으로 다시 정렬한다
+const mergeRoomUpdate = (prev, update) => {
+  const exists = prev.some((room) => room.roomId === update.roomId);
+  const next = exists
+    ? prev.map((room) =>
+        room.roomId === update.roomId ? { ...room, ...update } : room,
+      )
+    : [update, ...prev];
+
+  return next.slice().sort((a, b) => {
+    const aTime = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
+    const bTime = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
+    return bTime - aTime;
+  });
+};
+
 const ManagerInquiryInbox = () => {
   const navigate = useNavigate();
   const { loginState } = useCustomLogin();
@@ -45,7 +61,7 @@ const ManagerInquiryInbox = () => {
   const [roomsLoading, setRoomsLoading] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
 
-  // 담당 업체의 문의방 목록 조회 + 폴링
+  // 담당 업체의 문의방 목록 조회 (최초 1회 - 이후 갱신은 WebSocket으로 받음)
   const loadRooms = useCallback(async () => {
     if (!company?.cmno) return;
 
@@ -64,8 +80,15 @@ const ManagerInquiryInbox = () => {
     if (!company?.cmno) return;
 
     loadRooms();
-    const timer = setInterval(loadRooms, ROOM_POLL_INTERVAL_MS);
-    return () => clearInterval(timer);
+
+    const unsubscribe = subscribeInquiryTopic(
+      `/topic/inquiries/company/${company.cmno}`,
+      (roomUpdate) => {
+        setRooms((prev) => mergeRoomUpdate(prev, roomUpdate));
+      },
+    );
+
+    return unsubscribe;
   }, [company?.cmno, loadRooms]);
 
   if (!loginState.email) {
