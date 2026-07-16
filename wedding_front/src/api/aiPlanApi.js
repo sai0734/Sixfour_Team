@@ -15,3 +15,10 @@ export const getDetailRecommendations = async (params) => {
 
   return res.data;
 };
+
+// 외부 AI 호출이라 비용이 드는 작업 - POST로 바디에 담아 보냄
+export const getAiRecommendations = async (payload) => {
+  const res = await axios.post(`${prefix}/ai`, payload);
+
+  return res.data;
+};

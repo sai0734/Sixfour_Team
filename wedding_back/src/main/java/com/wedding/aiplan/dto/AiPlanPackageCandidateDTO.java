@@ -40,7 +40,12 @@ public class AiPlanPackageCandidateDTO {
     private String reason;
 
     // "PACKAGE"(기존 CompanyPackage 그대로) / "INDIVIDUAL_COMBO"(카테고리별 개별 업체를 조합)
-    // 패키지 취소 이력 때문에 패키지에 딱 맞는 게 없으면 개별 조합으로 대체됨 - 프론트에서
-    // "패키지 할인 적용" 배지 vs "개별로 모았어요" 문구 구분할 때 씀
+    // / "AI_COMBO"(5단계 - AI가 자유 텍스트/취향까지 반영해서 고름)
     private String sourceType;
+
+    // AI_COMBO일 때만 채워짐 - 카테고리별로 AI가 그 업체를 고른 이유(한 문장)
+    private String hallReason;
+    private String studioReason;
+    private String dressReason;
+    private String makeupReason;
 }
