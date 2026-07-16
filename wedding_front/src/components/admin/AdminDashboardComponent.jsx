@@ -32,14 +32,6 @@ const categoryColors = {
   STUDIO: "bg-blue-500",
 };
 
-const memberStatusLabel = {
-  active: "정상",
-  dormant: "휴면",
-  blacklist: "정지",
-  withdrawn: "탈퇴",
-};
-
-const MEMBER_STATUS_COLORS = ["#10b981", "#94a3b8", "#ef4444", "#64748b"];
 const ORDER_STATUS_COLORS = ["#3b82f6", "#f59e0b", "#a855f7"];
 
 // 오늘 발생량에 따른 카드 그라데이션 - 1건 이상이면 빨강, 0건이면 노랑
@@ -143,15 +135,6 @@ const AdminDashboardComponent = () => {
     name: label,
     개수: companyStats.categoryCounts[category] || 0,
   }));
-
-  const memberChartData = summary
-    ? [
-        { name: memberStatusLabel.active, value: summary.memberStats.active },
-        { name: memberStatusLabel.dormant, value: summary.memberStats.dormant },
-        { name: memberStatusLabel.blacklist, value: summary.memberStats.blacklist },
-        { name: memberStatusLabel.withdrawn, value: summary.memberStats.withdrawn },
-      ].filter((row) => row.value > 0)
-    : [];
 
   const orderChartData = summary
     ? [
@@ -276,51 +259,31 @@ const AdminDashboardComponent = () => {
         )}
       </Panel>
 
-      {/* ===== 회원 / 주문 차트 ===== */}
-      <div className="mb-5 grid gap-4 md:grid-cols-2">
-        <Panel title="회원 상태 분포" badge="전체 회원 기준">
-          {memberChartData.length ? (
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie data={memberChartData} dataKey="value" nameKey="name" outerRadius={80} label>
-                  {memberChartData.map((entry, index) => (
-                    <Cell key={entry.name} fill={MEMBER_STATUS_COLORS[index % MEMBER_STATUS_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <EmptyText>{summaryFetching ? "불러오는 중..." : "회원 데이터가 없습니다."}</EmptyText>
-          )}
-        </Panel>
-
-        <Panel title="주문 상태 현황" badge="PENDING 제외">
-          {orderChartData.some((row) => row["건수"] > 0) ? (
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie
-                  data={orderChartData}
-                  dataKey="건수"
-                  nameKey="name"
-                  innerRadius={55}
-                  outerRadius={80}
-                  paddingAngle={3}
-                >
-                  {orderChartData.map((entry, index) => (
-                    <Cell key={entry.name} fill={ORDER_STATUS_COLORS[index % ORDER_STATUS_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <EmptyText>{summaryFetching ? "불러오는 중..." : "주문 데이터가 없습니다."}</EmptyText>
-          )}
-        </Panel>
-      </div>
+      {/* ===== 주문 차트 ===== */}
+      <Panel title="주문 상태 현황" badge="PENDING 제외">
+        {orderChartData.some((row) => row["건수"] > 0) ? (
+          <ResponsiveContainer width="100%" height={220}>
+            <PieChart>
+              <Pie
+                data={orderChartData}
+                dataKey="건수"
+                nameKey="name"
+                innerRadius={55}
+                outerRadius={80}
+                paddingAngle={3}
+              >
+                {orderChartData.map((entry, index) => (
+                  <Cell key={entry.name} fill={ORDER_STATUS_COLORS[index % ORDER_STATUS_COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        ) : (
+          <EmptyText>{summaryFetching ? "불러오는 중..." : "주문 데이터가 없습니다."}</EmptyText>
+        )}
+      </Panel>
 
       {/* ===== 예약 / 재고 요약 ===== */}
       <div className="mb-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
