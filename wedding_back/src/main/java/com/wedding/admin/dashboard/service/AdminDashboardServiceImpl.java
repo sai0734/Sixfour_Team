@@ -188,26 +188,12 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
                 .build();
     }
 
-    // 정지기간 만료됐는데 아직 BLACKLIST 상태로 남아있는 회원 - 관리자가 수동으로 해제해줘야 하는 항목
-    // (자동 해제 배치가 따로 없어서, 매일 대시보드에서 확인하고 처리하는 방식 전제)
-    private long countExpiredSuspensions() {
-        return memberRepository.findExpiredSuspensions(LocalDateTime.now()).size();
-    }
-
     // "오늘의 할 일"은 관리자가 실제로 상태를 바꿔줘야 하는 항목만 넣음 (정보성 통계는 다른 패널에서 확인).
     // 예약 확정(manager-confirm)/문의 응대는 업체 매니저 화면에서 처리하는 영역이라 admin 할 일에서는 제외.
     // 0건이어도 항목 자체는 항상 보여줌 (몇 개나 있는지 목록으로 파악 가능하도록).
     private List<TodoItem> buildTodos(OrderStats orderStats, ProductStats productStats) {
 
         List<TodoItem> todos = new ArrayList<>();
-
-        long expiredSuspensions = countExpiredSuspensions();
-        todos.add(TodoItem.builder()
-                .label("정지 기간이 끝났는데 아직 해제 안 된 회원")
-                .count(expiredSuspensions)
-                .tone(expiredSuspensions > 0 ? "warning" : "info")
-                .link("/admin/members")
-                .build());
 
         todos.add(TodoItem.builder()
                 .label("결제 완료, 발송 대기 중인 주문")
@@ -236,7 +222,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
                 .label("답변 안 된 상품 Q&A")
                 .count(unansweredQuestions)
                 .tone("info")
-                .link("/admin/products")
+                .link("/admin/qna")
                 .build());
 
         return todos;
