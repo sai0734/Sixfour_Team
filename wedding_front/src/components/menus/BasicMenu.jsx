@@ -90,9 +90,9 @@ const BasicMenu = () => {
             </Link>
           </li>
           <li>
-            <a href="#" onClick={closeMobileMenu}>
+            <Link to="/aiplan" onClick={closeMobileMenu}>
               AI 웨딩플랜
-            </a>
+            </Link>
           </li>
           <li>
             <Link to={companyListPath} onClick={closeMobileMenu}>
@@ -171,7 +171,9 @@ const BasicMenu = () => {
             </Link>
           </li>
           <li>
-            <a href="#">AI 웨딩플랜</a>
+            <Link to="/aiplan" className={isActive("/aiplan") ? "active" : ""}>
+              AI 웨딩플랜
+            </Link>
           </li>
           <li>
             <Link

@@ -4,6 +4,7 @@ import productRouter from "./productRouter";
 import authRouter from "./authRouter";
 import dressItemRouter from "./dressItemRouter";
 import companyRouter from "./companyRouter";
+import aiPlanRouter from "./aiPlanRouter";
 import AppShell from "../layouts/AppShell";
 import AdminOnly from "../components/common/AdminOnly";
 
@@ -57,6 +58,7 @@ const ManagerInquiryPage = lazy(
 const ManagerReservationPage = lazy(
   () => import("../pages/manager/ManagerReservationPage"),
 );
+const AiPlanRouter = lazy(() => import("../pages/aiplan/IndexPage"));
 
 const appRoutes = [
   {
@@ -104,6 +106,15 @@ const appRoutes = [
   {
     path: "companies",
     children: companyRouter(),
+  },
+  {
+    path: "aiplan",
+    element: (
+      <Suspense fallback={Loading}>
+        <AiPlanRouter />
+      </Suspense>
+    ),
+    children: aiPlanRouter(),
   },
   {
     path: "admin",
