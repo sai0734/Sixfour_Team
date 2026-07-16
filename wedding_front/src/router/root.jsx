@@ -20,6 +20,7 @@ const AdminMemberManage = lazy(() => import("../pages/admin/MemberManagePage"));
 const ChecklistListPage = lazy(() => import("../pages/checklist/ListPage"));
 const PrepHubPage = lazy(() => import("../pages/prep/HubPage"));
 const PrepDdayPage = lazy(() => import("../pages/prep/DdayPage"));
+const PrepAiDressPage = lazy(() => import("../pages/prep/AiDressPage"));
 const BudgetListPage = lazy(() => import("../pages/budget/ListPage"));
 const MyPageHub = lazy(() => import("../pages/mypage/HubPage"));
 const BoardHubPage = lazy(() => import("../pages/board/HubPage"));
@@ -44,7 +45,6 @@ const AdminOrderListPage = lazy(
 const AdminOrderDetailPage = lazy(
   () => import("../pages/admin/AdminOrderDetailPage"),
 );
-const AdminQnaListPage = lazy(() => import("../pages/admin/AdminQnaListPage"));
 const CompanyListPage = lazy(() => import("../pages/company/CompanyListPage"));
 const CompanyAddPage = lazy(() => import("../pages/company/CompanyAddPage"));
 const CompanyModifyPage = lazy(
@@ -153,16 +153,6 @@ const appRoutes = [
       <AdminOnly>
         <Suspense fallback={Loading}>
           <AdminOrderListPage />
-        </Suspense>
-      </AdminOnly>
-    ),
-  },
-  {
-    path: "admin/qna",
-    element: (
-      <AdminOnly>
-        <Suspense fallback={Loading}>
-          <AdminQnaListPage />
         </Suspense>
       </AdminOnly>
     ),
@@ -346,6 +336,14 @@ const appRoutes = [
     element: (
       <Suspense fallback={Loading}>
         <PrepDdayPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/prep/ai-dress",
+    element: (
+      <Suspense fallback={Loading}>
+        <PrepAiDressPage />
       </Suspense>
     ),
   },

@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.web.client.RestTemplate;
 
 @Configuration
@@ -15,6 +16,7 @@ public class OpenAIConfig {
     private String apiKey;
 
     @Bean
+    @Primary
     public RestTemplate restTemplate(RestTemplateBuilder restTemplateBuilder) {
         return restTemplateBuilder
                 .additionalInterceptors(((request, body, execution) -> {
@@ -24,6 +26,12 @@ public class OpenAIConfig {
                     return execution.execute(request, body);
                 }))
                 .build();
+    }
+
+    /** multipart 이미지 편집용 — Content-Type boundary는 RestTemplate이 자동 설정 */
+    @Bean
+    public RestTemplate openAiMultipartRestTemplate(RestTemplateBuilder restTemplateBuilder) {
+        return restTemplateBuilder.build();
     }
 
 }

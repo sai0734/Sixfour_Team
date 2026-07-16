@@ -189,10 +189,18 @@ const HubPage = () => {
           </Link>
         )}
         {/* 재원 추가 끝 */}
-        <div className="bg-white rounded-2xl border border-line p-6 opacity-60">
-          <p className="text-sm font-medium text-ink mb-1">AI 드레스</p>
-          <p className="text-xs text-ink-faint">준비 중인 기능입니다</p>
-        </div>
+        <Link
+          to="/prep/ai-dress"
+          className="bg-white rounded-2xl border border-line p-6 hover:border-brand transition-colors"
+        >
+          <p className="text-xs text-ink-muted mb-2">AI 드레스</p>
+          <p className="text-sm font-medium text-ink mb-1">
+            가상 피팅 체험
+          </p>
+          <p className="text-xs text-ink-faint">
+            내 사진으로 드레스를 미리 입어보세요
+          </p>
+        </Link>
       </div>
     </PrepLayout>
   );
