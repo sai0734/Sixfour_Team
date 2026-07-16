@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createSearchParams, useNavigate, useSearchParams } from "react-router-dom";
 import { getUnansweredQnaList, postQnaReply } from "../../api/qnaApi";
+import { API_SERVER_HOST } from "../../api/reservationApi";
 import PageComponent from "../common/PageComponent";
 import AdminLayout from "../../layouts/AdminLayout";
 import ShopTapeLabel from "../product/ShopTapeLabel";
@@ -116,19 +117,36 @@ const AdminQnaListComponent = () => {
               key={item.qno}
               className="rounded-2xl bg-white p-5 shadow-[0_8px_24px_-12px_rgba(58,54,47,0.15)]"
             >
-              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                <button
-                  type="button"
-                  onClick={() => navigate(`/product/read/${item.pno}`)}
-                  className="text-sm font-medium text-brand-deep hover:underline"
-                >
-                  {item.pname}
-                </button>
-                <span className="text-xs text-ink-faint">{formatDate(item.regDate)}</span>
-              </div>
+              <div className="mb-3 flex items-start gap-3">
+                <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-cream">
+                  {item.thumbnail ? (
+                    <img
+                      alt={item.pname}
+                      className="h-full w-full object-cover"
+                      src={`${API_SERVER_HOST}/api/product/view/s_${item.thumbnail}`}
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-[10px] text-ink-faint">
+                      No Img
+                    </div>
+                  )}
+                </div>
 
-              <div className="mb-3 text-xs text-ink-soft">
-                {item.nickname} ({item.memberEmail})
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/product/read/${item.pno}`)}
+                      className="text-sm font-medium text-brand-deep hover:underline"
+                    >
+                      {item.pname}
+                    </button>
+                    <span className="text-xs text-ink-faint">{formatDate(item.regDate)}</span>
+                  </div>
+                  <div className="mt-1 text-xs text-ink-soft">
+                    {item.nickname} ({item.memberEmail})
+                  </div>
+                </div>
               </div>
 
               <div className="mb-4 rounded-lg bg-cream px-4 py-3 text-sm text-ink">
