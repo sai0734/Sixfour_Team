@@ -119,6 +119,14 @@ public class InquiryServiceImpl implements InquiryService {
 
         room.updateLastMessageAt(now);
 
+        // 보낸 사람 본인은 당연히 자기가 방금 보낸 메시지까지는 읽은 상태이므로,
+        // 그 사람의 읽음 시각도 같이 갱신 (안 하면 본인이 보낸 메시지로 자기 자신에게 안읽음이 뜸)
+        if (senderEmail.equals(room.getMemberEmail())) {
+            room.markReadByMember(now);
+        } else {
+            room.markReadByManager(now);
+        }
+
         InquiryMessageDTO messageDTO = InquiryMessageDTO.from(saved);
 
         // 채팅창이 열려있는 쪽(방을 구독 중인 클라이언트)에게 새 메시지를 즉시 밀어줌

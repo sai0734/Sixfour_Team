@@ -7,7 +7,11 @@ import {
   useState,
 } from "react";
 import { useSelector } from "react-redux";
-import { openInquiryRoom, sendInquiryMessage } from "../api/companyInquiryApi";
+import {
+  getMyInquiryRooms,
+  openInquiryRoom,
+  sendInquiryMessage,
+} from "../api/companyInquiryApi";
 import {
   connectInquiryWs,
   disconnectInquiryWs,
@@ -70,7 +74,36 @@ export const InquiryChatProvider = ({ children }) => {
       setIsListOpen(false);
       return;
     }
-    setSessions(loadStoredSessions(email));
+
+    const stored = loadStoredSessions(email);
+    setSessions(stored);
+
+    // 수정: localStorage엔 unread 정보가 없고, 그 사이(창 닫힘/재연결 중 등) 놓친 WS 갱신을
+    // 따라잡을 방법이 없었음 - 로그인/새로고침 시 서버의 최신 방 상태로 한 번 동기화한다
+    let cancelled = false;
+    getMyInquiryRooms()
+      .then((rooms) => {
+        if (cancelled) return;
+        setSessions((prev) => {
+          const companyNameByRoomId = new Map(
+            prev.map((session) => [session.roomId, session.companyName]),
+          );
+          return (Array.isArray(rooms) ? rooms : []).map((room) => ({
+            roomId: room.roomId,
+            cmno: room.cmno,
+            companyName: companyNameByRoomId.get(room.roomId) ?? "",
+            unread: Boolean(room.unread),
+            lastMessageAt: room.lastMessageAt,
+          }));
+        });
+      })
+      .catch((err) => {
+        console.error("내 문의방 목록 동기화 실패:", err);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [email]);
 
   useEffect(() => {
