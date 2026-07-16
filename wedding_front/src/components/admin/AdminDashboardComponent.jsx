@@ -13,7 +13,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { getDashboardSummary } from "../../api/adminDashboardApi";
+import { getCompanyRanking, getDashboardSummary } from "../../api/adminDashboardApi";
 
 const ORDER_STATUS_COLORS = ["#3b82f6", "#f59e0b", "#a855f7"];
 
@@ -28,6 +28,27 @@ const KPI_GRADIENTS = {
 // 업체 현황 카드 4개(웨딩홀/드레스/스튜디오/메이크업)에 순서대로 매길 색상
 const CATEGORY_CARD_GRADIENTS = ["pink", "purple", "green", "amber"];
 
+// "업체 월별 매출 추이" / "업체 매출 전체 순위" 카테고리 드롭다운 공통 옵션
+const COMPANY_REVENUE_CATEGORY_OPTIONS = [
+  { value: "ALL", label: "전체" },
+  { value: "HALL", label: "웨딩홀" },
+  { value: "DRESS", label: "드레스" },
+  { value: "STUDIO", label: "스튜디오" },
+  { value: "MAKEUP", label: "메이크업" },
+];
+
+// 이번 달부터 5개월 전까지 "yyyy-MM" 옵션 목록 (최근 달이 먼저)
+const buildRecentMonthOptions = () => {
+  const now = new Date();
+  const options = [];
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    options.push({ value, label: `${d.getFullYear()}년 ${d.getMonth() + 1}월` });
+  }
+  return options;
+};
+
 const toneStyle = {
   info: "border-blue-400 bg-blue-50 text-blue-700",
   warning: "border-amber-400 bg-amber-50 text-amber-700",
@@ -40,6 +61,13 @@ const AdminDashboardComponent = () => {
   const [summary, setSummary] = useState(null);
   const [summaryFetching, setSummaryFetching] = useState(true);
   const [summaryError, setSummaryError] = useState("");
+  const [companyRevenueCategory, setCompanyRevenueCategory] = useState("ALL");
+
+  const monthOptions = useMemo(() => buildRecentMonthOptions(), []);
+  const [rankingCategory, setRankingCategory] = useState("ALL");
+  const [rankingMonth, setRankingMonth] = useState(monthOptions[0].value);
+  const [rankingData, setRankingData] = useState([]);
+  const [rankingFetching, setRankingFetching] = useState(true);
 
   useEffect(() => {
     setSummaryFetching(true);
@@ -54,6 +82,15 @@ const AdminDashboardComponent = () => {
       .finally(() => setSummaryFetching(false));
   }, []);
 
+  useEffect(() => {
+    setRankingFetching(true);
+
+    getCompanyRanking({ category: rankingCategory, month: rankingMonth })
+      .then((data) => setRankingData(data))
+      .catch((err) => console.error(err))
+      .finally(() => setRankingFetching(false));
+  }, [rankingCategory, rankingMonth]);
+
   const today = useMemo(() => {
     const now = new Date();
     return `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}.${String(now.getDate()).padStart(2, "0")}`;
@@ -66,6 +103,10 @@ const AdminDashboardComponent = () => {
         { name: "배송완료", 건수: summary.orderStats.delivered },
       ]
     : [];
+
+  const companyMonthlyRevenue = summary?.companyMonthlyRevenueByCategory?.find(
+    (row) => row.category === companyRevenueCategory,
+  )?.monthlyRevenue;
 
   const handleTodoClick = (todo) => {
     if (todo.link) navigate(todo.link);
@@ -125,8 +166,8 @@ const AdminDashboardComponent = () => {
         />
       </div>
 
-      {/* ===== 월별 매출 추이 ===== */}
-      <Panel title="월별 매출 추이" badge="최근 6개월">
+      {/* ===== 월별 매출 추이 (답례품) ===== */}
+      <Panel title="월별 매출 추이 (답례품)" badge="최근 6개월">
         {summary?.monthlyRevenue?.length ? (
           <ResponsiveContainer width="100%" height={240}>
             <AreaChart data={summary.monthlyRevenue.map((row) => ({ ...row, 매출: row.revenue }))}>
@@ -255,26 +296,118 @@ const AdminDashboardComponent = () => {
         })}
       </div>
 
-      <Panel title="업체 매출 전체 순위" badge="TOP 10">
-        {summaryFetching ? (
-          <EmptyText>불러오는 중...</EmptyText>
-        ) : summary?.topCompaniesOverall?.length ? (
-          <div className="space-y-2">
-            {summary.topCompaniesOverall.map((item) => (
-              <div
-                key={item.rank}
-                className="flex items-center gap-3 rounded-md bg-slate-50 px-4 py-2.5"
-              >
-                <div className="w-6 text-center text-sm font-semibold text-slate-400">{item.rank}</div>
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium text-slate-900">{item.companyName}</div>
-                  <div className="text-xs text-slate-500">{item.categoryLabel}</div>
-                </div>
-                <div className="text-right text-sm font-semibold text-blue-700">
-                  {Number(item.amount).toLocaleString()}원
-                </div>
-              </div>
+      <Panel title="업체 월별 매출 추이" badge="최근 6개월">
+        <div className="mb-3 flex justify-end">
+          <select
+            value={companyRevenueCategory}
+            onChange={(e) => setCompanyRevenueCategory(e.target.value)}
+            className="rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-600"
+          >
+            {COMPANY_REVENUE_CATEGORY_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
             ))}
+          </select>
+        </div>
+        {companyMonthlyRevenue?.length ? (
+          <ResponsiveContainer width="100%" height={220}>
+            <AreaChart data={companyMonthlyRevenue.map((row) => ({ ...row, 매출: row.revenue }))}>
+              <defs>
+                <linearGradient id="companyRevenueFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#a855f7" stopOpacity={0.35} />
+                  <stop offset="95%" stopColor="#a855f7" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eef2f7" />
+              <XAxis dataKey="month" fontSize={12} axisLine={false} tickLine={false} />
+              <YAxis fontSize={12} axisLine={false} tickLine={false} tickFormatter={(v) => `${Math.round(v / 10000)}만`} />
+              <Tooltip formatter={(value) => `${Number(value).toLocaleString()}원`} />
+              <Area
+                type="monotone"
+                dataKey="매출"
+                stroke="#a855f7"
+                strokeWidth={3}
+                fill="url(#companyRevenueFill)"
+                dot={{ r: 4, fill: "#a855f7", strokeWidth: 0 }}
+                activeDot={{ r: 6 }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        ) : (
+          <EmptyText>{summaryFetching ? "불러오는 중..." : "매출 데이터가 없습니다."}</EmptyText>
+        )}
+      </Panel>
+
+      <Panel title="업체 매출 전체 순위" badge="TOP 10">
+        <div className="mb-3 flex flex-wrap justify-end gap-2">
+          <select
+            value={rankingCategory}
+            onChange={(e) => setRankingCategory(e.target.value)}
+            className="rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-600"
+          >
+            {COMPANY_REVENUE_CATEGORY_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          <select
+            value={rankingMonth}
+            onChange={(e) => setRankingMonth(e.target.value)}
+            className="rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-600"
+          >
+            {monthOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {rankingFetching ? (
+          <EmptyText>불러오는 중...</EmptyText>
+        ) : rankingData.length ? (
+          <div className="space-y-2">
+            {rankingData.map((item) => {
+              const isUp = item.rankChange != null && item.rankChange > 0;
+              const isDown = item.rankChange != null && item.rankChange < 0;
+
+              let changeText;
+              let changeClass;
+              if (item.rankChange == null) {
+                changeText = "신규";
+                changeClass = "text-slate-400";
+              } else if (isUp) {
+                changeText = `▲ ${item.rankChange}`;
+                changeClass = "text-red-600";
+              } else if (isDown) {
+                changeText = `▼ ${Math.abs(item.rankChange)}`;
+                changeClass = "text-blue-600";
+              } else {
+                changeText = "-";
+                changeClass = "text-slate-400";
+              }
+
+              return (
+                <div
+                  key={`${item.rank}-${item.companyName}`}
+                  className="flex items-center gap-3 rounded-md bg-slate-50 px-4 py-2.5"
+                >
+                  <div className="w-6 text-center text-sm font-semibold text-slate-400">{item.rank}</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium text-slate-900">{item.companyName}</div>
+                    <div className="text-xs text-slate-500">{item.categoryLabel}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-semibold text-blue-700">
+                      {Number(item.amount).toLocaleString()}원
+                    </div>
+                    <div className={`text-xs font-medium ${changeClass}`}>{changeText}</div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         ) : (
           <EmptyText>매출 데이터가 없습니다.</EmptyText>

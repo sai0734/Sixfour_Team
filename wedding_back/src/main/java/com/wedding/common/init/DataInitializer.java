@@ -487,10 +487,27 @@ public class DataInitializer implements ApplicationRunner {
     LocalDate baseDate = LocalDate.now().minusMonths(6);
     int i = 0;
 
+    // 업체 현황 "월별 매출 추이"용 - paidAt을 최근 6개월에 걸쳐 가중치를 두고(최근 달일수록 많이) 분산
+    int monthsBack = 5;
+    YearMonth currentMonth = YearMonth.now();
+    List<YearMonth> months = new ArrayList<>();
+    for (int m = monthsBack; m >= 0; m--) {
+      months.add(currentMonth.minusMonths(m));
+    }
+    List<Integer> weights = new ArrayList<>();
+    for (int w = 1; w <= months.size(); w++) {
+      weights.add(w);
+    }
+    int totalWeight = weights.stream().mapToInt(Integer::intValue).sum();
+    Random random = new Random();
+
     for (Company company : companyMap.values()) {
       int purchaseCount = companyPurchaseCountMap.getOrDefault(company.getCmno(), 0);
 
       for (int n = 0; n < purchaseCount; n++) {
+        YearMonth paidMonth = pickWeightedMonth(months, weights, totalWeight, random);
+        LocalDateTime paidAt = randomDateTimeInMonth(paidMonth, random);
+
         Reservation dummy = Reservation.builder()
                 .cmno(company.getCmno())
                 .memberEmail("dummy" + (n % 20) + "@wedding.demo")
@@ -499,6 +516,7 @@ public class DataInitializer implements ApplicationRunner {
                 .optionName("-")
                 .amount(company.getPriceAvg() != null ? company.getPriceAvg().intValue() : 100000)
                 .payStatus("PAID")
+                .paidAt(paidAt)
                 .build();
         reservationRepository.save(dummy);
         i++;
