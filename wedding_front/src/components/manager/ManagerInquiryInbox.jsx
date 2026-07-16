@@ -50,6 +50,30 @@ const mergeRoomUpdate = (prev, update) => {
   });
 };
 
+// 매니저가 "나가기"한 방 id 목록 — 서버 데이터는 그대로 두고 이 업체 계정의 받은편지함
+// 화면에서만 숨긴다 (회원이 새 메시지를 보내면 다시 나타남)
+const HIDDEN_STORAGE_PREFIX = "wedding_manager_hidden_inquiry_rooms_";
+
+const loadHiddenRoomIds = (cmno) => {
+  if (!cmno) return new Set();
+  try {
+    const raw = localStorage.getItem(`${HIDDEN_STORAGE_PREFIX}${cmno}`);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw);
+    return new Set(Array.isArray(parsed) ? parsed : []);
+  } catch {
+    return new Set();
+  }
+};
+
+const persistHiddenRoomIds = (cmno, ids) => {
+  if (!cmno) return;
+  localStorage.setItem(
+    `${HIDDEN_STORAGE_PREFIX}${cmno}`,
+    JSON.stringify([...ids]),
+  );
+};
+
 const ManagerInquiryInbox = () => {
   const navigate = useNavigate();
   const { loginState } = useCustomLogin();
@@ -60,6 +84,7 @@ const ManagerInquiryInbox = () => {
   const [rooms, setRooms] = useState([]);
   const [roomsLoading, setRoomsLoading] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
+  const [hiddenRoomIds, setHiddenRoomIds] = useState(() => new Set());
 
   // 담당 업체의 문의방 목록 조회 (최초 1회 - 이후 갱신은 WebSocket으로 받음)
   const loadRooms = useCallback(async () => {
@@ -79,17 +104,47 @@ const ManagerInquiryInbox = () => {
   useEffect(() => {
     if (!company?.cmno) return;
 
+    setHiddenRoomIds(loadHiddenRoomIds(company.cmno));
     loadRooms();
 
     const unsubscribe = subscribeInquiryTopic(
       `/topic/inquiries/company/${company.cmno}`,
       (roomUpdate) => {
         setRooms((prev) => mergeRoomUpdate(prev, roomUpdate));
+        // 나갔던 방에 회원이 새 메시지를 보냈으면 숨김을 풀어서 다시 보이게 한다
+        setHiddenRoomIds((prev) => {
+          if (!prev.has(roomUpdate.roomId)) return prev;
+          const next = new Set(prev);
+          next.delete(roomUpdate.roomId);
+          return next;
+        });
       },
     );
 
     return unsubscribe;
   }, [company?.cmno, loadRooms]);
+
+  useEffect(() => {
+    if (!company?.cmno) return;
+    persistHiddenRoomIds(company.cmno, hiddenRoomIds);
+  }, [company?.cmno, hiddenRoomIds]);
+
+  // 채팅창에서 "나가기" 눌렀을 때 — 서버 데이터는 그대로 두고 목록에서만 숨긴다
+  const handleLeaveRoom = (roomId) => {
+    setHiddenRoomIds((prev) => new Set(prev).add(roomId));
+    setSelectedRoom((prev) => (prev?.roomId === roomId ? null : prev));
+  };
+
+  // 목록에서 바로 "나가기" — 채팅창을 열지 않고 그 방만 숨긴다
+  const handleLeaveFromList = (e, roomId, memberEmail) => {
+    e.stopPropagation();
+    const confirmed = window.confirm(
+      `${memberEmail || "이 회원"} 문의를 목록에서 나가시겠습니까?\n대화 내용은 서버에 남아있고, 새 메시지가 오면 다시 표시됩니다.`,
+    );
+    if (confirmed) {
+      handleLeaveRoom(roomId);
+    }
+  };
 
   if (!loginState.email) {
     return (
@@ -133,6 +188,8 @@ const ManagerInquiryInbox = () => {
     );
   }
 
+  const visibleRooms = rooms.filter((room) => !hiddenRoomIds.has(room.roomId));
+
   return (
     <div className="rounded-2xl border border-line bg-white overflow-hidden">
       {/* 헤더 */}
@@ -150,16 +207,16 @@ const ManagerInquiryInbox = () => {
 
       {/* 방 목록 */}
       <div className="divide-y divide-line">
-        {roomsLoading && rooms.length === 0 ? (
+        {roomsLoading && visibleRooms.length === 0 ? (
           <p className="px-5 py-10 text-center text-sm text-ink-muted sm:px-6">
             문의 목록을 불러오는 중...
           </p>
-        ) : rooms.length === 0 ? (
+        ) : visibleRooms.length === 0 ? (
           <p className="px-5 py-10 text-center text-sm text-ink-muted sm:px-6">
             아직 들어온 문의가 없습니다.
           </p>
         ) : (
-          rooms.map((room) => {
+          visibleRooms.map((room) => {
             const isSelected = selectedRoom?.roomId === room.roomId;
             return (
               <button
@@ -196,11 +253,28 @@ const ManagerInquiryInbox = () => {
                     {room.status === "CLOSED" ? "종료됨" : "진행 중"}
                   </p>
                 </div>
-                <div className="shrink-0 text-right">
-                  <p className="text-xs text-ink-faint">
-                    {formatLastMessageAt(room.lastMessageAt)}
-                  </p>
-                  <p className="mt-1 text-xs text-brand">답변하기 →</p>
+                <div className="flex shrink-0 items-center gap-3">
+                  <div className="text-right">
+                    <p className="text-xs text-ink-faint">
+                      {formatLastMessageAt(room.lastMessageAt)}
+                    </p>
+                    <p className="mt-1 text-xs text-brand">답변하기 →</p>
+                  </div>
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    onClick={(e) =>
+                      handleLeaveFromList(e, room.roomId, room.memberEmail)
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        handleLeaveFromList(e, room.roomId, room.memberEmail);
+                      }
+                    }}
+                    className="shrink-0 rounded-full px-3 py-1.5 text-xs text-ink-muted transition hover:bg-blush-50 hover:text-brand"
+                  >
+                    나가기
+                  </span>
                 </div>
               </button>
             );
@@ -215,6 +289,7 @@ const ManagerInquiryInbox = () => {
           subtitle={`${company.name} 문의 답변`}
           roomId={selectedRoom.roomId}
           onMinimize={() => setSelectedRoom(null)}
+          onLeave={() => handleLeaveRoom(selectedRoom.roomId)}
         />
       )}
     </div>

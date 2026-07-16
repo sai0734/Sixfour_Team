@@ -2,6 +2,7 @@ package com.wedding.inquiry.controller;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.wedding.inquiry.dto.InquiryMessageDTO;
@@ -74,5 +76,15 @@ public class InquiryController {
             @AuthenticationPrincipal MemberDTO memberDTO) {
         log.info("InquiryController_listMyRooms_실행~~~~~~~~");
         return inquiryService.listRoomsByMember(memberDTO.getEmail());
+    }
+
+    // 채팅창을 열어둔 채로 실시간 메시지를 받았을 때 — 목록을 다시 안 불러오고 읽음 시각만 갱신
+    @PostMapping("/rooms/{roomId}/read")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void markRead(
+            @AuthenticationPrincipal MemberDTO memberDTO,
+            @PathVariable(name = "roomId") Long roomId) {
+        log.info("InquiryController_markRead_실행~~~~~~~~");
+        inquiryService.markRead(roomId, memberDTO.getEmail());
     }
 }
