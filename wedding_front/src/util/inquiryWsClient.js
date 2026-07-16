@@ -21,15 +21,20 @@ const buildConnectHeaders = () => {
 // 이미 연결됐다면 그 destination을, 아직이면 onConnect 때 한꺼번에 구독하도록 등록만 해둠
 const resubscribe = (destination) => {
   if (liveSubscriptions.has(destination)) return; // 이미 구독중
-  if (!client?.connected) return; // 아직 연결 전이면 onConnect에서 처리됨
+  if (!client?.connected) {
+    console.log("[InquiryWS] 아직 연결 전이라 구독 보류:", destination);
+    return; // 아직 연결 전이면 onConnect에서 처리됨
+  }
 
   const subscription = client.subscribe(destination, (message) => {
     const callbacks = listenersByDestination.get(destination);
     if (!callbacks) return;
     const payload = JSON.parse(message.body);
+    console.log("[InquiryWS] 메시지 수신:", destination, payload);
     callbacks.forEach((cb) => cb(payload));
   });
 
+  console.log("[InquiryWS] 구독 성공:", destination);
   liveSubscriptions.set(destination, subscription);
 };
 
@@ -41,16 +46,24 @@ const ensureClient = () => {
     reconnectDelay: 5000, // 끊기면 5초마다 재연결 시도
     beforeConnect: () => {
       client.connectHeaders = buildConnectHeaders();
+      console.log("[InquiryWS] 연결 시도, 헤더:", client.connectHeaders);
     },
     onConnect: () => {
+      console.log("[InquiryWS] 연결 성공! 등록된 구독 재개:", [...listenersByDestination.keys()]);
       // 최초 연결이든 재연결이든, 연결될 때마다 등록된 구독을 전부 다시 걸어준다
       liveSubscriptions.clear();
       listenersByDestination.forEach((_callbacks, destination) => {
         resubscribe(destination);
       });
     },
+    onDisconnect: () => {
+      console.log("[InquiryWS] 연결 끊김");
+    },
+    onWebSocketError: (event) => {
+      console.error("[InquiryWS] WebSocket 자체 에러:", event);
+    },
     onStompError: (frame) => {
-      console.error("STOMP 에러:", frame.headers?.message, frame.body);
+      console.error("[InquiryWS] STOMP 에러:", frame.headers?.message, frame.body);
     },
   });
 
