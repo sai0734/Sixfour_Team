@@ -46,7 +46,7 @@ public class JWTCheckFilter extends OncePerRequestFilter{
 
         log.info("check uri......................."+path);
 
-        // WebSocket(SockJS) 핸드셰이크/폴링 경로는 이 필터에서 제외 - 인증은 STOMP CONNECT 프레임에서
+        // WebSocket(SockJS) 핸드셰이크 경로는 이 필터에서 제외 - 인증은 STOMP CONNECT 프레임에서
         // StompAuthChannelInterceptor가 별도로 처리한다 (핸드셰이크 자체엔 Authorization 헤더가 없음)
         if(path.startsWith("/ws-inquiry")) {
             return true;
@@ -150,11 +150,8 @@ public class JWTCheckFilter extends OncePerRequestFilter{
             return true;
         }
 
-        // AI 웨딩플랜 리파인 대화(6단계)도 비로그인 허용
-        if(method.equals("POST") && path.equals("/api/aiplan/refine")) {
-            return true;
-        }
-        if(method.equals("POST") && path.matches("/api/aiplan/rollback/\\d+")) {
+        // AI 드레스 — 드레스 목록은 공개 조회 (합성·내 사진은 JWT 필요)
+        if(method.equals("GET") && path.equals("/api/ai-dress/dresses")) {
             return true;
         }
 
@@ -170,6 +167,10 @@ public class JWTCheckFilter extends OncePerRequestFilter{
         String authHeaderStr = request.getHeader("Authorization");
 
         try {
+            if (authHeaderStr == null || !authHeaderStr.startsWith("Bearer ")) {
+                throw new RuntimeException("Missing or invalid Authorization header");
+            }
+
             //Bearer accestoken...
             String accessToken = authHeaderStr.substring(7);
 
@@ -250,6 +251,7 @@ public class JWTCheckFilter extends OncePerRequestFilter{
         }
     }
 
+    // 정지/휴면/탈퇴 회원의 요청을 즉시 차단할 때 쓰는 응답 (일반 토큰 오류와 구분되는 전용 에러코드)
     private void sendBlockedResponse(HttpServletResponse response, String status) throws IOException {
 
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
@@ -265,6 +267,7 @@ public class JWTCheckFilter extends OncePerRequestFilter{
         printWriter.close();
     }
 
+    // 소셜 최초가입인데 추가정보(SocialCompletePage) 입력을 안 끝낸 상태로 다른 API를 호출할 때 쓰는 응답
     private void sendIncompleteProfileResponse(HttpServletResponse response) throws IOException {
 
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);

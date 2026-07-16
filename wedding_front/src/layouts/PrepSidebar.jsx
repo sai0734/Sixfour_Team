@@ -35,7 +35,7 @@ const MENU_GROUPS = [
         name: "AI 드레스",
         shortName: "AI 드레스",
         path: "/prep/ai-dress",
-        enabled: false,
+        enabled: true,
       },
     ],
   },
