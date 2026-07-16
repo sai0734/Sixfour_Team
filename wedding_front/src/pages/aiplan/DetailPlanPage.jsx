@@ -6,6 +6,8 @@ import ResultCards from "../../components/aiplan/ResultCards";
 import {
   getDetailRecommendations,
   getAiRecommendations,
+  refineRecommendation,
+  rollbackRecommendation,
 } from "../../api/aiPlanApi";
 
 // com.wedding.company.domain.HallType 그대로 - 한글 라벨만 붙임
@@ -38,6 +40,10 @@ const DetailPlanPage = () => {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const [refineOpen, setRefineOpen] = useState(false);
+  const [refineText, setRefineText] = useState("");
+  const [refineLoading, setRefineLoading] = useState(false);
 
   const handleChange = (field) => (e) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
@@ -103,6 +109,50 @@ const DetailPlanPage = () => {
   const handleReset = () => {
     setResult(null);
     setError(null);
+    setRefineOpen(false);
+    setRefineText("");
+  };
+
+  const handleRefineSubmit = (e) => {
+    e.preventDefault();
+
+    if (!refineText.trim() || !result?.sessionId) {
+      return;
+    }
+
+    setRefineLoading(true);
+
+    refineRecommendation({
+      sessionId: result.sessionId,
+      message: refineText.trim(),
+    })
+      .then((data) => {
+        setResult(data);
+        setRefineText("");
+      })
+      .catch((err) => {
+        console.error(err);
+        setError(
+          "다듬기 요청 중 문제가 발생했어요. 잠시 후 다시 시도해주세요.",
+        );
+      })
+      .finally(() => setRefineLoading(false));
+  };
+
+  const handleRollback = () => {
+    if (!result?.sessionId) {
+      return;
+    }
+
+    setRefineLoading(true);
+
+    rollbackRecommendation(result.sessionId)
+      .then((data) => setResult(data))
+      .catch((err) => {
+        console.error(err);
+        setError("되돌리기 중 문제가 발생했어요.");
+      })
+      .finally(() => setRefineLoading(false));
   };
 
   const inputClass =
@@ -272,14 +322,62 @@ const DetailPlanPage = () => {
         <div>
           <ResultCards result={result} />
 
-          <div className="mt-8 text-center">
+          {error && (
+            <p className="mt-4 text-center text-sm text-red-500">{error}</p>
+          )}
+
+          {result.sessionId && refineOpen && (
+            <form
+              onSubmit={handleRefineSubmit}
+              className="mt-6 rounded-2xl border border-line bg-surface p-5"
+            >
+              <label className="mb-2 block text-xs font-medium text-ink-muted">
+                이 조합을 어떻게 다듬을까요?
+              </label>
+              <textarea
+                value={refineText}
+                onChange={(e) => setRefineText(e.target.value)}
+                rows={3}
+                placeholder="예: 스튜디오는 예산 초과라서 빼고 나머지로 추천해줘. 홀이랑 메이크업은 마음에 들어서 확정, 드레스만 다른 스타일로 다시 찾아줘"
+                className="w-full rounded-xl border border-line bg-white px-4 py-2.5 text-sm text-ink outline-none focus:border-brand-dark"
+              />
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="submit"
+                  disabled={refineLoading || !refineText.trim()}
+                  className="h-10 rounded-full bg-brand px-5 text-sm font-medium text-white hover:bg-brand-dark disabled:opacity-60"
+                >
+                  {refineLoading ? "반영하는 중..." : "보내기"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRollback}
+                  disabled={refineLoading}
+                  className="h-10 rounded-full border border-line px-5 text-sm font-medium text-ink-soft hover:bg-white disabled:opacity-60"
+                >
+                  직전으로 되돌리기
+                </button>
+              </div>
+            </form>
+          )}
+
+          <div className="mt-8 flex flex-col items-center gap-3 md:flex-row md:justify-center">
             <button
               type="button"
               onClick={handleReset}
               className="h-11 rounded-full border border-line px-6 text-sm font-medium text-ink-soft hover:bg-surface"
             >
-              조건 다시 입력하기
+              다른 조건으로 다시 찾기
             </button>
+            {result.sessionId && (
+              <button
+                type="button"
+                onClick={() => setRefineOpen((prev) => !prev)}
+                className="h-11 rounded-full border border-brand-dark px-6 text-sm font-medium text-brand-deep hover:bg-surface"
+              >
+                {refineOpen ? "다듬기 닫기" : "이 결과 다듬기"}
+              </button>
+            )}
           </div>
         </div>
       )}

@@ -28,19 +28,19 @@ import lombok.extern.log4j.Log4j2;
 // 문서 4번 매칭 파이프라인 그대로: (1) SQL로 후보 좁히기 (2) AI 호출 - 그 목록 안에서만 고르고
 // JSON으로 응답 강제 (3) 서버 재검증 - AI가 준 cmno가 실제 후보 목록에 있는지 확인, 없으면 버림.
 // AI 호출/파싱/그라운딩 중 어느 단계든 실패하면 AiPlanCandidateBuilder(4단계 로직)로 조용히 폴백한다 -
-// AI가 죽어도 추천 자체는 항상 되게 하기 위함.
+// AI가 죽어도 추천 자체는 항상 되게 하기 위함. (fallback 경로도 6단계 세션 생성 대상에 포함)
 @Service
 @RequiredArgsConstructor
 @Log4j2
-@Transactional(readOnly = true)
+@Transactional
 public class AiPlanAiServiceImpl implements AiPlanAiService {
 
     private final OpenAiClient openAiClient;
     private final ObjectMapper objectMapper;
     private final CompanyRepository companyRepository;
     private final AiPlanCandidateBuilder candidateBuilder;
+    private final AiPlanSessionSupport sessionSupport;
 
-    // 카테고리당 AI에게 넘길 후보 개수 (너무 많으면 프롬프트/비용이 커짐)
     private static final int POOL_SIZE = 6;
 
     private static final String SYSTEM_PROMPT =
@@ -86,15 +86,26 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
             return fallback(region, budget, requestDTO);
         }
 
-        return AiPlanQuickResultDTO.builder()
+        return attachSession(AiPlanQuickResultDTO.builder()
                 .candidates(List.of(combo))
                 .regionRelaxed(false)
                 .message("AI가 취향과 자유 입력을 반영해서 골라줬어요.")
-                .build();
+                .build(), budget, region, "AI");
     }
 
     private AiPlanQuickResultDTO fallback(String region, Long budget, AiPlanDetailRequestDTO requestDTO) {
-        return candidateBuilder.recommend(region, budget, AiPlanCategoryPreferences.fromDetailRequest(requestDTO));
+        AiPlanQuickResultDTO result = candidateBuilder.recommend(
+                region, budget, AiPlanCategoryPreferences.fromDetailRequest(requestDTO));
+        return attachSession(result, budget, region, "AI_FALLBACK");
+    }
+
+    // 조합이 정확히 하나로 나왔을 때만 세션을 만든다 (AiPlanDetailServiceImpl과 동일한 규칙)
+    private AiPlanQuickResultDTO attachSession(AiPlanQuickResultDTO result, Long budget, String region, String mode) {
+        if (result.getCandidates().size() == 1) {
+            var session = sessionSupport.createSession(budget, region, mode, result.getCandidates().get(0));
+            result.setSessionId(session.getSessionId());
+        }
+        return result;
     }
 
     // ── 후보 풀 구성 (SQL 단계) ────────────────────────────────────────
@@ -124,7 +135,6 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
                 .searchList(category, region, null, maxPrice, PageRequest.of(0, POOL_SIZE, sort))
                 .getContent();
 
-        // 지역 매칭 후보가 하나도 없으면 지역 조건 없이 한 번 더 (문서 5번 조건 완화와 같은 취지)
         if (pool.isEmpty() && region != null) {
             pool = companyRepository
                     .searchList(category, null, null, maxPrice, PageRequest.of(0, POOL_SIZE, sort))
@@ -187,7 +197,6 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
             Picked makeup = extractAndValidate(root.get("makeup"), pools.get(CompanyCategory.MAKEUP));
 
             if (hall == null || studio == null || dress == null || makeup == null) {
-                // 4개 중 하나라도 그라운딩 검증 실패(목록에 없는 cmno 등) - AI 응답 전체를 신뢰하지 않음
                 return null;
             }
 
@@ -206,15 +215,19 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
                     .hallCmno(hall.company.getCmno())
                     .hallName(hall.company.getName())
                     .hallReason(hall.reason)
+                    .hallImageUrl(AiPlanCandidateBuilder.firstImage(hall.company))
                     .dressCmno(dress.company.getCmno())
                     .dressName(dress.company.getName())
                     .dressReason(dress.reason)
+                    .dressImageUrl(candidateBuilder.dressOptionImage(dress.company))
                     .studioCmno(studio.company.getCmno())
                     .studioName(studio.company.getName())
                     .studioReason(studio.reason)
+                    .studioImageUrl(AiPlanCandidateBuilder.firstImage(studio.company))
                     .makeupCmno(makeup.company.getCmno())
                     .makeupName(makeup.company.getName())
                     .makeupReason(makeup.reason)
+                    .makeupImageUrl(AiPlanCandidateBuilder.firstImage(makeup.company))
                     .sourceType("AI_COMBO")
                     .build();
 
@@ -224,7 +237,6 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
         }
     }
 
-    // node의 cmno가 실제로 그 카테고리 후보 목록(pool)에 있는지 확인 - 없으면 null(=신뢰 불가)
     private Picked extractAndValidate(JsonNode node, List<Company> pool) {
 
         if (node == null || !node.hasNonNull("cmno")) {

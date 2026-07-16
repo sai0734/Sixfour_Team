@@ -1,6 +1,7 @@
 package com.wedding.aiplan.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -9,9 +10,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.wedding.aiplan.dto.AiPlanDetailRequestDTO;
 import com.wedding.aiplan.dto.AiPlanQuickRequestDTO;
 import com.wedding.aiplan.dto.AiPlanQuickResultDTO;
+import com.wedding.aiplan.dto.AiPlanRefineRequestDTO;
 import com.wedding.aiplan.service.AiPlanAiService;
 import com.wedding.aiplan.service.AiPlanDetailService;
 import com.wedding.aiplan.service.AiPlanQuickService;
+import com.wedding.aiplan.service.AiPlanRefineService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -27,6 +30,7 @@ public class AiPlanController {
     private final AiPlanQuickService aiPlanQuickService;
     private final AiPlanDetailService aiPlanDetailService;
     private final AiPlanAiService aiPlanAiService;
+    private final AiPlanRefineService aiPlanRefineService;
 
     // 예: GET /api/aiplan/quick?budget=30000000&region=강남&weddingDate=2027-05-01
     @GetMapping("/quick")
@@ -53,6 +57,24 @@ public class AiPlanController {
         log.info("AiPlan AI request: {}", requestDTO);
 
         return aiPlanAiService.getAiRecommendations(requestDTO);
+    }
+
+    // 6단계 - 결과 화면에서 바로 자유 발화로 다듬기 ("스튜디오 빼줘" 등)
+    @PostMapping("/refine")
+    public AiPlanQuickResultDTO refine(@RequestBody AiPlanRefineRequestDTO requestDTO) {
+
+        log.info("AiPlan refine request: {}", requestDTO);
+
+        return aiPlanRefineService.refine(requestDTO);
+    }
+
+    // 6단계 - 바로 직전 턴으로 되돌리기
+    @PostMapping("/rollback/{sessionId}")
+    public AiPlanQuickResultDTO rollback(@PathVariable Long sessionId) {
+
+        log.info("AiPlan rollback request: sessionId={}", sessionId);
+
+        return aiPlanRefineService.rollback(sessionId);
     }
 
 }
