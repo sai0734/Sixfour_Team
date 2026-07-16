@@ -12,6 +12,7 @@ import {
   openInquiryRoom,
   sendInquiryMessage,
 } from "../api/companyInquiryApi";
+import { getOne } from "../api/companyApi";
 import {
   connectInquiryWs,
   disconnectInquiryWs,
@@ -78,7 +79,7 @@ export const InquiryChatProvider = ({ children }) => {
     const stored = loadStoredSessions(email);
     setSessions(stored);
 
-    // 수정: localStorage엔 unread 정보가 없고, 그 사이(창 닫힘/재연결 중 등) 놓친 WS 갱신을
+    // localStorage엔 unread 정보가 없고, 그 사이(창 닫힘/재연결 중 등) 놓친 WS 갱신을
     // 따라잡을 방법이 없었음 - 로그인/새로고침 시 서버의 최신 방 상태로 한 번 동기화한다
     let cancelled = false;
     getMyInquiryRooms()
@@ -127,7 +128,19 @@ export const InquiryChatProvider = ({ children }) => {
     const unsubscribe = subscribeInquiryTopic(
       `/topic/inquiries/member/${email}`,
       (roomUpdate) => {
+        let isNew = false;
+
         setSessions((prev) => {
+          const exists = prev.some(
+            (session) => session.roomId === roomUpdate.roomId,
+          );
+          if (!exists) {
+            // "나가기"로 목록에서 빠진 방으로 새 메시지가 온 경우 - 여기서 그냥 버리면
+            // 새로고침 전까진 뱃지가 영영 안 뜨므로, 아래에서 업체명을 다시 조회해 복귀시킨다
+            isNew = true;
+            return prev;
+          }
+
           let changed = false;
           const next = prev.map((session) => {
             if (session.roomId !== roomUpdate.roomId) return session;
@@ -149,6 +162,31 @@ export const InquiryChatProvider = ({ children }) => {
           });
           return changed ? next : prev;
         });
+
+        if (isNew) {
+          getOne(roomUpdate.cmno)
+            .then((company) => {
+              setSessions((prev) => {
+                // 그 사이 다른 경로(REST 동기화 등)로 이미 추가됐으면 중복 추가하지 않음
+                if (prev.some((session) => session.roomId === roomUpdate.roomId)) {
+                  return prev;
+                }
+                return [
+                  ...prev,
+                  {
+                    roomId: roomUpdate.roomId,
+                    cmno: roomUpdate.cmno,
+                    companyName: company?.name ?? "",
+                    unread: Boolean(roomUpdate.unread),
+                    lastMessageAt: roomUpdate.lastMessageAt,
+                  },
+                ];
+              });
+            })
+            .catch((err) => {
+              console.error("문의방 업체 정보 조회 실패:", err);
+            });
+        }
       },
     );
 

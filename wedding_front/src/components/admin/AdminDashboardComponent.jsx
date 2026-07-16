@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
   Cell,
   Legend,
-  Line,
-  LineChart,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -40,6 +40,15 @@ const memberStatusLabel = {
 };
 
 const MEMBER_STATUS_COLORS = ["#10b981", "#94a3b8", "#ef4444", "#64748b"];
+const ORDER_STATUS_COLORS = ["#3b82f6", "#f59e0b", "#a855f7"];
+
+// 오늘 발생량에 따른 카드 그라데이션 - 1건 이상이면 빨강, 0건이면 노랑
+const KPI_GRADIENTS = {
+  up: "from-[#f87171] to-[#dc2626]",
+  flat: "from-[#fbbf24] to-[#eab308]",
+};
+
+const trendGradient = (todayValue) => (todayValue > 0 ? "up" : "flat");
 
 const toneStyle = {
   info: "border-blue-400 bg-blue-50 text-blue-700",
@@ -175,32 +184,66 @@ const AdminDashboardComponent = () => {
       ) : null}
 
       {/* ===== 전체 핵심 지표 (전체 회원이 맨 위) ===== */}
-      <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Kpi label="전체 회원" value={summary ? `${summary.memberStats.total}명` : "-"} desc={`오늘 신규 ${summary?.memberStats.newToday ?? 0}명`} />
-        <div className="rounded-lg bg-slate-50 p-4">
-          <div className="text-xs text-slate-500">누적 매출</div>
-          <div className="mt-2 text-2xl font-semibold text-blue-600">
-            {summary ? `${Number(summary.orderStats.totalRevenue).toLocaleString()}원` : "-"}
-          </div>
-          <div className="mt-2 text-xs">
-            {summary ? <RevenueChangeBadge orderStats={summary.orderStats} /> : <span className="text-slate-500">-</span>}
-          </div>
-        </div>
-        <Kpi label="전체 게시글" value={summary ? `${summary.boardStats.total}건` : "-"} desc={`오늘 ${summary?.boardStats.todayCount ?? 0}건 작성`} tone="success" />
-        <Kpi label="진행중 문의" value={summary ? `${summary.inquiryStats.openRooms}건` : "-"} desc={`종료 ${summary?.inquiryStats.closedRooms ?? 0}건`} tone="warning" />
+      <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <GradientKpi
+          gradient={summary ? trendGradient(summary.memberStats.newToday) : "flat"}
+          icon={<UsersIcon />}
+          value={summary ? `${summary.memberStats.total}명` : "-"}
+          label="전체 회원"
+          desc={`오늘 신규 ${summary?.memberStats.newToday ?? 0}명`}
+        />
+        <GradientKpi
+          gradient={summary ? trendGradient(summary.orderStats.todayRevenue) : "flat"}
+          icon={<WalletIcon />}
+          value={summary ? `${Number(summary.orderStats.totalRevenue).toLocaleString()}원` : "-"}
+          label="누적 매출"
+          desc={summary ? <RevenueChangeBadge orderStats={summary.orderStats} light /> : "-"}
+        />
+        <GradientKpi
+          gradient={summary ? trendGradient(summary.boardStats.todayCount) : "flat"}
+          icon={<DocumentIcon />}
+          value={summary ? `${summary.boardStats.total}건` : "-"}
+          label="전체 게시글"
+          desc={`오늘 ${summary?.boardStats.todayCount ?? 0}건 작성`}
+        />
+        <GradientKpi
+          gradient={summary ? trendGradient(summary.orderStats.todayCount) : "flat"}
+          icon={<OrderIcon />}
+          value={
+            summary
+              ? `${summary.orderStats.paid + summary.orderStats.shipping + summary.orderStats.delivered}건`
+              : "-"
+          }
+          label="전체 주문"
+          desc={summary ? `오늘 ${summary.orderStats.todayCount}건` : "-"}
+        />
       </div>
 
       {/* ===== 월별 매출 추이 ===== */}
       <Panel title="월별 매출 추이" badge="최근 6개월">
         {summary?.monthlyRevenue?.length ? (
-          <ResponsiveContainer width="100%" height={220}>
-            <LineChart data={summary.monthlyRevenue.map((row) => ({ ...row, 매출: row.revenue }))}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" fontSize={12} />
-              <YAxis fontSize={12} tickFormatter={(v) => `${Math.round(v / 10000)}만`} />
+          <ResponsiveContainer width="100%" height={240}>
+            <AreaChart data={summary.monthlyRevenue.map((row) => ({ ...row, 매출: row.revenue }))}>
+              <defs>
+                <linearGradient id="revenueFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.35} />
+                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eef2f7" />
+              <XAxis dataKey="month" fontSize={12} axisLine={false} tickLine={false} />
+              <YAxis fontSize={12} axisLine={false} tickLine={false} tickFormatter={(v) => `${Math.round(v / 10000)}만`} />
               <Tooltip formatter={(value) => `${Number(value).toLocaleString()}원`} />
-              <Line type="monotone" dataKey="매출" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} />
-            </LineChart>
+              <Area
+                type="monotone"
+                dataKey="매출"
+                stroke="#3b82f6"
+                strokeWidth={3}
+                fill="url(#revenueFill)"
+                dot={{ r: 4, fill: "#3b82f6", strokeWidth: 0 }}
+                activeDot={{ r: 6 }}
+              />
+            </AreaChart>
           </ResponsiveContainer>
         ) : (
           <EmptyText>{summaryFetching ? "불러오는 중..." : "매출 데이터가 없습니다."}</EmptyText>
@@ -254,15 +297,24 @@ const AdminDashboardComponent = () => {
         </Panel>
 
         <Panel title="주문 상태 현황" badge="PENDING 제외">
-          {orderChartData.length ? (
+          {orderChartData.some((row) => row["건수"] > 0) ? (
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={orderChartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" fontSize={12} />
-                <YAxis allowDecimals={false} fontSize={12} />
+              <PieChart>
+                <Pie
+                  data={orderChartData}
+                  dataKey="건수"
+                  nameKey="name"
+                  innerRadius={55}
+                  outerRadius={80}
+                  paddingAngle={3}
+                >
+                  {orderChartData.map((entry, index) => (
+                    <Cell key={entry.name} fill={ORDER_STATUS_COLORS[index % ORDER_STATUS_COLORS.length]} />
+                  ))}
+                </Pie>
                 <Tooltip />
-                <Bar dataKey="건수" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-              </BarChart>
+                <Legend />
+              </PieChart>
             </ResponsiveContainer>
           ) : (
             <EmptyText>{summaryFetching ? "불러오는 중..." : "주문 데이터가 없습니다."}</EmptyText>
@@ -426,12 +478,12 @@ const Panel = ({ title, badge, children }) => (
 );
 
 // 이번 달 매출을 지난달과 비교해서 증감률/증감액을 뱃지로 보여줌
-const RevenueChangeBadge = ({ orderStats }) => {
+const RevenueChangeBadge = ({ orderStats, light = false }) => {
   const { currentMonthRevenue, lastMonthRevenue, revenueChangeAmount, revenueChangeRate } = orderStats;
 
   if (lastMonthRevenue === 0) {
     return (
-      <span className="text-slate-500">
+      <span className={light ? "text-white/80" : "text-slate-500"}>
         이번 달 {Number(currentMonthRevenue).toLocaleString()}원 (지난달 데이터 없음)
       </span>
     );
@@ -439,7 +491,13 @@ const RevenueChangeBadge = ({ orderStats }) => {
 
   const isUp = revenueChangeAmount > 0;
   const isFlat = revenueChangeAmount === 0;
-  const colorClass = isFlat ? "text-slate-500" : isUp ? "text-red-600" : "text-blue-600";
+  const colorClass = light
+    ? "text-white/85"
+    : isFlat
+      ? "text-slate-500"
+      : isUp
+        ? "text-red-600"
+        : "text-blue-600";
   const arrow = isFlat ? "" : isUp ? "▲" : "▼";
 
   return (
@@ -449,6 +507,47 @@ const RevenueChangeBadge = ({ orderStats }) => {
     </span>
   );
 };
+
+// 상단 핵심 지표용 그라데이션 카드 (레퍼런스 UI의 컬러풀한 KPI 카드 스타일)
+const GradientKpi = ({ gradient, icon, value, label, desc }) => (
+  <div className={`rounded-2xl bg-gradient-to-br ${KPI_GRADIENTS[gradient]} p-5 text-white shadow-md shadow-slate-200`}>
+    <div className="flex items-start justify-between">
+      <div>
+        <div className="text-2xl font-bold">{value}</div>
+        <div className="mt-1 text-sm text-white/85">{label}</div>
+      </div>
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20">
+        {icon}
+      </div>
+    </div>
+    {desc ? <div className="mt-3 text-xs text-white/75">{desc}</div> : null}
+  </div>
+);
+
+const UsersIcon = () => (
+  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 1a4 4 0 10-4-4" />
+  </svg>
+);
+
+const WalletIcon = () => (
+  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M21 12V7H5a2 2 0 010-4h14v4M3 5v14a2 2 0 002 2h16v-5" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M18 12a2 2 0 100 4 2 2 0 000-4z" />
+  </svg>
+);
+
+const DocumentIcon = () => (
+  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+  </svg>
+);
+
+const OrderIcon = () => (
+  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+  </svg>
+);
 
 const MiniStat = ({ label, value, tone = "default" }) => {
   const toneClass = {

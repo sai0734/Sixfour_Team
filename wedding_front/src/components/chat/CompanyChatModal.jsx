@@ -2,8 +2,10 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import {
   getInquiryMessages,
+  markInquiryRead,
   sendInquiryMessage,
 } from "../../api/companyInquiryApi";
+import { getOne, getCompanyImageUrl } from "../../api/companyApi";
 import { subscribeInquiryTopic } from "../../util/inquiryWsClient";
 
 // 날짜 구분선 표시용 — 메시지 목록에서 날짜가 바뀔 때 사이에 넣는다
@@ -33,6 +35,7 @@ const isSameDate = (a, b) => {
 
 const CompanyChatModal = ({
   companyName,
+  cmno,
   roomId,
   onMinimize,
   onLeave,
@@ -45,14 +48,44 @@ const CompanyChatModal = ({
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  // 지금 누구랑 대화 중인지 한눈에 보이게 헤더에 띄울 업체 대표사진 (cmno가 있을 때만 - 매니저 화면은 상대가
+  // 회원이라 cmno를 안 넘기므로 자동으로 사진 없이 이메일만 표시됨)
+  const [companyImage, setCompanyImage] = useState(null);
 
   const messageEndRef = useRef(null);
   const messageListRef = useRef(null);
   const onMinimizeRef = useRef(onMinimize);
+  // 방을 처음 열었을 때(과거 이력 로드)는 애니메이션 없이 바로 맨 아래로,
+  // 그 이후 실시간으로 새 메시지가 올 때만 부드럽게 스크롤하기 위한 플래그
+  const hasScrolledRef = useRef(false);
 
   useEffect(() => {
     onMinimizeRef.current = onMinimize;
   }, [onMinimize]);
+
+  // 헤더에 띄울 업체 대표사진 조회
+  useEffect(() => {
+    if (!cmno) {
+      setCompanyImage(null);
+      return;
+    }
+
+    let cancelled = false;
+    getOne(cmno)
+      .then((company) => {
+        if (cancelled) return;
+        setCompanyImage(
+          company?.mainImage ? getCompanyImageUrl(company.mainImage, true) : null,
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setCompanyImage(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [cmno]);
 
   // 메시지 목록 조회 (최초 진입 시 과거 대화 이력을 불러오는 용도 - 실시간 수신은 WS가 담당)
   const loadMessages = useCallback(async () => {
@@ -71,6 +104,8 @@ const CompanyChatModal = ({
   // 모달 열릴 때 과거 이력을 한 번 불러오고, 이후 새 메시지는 WebSocket 구독으로 실시간 수신.
   // roomId가 아직 없는 draft 상태(방 생성 전)면 불러올 게 없으니 로딩만 끄고 대기
   useEffect(() => {
+    hasScrolledRef.current = false;
+
     if (!roomId) {
       setLoading(false);
       return;
@@ -81,23 +116,50 @@ const CompanyChatModal = ({
 
     const unsubscribe = subscribeInquiryTopic(
       `/topic/inquiries/room/${roomId}`,
-      (incomingMessage) => {
-        setMessages((prev) => {
-          // 같은 메시지가 중복으로 들어오는 경우 방지 (재연결 등으로 인한 안전장치)
-          if (prev.some((m) => m.messageId === incomingMessage.messageId)) {
-            return prev;
+      (event) => {
+        if (event.type === "MESSAGE") {
+          const incomingMessage = event.message;
+          setMessages((prev) => {
+            // 같은 메시지가 중복으로 들어오는 경우 방지 (재연결 등으로 인한 안전장치)
+            if (prev.some((m) => m.messageId === incomingMessage.messageId)) {
+              return prev;
+            }
+            return [...prev, incomingMessage];
+          });
+
+          // 상대가 보낸 메시지가 창을 열어둔 채로 실시간으로 왔으므로 곧바로 읽음 처리한다.
+          // (안 하면 창을 닫을 때 방금 다 읽은 방인데도 안읽음 뱃지가 떠버림)
+          if (incomingMessage.senderEmail !== email) {
+            markInquiryRead(roomId).catch((err) => {
+              console.error("읽음 처리 실패:", err);
+            });
           }
-          return [...prev, incomingMessage];
-        });
+        } else if (event.type === "READ") {
+          // 상대가 내 메시지를 읽었다는 신호 - 내가 보낸 메시지들의 읽음 표시를 갱신
+          if (event.readerEmail !== email) {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.senderEmail === email && !m.readByRecipient
+                  ? { ...m, readByRecipient: true }
+                  : m,
+              ),
+            );
+          }
+        }
       },
     );
 
     return unsubscribe;
-  }, [roomId, loadMessages]);
+  }, [roomId, loadMessages, email]);
 
-  // 새 메시지 오면 맨 아래로 스크롤
+  // 메시지 목록이 바뀔 때 맨 아래로 스크롤 — 방을 막 연 최초 1회는 즉시 이동(auto),
+  // 그 이후 실시간으로 도착하는 새 메시지는 부드럽게(smooth) 스크롤한다
   useEffect(() => {
-    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messages.length === 0) return;
+
+    const behavior = hasScrolledRef.current ? "smooth" : "auto";
+    messageEndRef.current?.scrollIntoView({ behavior });
+    hasScrolledRef.current = true;
   }, [messages]);
 
   // ESC 키 + 배경 스크롤 잠금
@@ -155,10 +217,10 @@ const CompanyChatModal = ({
     }
   };
 
-  // 채팅방 나가기 — 목록에서 완전히 제거 (서버 대화 기록은 유지)
+  // 채팅방 나가기 — 목록에서만 숨김 (서버 대화 기록은 유지, 상대가 새 메시지를 보내면 다시 표시됨)
   const handleLeaveClick = () => {
     const confirmed = window.confirm(
-      `${companyName} 문의 채팅을 나가시겠습니까?\n대화 내용은 남아있고, 나중에 다시 문의하면 이어서 볼 수 있습니다.`,
+      `${companyName} 문의 채팅을 목록에서 나가시겠습니까?\n대화 내용은 서버에 남아있고, 새 메시지가 오면 다시 표시됩니다.`,
     );
     if (confirmed) {
       onLeave();
@@ -177,11 +239,29 @@ const CompanyChatModal = ({
         className="flex h-[min(520px,80dvh)] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* 헤더 */}
+        {/* 헤더 — 지금 누구와 대화 중인지 사진+이름으로 한눈에 보이게 */}
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <div>
-            <p className="text-sm font-semibold text-ink">{companyName}</p>
-            <p className="text-xs text-ink-muted">{subtitle}</p>
+          <div className="flex min-w-0 items-center gap-2.5">
+            {cmno && (
+              <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full bg-surface">
+                {companyImage ? (
+                  <img
+                    src={companyImage}
+                    alt={companyName}
+                    className="h-full w-full object-cover"
+                    onError={() => setCompanyImage(null)}
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-sm text-ink-faint">
+                    {companyName?.[0] || "🏢"}
+                  </div>
+                )}
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-ink">{companyName}</p>
+              <p className="text-xs text-ink-muted">{subtitle}</p>
+            </div>
           </div>
           <div className="flex items-center gap-1">
             {onLeave && (
@@ -244,21 +324,26 @@ const CompanyChatModal = ({
                         {message.content}
                       </p>
                       <p
-                        className={`mt-1 text-[10px] ${
+                        className={`mt-1 flex items-center gap-1 text-[10px] ${
                           isMine(message.senderEmail)
-                            ? "text-white/70"
+                            ? "justify-end text-white/70"
                             : "text-ink-muted"
                         }`}
                       >
-                        {message.regDate
-                          ? new Date(message.regDate).toLocaleTimeString(
-                              "ko-KR",
-                              {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              },
-                            )
-                          : ""}
+                        {isMine(message.senderEmail) && (
+                          <span>{message.readByRecipient ? "읽음" : "안읽음"}</span>
+                        )}
+                        <span>
+                          {message.regDate
+                            ? new Date(message.regDate).toLocaleTimeString(
+                                "ko-KR",
+                                {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                },
+                              )
+                            : ""}
+                        </span>
                       </p>
                     </div>
                   </div>

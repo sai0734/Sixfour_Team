@@ -4,15 +4,19 @@ import com.wedding.inquiry.domain.InquiryMessage;
 import com.wedding.inquiry.domain.InquiryRoom;
 import com.wedding.inquiry.dto.InquiryMessageDTO;
 import com.wedding.inquiry.dto.InquiryRoomDTO;
+import com.wedding.inquiry.dto.InquiryRoomEventDTO;
 import com.wedding.inquiry.repository.InquiryMessageRepository;
 import com.wedding.inquiry.repository.InquiryRoomRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -27,6 +31,8 @@ public class InquiryServiceImpl implements InquiryService {
     private final SimpMessagingTemplate messagingTemplate;
 
     private static final String MANAGER_VIEWER_MARKER = "__MANAGER_VIEW__";
+    // 채팅창을 열 때 한 번에 불러오는 최근 메시지 개수 — 대화가 길어져도 매번 전체를 다시 안 불러온다
+    private static final int MESSAGE_LOAD_LIMIT = 50;
 
     // 문의하기 클릭 시 — 기존 방 있으면 반환, 없으면 새로 생성
     @Override
@@ -73,7 +79,7 @@ public class InquiryServiceImpl implements InquiryService {
                 .toList();
     }
 
-    // 채팅창 열 때 / 풀링할 때 특정 방의 메시지 목록 (시간순)
+    // 채팅창 열 때 / 풀링할 때 특정 방의 메시지 목록 (시간순, 최근 MESSAGE_LOAD_LIMIT개까지만)
     @Override
     // 조회와 동시에 읽음 시각을 갱신해야 해서 readOnly 트랜잭션에서 제외
     public List<InquiryMessageDTO> getMessages(Long roomId, String callerEmail) {
@@ -81,7 +87,32 @@ public class InquiryServiceImpl implements InquiryService {
 
         InquiryRoom room = inquiryAccessService.requireAccessibleRoom(callerEmail, roomId);
 
+        // 최신순으로 최대 N개만 가져온 뒤, 화면 표시 순서(오래된 것 → 최신)로 뒤집는다
+        List<InquiryMessage> recent = new ArrayList<>(
+                inquiryMessageRepository.findByRoomIdOrderByRegDateDesc(
+                        roomId, PageRequest.of(0, MESSAGE_LOAD_LIMIT)));
+        Collections.reverse(recent);
+
+        markReadAndBroadcast(room, callerEmail);
+
+        return recent.stream()
+                .map(message -> InquiryMessageDTO.from(message, room))
+                .toList();
+    }
+
+    // 채팅창을 열어둔 채로 실시간 메시지를 받았을 때 — 목록을 다시 안 불러오고 읽음 시각만 갱신
+    @Override
+    public void markRead(Long roomId, String callerEmail) {
+        log.info("InquiryServiceImpl_markRead_실행~~~~~~~~~~~");
+
+        InquiryRoom room = inquiryAccessService.requireAccessibleRoom(callerEmail, roomId);
+        markReadAndBroadcast(room, callerEmail);
+    }
+
+    // 읽음 시각 갱신 + 회원/매니저 뱃지 토픽 + 상대방이 지금 보고 있을 채팅창(room 토픽)까지 전부 알린다
+    private void markReadAndBroadcast(InquiryRoom room, String callerEmail) {
         LocalDateTime now = LocalDateTime.now();
+
         if (callerEmail.equals(room.getMemberEmail())) {
             room.markReadByMember(now);
             InquiryRoomDTO memberView = InquiryRoomDTO.from(room, room.getMemberEmail());
@@ -92,10 +123,9 @@ public class InquiryServiceImpl implements InquiryService {
             messagingTemplate.convertAndSend("/topic/inquiries/company/" + room.getCmno(), managerView);
         }
 
-        return inquiryMessageRepository.findByRoomIdOrderByRegDateAsc(roomId)
-                .stream()
-                .map(InquiryMessageDTO::from)
-                .toList();
+        messagingTemplate.convertAndSend(
+                "/topic/inquiries/room/" + room.getRoomId(),
+                InquiryRoomEventDTO.read(callerEmail, now));
     }
 
     // 메시지 전송 - 저장 + 방의 LastMessageAt 갱신
@@ -127,10 +157,11 @@ public class InquiryServiceImpl implements InquiryService {
             room.markReadByManager(now);
         }
 
-        InquiryMessageDTO messageDTO = InquiryMessageDTO.from(saved);
+        InquiryMessageDTO messageDTO = InquiryMessageDTO.from(saved, room);
 
         // 채팅창이 열려있는 쪽(방을 구독 중인 클라이언트)에게 새 메시지를 즉시 밀어줌
-        messagingTemplate.convertAndSend("/topic/inquiries/room/" + roomId, messageDTO);
+        messagingTemplate.convertAndSend(
+                "/topic/inquiries/room/" + roomId, InquiryRoomEventDTO.message(messageDTO));
 
         // 회원/매니저 양쪽 뱃지·목록용 토픽에도 갱신된 방 상태를 밀어줌 (누가 보냈든 둘 다 lastMessageAt이 바뀌었으므로)
         InquiryRoomDTO memberView = InquiryRoomDTO.from(room, room.getMemberEmail());
@@ -140,6 +171,5 @@ public class InquiryServiceImpl implements InquiryService {
         messagingTemplate.convertAndSend("/topic/inquiries/company/" + room.getCmno(), managerView);
 
         return messageDTO;
-
     }
 }
