@@ -114,6 +114,7 @@ public class ProductServiceImpl implements ProductService {
 
         switch (sortType) {
             case "popular":
+            case "salesDesc": // 관리자 상품목록 정렬용 (판매량순)
                 return Sort.by("salesCount").descending();
             case "priceAsc":
                 return Sort.by("price").ascending();
@@ -121,6 +122,8 @@ public class ProductServiceImpl implements ProductService {
                 return Sort.by("price").descending();
             case "reviews":
                 return Sort.by("reviewCount").descending();
+            case "stockAsc": // 관리자 상품목록 정렬용 (재고적은순)
+                return Sort.by("stockQty").ascending();
             case "latest":
             default:
                 return Sort.by("pno").descending();
@@ -241,6 +244,7 @@ public class ProductServiceImpl implements ProductService {
                 searchDTO.getKeyword(),
                 searchDTO.getCategory(),
                 searchDTO.getSaleStatus(),
+                LOW_STOCK_THRESHOLD,
                 pageable);
 
         List<AdminProductListDTO> dtoList = result.get().map(arr -> {
