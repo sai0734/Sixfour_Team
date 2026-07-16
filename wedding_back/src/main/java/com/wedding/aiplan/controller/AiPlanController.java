@@ -1,12 +1,15 @@
 package com.wedding.aiplan.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.wedding.aiplan.dto.AiPlanDetailRequestDTO;
 import com.wedding.aiplan.dto.AiPlanQuickRequestDTO;
 import com.wedding.aiplan.dto.AiPlanQuickResultDTO;
+import com.wedding.aiplan.service.AiPlanAiService;
 import com.wedding.aiplan.service.AiPlanDetailService;
 import com.wedding.aiplan.service.AiPlanQuickService;
 
@@ -23,6 +26,7 @@ public class AiPlanController {
 
     private final AiPlanQuickService aiPlanQuickService;
     private final AiPlanDetailService aiPlanDetailService;
+    private final AiPlanAiService aiPlanAiService;
 
     // 예: GET /api/aiplan/quick?budget=30000000&region=강남&weddingDate=2027-05-01
     @GetMapping("/quick")
@@ -40,6 +44,15 @@ public class AiPlanController {
         log.info("AiPlan detail request: {}", requestDTO);
 
         return aiPlanDetailService.getDetailRecommendations(requestDTO);
+    }
+
+    // 외부 AI API를 호출하는 비용이 드는 작업이라 GET 쿼리파라미터가 아니라 POST 바디로 받음
+    @PostMapping("/ai")
+    public AiPlanQuickResultDTO ai(@RequestBody AiPlanDetailRequestDTO requestDTO) {
+
+        log.info("AiPlan AI request: {}", requestDTO);
+
+        return aiPlanAiService.getAiRecommendations(requestDTO);
     }
 
 }

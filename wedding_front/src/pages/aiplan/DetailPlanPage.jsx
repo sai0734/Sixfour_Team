@@ -3,7 +3,10 @@ import { useSearchParams } from "react-router-dom";
 import TapeLabel from "../../components/common/TapeLabel";
 import FetchingModal from "../../components/common/FetchingModal";
 import ResultCards from "../../components/aiplan/ResultCards";
-import { getDetailRecommendations } from "../../api/aiPlanApi";
+import {
+  getDetailRecommendations,
+  getAiRecommendations,
+} from "../../api/aiPlanApi";
 
 // com.wedding.company.domain.HallType 그대로 - 한글 라벨만 붙임
 const HALL_TYPE_OPTIONS = [
@@ -40,6 +43,19 @@ const DetailPlanPage = () => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
+  const buildPayload = () => ({
+    budget: Number(form.budgetManwon) * 10000,
+    region: form.region,
+    groomName: form.groomName || null,
+    brideName: form.brideName || null,
+    weddingDate: form.weddingDate || null,
+    hallType: form.hallType || null,
+    studioMood: form.studioMood || null,
+    dressStyle: form.dressStyle || null,
+    makeupStyle: form.makeupStyle || null,
+    freeText: form.freeText || null,
+  });
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -51,23 +67,34 @@ const DetailPlanPage = () => {
     setError(null);
     setLoading(true);
 
-    getDetailRecommendations({
-      budget: Number(form.budgetManwon) * 10000,
-      region: form.region,
-      groomName: form.groomName || null,
-      brideName: form.brideName || null,
-      weddingDate: form.weddingDate || null,
-      hallType: form.hallType || null,
-      studioMood: form.studioMood || null,
-      dressStyle: form.dressStyle || null,
-      makeupStyle: form.makeupStyle || null,
-      freeText: form.freeText || null,
-    })
+    getDetailRecommendations(buildPayload())
       .then((data) => setResult(data))
       .catch((err) => {
         console.error(err);
         setError(
           "추천을 불러오는 중 문제가 발생했어요. 잠시 후 다시 시도해주세요.",
+        );
+      })
+      .finally(() => setLoading(false));
+  };
+
+  const handleSubmitAi = (e) => {
+    e.preventDefault();
+
+    if (!form.budgetManwon || !form.region) {
+      setError("총 예산과 지역은 필수로 입력해주세요.");
+      return;
+    }
+
+    setError(null);
+    setLoading(true);
+
+    getAiRecommendations(buildPayload())
+      .then((data) => setResult(data))
+      .catch((err) => {
+        console.error(err);
+        setError(
+          "AI 추천을 불러오는 중 문제가 발생했어요. 잠시 후 다시 시도해주세요.",
         );
       })
       .finally(() => setLoading(false));
@@ -215,7 +242,7 @@ const DetailPlanPage = () => {
                 value={form.freeText}
                 onChange={handleChange("freeText")}
                 rows={3}
-                placeholder="예: 하객이 많아서 넓은 홀이었으면 좋겠어요 (아직 추천에는 반영되지 않고, AI 연동 이후 단계에서 사용될 예정이에요)"
+                placeholder="예: 하객이 많아서 넓은 홀이었으면 좋겠어요 (아래 'AI에게 맡기기'로 추천받을 때만 반영돼요)"
                 className={inputClass}
               />
             </div>
@@ -223,13 +250,23 @@ const DetailPlanPage = () => {
 
           {error && <p className="mt-4 text-sm text-red-500">{error}</p>}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-6 h-12 w-full rounded-full bg-brand text-sm font-medium text-white hover:bg-brand-dark disabled:opacity-60"
-          >
-            취향 반영해서 추천받기
-          </button>
+          <div className="mt-6 flex flex-col gap-3 md:flex-row">
+            <button
+              type="submit"
+              disabled={loading}
+              className="h-12 flex-1 rounded-full bg-brand text-sm font-medium text-white hover:bg-brand-dark disabled:opacity-60"
+            >
+              규칙 기반으로 추천받기
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmitAi}
+              disabled={loading}
+              className="h-12 flex-1 rounded-full border border-brand-dark text-sm font-medium text-brand-deep hover:bg-surface disabled:opacity-60"
+            >
+              AI에게 맡기기
+            </button>
+          </div>
         </form>
       ) : (
         <div>
