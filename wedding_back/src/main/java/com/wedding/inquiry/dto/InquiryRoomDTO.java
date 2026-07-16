@@ -34,9 +34,16 @@ public class InquiryRoomDTO {
     // 안읽은 메시지가 있는지 여부
     private boolean unread;
 
-    // Entity → DTO 변환 (Service에서 사용)
-    // Entity → DTO 변환 (viewerEmail 기준으로 unread 계산 — 회원 화면/매니저 화면 공용)
+    // 문의한 회원의 닉네임 — 매니저 화면(목록·채팅헤더)에서 이메일 대신 표시하기 위함
+    private String memberNickname;
+
+    // Entity → DTO 변환 (Service에서 사용) — 닉네임이 필요 없는 회원 본인 화면용
     public static InquiryRoomDTO from(InquiryRoom room, String viewerEmail) {
+        return from(room, viewerEmail, null);
+    }
+
+    // Entity → DTO 변환 (viewerEmail 기준으로 unread 계산 — 회원 화면/매니저 화면 공용)
+    public static InquiryRoomDTO from(InquiryRoom room, String viewerEmail, String memberNickname) {
         boolean isMemberView = room.getMemberEmail().equals(viewerEmail);
         LocalDateTime lastReadAt = isMemberView
                 ? room.getMemberLastReadAt()
@@ -52,6 +59,7 @@ public class InquiryRoomDTO {
                 .lastMessageAt(room.getLastMessageAt())
                 .regDate(room.getRegDate())
                 .unread(unread)
+                .memberNickname(memberNickname)
                 .build();
     }
 }

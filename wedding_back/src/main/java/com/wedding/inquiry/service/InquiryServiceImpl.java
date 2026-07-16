@@ -7,6 +7,8 @@ import com.wedding.inquiry.dto.InquiryRoomDTO;
 import com.wedding.inquiry.dto.InquiryRoomEventDTO;
 import com.wedding.inquiry.repository.InquiryMessageRepository;
 import com.wedding.inquiry.repository.InquiryRoomRepository;
+import com.wedding.member.domain.Member;
+import com.wedding.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.PageRequest;
@@ -29,6 +31,7 @@ public class InquiryServiceImpl implements InquiryService {
     private final InquiryMessageRepository inquiryMessageRepository;
     private final InquiryAccessService inquiryAccessService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final MemberRepository memberRepository;
 
     private static final String MANAGER_VIEWER_MARKER = "__MANAGER_VIEW__";
     // 채팅창을 열 때 한 번에 불러오는 최근 메시지 개수 — 대화가 길어져도 매번 전체를 다시 안 불러온다
@@ -63,8 +66,13 @@ public class InquiryServiceImpl implements InquiryService {
 
         return inquiryRoomRepository.findByCmnoOrderByLastMessageAtDesc(cmno)
                 .stream()
-                .map(room -> InquiryRoomDTO.from(room, callerEmail))
+                .map(room -> InquiryRoomDTO.from(room, callerEmail, resolveMemberNickname(room.getMemberEmail())))
                 .toList();
+    }
+
+    // 문의한 회원의 닉네임 조회 — 매니저 화면(목록·채팅헤더)에서 이메일 대신 표시하기 위함
+    private String resolveMemberNickname(String memberEmail) {
+        return memberRepository.findById(memberEmail).map(Member::getNickname).orElse(null);
     }
 
     // 회원 화면 - 내가 연 모든 문의방 목록 (안읽음 뱃지 폴링용)
@@ -119,7 +127,8 @@ public class InquiryServiceImpl implements InquiryService {
             messagingTemplate.convertAndSend("/topic/inquiries/member/" + room.getMemberEmail(), memberView);
         } else {
             room.markReadByManager(now);
-            InquiryRoomDTO managerView = InquiryRoomDTO.from(room, MANAGER_VIEWER_MARKER);
+            InquiryRoomDTO managerView = InquiryRoomDTO.from(
+                    room, MANAGER_VIEWER_MARKER, resolveMemberNickname(room.getMemberEmail()));
             messagingTemplate.convertAndSend("/topic/inquiries/company/" + room.getCmno(), managerView);
         }
 
@@ -167,7 +176,8 @@ public class InquiryServiceImpl implements InquiryService {
         InquiryRoomDTO memberView = InquiryRoomDTO.from(room, room.getMemberEmail());
         messagingTemplate.convertAndSend("/topic/inquiries/member/" + room.getMemberEmail(), memberView);
 
-        InquiryRoomDTO managerView = InquiryRoomDTO.from(room, MANAGER_VIEWER_MARKER);
+        InquiryRoomDTO managerView = InquiryRoomDTO.from(
+                room, MANAGER_VIEWER_MARKER, resolveMemberNickname(room.getMemberEmail()));
         messagingTemplate.convertAndSend("/topic/inquiries/company/" + room.getCmno(), managerView);
 
         return messageDTO;
