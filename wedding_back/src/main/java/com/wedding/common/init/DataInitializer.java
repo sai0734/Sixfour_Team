@@ -57,6 +57,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -759,6 +760,7 @@ public class DataInitializer implements ApplicationRunner {
         saveOrderFromJson(o, orderItemMap);
       }
       spreadOrderRegDates();
+      spreadOrderStatuses();
     }
 
     List<Map<String, Object>> reviews = castList(root.get("reviews"));
@@ -816,6 +818,40 @@ public class DataInitializer implements ApplicationRunner {
 
     log.info("Spread {} order regdate values across {} months ({} ~ {}).",
             orderIds.size(), months.size(), months.get(0), months.get(months.size() - 1));
+  }
+
+  // commerce_dummy.json 주문은 전부 orderStatus가 PAID/SHIPPING/DELIVERED 셋 중 하나로만 채워져 있어서
+  // 관리자 대시보드 "처리 필요 주문" 카드(결제완료/배송준비/교환신청/환불신청 4분류)가 결제완료 쪽으로만
+  // 쏠려 보임. 그래서 PAID 주문 일부를 배송준비/교환신청/환불신청으로 재분배해 실제 서비스처럼 고르게 보이게 함.
+  private void spreadOrderStatuses() {
+    List<Long> paidOrderIds = jdbcTemplate.queryForList(
+            "select ono from tbl_orders where order_status = 'PAID'", Long.class);
+    if (paidOrderIds.isEmpty()) {
+      return;
+    }
+
+    Collections.shuffle(paidOrderIds, new Random());
+
+    int total = paidOrderIds.size();
+    int shippingReadyCount = (int) Math.round(total * 0.25);
+    int exchangeCount = (int) Math.round(total * 0.20);
+    int refundCount = (int) Math.round(total * 0.15);
+    // 나머지는 PAID로 그대로 둠
+
+    updateOrderStatuses(paidOrderIds.subList(0, shippingReadyCount), "SHIPPING_READY");
+    updateOrderStatuses(paidOrderIds.subList(shippingReadyCount, shippingReadyCount + exchangeCount), "EXCHANGE_REQUESTED");
+    updateOrderStatuses(
+            paidOrderIds.subList(shippingReadyCount + exchangeCount, shippingReadyCount + exchangeCount + refundCount),
+            "REFUND_REQUESTED");
+
+    log.info("Spread PAID orders: {} -> SHIPPING_READY, {} -> EXCHANGE_REQUESTED, {} -> REFUND_REQUESTED (총 {}건 중).",
+            shippingReadyCount, exchangeCount, refundCount, total);
+  }
+
+  private void updateOrderStatuses(List<Long> onos, String status) {
+    for (Long ono : onos) {
+      jdbcTemplate.update("update tbl_orders set order_status = ? where ono = ?", status, ono);
+    }
   }
 
   private YearMonth pickWeightedMonth(List<YearMonth> months, List<Integer> weights, int totalWeight, Random random) {
