@@ -27,6 +27,14 @@ export const putQna = async (pno, qno, content) => {
   return res.data;
 };
 
+// 관리자 - 답변 없는 상품 Q&A 목록 (전체 상품 기준)
+export const getUnansweredQnaList = async ({ page, size }) => {
+  const res = await jwtAxios.get(`${API_SERVER_HOST}/api/admin/qna/unanswered`, {
+    params: { page, size },
+  });
+  return res.data;
+};
+
 // 관리자 답변 등록
 export const postQnaReply = async (pno, qno, content) => {
   const formData = new FormData();

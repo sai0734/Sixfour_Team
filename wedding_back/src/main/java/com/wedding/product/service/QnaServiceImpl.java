@@ -1,12 +1,19 @@
 package com.wedding.product.service;
 
+import com.wedding.global.dto.PageRequestDTO;
+import com.wedding.global.dto.PageResponseDTO;
 import com.wedding.member.domain.Member;
 import com.wedding.product.domain.Product;
 import com.wedding.product.domain.Qna;
+import com.wedding.product.dto.AdminQnaListDTO;
 import com.wedding.product.dto.QnaDTO;
 import com.wedding.product.repository.QnaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -52,6 +59,32 @@ public class QnaServiceImpl implements QnaService {
                 .content(qna.getContent())
                 .regDate(qna.getRegDate())
                 .answers(answers)
+                .build();
+    }
+
+    // 관리자용 - 답변 없는 질문 목록 (상품 무관, 전체)
+    @Override
+    public PageResponseDTO<AdminQnaListDTO> listUnanswered(PageRequestDTO requestDTO) {
+
+        Pageable pageable = PageRequest.of(requestDTO.getPage() - 1, requestDTO.getSize(), Sort.by("qno").descending());
+
+        Page<Qna> result = qnaRepository.findUnansweredQuestions(pageable);
+
+        List<AdminQnaListDTO> dtoList = result.get().map(q -> AdminQnaListDTO.builder()
+                .qno(q.getQno())
+                .pno(q.getProduct().getPno())
+                .pname(q.getProduct().getPname())
+                .memberEmail(q.getMember().getEmail())
+                .nickname(q.getMember().getNickname())
+                .content(q.getContent())
+                .regDate(q.getRegDate())
+                .build()
+        ).collect(Collectors.toList());
+
+        return PageResponseDTO.<AdminQnaListDTO>withAll()
+                .dtoList(dtoList)
+                .pageRequestDTO(requestDTO)
+                .totalCount(result.getTotalElements())
                 .build();
     }
 

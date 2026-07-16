@@ -222,7 +222,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
                 .label("답변 안 된 상품 Q&A")
                 .count(unansweredQuestions)
                 .tone("info")
-                .link("/admin/products")
+                .link("/admin/qna")
                 .build());
 
         return todos;
