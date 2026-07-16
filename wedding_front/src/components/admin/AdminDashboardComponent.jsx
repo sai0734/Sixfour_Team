@@ -1,5 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { getCompanyImageUrl, getList } from "../../api/companyApi";
+import { getDashboardSummary } from "../../api/adminDashboardApi";
 
 const categoryLabel = {
   HALL: "웨딩홀",
@@ -15,24 +32,42 @@ const categoryColors = {
   STUDIO: "bg-blue-500",
 };
 
-const initState = {
-  dtoList: [],
-  totalCount: 0,
+const memberStatusLabel = {
+  active: "정상",
+  dormant: "휴면",
+  blacklist: "정지",
+  withdrawn: "탈퇴",
 };
 
+const MEMBER_STATUS_COLORS = ["#10b981", "#94a3b8", "#ef4444", "#64748b"];
+
+const toneStyle = {
+  info: "border-blue-400 bg-blue-50 text-blue-700",
+  warning: "border-amber-400 bg-amber-50 text-amber-700",
+  danger: "border-red-400 bg-red-50 text-red-700",
+};
+
+const initCompanyState = { dtoList: [], totalCount: 0 };
+
 const AdminDashboardComponent = () => {
-  const [serverData, setServerData] = useState(initState);
-  const [fetching, setFetching] = useState(true);
-  const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  const [companyData, setCompanyData] = useState(initCompanyState);
+  const [companyFetching, setCompanyFetching] = useState(true);
+  const [companyError, setCompanyError] = useState("");
+
+  const [summary, setSummary] = useState(null);
+  const [summaryFetching, setSummaryFetching] = useState(true);
+  const [summaryError, setSummaryError] = useState("");
 
   useEffect(() => {
-    setFetching(true);
-    setError("");
+    setCompanyFetching(true);
+    setCompanyError("");
 
     getList({ page: 1, size: 100, sort: "latest" })
       .then((data) => {
-        setServerData({
-          ...initState,
+        setCompanyData({
+          ...initCompanyState,
           ...data,
           dtoList: data?.dtoList || [],
           totalCount: data?.totalCount || data?.dtoList?.length || 0,
@@ -40,11 +75,22 @@ const AdminDashboardComponent = () => {
       })
       .catch((err) => {
         console.error(err);
-        setError("등록 업체 데이터를 불러오지 못했습니다.");
+        setCompanyError("등록 업체 데이터를 불러오지 못했습니다.");
       })
-      .finally(() => {
-        setFetching(false);
-      });
+      .finally(() => setCompanyFetching(false));
+  }, []);
+
+  useEffect(() => {
+    setSummaryFetching(true);
+    setSummaryError("");
+
+    getDashboardSummary()
+      .then((data) => setSummary(data))
+      .catch((err) => {
+        console.error(err);
+        setSummaryError("대시보드 요약 데이터를 불러오지 못했습니다.");
+      })
+      .finally(() => setSummaryFetching(false));
   }, []);
 
   const today = useMemo(() => {
@@ -52,8 +98,8 @@ const AdminDashboardComponent = () => {
     return `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}.${String(now.getDate()).padStart(2, "0")}`;
   }, []);
 
-  const stats = useMemo(() => {
-    const companies = serverData.dtoList;
+  const companyStats = useMemo(() => {
+    const companies = companyData.dtoList;
     const activeCompanies = companies.filter((company) => !company.delFlag);
     const totalPrice = activeCompanies.reduce((sum, company) => sum + Number(company.priceAvg || 0), 0);
     const pricedCompanies = activeCompanies.filter((company) => Number(company.priceAvg || 0) > 0);
@@ -66,11 +112,13 @@ const AdminDashboardComponent = () => {
     }, {});
 
     const topCategory = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])[0];
-    const highestPriceCompany = [...activeCompanies].sort((a, b) => Number(b.priceAvg || 0) - Number(a.priceAvg || 0))[0];
+    const highestPriceCompany = [...activeCompanies].sort(
+      (a, b) => Number(b.priceAvg || 0) - Number(a.priceAvg || 0),
+    )[0];
     const newestCompanies = [...activeCompanies].slice(0, 5);
 
     return {
-      total: serverData.totalCount || companies.length,
+      total: companyData.totalCount || companies.length,
       active: activeCompanies.length,
       averagePrice,
       categoryCounts,
@@ -78,73 +126,236 @@ const AdminDashboardComponent = () => {
       highestPriceCompany,
       newestCompanies,
     };
-  }, [serverData]);
+  }, [companyData]);
 
-  const maxCategoryCount = Math.max(1, ...Object.values(stats.categoryCounts));
+  const maxCategoryCount = Math.max(1, ...Object.values(companyStats.categoryCounts));
+
+  const categoryChartData = Object.entries(categoryLabel).map(([category, label]) => ({
+    name: label,
+    개수: companyStats.categoryCounts[category] || 0,
+  }));
+
+  const memberChartData = summary
+    ? [
+        { name: memberStatusLabel.active, value: summary.memberStats.active },
+        { name: memberStatusLabel.dormant, value: summary.memberStats.dormant },
+        { name: memberStatusLabel.blacklist, value: summary.memberStats.blacklist },
+        { name: memberStatusLabel.withdrawn, value: summary.memberStats.withdrawn },
+      ].filter((row) => row.value > 0)
+    : [];
+
+  const orderChartData = summary
+    ? [
+        { name: "결제완료", 건수: summary.orderStats.paid },
+        { name: "배송중", 건수: summary.orderStats.shipping },
+        { name: "배송완료", 건수: summary.orderStats.delivered },
+      ]
+    : [];
+
+  const handleTodoClick = (todo) => {
+    if (todo.link) navigate(todo.link);
+  };
 
   return (
     <section className="mx-auto max-w-6xl p-4 text-slate-800">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold">관리자 대시보드</h2>
-          <p className="mt-1 text-sm text-slate-500">{today} 기준 등록 업체 현황입니다.</p>
+          <p className="mt-1 text-sm text-slate-500">{today} 기준 전체 운영 현황입니다.</p>
         </div>
         <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
-          {fetching ? "데이터 불러오는 중" : `업체 ${stats.total}개 분석`}
+          {summaryFetching ? "데이터 불러오는 중" : "실시간 요약"}
         </span>
       </div>
 
-      {error ? (
+      {summaryError ? (
         <div className="mb-5 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
+          {summaryError}
+        </div>
+      ) : null}
+
+      {/* ===== 전체 핵심 지표 (전체 회원이 맨 위) ===== */}
+      <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Kpi label="전체 회원" value={summary ? `${summary.memberStats.total}명` : "-"} desc={`오늘 신규 ${summary?.memberStats.newToday ?? 0}명`} />
+        <div className="rounded-lg bg-slate-50 p-4">
+          <div className="text-xs text-slate-500">누적 매출</div>
+          <div className="mt-2 text-2xl font-semibold text-blue-600">
+            {summary ? `${Number(summary.orderStats.totalRevenue).toLocaleString()}원` : "-"}
+          </div>
+          <div className="mt-2 text-xs">
+            {summary ? <RevenueChangeBadge orderStats={summary.orderStats} /> : <span className="text-slate-500">-</span>}
+          </div>
+        </div>
+        <Kpi label="전체 게시글" value={summary ? `${summary.boardStats.total}건` : "-"} desc={`오늘 ${summary?.boardStats.todayCount ?? 0}건 작성`} tone="success" />
+        <Kpi label="진행중 문의" value={summary ? `${summary.inquiryStats.openRooms}건` : "-"} desc={`종료 ${summary?.inquiryStats.closedRooms ?? 0}건`} tone="warning" />
+      </div>
+
+      {/* ===== 월별 매출 추이 ===== */}
+      <Panel title="월별 매출 추이" badge="최근 6개월">
+        {summary?.monthlyRevenue?.length ? (
+          <ResponsiveContainer width="100%" height={220}>
+            <LineChart data={summary.monthlyRevenue.map((row) => ({ ...row, 매출: row.revenue }))}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" fontSize={12} />
+              <YAxis fontSize={12} tickFormatter={(v) => `${Math.round(v / 10000)}만`} />
+              <Tooltip formatter={(value) => `${Number(value).toLocaleString()}원`} />
+              <Line type="monotone" dataKey="매출" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        ) : (
+          <EmptyText>{summaryFetching ? "불러오는 중..." : "매출 데이터가 없습니다."}</EmptyText>
+        )}
+      </Panel>
+
+      {/* ===== 오늘의 할 일 ===== */}
+      <Panel title="오늘의 할 일" badge="관리자 액션 필요">
+        {summaryFetching ? (
+          <EmptyText>불러오는 중...</EmptyText>
+        ) : summary?.todos?.length ? (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {summary.todos.map((todo, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={() => handleTodoClick(todo)}
+                disabled={!todo.link}
+                className={`rounded-lg border-l-4 p-4 text-left transition ${toneStyle[todo.tone] || toneStyle.info} ${
+                  todo.link ? "cursor-pointer hover:opacity-80" : "cursor-default"
+                }`}
+              >
+                <div className="text-xl font-semibold">{todo.count}건</div>
+                <div className="mt-1 text-sm font-medium">{todo.label}</div>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <EmptyText>오늘 처리할 항목이 없습니다. 🎉</EmptyText>
+        )}
+      </Panel>
+
+      {/* ===== 회원 / 주문 차트 ===== */}
+      <div className="mb-5 grid gap-4 md:grid-cols-2">
+        <Panel title="회원 상태 분포" badge="전체 회원 기준">
+          {memberChartData.length ? (
+            <ResponsiveContainer width="100%" height={220}>
+              <PieChart>
+                <Pie data={memberChartData} dataKey="value" nameKey="name" outerRadius={80} label>
+                  {memberChartData.map((entry, index) => (
+                    <Cell key={entry.name} fill={MEMBER_STATUS_COLORS[index % MEMBER_STATUS_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <EmptyText>{summaryFetching ? "불러오는 중..." : "회원 데이터가 없습니다."}</EmptyText>
+          )}
+        </Panel>
+
+        <Panel title="주문 상태 현황" badge="PENDING 제외">
+          {orderChartData.length ? (
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={orderChartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" fontSize={12} />
+                <YAxis allowDecimals={false} fontSize={12} />
+                <Tooltip />
+                <Bar dataKey="건수" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <EmptyText>{summaryFetching ? "불러오는 중..." : "주문 데이터가 없습니다."}</EmptyText>
+          )}
+        </Panel>
+      </div>
+
+      {/* ===== 예약 / 재고 요약 ===== */}
+      <div className="mb-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Panel title="예약 현황" badge="전체 예약">
+          <div className="space-y-3">
+            <MiniStat label="전체 예약" value={summary ? `${summary.reservationStats.total}건` : "-"} />
+            <MiniStat label="확정 대기" value={summary ? `${summary.reservationStats.pending}건` : "-"} tone="warning" />
+            <MiniStat label="결제 완료" value={summary ? `${summary.reservationStats.paidCount}건` : "-"} tone="success" />
+            <MiniStat label="이번 주 예식 예정" value={summary ? `${summary.reservationStats.weddingThisWeek}건` : "-"} tone="accent" />
+          </div>
+        </Panel>
+
+        <Panel title="게시판 현황" badge="자유 · 후기">
+          <div className="space-y-3">
+            <MiniStat label="자유게시판" value={summary ? `${summary.boardStats.freeCount}건` : "-"} />
+            <MiniStat label="후기게시판" value={summary ? `${summary.boardStats.reviewCount}건` : "-"} />
+            <MiniStat label="오늘 작성" value={summary ? `${summary.boardStats.todayCount}건` : "-"} tone="accent" />
+          </div>
+        </Panel>
+
+        <Panel title="재고 부족 상품" badge={`${summary?.productStats.lowStockCount ?? 0}개`}>
+          {summary?.productStats.lowStockProducts?.length ? (
+            <div className="space-y-2">
+              {summary.productStats.lowStockProducts.map((product) => (
+                <div key={product.pno} className="flex items-center justify-between rounded-md bg-red-50 px-3 py-2 text-sm">
+                  <span className="truncate text-red-700">{product.pname}</span>
+                  <span className="font-semibold text-red-700">{product.stockQty}개</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyText>{summaryFetching ? "불러오는 중..." : "재고 부족 상품이 없습니다."}</EmptyText>
+          )}
+        </Panel>
+      </div>
+
+      {/* ===== 업체 현황 (기존) ===== */}
+      <div className="mb-2 mt-8 text-sm font-semibold text-slate-500">업체 현황</div>
+
+      {companyError ? (
+        <div className="mb-5 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {companyError}
         </div>
       ) : null}
 
       <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Kpi label="전체 업체" value={`${stats.total}개`} desc="등록된 전체 업체" />
-        <Kpi label="활성 업체" value={`${stats.active}개`} desc="삭제 처리 제외" tone="success" />
-        <Kpi label="평균 가격" value={`${stats.averagePrice.toLocaleString()}원`} desc="가격 등록 업체 기준" tone="accent" />
+        <Kpi label="전체 업체" value={`${companyStats.total}개`} desc="등록된 전체 업체" />
+        <Kpi label="활성 업체" value={`${companyStats.active}개`} desc="삭제 처리 제외" tone="success" />
+        <Kpi label="평균 가격" value={`${companyStats.averagePrice.toLocaleString()}원`} desc="가격 등록 업체 기준" tone="accent" />
         <Kpi
           label="최다 유형"
-          value={stats.topCategory ? categoryLabel[stats.topCategory[0]] || stats.topCategory[0] : "-"}
-          desc={stats.topCategory ? `${stats.topCategory[1]}개 등록` : "데이터 없음"}
+          value={companyStats.topCategory ? categoryLabel[companyStats.topCategory[0]] || companyStats.topCategory[0] : "-"}
+          desc={companyStats.topCategory ? `${companyStats.topCategory[1]}개 등록` : "데이터 없음"}
           tone="warning"
         />
       </div>
 
       <div className="mb-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Panel title="업체 유형 분포" badge="카테고리별">
-          <div className="space-y-4">
-            {Object.entries(categoryLabel).map(([category, label]) => {
-              const count = stats.categoryCounts[category] || 0;
-              const percent = Math.round((count / maxCategoryCount) * 100);
-
-              return (
-                <div key={category}>
-                  <div className="mb-1 flex justify-between text-sm">
-                    <span>{label}</span>
-                    <span className="font-medium">{count}개</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-slate-100">
-                    <div className={`h-2 rounded-full ${categoryColors[category]}`} style={{ width: `${percent}%` }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          {companyFetching ? (
+            <EmptyText>불러오는 중...</EmptyText>
+          ) : (
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={categoryChartData} layout="vertical" margin={{ left: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                <XAxis type="number" allowDecimals={false} fontSize={12} />
+                <YAxis type="category" dataKey="name" fontSize={12} width={60} />
+                <Tooltip />
+                <Bar dataKey="개수" fill="#ec4899" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </Panel>
 
         <Panel title="가격 요약" badge="평균가 기준">
           <div className="flex h-full flex-col justify-between gap-4">
             <div>
               <div className="text-sm text-slate-500">평균 가격</div>
-              <div className="mt-2 text-3xl font-semibold text-blue-700">{stats.averagePrice.toLocaleString()}원</div>
+              <div className="mt-2 text-3xl font-semibold text-blue-700">{companyStats.averagePrice.toLocaleString()}원</div>
             </div>
             <div className="rounded-md bg-slate-50 p-4">
               <div className="text-xs text-slate-500">최고가 업체</div>
-              <div className="mt-1 truncate font-semibold">{stats.highestPriceCompany?.name || "-"}</div>
+              <div className="mt-1 truncate font-semibold">{companyStats.highestPriceCompany?.name || "-"}</div>
               <div className="mt-1 text-sm text-slate-600">
-                {stats.highestPriceCompany?.priceAvg ? `${Number(stats.highestPriceCompany.priceAvg).toLocaleString()}원` : "가격 정보 없음"}
+                {companyStats.highestPriceCompany?.priceAvg
+                  ? `${Number(companyStats.highestPriceCompany.priceAvg).toLocaleString()}원`
+                  : "가격 정보 없음"}
               </div>
             </div>
           </div>
@@ -152,8 +363,8 @@ const AdminDashboardComponent = () => {
 
         <Panel title="운영 체크" badge="업체 데이터">
           <div className="space-y-3">
-            <Todo tone="info" count={stats.active} title="노출 가능 업체" desc="사용자에게 보여줄 수 있는 업체입니다." />
-            <Todo tone="warning" count={stats.total - stats.active} title="비활성 업체" desc="삭제 처리되었거나 숨김 상태입니다." />
+            <MiniStat label="노출 가능 업체" value={`${companyStats.active}개`} tone="accent" />
+            <MiniStat label="비활성 업체" value={`${companyStats.total - companyStats.active}개`} tone="warning" />
           </div>
         </Panel>
       </div>
@@ -161,8 +372,8 @@ const AdminDashboardComponent = () => {
       <div className="grid gap-4 md:grid-cols-2">
         <Panel title="최근 등록 업체" badge="최신순 5개">
           <div className="space-y-3">
-            {stats.newestCompanies.length ? (
-              stats.newestCompanies.map((company, index) => (
+            {companyStats.newestCompanies.length ? (
+              companyStats.newestCompanies.map((company, index) => (
                 <CompanyRow key={company.cmno || company.name} rank={index + 1} company={company} />
               ))
             ) : (
@@ -177,7 +388,7 @@ const AdminDashboardComponent = () => {
               <div key={category} className="rounded-md bg-slate-50 p-4">
                 <div className={`mb-3 h-2 w-10 rounded-full ${categoryColors[category]}`} />
                 <div className="text-sm text-slate-500">{label}</div>
-                <div className="mt-1 text-2xl font-semibold">{stats.categoryCounts[category] || 0}개</div>
+                <div className="mt-1 text-2xl font-semibold">{companyStats.categoryCounts[category] || 0}개</div>
               </div>
             ))}
           </div>
@@ -205,7 +416,7 @@ const Kpi = ({ label, value, desc, tone = "default" }) => {
 };
 
 const Panel = ({ title, badge, children }) => (
-  <div className="rounded-lg border border-slate-200 bg-white p-5">
+  <div className="mb-5 rounded-lg border border-slate-200 bg-white p-5">
     <div className="mb-4 flex items-center justify-between">
       <h3 className="font-semibold">{title}</h3>
       <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs text-blue-700">{badge}</span>
@@ -214,17 +425,43 @@ const Panel = ({ title, badge, children }) => (
   </div>
 );
 
-const Todo = ({ tone, count, title, desc }) => {
-  const toneMap = {
-    warning: "border-amber-400 bg-amber-50 text-amber-700",
-    info: "border-blue-400 bg-blue-50 text-blue-700",
-  };
+// 이번 달 매출을 지난달과 비교해서 증감률/증감액을 뱃지로 보여줌
+const RevenueChangeBadge = ({ orderStats }) => {
+  const { currentMonthRevenue, lastMonthRevenue, revenueChangeAmount, revenueChangeRate } = orderStats;
+
+  if (lastMonthRevenue === 0) {
+    return (
+      <span className="text-slate-500">
+        이번 달 {Number(currentMonthRevenue).toLocaleString()}원 (지난달 데이터 없음)
+      </span>
+    );
+  }
+
+  const isUp = revenueChangeAmount > 0;
+  const isFlat = revenueChangeAmount === 0;
+  const colorClass = isFlat ? "text-slate-500" : isUp ? "text-red-600" : "text-blue-600";
+  const arrow = isFlat ? "" : isUp ? "▲" : "▼";
 
   return (
-    <div className={`rounded-lg border-l-4 p-4 ${toneMap[tone]}`}>
-      <div className="mb-2 text-xl font-semibold">{count}개</div>
-      <div className="font-medium">{title}</div>
-      <div className="mt-1 text-sm opacity-80">{desc}</div>
+    <span className={colorClass}>
+      전월대비 {arrow} {Math.abs(revenueChangeRate ?? 0).toFixed(1)}%
+      {" "}({isUp ? "+" : isFlat ? "" : "-"}{Math.abs(revenueChangeAmount).toLocaleString()}원)
+    </span>
+  );
+};
+
+const MiniStat = ({ label, value, tone = "default" }) => {
+  const toneClass = {
+    default: "text-slate-900",
+    success: "text-emerald-600",
+    warning: "text-amber-600",
+    accent: "text-blue-600",
+  }[tone];
+
+  return (
+    <div className="flex items-center justify-between rounded-md bg-slate-50 px-4 py-3">
+      <span className="text-sm text-slate-500">{label}</span>
+      <span className={`text-sm font-semibold ${toneClass}`}>{value}</span>
     </div>
   );
 };

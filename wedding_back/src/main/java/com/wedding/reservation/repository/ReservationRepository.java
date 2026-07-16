@@ -21,4 +21,11 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     // 승진 추가 - 업체 예약관리 목록
     List<Reservation> findByCmnoOrderByReservationIdDesc(Long cmno);
 
+    // 관리자 대시보드용 집계
+    long countByStatus(String status);
+
+    long countByPayStatus(String payStatus);
+
+    long countByWeddingDateBetween(LocalDate start, LocalDate end);
+
 }

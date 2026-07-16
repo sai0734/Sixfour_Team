@@ -8,6 +8,9 @@ export default defineConfig({
       include: "**/*.{jsx,js}",
     }),
   ],
+  define: {
+    global: "globalThis",
+  },
   server: {
     port: 3000,
     open: false,

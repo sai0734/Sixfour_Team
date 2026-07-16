@@ -9,7 +9,9 @@ import org.springframework.web.client.RestTemplate;
 @Configuration
 public class OpenAIConfig {
 
-    @Value("${openai.api-key}")
+    // 키가 비어있어도(로컬에 아직 발급 안 된 상태) 서버 기동은 되게 기본값(빈 문자열)을 줌.
+    // 실제 호출 시점에는 여전히 인증 실패로 막히지만, 최소한 앱 전체가 죽는 건 방지함.
+    @Value("${openai.api-key:}")
     private String apiKey;
 
     @Bean

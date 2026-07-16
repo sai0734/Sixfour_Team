@@ -28,4 +28,9 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
     // 댓글 더미데이터 로더가 특정 게시글을 제목으로 찾아 boardId를 얻기 위함
     java.util.Optional<Board> findFirstByTitle(String title);
 
+    // 관리자 대시보드용 집계
+    long countByBoardTypeAndDeletedFalse(String boardType);
+
+    long countByDeletedFalseAndRegDateAfter(java.time.LocalDateTime dateTime);
+
 }

@@ -29,4 +29,11 @@ public interface MemberRepository extends JpaRepository<Member, String> {
   @Query("select m from Member m where m.status = 'BLACKLIST' " +
           "and m.suspendUntil is not null and m.suspendUntil <= :now")
   List<Member> findExpiredSuspensions(@Param("now") LocalDateTime now);
+
+  // 관리자 대시보드용 집계
+  long countByStatus(String status);
+
+  long countByRegDateAfter(LocalDateTime dateTime);
+
+  long countByEmailVerifiedFalse();
 }
