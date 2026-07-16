@@ -34,4 +34,23 @@ public interface OrderRepository extends JpaRepository<Orders, Long> {
                                    @Param("status") String status,
                                    Pageable pageable);
 
+    // 관리자 대시보드용 집계 (PENDING 제외 - 결제 미완료 임시주문은 실적/매출에서 제외)
+    @Query("select count(o) from Orders o where o.orderStatus = :status and o.orderStatus != 'PENDING'")
+    long countByOrderStatus(@Param("status") String status);
+
+    @Query("select coalesce(sum(o.totalPrice), 0) from Orders o " +
+            "where o.orderStatus not in ('PENDING', 'REFUNDED', 'CANCELLED')")
+    long sumTotalRevenue();
+
+    @Query("select coalesce(sum(o.totalPrice), 0) from Orders o " +
+            "where o.orderStatus not in ('PENDING', 'REFUNDED', 'CANCELLED') and o.regDate >= :dateTime")
+    long sumRevenueAfter(@Param("dateTime") java.time.LocalDateTime dateTime);
+
+    long countByOrderStatusNotAndRegDateAfter(String excludedStatus, java.time.LocalDateTime dateTime);
+
+    // 월별 매출 추이 + 전월대비 비교 계산용 원본 데이터 (날짜, 금액). 집계는 서비스단에서 월별로 묶음.
+    @Query("select o.regDate, o.totalPrice from Orders o " +
+            "where o.orderStatus not in ('PENDING', 'REFUNDED', 'CANCELLED') and o.regDate >= :since")
+    List<Object[]> findRevenueRowsSince(@Param("since") java.time.LocalDateTime since);
+
 }
