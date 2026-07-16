@@ -6,6 +6,7 @@ const formatWon = (value) => {
 const SOURCE_LABEL = {
   PACKAGE: "패키지 할인가",
   INDIVIDUAL_COMBO: "개별 조합",
+  AI_COMBO: "AI 추천",
 };
 
 // 슬롯(홀/드레스/스튜디오/메이크업) 상태를 항상 보여주는 사이드 패널.
@@ -46,7 +47,9 @@ const ResultCards = ({ result }) => {
 
   const { candidates = [], message } = result;
   const soleCombo =
-    candidates.length === 1 && candidates[0].sourceType === "INDIVIDUAL_COMBO"
+    candidates.length === 1 &&
+    (candidates[0].sourceType === "INDIVIDUAL_COMBO" ||
+      candidates[0].sourceType === "AI_COMBO")
       ? candidates[0]
       : null;
 
@@ -86,10 +89,38 @@ const ResultCards = ({ result }) => {
               )}
 
               <ul className="mb-3 space-y-1 text-sm text-ink-soft">
-                <li>홀 · {c.hallName}</li>
-                <li>드레스 · {c.dressName}</li>
-                <li>스튜디오 · {c.studioName}</li>
-                <li>메이크업 · {c.makeupName}</li>
+                <li>
+                  홀 · {c.hallName}
+                  {c.hallReason && (
+                    <span className="block text-xs text-ink-faint">
+                      {c.hallReason}
+                    </span>
+                  )}
+                </li>
+                <li>
+                  드레스 · {c.dressName}
+                  {c.dressReason && (
+                    <span className="block text-xs text-ink-faint">
+                      {c.dressReason}
+                    </span>
+                  )}
+                </li>
+                <li>
+                  스튜디오 · {c.studioName}
+                  {c.studioReason && (
+                    <span className="block text-xs text-ink-faint">
+                      {c.studioReason}
+                    </span>
+                  )}
+                </li>
+                <li>
+                  메이크업 · {c.makeupName}
+                  {c.makeupReason && (
+                    <span className="block text-xs text-ink-faint">
+                      {c.makeupReason}
+                    </span>
+                  )}
+                </li>
               </ul>
 
               <p className="border-t border-line pt-3 text-xs text-ink-muted">

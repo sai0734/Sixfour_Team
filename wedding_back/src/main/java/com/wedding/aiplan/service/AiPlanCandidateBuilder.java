@@ -50,11 +50,11 @@ public class AiPlanCandidateBuilder {
     // 예산의 110%까지는 "적합한 패키지"로 인정
     private static final double PACKAGE_FIT_TOLERANCE = 1.1;
 
-    // 개별 조합 시 카테고리별 예산 배분 비율 - 데모용 임의 가정치
-    private static final double HALL_RATIO = 0.45;
-    private static final double DRESS_RATIO = 0.25;
-    private static final double STUDIO_RATIO = 0.15;
-    private static final double MAKEUP_RATIO = 0.15;
+    // 개별 조합 시 카테고리별 예산 배분 비율 - 데모용 임의 가정치 (AiPlanAiServiceImpl에서도 재사용)
+    static final double HALL_RATIO = 0.45;
+    static final double DRESS_RATIO = 0.25;
+    static final double STUDIO_RATIO = 0.15;
+    static final double MAKEUP_RATIO = 0.15;
 
     public AiPlanQuickResultDTO recommend(String region, Long budget, AiPlanCategoryPreferences prefs) {
 
