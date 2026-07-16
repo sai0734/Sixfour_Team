@@ -1,6 +1,7 @@
 package com.wedding.reservation.repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.domain.Pageable;
@@ -50,9 +51,24 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             "where r.payStatus = 'PAID' and c.category = :category")
     long countDistinctCompaniesInCategoryWithPaidReservation(@Param("category") CompanyCategory category);
 
-    // 관리자 대시보드 "업체 매출 전체 순위" - 카테고리 구분 없이 4개 카테고리 업체 전체를 매출 기준으로 랭킹
-    @Query("select c.name, c.category, sum(r.amount) as total from Reservation r join Company c on r.cmno = c.cmno " +
-            "where r.payStatus = 'PAID' group by c.cmno, c.name, c.category order by total desc")
-    List<Object[]> sumAmountByCompanyOverallDesc(Pageable pageable);
+    // 관리자 대시보드 "업체 매출 전체 순위" - 특정 기간(보통 1개월) 동안의 매출로 업체 랭킹.
+    // category가 null이면 4개 카테고리 전체 통합 랭킹. 순위번호는 서비스단에서 매김(1위부터).
+    @Query("select c.cmno, c.name, c.category, sum(r.amount) as total from Reservation r join Company c on r.cmno = c.cmno " +
+            "where r.payStatus = 'PAID' and r.paidAt >= :start and r.paidAt < :end " +
+            "and (:category is null or c.category = :category) " +
+            "group by c.cmno, c.name, c.category order by total desc")
+    List<Object[]> sumAmountByCompanyForPeriod(@Param("category") CompanyCategory category,
+                                                @Param("start") LocalDateTime start,
+                                                @Param("end") LocalDateTime end);
+
+    // 관리자 대시보드 "업체 월별 매출 추이" (전체) - 결제완료 예약의 결제일시/금액 원본 (월별 집계는 서비스단에서)
+    @Query("select r.paidAt, r.amount from Reservation r where r.payStatus = 'PAID' and r.paidAt >= :since")
+    List<Object[]> findPaidAmountRowsSince(@Param("since") LocalDateTime since);
+
+    // 관리자 대시보드 "업체 월별 매출 추이" (카테고리별 드롭다운용)
+    @Query("select r.paidAt, r.amount from Reservation r join Company c on r.cmno = c.cmno " +
+            "where r.payStatus = 'PAID' and c.category = :category and r.paidAt >= :since")
+    List<Object[]> findPaidAmountRowsByCategorySince(@Param("category") CompanyCategory category,
+                                                      @Param("since") LocalDateTime since);
 
 }

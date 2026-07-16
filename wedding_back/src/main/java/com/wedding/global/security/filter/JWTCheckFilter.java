@@ -111,6 +111,10 @@ public class JWTCheckFilter extends OncePerRequestFilter{
         if(method.equals("GET") && path.matches("/api/boards/\\d+")) {
             return true;
         }
+        // AI 한줄요약도 게시글 조회의 일부 - 비로그인 사용자도 볼 수 있어야 함
+        if(method.equals("GET") && path.matches("/api/boards/\\d+/summary")) {
+            return true;
+        }
 
         // 댓글 목록 조회도 공개 (게시글을 보면 댓글도 같이 보여야 하므로)
         if(method.equals("GET") && path.matches("/api/comments/board/\\d+")) {

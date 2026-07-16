@@ -120,7 +120,7 @@ const DetailModal = ({
         {board.aiSummary && (
           <div className="bg-surface rounded-xl p-4 mb-6">
             <p className="text-xs font-medium text-ink-soft mb-1">
-              AI 3줄 요약
+              AI 한줄요약
             </p>
             <p className="text-xs text-ink-muted whitespace-pre-wrap">
               {board.aiSummary}

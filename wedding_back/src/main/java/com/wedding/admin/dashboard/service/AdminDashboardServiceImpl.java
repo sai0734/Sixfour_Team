@@ -2,6 +2,7 @@ package com.wedding.admin.dashboard.service;
 
 import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO;
 import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO.BoardStats;
+import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO.CategoryMonthlyRevenue;
 import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO.CategoryRevenueCard;
 import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO.InquiryStats;
 import com.wedding.admin.dashboard.dto.AdminDashboardSummaryDTO.LowStockProduct;
@@ -28,6 +29,7 @@ import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +73,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
         InquiryStats inquiryStats = buildInquiryStats();
         ProductStats productStats = buildProductStats();
         List<CategoryRevenueCard> categoryRevenueCards = buildCategoryRevenueCards();
-        List<CompanyRankingItem> topCompaniesOverall = buildTopCompaniesOverall();
+        List<CategoryMonthlyRevenue> companyMonthlyRevenueByCategory = buildCompanyMonthlyRevenueByCategory();
 
         List<TodoItem> todos = buildTodos(orderStats, productStats);
 
@@ -83,10 +85,63 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
                 .inquiryStats(inquiryStats)
                 .productStats(productStats)
                 .categoryRevenueCards(categoryRevenueCards)
-                .topCompaniesOverall(topCompaniesOverall)
+                .companyMonthlyRevenueByCategory(companyMonthlyRevenueByCategory)
                 .monthlyRevenue(toMonthlyRevenuePoints(monthlyRevenueMap))
                 .todos(todos)
                 .build();
+    }
+
+    // "업체 매출 전체 순위" - 지정한 월(monthParam, 없으면 이번 달) + 카테고리(categoryParam, "ALL"이면 전체)
+    // 기준 TOP 10과, 전달 같은 카테고리 랭킹 대비 순위 변동을 계산
+    @Override
+    public List<CompanyRankingItem> getCompanyRanking(String categoryParam, String monthParam) {
+        CompanyCategory category = (categoryParam == null || "ALL".equalsIgnoreCase(categoryParam))
+                ? null
+                : CompanyCategory.valueOf(categoryParam);
+
+        YearMonth targetMonth = (monthParam == null || monthParam.isBlank())
+                ? YearMonth.now()
+                : YearMonth.parse(monthParam);
+        YearMonth previousMonth = targetMonth.minusMonths(1);
+
+        List<Object[]> currentRows = reservationRepository.sumAmountByCompanyForPeriod(
+                category, targetMonth.atDay(1).atStartOfDay(), targetMonth.plusMonths(1).atDay(1).atStartOfDay());
+        List<Object[]> previousRows = reservationRepository.sumAmountByCompanyForPeriod(
+                category, previousMonth.atDay(1).atStartOfDay(), previousMonth.plusMonths(1).atDay(1).atStartOfDay());
+
+        Map<Long, Integer> previousRankByCmno = new HashMap<>();
+        int previousRank = 1;
+        for (Object[] row : previousRows) {
+            previousRankByCmno.put(((Number) row[0]).longValue(), previousRank++);
+        }
+
+        List<CompanyRankingItem> ranking = new ArrayList<>();
+        int rank = 1;
+        for (Object[] row : currentRows) {
+            if (rank > 10) {
+                break;
+            }
+
+            Long cmno = ((Number) row[0]).longValue();
+            String companyName = (String) row[1];
+            CompanyCategory rowCategory = (CompanyCategory) row[2];
+            long amount = ((Number) row[3]).longValue();
+
+            Integer prevRank = previousRankByCmno.get(cmno);
+            Integer rankChange = prevRank == null ? null : prevRank - rank;
+
+            ranking.add(CompanyRankingItem.builder()
+                    .rank(rank)
+                    .companyName(companyName)
+                    .category(rowCategory.name())
+                    .categoryLabel(CATEGORY_LABELS.get(rowCategory))
+                    .amount(amount)
+                    .rankChange(rankChange)
+                    .build());
+            rank++;
+        }
+
+        return ranking;
     }
 
     // 최근 6개월(이번 달 포함) 매출을 월별로 묶어서 Map으로 반환 (오래된 달 -> 최신 달 순서 보장)
@@ -108,6 +163,56 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
             YearMonth month = YearMonth.from(regDate);
 
             monthlyRevenue.merge(month, totalPrice.longValue(), Long::sum);
+        }
+
+        return monthlyRevenue;
+    }
+
+    // 업체 현황 "월별 매출 추이" 드롭다운 - 전체(ALL) 1개 + 카테고리 4개, 각각 결제완료 예약
+    // (Reservation.amount, paidAt 기준) 최근 6개월 합산
+    private List<CategoryMonthlyRevenue> buildCompanyMonthlyRevenueByCategory() {
+        List<CategoryMonthlyRevenue> result = new ArrayList<>();
+
+        result.add(CategoryMonthlyRevenue.builder()
+                .category("ALL")
+                .categoryLabel("전체")
+                .monthlyRevenue(toMonthlyRevenuePoints(buildCompanyMonthlyRevenueMap(null)))
+                .build());
+
+        for (CompanyCategory category : List.of(
+                CompanyCategory.HALL, CompanyCategory.DRESS, CompanyCategory.STUDIO, CompanyCategory.MAKEUP)) {
+            result.add(CategoryMonthlyRevenue.builder()
+                    .category(category.name())
+                    .categoryLabel(CATEGORY_LABELS.get(category))
+                    .monthlyRevenue(toMonthlyRevenuePoints(buildCompanyMonthlyRevenueMap(category)))
+                    .build());
+        }
+
+        return result;
+    }
+
+    // category가 null이면 전체 카테고리 합산, 아니면 해당 카테고리만
+    private Map<YearMonth, Long> buildCompanyMonthlyRevenueMap(CompanyCategory category) {
+        int monthsBack = 5; // 이번 달 포함 총 6개월
+        YearMonth currentMonth = YearMonth.now();
+        YearMonth startMonth = currentMonth.minusMonths(monthsBack);
+        LocalDateTime since = startMonth.atDay(1).atStartOfDay();
+
+        Map<YearMonth, Long> monthlyRevenue = new LinkedHashMap<>();
+        for (int i = 0; i <= monthsBack; i++) {
+            monthlyRevenue.put(startMonth.plusMonths(i), 0L);
+        }
+
+        List<Object[]> rows = category == null
+                ? reservationRepository.findPaidAmountRowsSince(since)
+                : reservationRepository.findPaidAmountRowsByCategorySince(category, since);
+
+        for (Object[] row : rows) {
+            LocalDateTime paidAt = (LocalDateTime) row[0];
+            Number amount = (Number) row[1];
+            YearMonth month = YearMonth.from(paidAt);
+
+            monthlyRevenue.merge(month, amount.longValue(), Long::sum);
         }
 
         return monthlyRevenue;
@@ -235,30 +340,6 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
                 .bottomCompanyName(bottomRows.isEmpty() ? "-" : (String) bottomRows.get(0)[0])
                 .bottomAmount(bottomRows.isEmpty() ? 0 : ((Number) bottomRows.get(0)[1]).longValue())
                 .build();
-    }
-
-    // 업체 매출 전체 순위 - 4개 카테고리(웨딩홀/드레스/스튜디오/메이크업) 구분 없이 결제완료 예약 금액
-    // 합산 기준 TOP 10
-    private List<CompanyRankingItem> buildTopCompaniesOverall() {
-        List<Object[]> rows = reservationRepository.sumAmountByCompanyOverallDesc(PageRequest.of(0, 10));
-
-        List<CompanyRankingItem> ranking = new ArrayList<>();
-        int rank = 1;
-        for (Object[] row : rows) {
-            String companyName = (String) row[0];
-            CompanyCategory category = (CompanyCategory) row[1];
-            long amount = ((Number) row[2]).longValue();
-
-            ranking.add(CompanyRankingItem.builder()
-                    .rank(rank++)
-                    .companyName(companyName)
-                    .category(category.name())
-                    .categoryLabel(CATEGORY_LABELS.get(category))
-                    .amount(amount)
-                    .build());
-        }
-
-        return ranking;
     }
 
     // "오늘의 할 일"은 관리자가 실제로 상태를 바꿔줘야 하는 항목만 넣음 (정보성 통계는 다른 패널에서 확인).

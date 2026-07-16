@@ -29,6 +29,13 @@ export const getOne = async (boardId) => {
   return res.data;
 };
 
+// AI 한줄요약 - 처음 호출 시 생성(시간이 좀 걸릴 수 있음), 이후엔 캐시된 값 바로 반환
+export const getAiSummary = async (boardId) => {
+  const res = await jwtAxios.get(`${prefix}/${boardId}/summary`);
+
+  return res.data.aiSummary;
+};
+
 export const postAdd = async (board) => {
   const res = await jwtAxios.post(`${prefix}/`, board);
 

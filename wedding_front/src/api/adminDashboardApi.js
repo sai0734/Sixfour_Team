@@ -7,3 +7,10 @@ export const getDashboardSummary = async () => {
   const res = await jwtAxios.get(`${prefix}/summary`);
   return res.data;
 };
+
+export const getCompanyRanking = async ({ category, month }) => {
+  const res = await jwtAxios.get(`${prefix}/company-ranking`, {
+    params: { category, month },
+  });
+  return res.data;
+};

@@ -22,8 +22,8 @@ public class AdminDashboardSummaryDTO {
     private ProductStats productStats;
     // 업체 현황 카드 4개 - 웨딩홀/드레스/스튜디오/메이크업 순서로 카테고리별 매출 1위·평균·꼴찌
     private List<CategoryRevenueCard> categoryRevenueCards;
-    // 카테고리 구분 없이 4개 카테고리 업체 전체를 매출 기준으로 줄세운 TOP 10
-    private List<CompanyRankingItem> topCompaniesOverall;
+    // 업체 현황 "월별 매출 추이" 드롭다운용 - ALL/HALL/DRESS/STUDIO/MAKEUP 5개, 각각 최근 6개월치
+    private List<CategoryMonthlyRevenue> companyMonthlyRevenueByCategory;
 
     // 최근 6개월 매출 추이 (오래된 달 -> 최신 달 순)
     private List<MonthlyRevenuePoint> monthlyRevenue;
@@ -139,7 +139,7 @@ public class AdminDashboardSummaryDTO {
         private long bottomAmount;
     }
 
-    // "업체 매출 전체 순위" 카드 1행 - 카테고리 구분 없이 매출 기준 랭킹
+    // "업체 매출 전체 순위" 카드 1행 - 특정 월(카테고리 필터 가능) 매출 기준 랭킹 + 전달 대비 순위 변동
     @Data
     @Builder
     @AllArgsConstructor
@@ -150,6 +150,19 @@ public class AdminDashboardSummaryDTO {
         private String category; // HALL / DRESS / STUDIO / MAKEUP
         private String categoryLabel; // "웨딩홀" 등
         private long amount;
+        // 전달 순위 - 이번 달 순위 (양수: 순위 상승, 음수: 순위 하락, null: 전달에 매출 없어 비교 불가/신규)
+        private Integer rankChange;
+    }
+
+    // "업체 월별 매출 추이" 드롭다운 1개 옵션 (전체 또는 카테고리 1개) + 그 옵션의 6개월치 추이
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class CategoryMonthlyRevenue {
+        private String category; // "ALL" / HALL / DRESS / STUDIO / MAKEUP
+        private String categoryLabel; // "전체" / "웨딩홀" 등
+        private List<MonthlyRevenuePoint> monthlyRevenue;
     }
 
     @Data
