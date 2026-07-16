@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import {
   Area,
   AreaChart,
-  Bar,
-  BarChart,
   CartesianGrid,
   Cell,
   Legend,
@@ -15,22 +13,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { getCompanyImageUrl, getList } from "../../api/companyApi";
 import { getDashboardSummary } from "../../api/adminDashboardApi";
-
-const categoryLabel = {
-  HALL: "웨딩홀",
-  DRESS: "드레스",
-  MAKEUP: "메이크업",
-  STUDIO: "스튜디오",
-};
-
-const categoryColors = {
-  HALL: "bg-emerald-500",
-  DRESS: "bg-pink-500",
-  MAKEUP: "bg-amber-500",
-  STUDIO: "bg-blue-500",
-};
 
 const ORDER_STATUS_COLORS = ["#3b82f6", "#f59e0b", "#a855f7"];
 
@@ -42,44 +25,21 @@ const KPI_GRADIENTS = {
   amber: "from-[#fbbf24] to-[#f97316]",
 };
 
+// 업체 현황 카드 4개(웨딩홀/드레스/스튜디오/메이크업)에 순서대로 매길 색상
+const CATEGORY_CARD_GRADIENTS = ["pink", "purple", "green", "amber"];
+
 const toneStyle = {
   info: "border-blue-400 bg-blue-50 text-blue-700",
   warning: "border-amber-400 bg-amber-50 text-amber-700",
   danger: "border-red-400 bg-red-50 text-red-700",
 };
 
-const initCompanyState = { dtoList: [], totalCount: 0 };
-
 const AdminDashboardComponent = () => {
   const navigate = useNavigate();
-
-  const [companyData, setCompanyData] = useState(initCompanyState);
-  const [companyFetching, setCompanyFetching] = useState(true);
-  const [companyError, setCompanyError] = useState("");
 
   const [summary, setSummary] = useState(null);
   const [summaryFetching, setSummaryFetching] = useState(true);
   const [summaryError, setSummaryError] = useState("");
-
-  useEffect(() => {
-    setCompanyFetching(true);
-    setCompanyError("");
-
-    getList({ page: 1, size: 100, sort: "latest" })
-      .then((data) => {
-        setCompanyData({
-          ...initCompanyState,
-          ...data,
-          dtoList: data?.dtoList || [],
-          totalCount: data?.totalCount || data?.dtoList?.length || 0,
-        });
-      })
-      .catch((err) => {
-        console.error(err);
-        setCompanyError("등록 업체 데이터를 불러오지 못했습니다.");
-      })
-      .finally(() => setCompanyFetching(false));
-  }, []);
 
   useEffect(() => {
     setSummaryFetching(true);
@@ -98,43 +58,6 @@ const AdminDashboardComponent = () => {
     const now = new Date();
     return `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}.${String(now.getDate()).padStart(2, "0")}`;
   }, []);
-
-  const companyStats = useMemo(() => {
-    const companies = companyData.dtoList;
-    const activeCompanies = companies.filter((company) => !company.delFlag);
-    const totalPrice = activeCompanies.reduce((sum, company) => sum + Number(company.priceAvg || 0), 0);
-    const pricedCompanies = activeCompanies.filter((company) => Number(company.priceAvg || 0) > 0);
-    const averagePrice = pricedCompanies.length ? Math.round(totalPrice / pricedCompanies.length) : 0;
-
-    const categoryCounts = activeCompanies.reduce((acc, company) => {
-      const category = company.category || "ETC";
-      acc[category] = (acc[category] || 0) + 1;
-      return acc;
-    }, {});
-
-    const topCategory = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])[0];
-    const highestPriceCompany = [...activeCompanies].sort(
-      (a, b) => Number(b.priceAvg || 0) - Number(a.priceAvg || 0),
-    )[0];
-    const newestCompanies = [...activeCompanies].slice(0, 5);
-
-    return {
-      total: companyData.totalCount || companies.length,
-      active: activeCompanies.length,
-      averagePrice,
-      categoryCounts,
-      topCategory,
-      highestPriceCompany,
-      newestCompanies,
-    };
-  }, [companyData]);
-
-  const maxCategoryCount = Math.max(1, ...Object.values(companyStats.categoryCounts));
-
-  const categoryChartData = Object.entries(categoryLabel).map(([category, label]) => ({
-    name: label,
-    개수: companyStats.categoryCounts[category] || 0,
-  }));
 
   const orderChartData = summary
     ? [
@@ -301,148 +224,63 @@ const AdminDashboardComponent = () => {
         )}
       </Panel>
 
-      {/* ===== 예약 / 재고 요약 ===== */}
-      <div className="mb-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Panel title="예약 현황" badge="전체 예약">
-          <div className="space-y-3">
-            <MiniStat label="전체 예약" value={summary ? `${summary.reservationStats.total}건` : "-"} />
-            <MiniStat label="확정 대기" value={summary ? `${summary.reservationStats.pending}건` : "-"} tone="warning" />
-            <MiniStat label="결제 완료" value={summary ? `${summary.reservationStats.paidCount}건` : "-"} tone="success" />
-            <MiniStat label="이번 주 예식 예정" value={summary ? `${summary.reservationStats.weddingThisWeek}건` : "-"} tone="accent" />
-          </div>
-        </Panel>
-
-        <Panel title="게시판 현황" badge="자유 · 후기">
-          <div className="space-y-3">
-            <MiniStat label="자유게시판" value={summary ? `${summary.boardStats.freeCount}건` : "-"} />
-            <MiniStat label="후기게시판" value={summary ? `${summary.boardStats.reviewCount}건` : "-"} />
-            <MiniStat label="오늘 작성" value={summary ? `${summary.boardStats.todayCount}건` : "-"} tone="accent" />
-          </div>
-        </Panel>
-
-        <Panel title="재고 부족 상품" badge={`${summary?.productStats.lowStockCount ?? 0}개`}>
-          {summary?.productStats.lowStockProducts?.length ? (
-            <div className="space-y-2">
-              {summary.productStats.lowStockProducts.map((product) => (
-                <div key={product.pno} className="flex items-center justify-between rounded-md bg-red-50 px-3 py-2 text-sm">
-                  <span className="truncate text-red-700">{product.pname}</span>
-                  <span className="font-semibold text-red-700">{product.stockQty}개</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <EmptyText>{summaryFetching ? "불러오는 중..." : "재고 부족 상품이 없습니다."}</EmptyText>
-          )}
-        </Panel>
-      </div>
-
-      {/* ===== 업체 현황 (기존) ===== */}
+      {/* ===== 업체 현황 ===== */}
       <div className="mb-2 mt-8 text-sm font-semibold text-slate-500">업체 현황</div>
 
-      {companyError ? (
-        <div className="mb-5 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {companyError}
-        </div>
-      ) : null}
-
-      <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Kpi label="전체 업체" value={`${companyStats.total}개`} desc="등록된 전체 업체" />
-        <Kpi label="활성 업체" value={`${companyStats.active}개`} desc="삭제 처리 제외" tone="success" />
-        <Kpi label="평균 가격" value={`${companyStats.averagePrice.toLocaleString()}원`} desc="가격 등록 업체 기준" tone="accent" />
-        <Kpi
-          label="최다 유형"
-          value={companyStats.topCategory ? categoryLabel[companyStats.topCategory[0]] || companyStats.topCategory[0] : "-"}
-          desc={companyStats.topCategory ? `${companyStats.topCategory[1]}개 등록` : "데이터 없음"}
-          tone="warning"
-        />
+      <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {CATEGORY_CARD_GRADIENTS.map((gradient, index) => {
+          const card = summary?.categoryRevenueCards?.[index];
+          return (
+            <GradientKpi
+              key={gradient}
+              gradient={gradient}
+              icon={<WalletIcon />}
+              label={card ? card.categoryLabel : "-"}
+              breakdown={[
+                {
+                  label: "매출최고",
+                  value: card ? `${card.topCompanyName} · ${Number(card.topAmount).toLocaleString()}원` : "-",
+                },
+                {
+                  label: "평균매출",
+                  value: card ? `${Number(card.averageAmount).toLocaleString()}원` : "-",
+                },
+                {
+                  label: "매출최저",
+                  value: card ? `${card.bottomCompanyName} · ${Number(card.bottomAmount).toLocaleString()}원` : "-",
+                },
+              ]}
+            />
+          );
+        })}
       </div>
 
-      <div className="mb-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Panel title="업체 유형 분포" badge="카테고리별">
-          {companyFetching ? (
-            <EmptyText>불러오는 중...</EmptyText>
-          ) : (
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={categoryChartData} layout="vertical" margin={{ left: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                <XAxis type="number" allowDecimals={false} fontSize={12} />
-                <YAxis type="category" dataKey="name" fontSize={12} width={60} />
-                <Tooltip />
-                <Bar dataKey="개수" fill="#ec4899" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </Panel>
-
-        <Panel title="가격 요약" badge="평균가 기준">
-          <div className="flex h-full flex-col justify-between gap-4">
-            <div>
-              <div className="text-sm text-slate-500">평균 가격</div>
-              <div className="mt-2 text-3xl font-semibold text-blue-700">{companyStats.averagePrice.toLocaleString()}원</div>
-            </div>
-            <div className="rounded-md bg-slate-50 p-4">
-              <div className="text-xs text-slate-500">최고가 업체</div>
-              <div className="mt-1 truncate font-semibold">{companyStats.highestPriceCompany?.name || "-"}</div>
-              <div className="mt-1 text-sm text-slate-600">
-                {companyStats.highestPriceCompany?.priceAvg
-                  ? `${Number(companyStats.highestPriceCompany.priceAvg).toLocaleString()}원`
-                  : "가격 정보 없음"}
-              </div>
-            </div>
-          </div>
-        </Panel>
-
-        <Panel title="운영 체크" badge="업체 데이터">
-          <div className="space-y-3">
-            <MiniStat label="노출 가능 업체" value={`${companyStats.active}개`} tone="accent" />
-            <MiniStat label="비활성 업체" value={`${companyStats.total - companyStats.active}개`} tone="warning" />
-          </div>
-        </Panel>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <Panel title="최근 등록 업체" badge="최신순 5개">
-          <div className="space-y-3">
-            {companyStats.newestCompanies.length ? (
-              companyStats.newestCompanies.map((company, index) => (
-                <CompanyRow key={company.cmno || company.name} rank={index + 1} company={company} />
-              ))
-            ) : (
-              <EmptyText>등록된 업체가 없습니다.</EmptyText>
-            )}
-          </div>
-        </Panel>
-
-        <Panel title="카테고리별 요약" badge="등록 현황">
-          <div className="grid grid-cols-2 gap-3">
-            {Object.entries(categoryLabel).map(([category, label]) => (
-              <div key={category} className="rounded-md bg-slate-50 p-4">
-                <div className={`mb-3 h-2 w-10 rounded-full ${categoryColors[category]}`} />
-                <div className="text-sm text-slate-500">{label}</div>
-                <div className="mt-1 text-2xl font-semibold">{companyStats.categoryCounts[category] || 0}개</div>
+      <Panel title="업체 매출 전체 순위" badge="TOP 10">
+        {summaryFetching ? (
+          <EmptyText>불러오는 중...</EmptyText>
+        ) : summary?.topCompaniesOverall?.length ? (
+          <div className="space-y-2">
+            {summary.topCompaniesOverall.map((item) => (
+              <div
+                key={item.rank}
+                className="flex items-center gap-3 rounded-md bg-slate-50 px-4 py-2.5"
+              >
+                <div className="w-6 text-center text-sm font-semibold text-slate-400">{item.rank}</div>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium text-slate-900">{item.companyName}</div>
+                  <div className="text-xs text-slate-500">{item.categoryLabel}</div>
+                </div>
+                <div className="text-right text-sm font-semibold text-blue-700">
+                  {Number(item.amount).toLocaleString()}원
+                </div>
               </div>
             ))}
           </div>
-        </Panel>
-      </div>
+        ) : (
+          <EmptyText>매출 데이터가 없습니다.</EmptyText>
+        )}
+      </Panel>
     </section>
-  );
-};
-
-const Kpi = ({ label, value, desc, tone = "default" }) => {
-  const toneClass = {
-    default: "text-slate-900",
-    success: "text-emerald-600",
-    warning: "text-amber-600",
-    accent: "text-blue-600",
-  }[tone];
-
-  return (
-    <div className="rounded-lg bg-slate-50 p-4">
-      <div className="text-xs text-slate-500">{label}</div>
-      <div className={`mt-2 text-2xl font-semibold ${toneClass}`}>{value}</div>
-      <div className="mt-2 text-xs text-slate-500">{desc}</div>
-    </div>
   );
 };
 
@@ -488,18 +326,36 @@ const RevenueChangeBadge = ({ orderStats, light = false }) => {
 };
 
 // 상단 핵심 지표용 그라데이션 카드 (레퍼런스 UI의 컬러풀한 KPI 카드 스타일)
-const GradientKpi = ({ gradient, icon, value, label, desc }) => (
+const GradientKpi = ({ gradient, icon, value, label, desc, breakdown }) => (
   <div className={`rounded-2xl bg-gradient-to-br ${KPI_GRADIENTS[gradient]} p-5 text-white shadow-md shadow-slate-200`}>
     <div className="flex items-start justify-between">
-      <div>
-        <div className="text-2xl font-bold">{value}</div>
-        <div className="mt-1 text-sm text-white/85">{label}</div>
+      <div className="min-w-0 flex-1">
+        {breakdown?.length ? (
+          <div className="text-sm font-semibold">{label}</div>
+        ) : (
+          <>
+            <div className="text-2xl font-bold">{value}</div>
+            <div className="mt-1 text-sm text-white/85">{label}</div>
+          </>
+        )}
       </div>
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20">
         {icon}
       </div>
     </div>
-    {desc ? <div className="mt-3 text-xs text-white/75">{desc}</div> : null}
+
+    {breakdown?.length ? (
+      <div className="mt-3 space-y-2">
+        {breakdown.map((row) => (
+          <div key={row.label} className="text-xs">
+            <div className="text-white/80">{row.label}</div>
+            <div className="mt-0.5 break-words font-semibold">{row.value}</div>
+          </div>
+        ))}
+      </div>
+    ) : desc ? (
+      <div className="mt-3 text-xs text-white/75">{desc}</div>
+    ) : null}
   </div>
 );
 
@@ -527,46 +383,6 @@ const OrderIcon = () => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
   </svg>
 );
-
-const MiniStat = ({ label, value, tone = "default" }) => {
-  const toneClass = {
-    default: "text-slate-900",
-    success: "text-emerald-600",
-    warning: "text-amber-600",
-    accent: "text-blue-600",
-  }[tone];
-
-  return (
-    <div className="flex items-center justify-between rounded-md bg-slate-50 px-4 py-3">
-      <span className="text-sm text-slate-500">{label}</span>
-      <span className={`text-sm font-semibold ${toneClass}`}>{value}</span>
-    </div>
-  );
-};
-
-const CompanyRow = ({ rank, company }) => {
-  const imageUrl = getCompanyImageUrl(company.mainImage || company.uploadFileNames?.[0], true);
-
-  return (
-    <div className="flex items-center gap-3 border-b border-slate-100 pb-3 last:border-b-0 last:pb-0">
-      <div className="w-6 text-center text-sm font-semibold text-slate-400">{rank}</div>
-      <div className="h-12 w-16 overflow-hidden rounded-xl bg-slate-100">
-        {imageUrl ? (
-          <img className="h-full w-full object-cover" src={imageUrl} alt={company.name} />
-        ) : (
-          <div className="flex h-full items-center justify-center text-xs text-slate-400">No Img</div>
-        )}
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-medium text-slate-900">{company.name || "업체명 없음"}</div>
-        <div className="text-xs text-slate-500">{categoryLabel[company.category] || company.category || "기타"}</div>
-      </div>
-      <div className="text-right text-sm font-semibold text-blue-700">
-        {company.priceAvg ? `${Number(company.priceAvg).toLocaleString()}원` : "-"}
-      </div>
-    </div>
-  );
-};
 
 const EmptyText = ({ children }) => (
   <div className="rounded-md bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">{children}</div>
