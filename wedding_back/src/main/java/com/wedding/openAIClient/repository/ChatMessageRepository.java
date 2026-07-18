@@ -1,4 +1,4 @@
-package com.wedding.openAIClient.controller;
+package com.wedding.openAIClient.repository;
 
 import com.wedding.openAIClient.domain.ChatMessage;
 import org.springframework.data.domain.Pageable;

@@ -27,7 +27,7 @@ public class CartController {
         log.info(itemDTO);
 
         if (itemDTO.getQty() <= 0) {
-            return cartService.remove(itemDTO.getCino());
+            return cartService.remove(itemDTO.getCino(), itemDTO.getEmail());
         }
 
         return cartService.addOrModify(itemDTO);
@@ -46,7 +46,8 @@ public class CartController {
     // 장바구니 아이템 삭제
     @PreAuthorize("hasAnyRole('USER')")
     @DeleteMapping("/{cino}")
-    public List<CartItemListDTO> removeFromCart(@PathVariable("cino") Long cino) {
-        return cartService.remove(cino);
+    public List<CartItemListDTO> removeFromCart(@PathVariable("cino") Long cino, Principal principal) {
+
+        return cartService.remove(cino, principal.getName());
     }
 }

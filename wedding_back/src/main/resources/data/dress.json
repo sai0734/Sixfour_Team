@@ -9,7 +9,7 @@
         "imageUrl": "dress_1_item_1.jpg",
         "ord": 0,
         "itemType": "DRESS",
-        "styleTags": "셀프웨딩,미니드레스",
+        "styleTags": "셀프웨딩,미니드레스,청순,로맨틱",
         "sizeRange": "50~66"
       },
       {
@@ -18,7 +18,7 @@
         "imageUrl": "dress_1_item_2.jpg",
         "ord": 1,
         "itemType": "DRESS",
-        "styleTags": "셀프웨딩,미니드레스",
+        "styleTags": "셀프웨딩,미니드레스,청순,로맨틱",
         "sizeRange": "44~66"
       },
       {
@@ -27,7 +27,7 @@
         "imageUrl": "dress_1_item_3.jpg",
         "ord": 2,
         "itemType": "DRESS",
-        "styleTags": "셀프웨딩,스몰웨딩",
+        "styleTags": "셀프웨딩,스몰웨딩,로맨틱",
         "sizeRange": "60~66"
       },
       {
@@ -36,7 +36,7 @@
         "imageUrl": "dress_1_item_4.jpg",
         "ord": 3,
         "itemType": "DRESS",
-        "styleTags": "화동,미니드레스",
+        "styleTags": "화동,미니드레스,청순",
         "sizeRange": "44~66"
       },
       {
@@ -45,7 +45,7 @@
         "imageUrl": "dress_1_item_5.jpg",
         "ord": 4,
         "itemType": "DRESS",
-        "styleTags": "화동,스몰웨딩",
+        "styleTags": "화동,스몰웨딩,청순,로맨틱",
         "sizeRange": "50~55"
       },
       {
@@ -54,7 +54,7 @@
         "imageUrl": "dress_1_item_6.jpg",
         "ord": 5,
         "itemType": "DRESS",
-        "styleTags": "화동,셀프웨딩",
+        "styleTags": "화동,셀프웨딩,청순,로맨틱",
         "sizeRange": "60~66"
       },
       {
@@ -63,7 +63,7 @@
         "imageUrl": "dress_1_item_7.jpg",
         "ord": 6,
         "itemType": "DRESS",
-        "styleTags": "스몰웨딩,셀프웨딩",
+        "styleTags": "스몰웨딩,셀프웨딩,로맨틱",
         "sizeRange": "60~66"
       },
       {
@@ -72,7 +72,7 @@
         "imageUrl": "dress_1_item_8.jpg",
         "ord": 7,
         "itemType": "DRESS",
-        "styleTags": "스몰웨딩,A라인",
+        "styleTags": "스몰웨딩,A라인,클래식,로맨틱",
         "sizeRange": "44~50"
       },
       {
@@ -81,7 +81,7 @@
         "imageUrl": "dress_1_item_9.jpg",
         "ord": 8,
         "itemType": "DRESS",
-        "styleTags": "셀프웨딩,화동",
+        "styleTags": "셀프웨딩,화동,청순,로맨틱",
         "sizeRange": "60~66"
       },
       {
@@ -90,7 +90,7 @@
         "imageUrl": "dress_1_item_10.jpg",
         "ord": 9,
         "itemType": "DRESS",
-        "styleTags": "화동,미니드레스",
+        "styleTags": "화동,미니드레스,청순",
         "sizeRange": "50~60"
       },
       {
@@ -99,7 +99,7 @@
         "imageUrl": "dress_1_item_11.jpg",
         "ord": 10,
         "itemType": "DRESS",
-        "styleTags": "미니드레스,A라인",
+        "styleTags": "미니드레스,A라인,클래식,청순",
         "sizeRange": "50~55"
       },
       {
@@ -108,7 +108,7 @@
         "imageUrl": "dress_1_item_12.jpg",
         "ord": 11,
         "itemType": "DRESS",
-        "styleTags": "스몰웨딩,화동",
+        "styleTags": "스몰웨딩,화동,청순,로맨틱",
         "sizeRange": "44~50"
       },
       {
@@ -117,7 +117,7 @@
         "imageUrl": "dress_1_item_13.jpg",
         "ord": 12,
         "itemType": "DRESS",
-        "styleTags": "화동,미니드레스",
+        "styleTags": "화동,미니드레스,청순",
         "sizeRange": "50~60"
       },
       {
@@ -126,7 +126,7 @@
         "imageUrl": "dress_1_item_14.jpg",
         "ord": 13,
         "itemType": "SUIT",
-        "styleTags": "맞춤제작",
+        "styleTags": "맞춤제작,클래식",
         "sizeRange": "60~66"
       },
       {
@@ -135,7 +135,7 @@
         "imageUrl": "dress_1_item_15.jpg",
         "ord": 14,
         "itemType": "SUIT",
-        "styleTags": "맞춤제작",
+        "styleTags": "맞춤제작,미니멀",
         "sizeRange": "55~66"
       },
       {
@@ -144,7 +144,7 @@
         "imageUrl": "dress_1_item_16.jpg",
         "ord": 15,
         "itemType": "SUIT",
-        "styleTags": "맞춤제작",
+        "styleTags": "맞춤제작,모던",
         "sizeRange": "50~60"
       },
       {
@@ -153,7 +153,7 @@
         "imageUrl": "dress_1_item_17.jpg",
         "ord": 16,
         "itemType": "SUIT",
-        "styleTags": "맞춤제작",
+        "styleTags": "맞춤제작,클래식",
         "sizeRange": "55~60"
       },
       {
@@ -162,7 +162,7 @@
         "imageUrl": "dress_1_item_18.png",
         "ord": 17,
         "itemType": "SUIT",
-        "styleTags": "맞춤제작",
+        "styleTags": "맞춤제작,클래식",
         "sizeRange": "44~50"
       },
       {
@@ -171,7 +171,7 @@
         "imageUrl": "dress_1_item_19.png",
         "ord": 18,
         "itemType": "SUIT",
-        "styleTags": "맞춤제작",
+        "styleTags": "맞춤제작,우아한",
         "sizeRange": "50~60"
       },
       {
@@ -180,7 +180,7 @@
         "imageUrl": "dress_1_item_20.png",
         "ord": 19,
         "itemType": "SUIT",
-        "styleTags": "맞춤제작",
+        "styleTags": "맞춤제작,클래식",
         "sizeRange": "50~60"
       }
     ]
@@ -195,7 +195,7 @@
         "imageUrl": "dress_2_item_1.jpg",
         "ord": 0,
         "itemType": "DRESS",
-        "styleTags": "만삭,셀프웨딩",
+        "styleTags": "만삭,셀프웨딩,로맨틱",
         "sizeRange": "60~70"
       },
       {
@@ -204,7 +204,7 @@
         "imageUrl": "dress_2_item_2.jpg",
         "ord": 1,
         "itemType": "DRESS",
-        "styleTags": "만삭,셀프웨딩",
+        "styleTags": "만삭,셀프웨딩,로맨틱",
         "sizeRange": "44~70"
       },
       {
@@ -213,7 +213,7 @@
         "imageUrl": "dress_2_item_3.jpg",
         "ord": 2,
         "itemType": "DRESS",
-        "styleTags": "미니드레스,만삭",
+        "styleTags": "미니드레스,만삭,청순",
         "sizeRange": "44~66"
       },
       {
@@ -222,7 +222,7 @@
         "imageUrl": "dress_2_item_4.jpg",
         "ord": 3,
         "itemType": "DRESS",
-        "styleTags": "벨라인,셀프웨딩",
+        "styleTags": "벨라인,셀프웨딩,클래식,로맨틱",
         "sizeRange": "50~66"
       },
       {
@@ -231,7 +231,7 @@
         "imageUrl": "dress_2_item_5.jpg",
         "ord": 4,
         "itemType": "DRESS",
-        "styleTags": "미니드레스,셀프웨딩",
+        "styleTags": "미니드레스,셀프웨딩,청순,로맨틱",
         "sizeRange": "50~66"
       },
       {
@@ -240,7 +240,7 @@
         "imageUrl": "dress_2_item_6.jpg",
         "ord": 5,
         "itemType": "DRESS",
-        "styleTags": "벨라인,파티",
+        "styleTags": "벨라인,파티,클래식,로맨틱",
         "sizeRange": "55~70"
       },
       {
@@ -249,7 +249,7 @@
         "imageUrl": "dress_2_item_7.jpg",
         "ord": 6,
         "itemType": "DRESS",
-        "styleTags": "만삭,미니드레스",
+        "styleTags": "만삭,미니드레스,청순",
         "sizeRange": "44~50"
       },
       {
@@ -258,7 +258,7 @@
         "imageUrl": "dress_2_item_8.jpg",
         "ord": 7,
         "itemType": "DRESS",
-        "styleTags": "만삭,벨라인",
+        "styleTags": "만삭,벨라인,클래식",
         "sizeRange": "66~70"
       },
       {
@@ -267,7 +267,7 @@
         "imageUrl": "dress_2_item_9.jpg",
         "ord": 8,
         "itemType": "DRESS",
-        "styleTags": "미니드레스,벨라인",
+        "styleTags": "미니드레스,벨라인,클래식,청순",
         "sizeRange": "55~70"
       },
       {
@@ -276,7 +276,7 @@
         "imageUrl": "dress_2_item_10.jpg",
         "ord": 9,
         "itemType": "DRESS",
-        "styleTags": "만삭,파티",
+        "styleTags": "만삭,파티,로맨틱",
         "sizeRange": "44~55"
       },
       {
@@ -285,7 +285,7 @@
         "imageUrl": "dress_2_item_11.jpg",
         "ord": 10,
         "itemType": "DRESS",
-        "styleTags": "파티,미니드레스",
+        "styleTags": "파티,미니드레스,청순,로맨틱",
         "sizeRange": "55~66"
       },
       {
@@ -294,7 +294,7 @@
         "imageUrl": "dress_2_item_12.jpg",
         "ord": 11,
         "itemType": "DRESS",
-        "styleTags": "만삭,파티",
+        "styleTags": "만삭,파티,로맨틱",
         "sizeRange": "44~66"
       }
     ]
@@ -309,7 +309,7 @@
         "imageUrl": "dress_3_item_1.jpg",
         "ord": 0,
         "itemType": "DRESS",
-        "styleTags": "머메이드,A라인",
+        "styleTags": "머메이드,A라인,우아한,글래머러스",
         "sizeRange": "50~60"
       },
       {
@@ -318,7 +318,7 @@
         "imageUrl": "dress_3_item_2.jpg",
         "ord": 1,
         "itemType": "DRESS",
-        "styleTags": "머메이드,벨라인",
+        "styleTags": "머메이드,벨라인,우아한,글래머러스",
         "sizeRange": "50~60"
       },
       {
@@ -327,7 +327,7 @@
         "imageUrl": "dress_3_item_3.jpg",
         "ord": 2,
         "itemType": "DRESS",
-        "styleTags": "A라인,벨라인",
+        "styleTags": "A라인,벨라인,클래식",
         "sizeRange": "50~60"
       },
       {
@@ -336,7 +336,7 @@
         "imageUrl": "dress_3_item_4.jpg",
         "ord": 3,
         "itemType": "DRESS",
-        "styleTags": "A라인,머메이드",
+        "styleTags": "A라인,머메이드,우아한,글래머러스",
         "sizeRange": "44~60"
       },
       {
@@ -345,7 +345,7 @@
         "imageUrl": "dress_3_item_5.jpg",
         "ord": 4,
         "itemType": "DRESS",
-        "styleTags": "본식,A라인",
+        "styleTags": "본식,A라인,클래식",
         "sizeRange": "44~60"
       },
       {
@@ -354,7 +354,7 @@
         "imageUrl": "dress_3_item_6.jpg",
         "ord": 5,
         "itemType": "DRESS",
-        "styleTags": "머메이드,본식",
+        "styleTags": "머메이드,본식,우아한,글래머러스",
         "sizeRange": "44~55"
       },
       {
@@ -363,7 +363,7 @@
         "imageUrl": "dress_3_item_7.jpg",
         "ord": 6,
         "itemType": "DRESS",
-        "styleTags": "본식,A라인",
+        "styleTags": "본식,A라인,클래식",
         "sizeRange": "50~60"
       },
       {
@@ -372,7 +372,7 @@
         "imageUrl": "dress_3_item_8.jpg",
         "ord": 7,
         "itemType": "DRESS",
-        "styleTags": "벨라인,A라인",
+        "styleTags": "벨라인,A라인,클래식",
         "sizeRange": "44~60"
       },
       {
@@ -381,7 +381,7 @@
         "imageUrl": "dress_3_item_9.jpg",
         "ord": 8,
         "itemType": "DRESS",
-        "styleTags": "A라인,본식",
+        "styleTags": "A라인,본식,클래식",
         "sizeRange": "55~60"
       },
       {
@@ -390,7 +390,7 @@
         "imageUrl": "dress_3_item_10.jpg",
         "ord": 9,
         "itemType": "DRESS",
-        "styleTags": "벨라인,머메이드",
+        "styleTags": "벨라인,머메이드,우아한,글래머러스",
         "sizeRange": "44~60"
       },
       {
@@ -399,7 +399,7 @@
         "imageUrl": "dress_3_item_11.jpg",
         "ord": 10,
         "itemType": "DRESS",
-        "styleTags": "A라인,머메이드",
+        "styleTags": "A라인,머메이드,우아한,글래머러스",
         "sizeRange": "50~55"
       },
       {
@@ -408,7 +408,7 @@
         "imageUrl": "dress_3_item_12.jpg",
         "ord": 11,
         "itemType": "DRESS",
-        "styleTags": "머메이드,본식",
+        "styleTags": "머메이드,본식,우아한,글래머러스",
         "sizeRange": "55~60"
       },
       {
@@ -417,7 +417,7 @@
         "imageUrl": "dress_3_item_13.jpg",
         "ord": 12,
         "itemType": "DRESS",
-        "styleTags": "A라인,벨라인",
+        "styleTags": "A라인,벨라인,클래식",
         "sizeRange": "44~50"
       },
       {
@@ -426,7 +426,7 @@
         "imageUrl": "dress_3_item_14.jpg",
         "ord": 13,
         "itemType": "DRESS",
-        "styleTags": "머메이드,벨라인",
+        "styleTags": "머메이드,벨라인,우아한,글래머러스",
         "sizeRange": "44~55"
       },
       {
@@ -435,7 +435,7 @@
         "imageUrl": "dress_3_item_15.jpg",
         "ord": 14,
         "itemType": "DRESS",
-        "styleTags": "벨라인,A라인",
+        "styleTags": "벨라인,A라인,클래식",
         "sizeRange": "44~60"
       },
       {
@@ -444,7 +444,7 @@
         "imageUrl": "dress_3_item_16.jpg",
         "ord": 15,
         "itemType": "DRESS",
-        "styleTags": "머메이드,A라인",
+        "styleTags": "머메이드,A라인,우아한,글래머러스",
         "sizeRange": "44~50"
       }
     ]
@@ -459,7 +459,7 @@
         "imageUrl": "dress_4_item_1.jpg",
         "ord": 0,
         "itemType": "DRESS",
-        "styleTags": "미니멀,셀프웨딩",
+        "styleTags": "미니멀,셀프웨딩,모던,로맨틱",
         "sizeRange": "50~66"
       },
       {
@@ -468,7 +468,7 @@
         "imageUrl": "dress_4_item_2.jpg",
         "ord": 1,
         "itemType": "DRESS",
-        "styleTags": "미니멀,A라인",
+        "styleTags": "미니멀,A라인,클래식,모던",
         "sizeRange": "55~60"
       },
       {
@@ -477,7 +477,7 @@
         "imageUrl": "dress_4_item_3.jpg",
         "ord": 2,
         "itemType": "DRESS",
-        "styleTags": "셀프웨딩,미니멀",
+        "styleTags": "셀프웨딩,미니멀,모던,로맨틱",
         "sizeRange": "55~60"
       },
       {
@@ -486,7 +486,7 @@
         "imageUrl": "dress_4_item_4.jpg",
         "ord": 3,
         "itemType": "DRESS",
-        "styleTags": "A라인,미니멀",
+        "styleTags": "A라인,미니멀,클래식,모던",
         "sizeRange": "50~60"
       },
       {
@@ -495,7 +495,7 @@
         "imageUrl": "dress_4_item_5.jpg",
         "ord": 4,
         "itemType": "DRESS",
-        "styleTags": "미니멀,셀프웨딩",
+        "styleTags": "미니멀,셀프웨딩,모던,로맨틱",
         "sizeRange": "44~60"
       },
       {
@@ -504,7 +504,7 @@
         "imageUrl": "dress_4_item_6.jpg",
         "ord": 5,
         "itemType": "DRESS",
-        "styleTags": "A라인,셀프웨딩",
+        "styleTags": "A라인,셀프웨딩,클래식,로맨틱",
         "sizeRange": "55~60"
       },
       {
@@ -513,7 +513,7 @@
         "imageUrl": "dress_4_item_7.jpg",
         "ord": 6,
         "itemType": "DRESS",
-        "styleTags": "미니드레스,A라인",
+        "styleTags": "미니드레스,A라인,클래식,청순",
         "sizeRange": "50~60"
       },
       {
@@ -522,7 +522,7 @@
         "imageUrl": "dress_4_item_8.jpg",
         "ord": 7,
         "itemType": "DRESS",
-        "styleTags": "셀프웨딩,미니멀",
+        "styleTags": "셀프웨딩,미니멀,모던,로맨틱",
         "sizeRange": "44~60"
       },
       {
@@ -531,7 +531,7 @@
         "imageUrl": "dress_4_item_9.jpg",
         "ord": 8,
         "itemType": "DRESS",
-        "styleTags": "미니드레스,A라인",
+        "styleTags": "미니드레스,A라인,클래식,청순",
         "sizeRange": "50~60"
       },
       {
@@ -540,7 +540,7 @@
         "imageUrl": "dress_4_item_10.jpg",
         "ord": 9,
         "itemType": "DRESS",
-        "styleTags": "미니드레스,미니멀",
+        "styleTags": "미니드레스,미니멀,모던,청순",
         "sizeRange": "44~50"
       },
       {
@@ -549,7 +549,7 @@
         "imageUrl": "dress_4_item_11.jpg",
         "ord": 10,
         "itemType": "DRESS",
-        "styleTags": "미니멀,셀프웨딩",
+        "styleTags": "미니멀,셀프웨딩,모던,로맨틱",
         "sizeRange": "44~55"
       },
       {
@@ -558,7 +558,7 @@
         "imageUrl": "dress_4_item_12.jpg",
         "ord": 11,
         "itemType": "DRESS",
-        "styleTags": "미니멀,A라인",
+        "styleTags": "미니멀,A라인,클래식,모던",
         "sizeRange": "60~66"
       },
       {
@@ -567,7 +567,7 @@
         "imageUrl": "dress_4_item_13.jpg",
         "ord": 12,
         "itemType": "DRESS",
-        "styleTags": "미니멀,A라인",
+        "styleTags": "미니멀,A라인,클래식,모던",
         "sizeRange": "55~66"
       },
       {
@@ -576,7 +576,7 @@
         "imageUrl": "dress_4_item_14.jpg",
         "ord": 13,
         "itemType": "DRESS",
-        "styleTags": "셀프웨딩,A라인",
+        "styleTags": "셀프웨딩,A라인,클래식,로맨틱",
         "sizeRange": "44~50"
       },
       {
@@ -585,7 +585,7 @@
         "imageUrl": "dress_4_item_15.jpg",
         "ord": 14,
         "itemType": "DRESS",
-        "styleTags": "미니드레스,셀프웨딩",
+        "styleTags": "미니드레스,셀프웨딩,청순,로맨틱",
         "sizeRange": "44~60"
       },
       {
@@ -594,7 +594,7 @@
         "imageUrl": "dress_4_item_16.jpg",
         "ord": 15,
         "itemType": "SUIT",
-        "styleTags": "맞춤제작",
+        "styleTags": "맞춤제작,미니멀",
         "sizeRange": "44~60"
       },
       {
@@ -603,7 +603,7 @@
         "imageUrl": "dress_4_item_17.jpg",
         "ord": 16,
         "itemType": "SUIT",
-        "styleTags": "맞춤제작",
+        "styleTags": "맞춤제작,클래식",
         "sizeRange": "44~60"
       },
       {
@@ -612,7 +612,7 @@
         "imageUrl": "dress_4_item_18.jpg",
         "ord": 17,
         "itemType": "SUIT",
-        "styleTags": "맞춤제작",
+        "styleTags": "맞춤제작,클래식",
         "sizeRange": "50~55"
       },
       {
@@ -621,7 +621,7 @@
         "imageUrl": "dress_4_item_19.jpg",
         "ord": 18,
         "itemType": "SUIT",
-        "styleTags": "맞춤제작",
+        "styleTags": "맞춤제작,클래식",
         "sizeRange": "44~55"
       },
       {
@@ -630,7 +630,7 @@
         "imageUrl": "dress_4_item_20.jpg",
         "ord": 19,
         "itemType": "SUIT",
-        "styleTags": "맞춤제작",
+        "styleTags": "맞춤제작,클래식",
         "sizeRange": "55~60"
       }
     ]
@@ -645,7 +645,7 @@
         "imageUrl": "dress_5_item_1.jpg",
         "ord": 0,
         "itemType": "DRESS",
-        "styleTags": "셀프웨딩,미니드레스",
+        "styleTags": "셀프웨딩,미니드레스,청순,로맨틱",
         "sizeRange": "44~50"
       },
       {
@@ -654,7 +654,7 @@
         "imageUrl": "dress_5_item_2.jpg",
         "ord": 1,
         "itemType": "DRESS",
-        "styleTags": "본식,셀프웨딩",
+        "styleTags": "본식,셀프웨딩,로맨틱",
         "sizeRange": "44~50"
       },
       {
@@ -663,7 +663,7 @@
         "imageUrl": "dress_5_item_3.jpg",
         "ord": 2,
         "itemType": "DRESS",
-        "styleTags": "셀프웨딩,본식",
+        "styleTags": "셀프웨딩,본식,로맨틱",
         "sizeRange": "44~50"
       },
       {
@@ -672,7 +672,7 @@
         "imageUrl": "dress_5_item_4.jpg",
         "ord": 3,
         "itemType": "DRESS",
-        "styleTags": "본식,미니드레스",
+        "styleTags": "본식,미니드레스,청순",
         "sizeRange": "44~60"
       },
       {
@@ -681,7 +681,7 @@
         "imageUrl": "dress_5_item_5.jpg",
         "ord": 4,
         "itemType": "DRESS",
-        "styleTags": "앵클라인,본식",
+        "styleTags": "앵클라인,본식,청순",
         "sizeRange": "50~60"
       },
       {
@@ -690,7 +690,7 @@
         "imageUrl": "dress_5_item_6.jpg",
         "ord": 5,
         "itemType": "DRESS",
-        "styleTags": "셀프웨딩,앵클라인",
+        "styleTags": "셀프웨딩,앵클라인,청순,로맨틱",
         "sizeRange": "44~60"
       },
       {
@@ -699,7 +699,7 @@
         "imageUrl": "dress_5_item_7.jpg",
         "ord": 6,
         "itemType": "DRESS",
-        "styleTags": "앵클라인,미니드레스",
+        "styleTags": "앵클라인,미니드레스,청순",
         "sizeRange": "44~60"
       },
       {
@@ -708,7 +708,7 @@
         "imageUrl": "dress_5_item_8.jpg",
         "ord": 7,
         "itemType": "DRESS",
-        "styleTags": "앵클라인,셀프웨딩",
+        "styleTags": "앵클라인,셀프웨딩,청순,로맨틱",
         "sizeRange": "50~60"
       },
       {
@@ -717,7 +717,7 @@
         "imageUrl": "dress_5_item_9.jpg",
         "ord": 8,
         "itemType": "DRESS",
-        "styleTags": "셀프웨딩,미니드레스",
+        "styleTags": "셀프웨딩,미니드레스,청순,로맨틱",
         "sizeRange": "44~55"
       },
       {
@@ -726,7 +726,7 @@
         "imageUrl": "dress_5_item_10.jpg",
         "ord": 9,
         "itemType": "DRESS",
-        "styleTags": "앵클라인,미니드레스",
+        "styleTags": "앵클라인,미니드레스,청순",
         "sizeRange": "44~50"
       },
       {
@@ -735,7 +735,7 @@
         "imageUrl": "dress_5_item_11.jpg",
         "ord": 10,
         "itemType": "DRESS",
-        "styleTags": "미니드레스,앵클라인",
+        "styleTags": "미니드레스,앵클라인,청순",
         "sizeRange": "44~50"
       }
     ]
@@ -750,7 +750,7 @@
         "imageUrl": "dress_6_item_1.jpg",
         "ord": 0,
         "itemType": "DRESS",
-        "styleTags": "2부,셀프웨딩",
+        "styleTags": "2부,셀프웨딩,청순,로맨틱",
         "sizeRange": "50~66"
       },
       {
@@ -759,7 +759,7 @@
         "imageUrl": "dress_6_item_2.jpg",
         "ord": 1,
         "itemType": "DRESS",
-        "styleTags": "셀프웨딩,파티",
+        "styleTags": "셀프웨딩,파티,로맨틱",
         "sizeRange": "50~66"
       },
       {
@@ -768,7 +768,7 @@
         "imageUrl": "dress_6_item_3.jpg",
         "ord": 2,
         "itemType": "DRESS",
-        "styleTags": "맞춤제작,셀프웨딩",
+        "styleTags": "맞춤제작,셀프웨딩,로맨틱",
         "sizeRange": "44~55"
       },
       {
@@ -777,7 +777,7 @@
         "imageUrl": "dress_6_item_4.jpg",
         "ord": 3,
         "itemType": "DRESS",
-        "styleTags": "맞춤제작,파티",
+        "styleTags": "맞춤제작,파티,로맨틱",
         "sizeRange": "50~55"
       },
       {
@@ -786,7 +786,7 @@
         "imageUrl": "dress_6_item_5.jpg",
         "ord": 4,
         "itemType": "DRESS",
-        "styleTags": "파티,셀프웨딩",
+        "styleTags": "파티,셀프웨딩,로맨틱",
         "sizeRange": "50~66"
       },
       {
@@ -795,7 +795,7 @@
         "imageUrl": "dress_6_item_6.jpg",
         "ord": 5,
         "itemType": "DRESS",
-        "styleTags": "파티,화동",
+        "styleTags": "파티,화동,청순,로맨틱",
         "sizeRange": "50~66"
       },
       {
@@ -804,7 +804,7 @@
         "imageUrl": "dress_6_item_7.jpg",
         "ord": 6,
         "itemType": "DRESS",
-        "styleTags": "맞춤제작,2부",
+        "styleTags": "맞춤제작,2부,청순",
         "sizeRange": "44~60"
       },
       {
@@ -813,7 +813,7 @@
         "imageUrl": "dress_6_item_8.jpg",
         "ord": 7,
         "itemType": "DRESS",
-        "styleTags": "셀프웨딩,맞춤제작",
+        "styleTags": "셀프웨딩,맞춤제작,로맨틱",
         "sizeRange": "44~66"
       },
       {
@@ -822,7 +822,7 @@
         "imageUrl": "dress_6_item_9.jpg",
         "ord": 8,
         "itemType": "DRESS",
-        "styleTags": "2부,화동",
+        "styleTags": "2부,화동,청순",
         "sizeRange": "44~66"
       },
       {
@@ -831,7 +831,7 @@
         "imageUrl": "dress_6_item_10.jpg",
         "ord": 9,
         "itemType": "DRESS",
-        "styleTags": "화동,맞춤제작",
+        "styleTags": "화동,맞춤제작,청순",
         "sizeRange": "55~66"
       },
       {
@@ -840,7 +840,7 @@
         "imageUrl": "dress_6_item_11.jpg",
         "ord": 10,
         "itemType": "DRESS",
-        "styleTags": "파티,셀프웨딩",
+        "styleTags": "파티,셀프웨딩,로맨틱",
         "sizeRange": "44~50"
       },
       {
@@ -849,7 +849,7 @@
         "imageUrl": "dress_6_item_12.jpg",
         "ord": 11,
         "itemType": "DRESS",
-        "styleTags": "셀프웨딩,파티",
+        "styleTags": "셀프웨딩,파티,로맨틱",
         "sizeRange": "50~55"
       },
       {
@@ -858,7 +858,7 @@
         "imageUrl": "dress_6_item_13.jpg",
         "ord": 12,
         "itemType": "DRESS",
-        "styleTags": "2부,맞춤제작",
+        "styleTags": "2부,맞춤제작,청순",
         "sizeRange": "50~66"
       },
       {
@@ -867,7 +867,7 @@
         "imageUrl": "dress_6_item_14.jpg",
         "ord": 13,
         "itemType": "DRESS",
-        "styleTags": "화동,2부",
+        "styleTags": "화동,2부,청순",
         "sizeRange": "50~60"
       },
       {
@@ -876,7 +876,7 @@
         "imageUrl": "dress_6_item_15.jpg",
         "ord": 14,
         "itemType": "DRESS",
-        "styleTags": "셀프웨딩,파티",
+        "styleTags": "셀프웨딩,파티,로맨틱",
         "sizeRange": "50~66"
       },
       {
@@ -885,7 +885,7 @@
         "imageUrl": "dress_6_item_16.jpg",
         "ord": 15,
         "itemType": "SUIT",
-        "styleTags": "맞춤제작",
+        "styleTags": "맞춤제작,클래식",
         "sizeRange": "44~66"
       },
       {
@@ -894,7 +894,7 @@
         "imageUrl": "dress_6_item_17.jpg",
         "ord": 16,
         "itemType": "SUIT",
-        "styleTags": "맞춤제작",
+        "styleTags": "맞춤제작,클래식",
         "sizeRange": "50~55"
       },
       {
@@ -903,7 +903,7 @@
         "imageUrl": "dress_6_item_18.jpg",
         "ord": 17,
         "itemType": "SUIT",
-        "styleTags": "맞춤제작",
+        "styleTags": "맞춤제작,미니멀",
         "sizeRange": "44~50"
       },
       {
@@ -912,7 +912,7 @@
         "imageUrl": "dress_6_item_19.jpg",
         "ord": 18,
         "itemType": "SUIT",
-        "styleTags": "맞춤제작",
+        "styleTags": "맞춤제작,모던",
         "sizeRange": "55~60"
       },
       {
@@ -921,7 +921,7 @@
         "imageUrl": "dress_6_item_20.jpg",
         "ord": 19,
         "itemType": "SUIT",
-        "styleTags": "맞춤제작",
+        "styleTags": "맞춤제작,클래식",
         "sizeRange": "55~66"
       }
     ]
@@ -936,7 +936,7 @@
         "imageUrl": "dress_7_item_1.jpg",
         "ord": 0,
         "itemType": "DRESS",
-        "styleTags": "맞춤제작,파티",
+        "styleTags": "맞춤제작,파티,로맨틱",
         "sizeRange": "44~66"
       },
       {
@@ -945,7 +945,7 @@
         "imageUrl": "dress_7_item_2.jpg",
         "ord": 1,
         "itemType": "DRESS",
-        "styleTags": "파티,맞춤제작",
+        "styleTags": "파티,맞춤제작,로맨틱",
         "sizeRange": "50~55"
       },
       {
@@ -954,7 +954,7 @@
         "imageUrl": "dress_7_item_3.jpg",
         "ord": 2,
         "itemType": "DRESS",
-        "styleTags": "파티,콩쿨복",
+        "styleTags": "파티,콩쿨복,로맨틱",
         "sizeRange": "50~55"
       },
       {
@@ -981,7 +981,7 @@
         "imageUrl": "dress_7_item_6.jpg",
         "ord": 5,
         "itemType": "DRESS",
-        "styleTags": "파티,맞춤제작",
+        "styleTags": "파티,맞춤제작,로맨틱",
         "sizeRange": "55~66"
       },
       {
@@ -1017,7 +1017,7 @@
         "imageUrl": "dress_7_item_10.jpg",
         "ord": 9,
         "itemType": "DRESS",
-        "styleTags": "파티,맞춤제작",
+        "styleTags": "파티,맞춤제작,로맨틱",
         "sizeRange": "50~66"
       },
       {
@@ -1026,7 +1026,7 @@
         "imageUrl": "dress_7_item_11.jpg",
         "ord": 10,
         "itemType": "DRESS",
-        "styleTags": "파티,맞춤제작",
+        "styleTags": "파티,맞춤제작,로맨틱",
         "sizeRange": "44~50"
       },
       {
@@ -1035,7 +1035,7 @@
         "imageUrl": "dress_7_item_12.jpg",
         "ord": 11,
         "itemType": "DRESS",
-        "styleTags": "콩쿨복,파티",
+        "styleTags": "콩쿨복,파티,로맨틱",
         "sizeRange": "44~66"
       },
       {
@@ -1044,7 +1044,7 @@
         "imageUrl": "dress_7_item_13.jpg",
         "ord": 12,
         "itemType": "SUIT",
-        "styleTags": "맞춤제작",
+        "styleTags": "맞춤제작,클래식",
         "sizeRange": "55~66"
       },
       {
@@ -1053,7 +1053,7 @@
         "imageUrl": "dress_7_item_14.jpg",
         "ord": 13,
         "itemType": "SUIT",
-        "styleTags": "맞춤제작",
+        "styleTags": "맞춤제작,클래식",
         "sizeRange": "60~66"
       },
       {
@@ -1062,7 +1062,7 @@
         "imageUrl": "dress_7_item_15.jpg",
         "ord": 14,
         "itemType": "SUIT",
-        "styleTags": "맞춤제작",
+        "styleTags": "맞춤제작,클래식",
         "sizeRange": "44~66"
       },
       {
@@ -1071,7 +1071,7 @@
         "imageUrl": "dress_7_item_16.jpg",
         "ord": 15,
         "itemType": "SUIT",
-        "styleTags": "맞춤제작",
+        "styleTags": "맞춤제작,우아한",
         "sizeRange": "44~55"
       },
       {
@@ -1080,7 +1080,7 @@
         "imageUrl": "dress_7_item_17.jpg",
         "ord": 16,
         "itemType": "SUIT",
-        "styleTags": "맞춤제작",
+        "styleTags": "맞춤제작,모던",
         "sizeRange": "44~66"
       },
       {
@@ -1089,7 +1089,7 @@
         "imageUrl": "dress_7_item_18.jpg",
         "ord": 17,
         "itemType": "SUIT",
-        "styleTags": "맞춤제작",
+        "styleTags": "맞춤제작,클래식",
         "sizeRange": "50~60"
       },
       {
@@ -1098,7 +1098,7 @@
         "imageUrl": "dress_7_item_19.jpg",
         "ord": 18,
         "itemType": "SUIT",
-        "styleTags": "맞춤제작",
+        "styleTags": "맞춤제작,클래식",
         "sizeRange": "44~66"
       },
       {
@@ -1107,7 +1107,7 @@
         "imageUrl": "dress_7_item_20.jpg",
         "ord": 19,
         "itemType": "SUIT",
-        "styleTags": "맞춤제작",
+        "styleTags": "맞춤제작,미니멀",
         "sizeRange": "50~60"
       }
     ]
@@ -1122,7 +1122,7 @@
         "imageUrl": "dress_8_item_1.jpg",
         "ord": 0,
         "itemType": "DRESS",
-        "styleTags": "실크,비즈",
+        "styleTags": "실크,비즈,화려한,우아한",
         "sizeRange": "44~60"
       },
       {
@@ -1131,7 +1131,7 @@
         "imageUrl": "dress_8_item_2.jpg",
         "ord": 1,
         "itemType": "DRESS",
-        "styleTags": "비즈,본식",
+        "styleTags": "비즈,본식,화려한",
         "sizeRange": "50~60"
       },
       {
@@ -1140,7 +1140,7 @@
         "imageUrl": "dress_8_item_3.jpg",
         "ord": 2,
         "itemType": "DRESS",
-        "styleTags": "본식,비즈",
+        "styleTags": "본식,비즈,화려한",
         "sizeRange": "44~60"
       },
       {
@@ -1149,7 +1149,7 @@
         "imageUrl": "dress_8_item_4.jpg",
         "ord": 3,
         "itemType": "DRESS",
-        "styleTags": "본식,비즈",
+        "styleTags": "본식,비즈,화려한",
         "sizeRange": "44~60"
       },
       {
@@ -1158,7 +1158,7 @@
         "imageUrl": "dress_8_item_5.jpg",
         "ord": 4,
         "itemType": "DRESS",
-        "styleTags": "비즈,본식",
+        "styleTags": "비즈,본식,화려한",
         "sizeRange": "50~60"
       },
       {
@@ -1167,7 +1167,7 @@
         "imageUrl": "dress_8_item_6.jpg",
         "ord": 5,
         "itemType": "DRESS",
-        "styleTags": "머메이드,비즈",
+        "styleTags": "머메이드,비즈,우아한,글래머러스",
         "sizeRange": "55~60"
       },
       {
@@ -1176,7 +1176,7 @@
         "imageUrl": "dress_8_item_7.jpg",
         "ord": 6,
         "itemType": "DRESS",
-        "styleTags": "실크,머메이드",
+        "styleTags": "실크,머메이드,우아한,글래머러스",
         "sizeRange": "50~60"
       },
       {
@@ -1185,7 +1185,7 @@
         "imageUrl": "dress_8_item_8.jpg",
         "ord": 7,
         "itemType": "DRESS",
-        "styleTags": "본식,실크",
+        "styleTags": "본식,실크,우아한",
         "sizeRange": "50~60"
       },
       {
@@ -1194,7 +1194,7 @@
         "imageUrl": "dress_8_item_9.jpg",
         "ord": 8,
         "itemType": "DRESS",
-        "styleTags": "비즈,실크",
+        "styleTags": "비즈,실크,화려한,우아한",
         "sizeRange": "50~60"
       },
       {
@@ -1203,7 +1203,7 @@
         "imageUrl": "dress_8_item_10.jpg",
         "ord": 9,
         "itemType": "DRESS",
-        "styleTags": "비즈,본식",
+        "styleTags": "비즈,본식,화려한",
         "sizeRange": "44~60"
       },
       {
@@ -1212,7 +1212,7 @@
         "imageUrl": "dress_8_item_11.jpg",
         "ord": 10,
         "itemType": "DRESS",
-        "styleTags": "실크,본식",
+        "styleTags": "실크,본식,우아한",
         "sizeRange": "50~55"
       },
       {
@@ -1221,7 +1221,7 @@
         "imageUrl": "dress_8_item_12.jpg",
         "ord": 11,
         "itemType": "DRESS",
-        "styleTags": "본식,실크",
+        "styleTags": "본식,실크,우아한",
         "sizeRange": "44~60"
       },
       {
@@ -1230,7 +1230,7 @@
         "imageUrl": "dress_8_item_13.jpg",
         "ord": 12,
         "itemType": "DRESS",
-        "styleTags": "머메이드,비즈",
+        "styleTags": "머메이드,비즈,우아한,글래머러스",
         "sizeRange": "44~60"
       },
       {
@@ -1239,7 +1239,7 @@
         "imageUrl": "dress_8_item_14.jpg",
         "ord": 13,
         "itemType": "DRESS",
-        "styleTags": "본식,실크",
+        "styleTags": "본식,실크,우아한",
         "sizeRange": "50~60"
       },
       {
@@ -1248,7 +1248,7 @@
         "imageUrl": "dress_8_item_15.jpg",
         "ord": 14,
         "itemType": "DRESS",
-        "styleTags": "실크,본식",
+        "styleTags": "실크,본식,우아한",
         "sizeRange": "44~55"
       },
       {
@@ -1257,7 +1257,7 @@
         "imageUrl": "dress_8_item_16.jpg",
         "ord": 15,
         "itemType": "DRESS",
-        "styleTags": "비즈,실크",
+        "styleTags": "비즈,실크,화려한,우아한",
         "sizeRange": "55~60"
       },
       {
@@ -1266,7 +1266,7 @@
         "imageUrl": "dress_8_item_17.jpg",
         "ord": 16,
         "itemType": "DRESS",
-        "styleTags": "머메이드,본식",
+        "styleTags": "머메이드,본식,우아한,글래머러스",
         "sizeRange": "50~55"
       },
       {
@@ -1275,7 +1275,7 @@
         "imageUrl": "dress_8_item_18.jpg",
         "ord": 17,
         "itemType": "DRESS",
-        "styleTags": "본식,실크",
+        "styleTags": "본식,실크,우아한",
         "sizeRange": "55~60"
       },
       {
@@ -1284,7 +1284,7 @@
         "imageUrl": "dress_8_item_19.jpg",
         "ord": 18,
         "itemType": "DRESS",
-        "styleTags": "본식,실크",
+        "styleTags": "본식,실크,우아한",
         "sizeRange": "44~50"
       }
     ]
@@ -1299,7 +1299,7 @@
         "imageUrl": "dress_9_item_1.jpg",
         "ord": 0,
         "itemType": "DRESS",
-        "styleTags": "오프숄더,A라인",
+        "styleTags": "오프숄더,A라인,클래식,로맨틱",
         "sizeRange": "50~60"
       },
       {
@@ -1308,7 +1308,7 @@
         "imageUrl": "dress_9_item_2.jpg",
         "ord": 1,
         "itemType": "DRESS",
-        "styleTags": "A라인,본식",
+        "styleTags": "A라인,본식,클래식",
         "sizeRange": "50~55"
       },
       {
@@ -1317,7 +1317,7 @@
         "imageUrl": "dress_9_item_3.jpg",
         "ord": 2,
         "itemType": "DRESS",
-        "styleTags": "본식,오프숄더",
+        "styleTags": "본식,오프숄더,로맨틱",
         "sizeRange": "44~50"
       },
       {
@@ -1326,7 +1326,7 @@
         "imageUrl": "dress_9_item_4.jpg",
         "ord": 3,
         "itemType": "DRESS",
-        "styleTags": "오프숄더,A라인",
+        "styleTags": "오프숄더,A라인,클래식,로맨틱",
         "sizeRange": "50~60"
       },
       {
@@ -1335,7 +1335,7 @@
         "imageUrl": "dress_9_item_5.jpg",
         "ord": 4,
         "itemType": "DRESS",
-        "styleTags": "A라인,미니멀",
+        "styleTags": "A라인,미니멀,클래식,모던",
         "sizeRange": "44~60"
       },
       {
@@ -1344,7 +1344,7 @@
         "imageUrl": "dress_9_item_6.jpg",
         "ord": 5,
         "itemType": "DRESS",
-        "styleTags": "오프숄더,본식",
+        "styleTags": "오프숄더,본식,로맨틱",
         "sizeRange": "50~55"
       },
       {
@@ -1353,7 +1353,7 @@
         "imageUrl": "dress_9_item_7.jpg",
         "ord": 6,
         "itemType": "DRESS",
-        "styleTags": "A라인,본식",
+        "styleTags": "A라인,본식,클래식",
         "sizeRange": "50~60"
       },
       {
@@ -1362,7 +1362,7 @@
         "imageUrl": "dress_9_item_8.jpg",
         "ord": 7,
         "itemType": "DRESS",
-        "styleTags": "A라인,본식",
+        "styleTags": "A라인,본식,클래식",
         "sizeRange": "44~50"
       },
       {
@@ -1371,7 +1371,7 @@
         "imageUrl": "dress_9_item_9.jpg",
         "ord": 8,
         "itemType": "DRESS",
-        "styleTags": "본식,A라인",
+        "styleTags": "본식,A라인,클래식",
         "sizeRange": "55~60"
       },
       {
@@ -1380,7 +1380,7 @@
         "imageUrl": "dress_9_item_10.jpg",
         "ord": 9,
         "itemType": "DRESS",
-        "styleTags": "오프숄더,본식",
+        "styleTags": "오프숄더,본식,로맨틱",
         "sizeRange": "50~60"
       }
     ]
@@ -1395,7 +1395,7 @@
         "imageUrl": "dress_10_item_1.jpg",
         "ord": 0,
         "itemType": "DRESS",
-        "styleTags": "수입실크,본식",
+        "styleTags": "수입실크,본식,화려한",
         "sizeRange": "44~50"
       },
       {
@@ -1404,7 +1404,7 @@
         "imageUrl": "dress_10_item_2.jpg",
         "ord": 1,
         "itemType": "DRESS",
-        "styleTags": "머메이드,본식",
+        "styleTags": "머메이드,본식,우아한,글래머러스",
         "sizeRange": "44~55"
       },
       {
@@ -1413,7 +1413,7 @@
         "imageUrl": "dress_10_item_3.png",
         "ord": 2,
         "itemType": "DRESS",
-        "styleTags": "머메이드,비즈",
+        "styleTags": "머메이드,비즈,우아한,글래머러스",
         "sizeRange": "44~50"
       },
       {
@@ -1422,7 +1422,7 @@
         "imageUrl": "dress_10_item_4.png",
         "ord": 3,
         "itemType": "DRESS",
-        "styleTags": "머메이드,비즈",
+        "styleTags": "머메이드,비즈,우아한,글래머러스",
         "sizeRange": "44~50"
       },
       {
@@ -1431,7 +1431,7 @@
         "imageUrl": "dress_10_item_5.jpg",
         "ord": 4,
         "itemType": "DRESS",
-        "styleTags": "수입실크,본식",
+        "styleTags": "수입실크,본식,화려한",
         "sizeRange": "44~50"
       },
       {
@@ -1440,7 +1440,7 @@
         "imageUrl": "dress_10_item_6.jpg",
         "ord": 5,
         "itemType": "DRESS",
-        "styleTags": "머메이드,본식",
+        "styleTags": "머메이드,본식,우아한,글래머러스",
         "sizeRange": "44~55"
       },
       {
@@ -1449,7 +1449,7 @@
         "imageUrl": "dress_10_item_7.jpg",
         "ord": 6,
         "itemType": "DRESS",
-        "styleTags": "수입실크,비즈",
+        "styleTags": "수입실크,비즈,화려한",
         "sizeRange": "44~50"
       },
       {
@@ -1458,7 +1458,7 @@
         "imageUrl": "dress_10_item_8.png",
         "ord": 7,
         "itemType": "DRESS",
-        "styleTags": "머메이드,수입실크",
+        "styleTags": "머메이드,수입실크,우아한,글래머러스",
         "sizeRange": "44~55"
       },
       {
@@ -1467,7 +1467,7 @@
         "imageUrl": "dress_10_item_9.png",
         "ord": 8,
         "itemType": "DRESS",
-        "styleTags": "수입실크,본식",
+        "styleTags": "수입실크,본식,화려한",
         "sizeRange": "44~50"
       },
       {
@@ -1476,7 +1476,7 @@
         "imageUrl": "dress_10_item_10.jpg",
         "ord": 9,
         "itemType": "DRESS",
-        "styleTags": "수입실크,머메이드",
+        "styleTags": "수입실크,머메이드,우아한,글래머러스",
         "sizeRange": "44~55"
       },
       {
@@ -1485,7 +1485,7 @@
         "imageUrl": "dress_10_item_11.jpg",
         "ord": 10,
         "itemType": "DRESS",
-        "styleTags": "머메이드,수입실크",
+        "styleTags": "머메이드,수입실크,우아한,글래머러스",
         "sizeRange": "44~50"
       },
       {
@@ -1494,7 +1494,7 @@
         "imageUrl": "dress_10_item_12.jpg",
         "ord": 11,
         "itemType": "DRESS",
-        "styleTags": "머메이드,본식",
+        "styleTags": "머메이드,본식,우아한,글래머러스",
         "sizeRange": "50~55"
       },
       {
@@ -1503,7 +1503,7 @@
         "imageUrl": "dress_10_item_13.jpg",
         "ord": 12,
         "itemType": "DRESS",
-        "styleTags": "비즈,수입실크",
+        "styleTags": "비즈,수입실크,화려한",
         "sizeRange": "44~55"
       },
       {
@@ -1512,7 +1512,7 @@
         "imageUrl": "dress_10_item_14.jpg",
         "ord": 13,
         "itemType": "DRESS",
-        "styleTags": "머메이드,수입실크",
+        "styleTags": "머메이드,수입실크,우아한,글래머러스",
         "sizeRange": "44~55"
       },
       {
@@ -1521,7 +1521,7 @@
         "imageUrl": "dress_10_item_15.jpg",
         "ord": 14,
         "itemType": "DRESS",
-        "styleTags": "본식,수입실크",
+        "styleTags": "본식,수입실크,화려한",
         "sizeRange": "44~55"
       },
       {
@@ -1530,7 +1530,7 @@
         "imageUrl": "dress_10_item_16.jpg",
         "ord": 15,
         "itemType": "DRESS",
-        "styleTags": "머메이드,비즈",
+        "styleTags": "머메이드,비즈,우아한,글래머러스",
         "sizeRange": "44~50"
       },
       {
@@ -1539,7 +1539,7 @@
         "imageUrl": "dress_10_item_17.jpg",
         "ord": 16,
         "itemType": "DRESS",
-        "styleTags": "수입실크,비즈",
+        "styleTags": "수입실크,비즈,화려한",
         "sizeRange": "50~55"
       },
       {
@@ -1548,7 +1548,7 @@
         "imageUrl": "dress_10_item_18.jpg",
         "ord": 17,
         "itemType": "DRESS",
-        "styleTags": "머메이드,수입실크",
+        "styleTags": "머메이드,수입실크,우아한,글래머러스",
         "sizeRange": "50~55"
       }
     ]

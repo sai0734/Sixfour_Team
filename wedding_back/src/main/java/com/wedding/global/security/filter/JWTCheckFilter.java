@@ -170,6 +170,8 @@ public class JWTCheckFilter extends OncePerRequestFilter{
 
         String authHeaderStr = request.getHeader("Authorization");
 
+        // try 안에는 토큰 검증 로직만 둔다 - doFilter()를 try 밖에 둬야 인증 통과 이후
+        // 컨트롤러/서비스에서 발생하는 예외를 이 catch가 401로 잘못 삼키지 않는다
         try {
             if (authHeaderStr == null || !authHeaderStr.startsWith("Bearer ")) {
                 throw new RuntimeException("Missing or invalid Authorization header");
@@ -186,8 +188,6 @@ public class JWTCheckFilter extends OncePerRequestFilter{
             Map<String, Object> claims = JWTUtil.validateToken(accessToken);
 
             log.info("JWT claims: " + claims);
-
-            //   filterChain.doFilter(request, response);
 
             String email = (String) claims.get("email");
             String pw = (String) claims.get("pw");
@@ -232,16 +232,13 @@ public class JWTCheckFilter extends OncePerRequestFilter{
 
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 
-            filterChain.doFilter(request, response);
-
         }catch(Exception e){
 
             log.error("JWT Check Error..............");
             log.error(e.getMessage());
 
-            // 수정: 토큰 검증 실패 시 401 상태코드를 명시적으로 지정
-            // (이게 없으면 기본값 200으로 응답이 나가서, 프론트 axios가 이 응답을
-            //  "정상 성공"으로 착각하고 {"error": "..."} 객체를 그대로 데이터로 써버림)
+            // 상태코드를 명시하지 않으면 기본값 200이 나가서, 프론트 axios가 이 응답을
+            // "정상 성공"으로 착각하고 {"error": "..."} 객체를 그대로 데이터로 써버린다
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
             Gson gson = new Gson();
@@ -252,7 +249,15 @@ public class JWTCheckFilter extends OncePerRequestFilter{
             printWriter.println(msg);
             printWriter.close();
 
+            // 여기서 return하지 않으면 catch 블록이 끝난 뒤 아래의 filterChain.doFilter()가
+            // 그대로 실행되어, 이미 401 응답을 다 쓴 요청이 컨트롤러까지 넘어가버린다.
+            return;
+
         }
+
+        // 토큰 검증(위 try)이 예외 없이 끝났을 때만 여기 도달한다.
+        // 이 아래에서 발생하는 예외는 더 이상 위 catch가 삼키지 않고 그대로 전파된다.
+        filterChain.doFilter(request, response);
     }
 
     // 정지/휴면/탈퇴 회원의 요청을 즉시 차단할 때 쓰는 응답 (일반 토큰 오류와 구분되는 전용 에러코드)

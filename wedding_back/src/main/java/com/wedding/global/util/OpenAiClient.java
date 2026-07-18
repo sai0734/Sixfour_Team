@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
@@ -66,6 +67,40 @@ public class OpenAiClient {
         }
 
         return chatResponse.getBody();
+    }
+
+    // Vision 지원 모델에게 이미지+프롬프트를 보내 텍스트 설명만 받음. OpenAiMessageDTO.content는
+    // 순수 문자열이라 멀티모달 content를 못 담아서, 이 호출만 요청 바디를 직접 구성한다.
+    public String describeImage(byte[] imageBytes, String contentType, String prompt) {
+
+        String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+        String mimeType = (contentType != null && !contentType.isBlank()) ? contentType : "image/jpeg";
+        String dataUrl = "data:" + mimeType + ";base64," + base64Image;
+
+        Map<String, Object> textPart = Map.of("type", "text", "text", prompt);
+        Map<String, Object> imagePart = Map.of(
+                "type", "image_url",
+                "image_url", Map.of("url", dataUrl));
+
+        Map<String, Object> userMessage = Map.of(
+                "role", "user",
+                "content", List.of(textPart, imagePart));
+
+        Map<String, Object> requestBody = Map.of(
+                "model", model,
+                "messages", List.of(userMessage));
+
+        ResponseEntity<OpenAiResponseDTO> response = restTemplate.postForEntity(
+                apiUrl,
+                requestBody,
+                OpenAiResponseDTO.class
+        );
+
+        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+            throw new RuntimeException("OpenAI 이미지 분석 호출 실패");
+        }
+
+        return response.getBody().getChoices().getFirst().getMessage().getContent();
     }
 
 }

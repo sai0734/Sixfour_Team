@@ -22,10 +22,8 @@ const MyPageSidebar = () => {
   const { isManager, company } = useManagedCompany({
     enabled: Boolean(loginState.email),
   });
-  // 수정시작
   // 방 하나하나의 안읽음 여부를 맵으로 들고 있다가, 하나라도 true면 뱃지 표시
   const [roomUnreadMap, setRoomUnreadMap] = useState({});
-  // 수정끝
 
   useEffect(() => {
     activeRef.current?.scrollIntoView({

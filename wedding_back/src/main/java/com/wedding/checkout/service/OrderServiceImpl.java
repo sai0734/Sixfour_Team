@@ -8,9 +8,7 @@ import com.wedding.checkout.repository.PaymentRepository;
 import com.wedding.global.util.TossPaymentClient;
 import com.wedding.global.dto.PageResponseDTO;
 import com.wedding.product.domain.ProductImage;
-// 수정시작: productRepository 재조회 방식으로 바꾸기 위해 추가
 import com.wedding.product.repository.ProductRepository;
-// 수정끝
 import java.util.Comparator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;

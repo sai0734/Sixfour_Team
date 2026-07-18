@@ -237,7 +237,6 @@ const AdminProductListComponent = () => {
                       </div>
                     </td>
                     <td className="py-2.5 px-4">{p.pname}</td>
-                    {/* 수정시작: 각 셀에 whitespace-nowrap 추가 */}
                     <td className="py-2.5 px-4 text-ink-faint whitespace-nowrap">
                       {p.category}
                     </td>
@@ -260,7 +259,6 @@ const AdminProductListComponent = () => {
                       </span>
                     </td>
                     <td className="py-2.5 px-4 text-center whitespace-nowrap">
-                      {/* 수정끝 */}
                       <button
                         onClick={(e) => handleClickModify(e, p.pno)}
                         className="text-xs text-brand-accent underline mr-3"

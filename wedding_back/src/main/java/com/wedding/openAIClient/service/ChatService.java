@@ -4,33 +4,53 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wedding.company.domain.Company;
 import com.wedding.company.domain.CompanyCategory;
+import com.wedding.company.domain.DressItem;
+import com.wedding.company.domain.DressItemType;
+import com.wedding.company.domain.HallItem;
+import com.wedding.company.domain.MakeupPackageType;
+import com.wedding.company.domain.MealType;
 import com.wedding.company.dto.CompanyDTO;
 import com.wedding.company.dto.DressDetailDTO;
+import com.wedding.company.dto.DressItemDTO;
 import com.wedding.company.dto.HallDetailDTO;
+import com.wedding.company.dto.HallItemDTO;
 import com.wedding.company.dto.MakeupDetailDTO;
+import com.wedding.company.dto.MakeupPackageDTO;
 import com.wedding.company.dto.StudioDetailDTO;
 import com.wedding.company.repository.CompanyRepository;
+import com.wedding.company.repository.DressItemRepository;
+import com.wedding.company.repository.HallItemRepository;
+import com.wedding.company.repository.MakeupPackageRepository;
 import com.wedding.company.service.CompanyService;
 import com.wedding.global.util.OpenAiClient;
-import com.wedding.openAIClient.controller.ChatMessageRepository;
+import com.wedding.openAIClient.repository.ChatMessageRepository;
 import com.wedding.openAIClient.domain.ChatMessage;
 import com.wedding.openAIClient.dto.ChatReferenceDTO;
 import com.wedding.openAIClient.dto.ChatResponseDTO;
 import com.wedding.openAIClient.dto.OpenAiMessageDTO;
 import com.wedding.openAIClient.dto.OpenAiResponseDTO;
-import com.wedding.openAIClient.dto.OpenAiToolDTO;
 import com.wedding.product.domain.Product;
 import com.wedding.product.repository.ProductRepository;
+import com.wedding.reservation.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,6 +62,10 @@ public class ChatService {
     private final ProductRepository productRepository;
     private final CompanyRepository companyRepository;
     private final CompanyService companyService;
+    private final DressItemRepository dressItemRepository;
+    private final HallItemRepository hallItemRepository;
+    private final MakeupPackageRepository makeupPackageRepository;
+    private final ReservationRepository reservationRepository;
     private final ObjectMapper objectMapper;
 
     // 회원별로 대화를 이만큼만 DB에 남기고, 문맥으로도 이만큼만 사용
@@ -50,61 +74,26 @@ public class ChatService {
     // 한 답변에 카드로 보여줄 참조(업체/아이템/답례품) 최대 개수
     private static final int MAX_REFERENCES = 5;
 
-    // 웨딩 관련 질문을 "무관한 질문"으로 과도하게 거절하지 않도록, 그리고 카드가 별도로 뜨니
-    // 텍스트 답변은 중복 나열 없이 짧게 요약하도록 명확히 지시하는 프롬프트로 정비
-    private static final String SYSTEM_PROMPT =
-            "당신은 웨딩 준비 전문 AI 비서입니다. 결혼 준비(웨딩홀, 스튜디오, 드레스, 메이크업, 답례품 등)와 " +
-                    "관련된 질문에 답변합니다.\n\n" +
-                    "중요: 매 사용자 메시지마다 search_gifts, search_companies, get_company_detail, " +
-                    "answer_directly 이 4개 함수 중 정확히 하나를 반드시 호출해야 합니다. 함수를 호출하지 않고 " +
-                    "곧바로 텍스트로만 답변하는 것은 허용되지 않습니다. 실제 데이터 조회가 필요 없는 경우에는 " +
-                    "answer_directly를 호출하세요.\n\n" +
-                    "질문은 아래 기준으로 판단해서 답변하세요.\n\n" +
-                    "1) 결혼 준비와 정말 무관한 질문(예: 날씨, 요리 레시피, 스포츠, 코딩 등 웨딩과 전혀 관계없는 화제)에는 " +
-                    "answer_directly를 호출한 뒤 '결혼 준비와 관련된 질문만 답변해 드릴 수 있습니다.'라고 정중하게 " +
-                    "답하세요. 웨딩홀/드레스/스튜디오/메이크업/답례품/결혼 준비 절차 등과 조금이라도 관련 있으면 절대 " +
-                    "이 경우로 처리하지 말고 아래 2), 3)번 기준으로 판단하세요.\n\n" +
-                    "2) 결혼 준비와 관련된 일반 지식/조언 질문(예: 결혼식 예절, 청첩장 문구, 결혼을 많이 하는 달/계절, " +
-                    "예산 짜는 법, 웨딩 준비 순서, 스몰웨딩 팁 등 우리 서비스의 상품·업체 데이터와 무관한 질문), " +
-                    "또는 이전 대화에서 이미 조회한 내용만으로 충분히 답할 수 있는 질문(예: 방금 얘기한 업체의 " +
-                    "주소를 다시 묻는 경우)에는 answer_directly를 호출한 뒤, 당신이 알고 있는 지식이나 이전 대화 " +
-                    "내용을 바탕으로 직접 친절하고 자연스럽게 답변하세요. 이런 질문을 거절하거나 얼버무리지 마세요. " +
-                    "다만 특정 업체/상품의 최신 정보나 아직 조회하지 않은 세부 정보(가격, 옵션 등)가 필요하면 " +
-                    "이 경우가 아니라 아래 3)번으로 처리하세요.\n\n" +
-                    "3) 우리 사이트에 등록된 업체/상품 데이터를 새로 조회해야 답할 수 있는 질문 - 아래 함수들 중 " +
-                    "정확히 맞는 것을 사용하세요.\n" +
-                    "   - 답례품/하객 선물(그릇, 수건, 디퓨저, 차, 과자, 비누 등)을 찾거나 추천받고 싶어하면 " +
-                    "search_gifts 함수를 사용하세요.\n" +
-                    "   - 웨딩드레스(대여/구매/드레스샵 포함), 웨딩홀, 스튜디오, 메이크업 업체를 찾거나 추천받고 싶어하면 " +
-                    "search_companies 함수를 사용하세요. 드레스는 상품이 아니라 category=DRESS인 업체(드레스샵)로 " +
-                    "등록되어 있으므로, 드레스 관련 질문에는 절대 search_gifts를 쓰지 말고 반드시 search_companies를 " +
-                    "사용하세요.\n" +
-                    "   - 사용자가 특정 업체 하나를 콕 집어서 그 업체의 세부 상품/가격/옵션(드레스 아이템 목록, " +
-                    "홀 대관 옵션, 메이크업 패키지 등)을 알고 싶어하면 get_company_detail 함수를 사용하세요. " +
-                    "cmno(업체번호)를 모르면 먼저 search_companies로 그 업체를 찾아서 결과에 있는 업체번호를 확인한 뒤 " +
-                    "get_company_detail을 호출하세요. 스튜디오는 세부 상품 목록이 없고 테마 태그 정보만 있습니다.\n" +
-                    "   - '인기있는', '괜찮은', '추천할만한', '가성비 좋은'처럼 정확한 필터 조건이 없는 모호한 " +
-                    "질문이어도 절대 거절하지 말고, 일단 필터 없이(또는 파악되는 조건만으로) 함수를 호출해서 실제 " +
-                    "데이터를 가져온 뒤 그 안에서 최선을 다해 추천하세요. 인기도처럼 우리 데이터에 없는 기준을 " +
-                    "물으면, 그 기준의 데이터는 없다고 짧게 언급하되 답변 자체는 거절하지 말고 실제 등록된 업체/상품 " +
-                    "중 몇 곳을 추천하세요.\n\n" +
-                    "화면 표시 안내: 함수 호출 결과는 이름/가격/이미지가 담긴 카드로 화면에 자동으로 함께 표시됩니다. " +
-                    "따라서 답변 텍스트에서는 조회된 업체·상품의 이름, 가격, 설명을 다시 나열하지 말고, 질문에 대한 " +
-                    "짧은 요약과 추천 이유만 2~3문장 이내로 간결하게 답하세요. 자세한 목록은 카드를 통해 확인할 수 " +
-                    "있습니다. 실제 등록된 데이터에 없는 내용은 절대 지어내지 마세요.\n\n" +
-                    "개수 지정: 사용자가 '3개만', '두 곳만'처럼 원하는 개수를 말하면 search_gifts/search_companies의 " +
-                    "limit 파라미터에 그 숫자를 그대로 전달하세요. 개수를 말하지 않았으면 limit을 생략하세요. " +
-                    "카드는 항상 이 limit(또는 기본값)만큼만 표시되니, 텍스트에서 언급하는 개수와 반드시 일치시키세요.\n\n" +
-                    "대화 기록 안내: 이전 대화의 assistant 메시지 끝에 '(참고용 메타데이터...)' 형태의 문구가 붙어 " +
-                    "있을 수 있습니다. 이는 사용자에게 보여진 적 없는, 당신만을 위한 내부 참고용 정보(직전에 조회했던 " +
-                    "업체/상품의 이름과 id)입니다. 사용자가 '그 중 한 곳', '아까 그 업체'처럼 이전에 조회된 대상을 " +
-                    "다시 언급하면 이 메타데이터에서 해당 항목의 id를 찾아 cmno로 사용해 get_company_detail을 " +
-                    "호출하세요(이런 경우는 2)번이 아니라 3)번으로 처리 - answer_directly를 호출하면 안 됩니다). " +
-                    "이 메타데이터 형식을 당신의 답변에 그대로 출력하지 마세요.\n\n" +
-                    "출력 형식: 답변이 표시되는 화면은 마크다운을 렌더링하지 않는 일반 텍스트 채팅창입니다. " +
-                    "**볼드**, # 제목, `코드블록`, [링크](url), 표 같은 마크다운 문법을 절대 사용하지 마세요. " +
-                    "강조하고 싶은 내용은 문장으로 자연스럽게 풀어 쓰고, 목록이 필요하면 '- '로 시작하는 줄바꿈 " +
-                    "목록만 사용하세요.";
+    // 메이크업 패키지 타입이 포함하는 서비스 조합. HAIR_NAIL을 요청해도 그 조합을 포함하는 더 큰
+    // 패키지(FULL)가 있으면 함께 매칭시키기 위해 사용한다
+    private static final Map<MakeupPackageType, Set<String>> MAKEUP_PACKAGE_SERVICES = Map.of(
+            MakeupPackageType.HAIR, Set.of("HAIR"),
+            MakeupPackageType.MAKEUP, Set.of("MAKEUP"),
+            MakeupPackageType.NAIL, Set.of("NAIL"),
+            MakeupPackageType.HAIR_MAKEUP, Set.of("HAIR", "MAKEUP"),
+            MakeupPackageType.HAIR_NAIL, Set.of("HAIR", "NAIL"),
+            MakeupPackageType.MAKEUP_NAIL, Set.of("MAKEUP", "NAIL"),
+            MakeupPackageType.FULL, Set.of("HAIR", "MAKEUP", "NAIL")
+    );
+
+    // 요청한 서비스 조합을 포함하는(상위 호환) 패키지 타입 목록을 반환
+    private List<MakeupPackageType> matchingMakeupPackageTypes(MakeupPackageType requested) {
+        Set<String> requiredServices = MAKEUP_PACKAGE_SERVICES.get(requested);
+        return MAKEUP_PACKAGE_SERVICES.entrySet().stream()
+                .filter(e -> e.getValue().containsAll(requiredServices))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+    }
 
     // 함수 실행 결과 - AI에게 줄 텍스트와, 프론트에 카드로 줄 참조 데이터를 같이 담음
     private record ToolResult(String text, List<ChatReferenceDTO> references) {
@@ -116,14 +105,14 @@ public class ChatService {
     // DB save/delete가 saveAndTrim 안에서 이어지는데, deleteOlderThan은 @Modifying 쿼리라
     // 트랜잭션 없이 호출되면 "Executing an update/delete query" 에러가 남 - 여기서 감싸줌
     @Transactional
-    public ChatResponseDTO getAnswer(String memberEmail, String question) {
+    public ChatResponseDTO getAnswer(String memberEmail, String question, String intent, String lockedCategory) {
 
         // 1) 회원의 최근 대화(최대 HISTORY_LIMIT개, 최신순)를 불러와서 문맥으로 사용할 메시지 목록 구성
         List<ChatMessage> history = chatMessageRepository
                 .findRecentByMember(memberEmail, PageRequest.of(0, HISTORY_LIMIT));
 
         List<OpenAiMessageDTO> messages = new ArrayList<>();
-        messages.add(OpenAiMessageDTO.of("system", SYSTEM_PROMPT));
+        messages.add(OpenAiMessageDTO.of("system", ChatPrompts.buildSystemPrompt(intent)));
 
         // findRecentByMember는 최신순(cno desc)으로 오기 때문에, 대화 순서로 쓰려면 뒤집어야 함
         for (int i = history.size() - 1; i >= 0; i--) {
@@ -133,13 +122,10 @@ public class ChatService {
 
         messages.add(OpenAiMessageDTO.of("user", question));
 
-        // 2) 1차 호출 - 답례품 검색 + 업체 검색 + 업체 상세 + "조회 불필요" 함수를 tools로 같이 전달.
-        // tool_choice="required"로 강제해서, 모델이 아무 함수도 안 부르고 바로 텍스트로 답해버리는(그래서
-        // 카드가 안 뜨는) 경우를 막는다 - 조회가 필요 없을 땐 answer_directly를 고르게 유도
+        // 2) intent가 있으면 그 목적에 맞는 함수(들)만 tools로 전달하고, 없으면(자유 질문) 4개 함수를
+        // 다 후보로 준다. tool_choice="required"로 모델이 함수 호출 없이 텍스트로만 답하는 것을 막는다.
         OpenAiResponseDTO firstResponse = openAiClient.getChatCompletions(
-                messages,
-                List.of(searchGiftsTool(), searchCompaniesTool(), getCompanyDetailTool(), answerDirectlyTool()),
-                "required");
+                messages, ChatToolDefinitions.resolveTools(intent), "required");
 
         OpenAiMessageDTO assistantMessage = firstResponse.getChoices().getFirst().getMessage();
 
@@ -154,7 +140,7 @@ public class ChatService {
 
             for (OpenAiMessageDTO.ToolCallDTO toolCall : assistantMessage.getToolCalls()) {
 
-                ToolResult result = executeToolCall(toolCall);
+                ToolResult result = executeToolCall(toolCall, lockedCategory);
                 references.addAll(result.references());
 
                 followUp.add(OpenAiMessageDTO.builder()
@@ -175,6 +161,9 @@ public class ChatService {
         // 프롬프트로 "마크다운 쓰지 마라"고 지시해도 모델이 종종 **볼드** 등을 섞어 보내서,
         // 화면에 별표가 그대로 노출되지 않도록 여기서 한 번 더 강제로 걷어낸다
         finalAnswer = stripMarkdown(finalAnswer);
+
+        // 모델이 내부용 숨김 메타데이터 형식을 답변에 그대로 섞어 보내는 경우가 있어 정규식으로 제거한다
+        finalAnswer = stripHiddenMetadata(finalAnswer);
 
         List<ChatReferenceDTO> cappedReferences = references.stream()
                 .limit(MAX_REFERENCES)
@@ -200,15 +189,18 @@ public class ChatService {
         return finalAnswer + "\n\n(참고용 메타데이터, 화면에 표시되지 않음: " + refNote + ")";
     }
 
-    // 함수가 3개가 됐으니 이름으로 분기
-    private ToolResult executeToolCall(OpenAiMessageDTO.ToolCallDTO toolCall) {
+    // 함수가 늘어날 때마다 이름으로 분기. lockedCategory는 "업체 찾기" 카테고리 버튼으로 고정된 값 -
+    // 카테고리를 다루는 함수들에 전달되어 모델이 준 category 값을 덮어쓴다
+    private ToolResult executeToolCall(OpenAiMessageDTO.ToolCallDTO toolCall, String lockedCategory) {
 
         String functionName = toolCall.getFunction().getName();
 
         return switch (functionName) {
             case "search_gifts" -> executeSearchGifts(toolCall);
-            case "search_companies" -> executeSearchCompanies(toolCall);
+            case "search_companies" -> executeSearchCompanies(toolCall, lockedCategory);
             case "get_company_detail" -> executeGetCompanyDetail(toolCall);
+            case "find_available_companies" -> executeFindAvailableCompanies(toolCall, lockedCategory);
+            case "find_top_items" -> executeFindTopItems(toolCall, lockedCategory);
             // 실제 조회 없이 답할 수 있다고 판단했을 때 호출되는 더미 함수 - 아무 것도 하지 않음
             case "answer_directly" -> ToolResult.textOnly("");
             default -> ToolResult.textOnly("지원하지 않는 함수입니다: " + functionName);
@@ -227,21 +219,57 @@ public class ChatService {
             Integer maxPrice = args.hasNonNull("maxPrice") ? args.get("maxPrice").asInt() : null;
             Double minRating = args.hasNonNull("minRating") ? args.get("minRating").asDouble() : null;
             Integer limit = args.hasNonNull("limit") ? args.get("limit").asInt() : null;
+            String sortBy = args.hasNonNull("sortBy") ? args.get("sortBy").asText() : null;
 
             List<String> categories = category != null ? List.of(category) : null;
 
-            // 사용자가 개수를 지정했으면 그 개수를, 아니면 기본 5개까지만 - 텍스트/카드 개수를 일치시키기 위해
-            // 여기서 페이지 크기 자체를 제한해서 이후 텍스트/카드가 동일한 목록을 그대로 쓰게 한다
+            // 사용자가 개수를 지정했으면 그 개수를, 아니면 기본 5개까지만
             int effectiveLimit = (limit != null && limit > 0) ? Math.min(limit, MAX_REFERENCES) : MAX_REFERENCES;
 
-            var page = productRepository.searchProductList(
-                    categories, keyword, minPrice, maxPrice, minRating,
-                    PageRequest.of(0, effectiveLimit, Sort.by("ratingAvg").descending())
-            );
+            // keyword에 동의어를 쉼표로 여러 개 넣을 수 있음(예: "돌잔치,백일") - 각 키워드로 따로
+            // 조회한 뒤 상품번호(pno) 기준으로 중복 없이 합친다
+            List<String> keywordTerms = (keyword != null && !keyword.isBlank())
+                    ? Arrays.stream(keyword.split(","))
+                            .map(String::trim)
+                            .filter(k -> !k.isEmpty())
+                            .collect(Collectors.toList())
+                    : List.of();
 
-            List<Product> products = page.getContent().stream()
-                    .map(row -> (Product) row[0])
-                    .collect(Collectors.toList());
+            // 정렬은 merge 이후 한 번에 적용하므로, DB 조회 시에는 정렬 없이 후보만 넉넉히 가져온다
+            Map<Long, Product> merged = new LinkedHashMap<>();
+
+            if (keywordTerms.isEmpty()) {
+                var page = productRepository.searchProductList(
+                        categories, null, minPrice, maxPrice, minRating, PageRequest.of(0, 30));
+                page.getContent().forEach(row -> {
+                    Product p = (Product) row[0];
+                    merged.putIfAbsent(p.getPno(), p);
+                });
+            } else {
+                for (String kw : keywordTerms) {
+                    var page = productRepository.searchProductList(
+                            categories, kw, minPrice, maxPrice, minRating, PageRequest.of(0, 30));
+                    page.getContent().forEach(row -> {
+                        Product p = (Product) row[0];
+                        merged.putIfAbsent(p.getPno(), p);
+                    });
+                }
+            }
+
+            // sortBy 미지정 시 기본값은 평점 높은순
+            List<Product> products = new ArrayList<>(merged.values());
+
+            if ("PRICE_DESC".equals(sortBy)) {
+                products.sort(Comparator.comparingInt(Product::getPrice).reversed());
+            } else if ("PRICE_ASC".equals(sortBy)) {
+                products.sort(Comparator.comparingInt(Product::getPrice));
+            } else if ("RATING_ASC".equals(sortBy)) {
+                products.sort(Comparator.comparingDouble(Product::getRatingAvg));
+            } else {
+                products.sort(Comparator.comparingDouble(Product::getRatingAvg).reversed());
+            }
+
+            products = products.stream().limit(effectiveLimit).collect(Collectors.toList());
 
             if (products.isEmpty()) {
                 return ToolResult.textOnly("조건에 맞는 답례품을 찾지 못했습니다.");
@@ -273,13 +301,19 @@ public class ChatService {
 
     // 업체(홀/드레스업체/스튜디오/메이크업) 검색 실행 - 설명 텍스트를 통째로 넘겨서
     // AI가 느낌/분위기까지 읽고 판단할 수 있게 함
-    private ToolResult executeSearchCompanies(OpenAiMessageDTO.ToolCallDTO toolCall) {
+    private ToolResult executeSearchCompanies(OpenAiMessageDTO.ToolCallDTO toolCall, String lockedCategory) {
 
         try {
             JsonNode args = objectMapper.readTree(toolCall.getFunction().getArguments());
 
+            // 카테고리 버튼으로 고정되어 있으면 모델이 준 category는 무시하고 이 값으로 강제한다
             CompanyCategory category = null;
-            if (args.hasNonNull("category")) {
+            if (lockedCategory != null) {
+                try {
+                    category = CompanyCategory.valueOf(lockedCategory.toUpperCase());
+                } catch (IllegalArgumentException ignored) {
+                }
+            } else if (args.hasNonNull("category")) {
                 try {
                     category = CompanyCategory.valueOf(args.get("category").asText().toUpperCase());
                 } catch (IllegalArgumentException ignored) {
@@ -291,16 +325,95 @@ public class ChatService {
             BigDecimal minPrice = args.hasNonNull("minPrice") ? BigDecimal.valueOf(args.get("minPrice").asDouble()) : null;
             BigDecimal maxPrice = args.hasNonNull("maxPrice") ? BigDecimal.valueOf(args.get("maxPrice").asDouble()) : null;
             Integer limit = args.hasNonNull("limit") ? args.get("limit").asInt() : null;
+            String sortBy = args.hasNonNull("sortBy") ? args.get("sortBy").asText() : null;
 
             // 사용자가 개수를 지정했으면 그 개수를, 아니면 기본 5개까지만
             int effectiveLimit = (limit != null && limit > 0) ? Math.min(limit, MAX_REFERENCES) : MAX_REFERENCES;
 
-            // DB에서는 후보 15개까지 넉넉히 가져오되, 실제 텍스트/카드로 내보내는 건 effectiveLimit개로 맞춰서
-            // 텍스트에서 설명하는 개수와 카드 개수가 항상 일치하도록 한다
-            var page = companyRepository.searchList(
-                    category, keyword, minPrice, maxPrice, PageRequest.of(0, 15));
+            // 카테고리별 실제 보유 옵션/상품 필터 - 지정되면 keyword 기반 설명 검색보다 우선한다
+            Set<Long> itemFilteredCmnos = null;
 
-            List<Company> companies = page.getContent().stream()
+            if (args.hasNonNull("dressItemType")) {
+                try {
+                    DressItemType type = DressItemType.valueOf(args.get("dressItemType").asText().toUpperCase());
+                    itemFilteredCmnos = new HashSet<>(dressItemRepository.findCompanyCmnosByItemType(type));
+                } catch (IllegalArgumentException ignored) {
+                    // 모델이 이상한 값을 주면 이 필터는 무시하고 keyword 검색으로 처리
+                }
+            } else if (args.hasNonNull("hallMealType")) {
+                try {
+                    MealType type = MealType.valueOf(args.get("hallMealType").asText().toUpperCase());
+                    itemFilteredCmnos = new HashSet<>(hallItemRepository.findCompanyCmnosByMealType(type));
+                } catch (IllegalArgumentException ignored) {
+                }
+            } else if (args.hasNonNull("makeupPackageType")) {
+                try {
+                    MakeupPackageType type = MakeupPackageType.valueOf(args.get("makeupPackageType").asText().toUpperCase());
+                    itemFilteredCmnos = new HashSet<>(makeupPackageRepository
+                            .findCompanyCmnosByPackageTypeIn(matchingMakeupPackageTypes(type)));
+                } catch (IllegalArgumentException ignored) {
+                }
+            }
+
+            // keyword에 동의어를 쉼표로 여러 개 넣을 수 있음(예: "슈트,턱시도,정장") - 각 키워드로
+            // 따로 조회한 뒤 업체번호(cmno) 기준으로 중복 없이 합친다
+            List<String> keywordTerms = (keyword != null && !keyword.isBlank())
+                    ? Arrays.stream(keyword.split(","))
+                            .map(String::trim)
+                            .filter(k -> !k.isEmpty())
+                            .collect(Collectors.toList())
+                    : List.of();
+
+            // searchListWithDescription은 업체명/주소뿐 아니라 설명(description) 텍스트까지 검색한다
+            Map<Long, Company> merged = new LinkedHashMap<>();
+
+            if (itemFilteredCmnos != null) {
+                // 람다 캡처를 위해 effectively final 변수로 복사
+                final CompanyCategory categoryFilter = category;
+                for (Long cmno : itemFilteredCmnos) {
+                    companyRepository.selectOne(cmno).ifPresent(c -> {
+                        boolean categoryOk = categoryFilter == null || c.getCategory() == categoryFilter;
+                        boolean minOk = minPrice == null || c.getPriceAvg().compareTo(minPrice) >= 0;
+                        boolean maxOk = maxPrice == null || c.getPriceAvg().compareTo(maxPrice) <= 0;
+                        if (categoryOk && minOk && maxOk) {
+                            merged.putIfAbsent(cmno, c);
+                        }
+                    });
+                }
+            } else {
+                // category가 없으면(카테고리 버튼도 안 거치고 자유질문으로 막연히 물은 경우) 한쪽
+                // 카테고리로 쏠리지 않도록 4개 카테고리 모두에서 고르게 가져온다
+                List<CompanyCategory> categoriesToQuery = category != null
+                        ? List.of(category)
+                        : Arrays.asList(CompanyCategory.values());
+                int perCategoryLimit = category != null ? 15 : 4;
+
+                if (keywordTerms.isEmpty()) {
+                    for (CompanyCategory cat : categoriesToQuery) {
+                        var page = companyRepository.searchListWithDescription(
+                                cat, null, minPrice, maxPrice, PageRequest.of(0, perCategoryLimit));
+                        page.getContent().forEach(c -> merged.putIfAbsent(c.getCmno(), c));
+                    }
+                } else {
+                    for (String kw : keywordTerms) {
+                        for (CompanyCategory cat : categoriesToQuery) {
+                            var page = companyRepository.searchListWithDescription(
+                                    cat, kw, minPrice, maxPrice, PageRequest.of(0, perCategoryLimit));
+                            page.getContent().forEach(c -> merged.putIfAbsent(c.getCmno(), c));
+                        }
+                    }
+                }
+            }
+
+            List<Company> companies = new ArrayList<>(merged.values());
+
+            if ("PRICE_DESC".equals(sortBy)) {
+                companies.sort(Comparator.comparing(Company::getPriceAvg, Comparator.nullsLast(Comparator.naturalOrder())).reversed());
+            } else if ("PRICE_ASC".equals(sortBy)) {
+                companies.sort(Comparator.comparing(Company::getPriceAvg, Comparator.nullsLast(Comparator.naturalOrder())));
+            }
+
+            companies = companies.stream()
                     .limit(effectiveLimit)
                     .collect(Collectors.toList());
 
@@ -352,6 +465,35 @@ public class ChatService {
                 return ToolResult.textOnly("해당 업체번호의 업체를 찾을 수 없습니다.");
             }
 
+            // 텍스트와 카드는 항상 같은 (필터 + 정렬 + 개수제한된) 목록에서 만든다
+            String sortBy = args.hasNonNull("sortBy") ? args.get("sortBy").asText() : null;
+            Integer limit = args.hasNonNull("limit") ? args.get("limit").asInt() : null;
+            int effectiveLimit = (limit != null && limit > 0) ? Math.min(limit, MAX_REFERENCES) : MAX_REFERENCES;
+
+            // 카테고리별 타입 필터 - "이 업체 슈트만 보여줘"처럼 특정 타입만 보고 싶어할 때 사용
+            DressItemType dressItemTypeFilter = null;
+            if (args.hasNonNull("dressItemType")) {
+                try {
+                    dressItemTypeFilter = DressItemType.valueOf(args.get("dressItemType").asText().toUpperCase());
+                } catch (IllegalArgumentException ignored) {
+                }
+            }
+            MealType hallMealTypeFilter = null;
+            if (args.hasNonNull("hallMealType")) {
+                try {
+                    hallMealTypeFilter = MealType.valueOf(args.get("hallMealType").asText().toUpperCase());
+                } catch (IllegalArgumentException ignored) {
+                }
+            }
+            List<MakeupPackageType> makeupPackageTypeFilter = null;
+            if (args.hasNonNull("makeupPackageType")) {
+                try {
+                    makeupPackageTypeFilter = matchingMakeupPackageTypes(
+                            MakeupPackageType.valueOf(args.get("makeupPackageType").asText().toUpperCase()));
+                } catch (IllegalArgumentException ignored) {
+                }
+            }
+
             StringBuilder sb = new StringBuilder();
             sb.append(String.format("%s (%s) | 주소: %s | 평균가격: %s\n",
                     company.getName(), company.getCategory(), company.getAddress(),
@@ -365,7 +507,25 @@ public class ChatService {
                     if (detail == null || detail.getItems() == null || detail.getItems().isEmpty()) {
                         sb.append("등록된 드레스 아이템이 없습니다.");
                     } else {
-                        detail.getItems().forEach(item -> sb.append(String.format(
+                        List<DressItemDTO> items = new ArrayList<>(detail.getItems());
+                        if (dressItemTypeFilter != null) {
+                            final DressItemType typeFilter = dressItemTypeFilter;
+                            items = items.stream()
+                                    .filter(item -> item.getItemType() == typeFilter)
+                                    .collect(Collectors.toList());
+                        }
+
+                        if (items.isEmpty()) {
+                            sb.append("해당 타입의 드레스 아이템이 없습니다.");
+                        } else {
+                        if ("PRICE_DESC".equals(sortBy)) {
+                            items.sort(Comparator.comparing(DressItemDTO::getPrice, Comparator.nullsLast(Comparator.naturalOrder())).reversed());
+                        } else if ("PRICE_ASC".equals(sortBy)) {
+                            items.sort(Comparator.comparing(DressItemDTO::getPrice, Comparator.nullsLast(Comparator.naturalOrder())));
+                        }
+                        items = items.stream().limit(effectiveLimit).collect(Collectors.toList());
+
+                        items.forEach(item -> sb.append(String.format(
                                 "- %s (%,d원, 타입: %s, 스타일: %s, 사이즈: %s)\n",
                                 item.getItemName(),
                                 item.getPrice() != null ? item.getPrice().longValue() : 0L,
@@ -373,7 +533,7 @@ public class ChatService {
                                 item.getStyleTags() != null ? item.getStyleTags() : "정보없음",
                                 item.getSizeRange() != null ? item.getSizeRange() : "정보없음")));
 
-                        detail.getItems().stream().limit(MAX_REFERENCES).forEach(item ->
+                        items.forEach(item ->
                                 refs.add(ChatReferenceDTO.builder()
                                         .type("DRESS_ITEM")
                                         .id(item.getDressItemId())
@@ -384,6 +544,7 @@ public class ChatService {
                                                 : "가격 정보없음")
                                         .link("/dress-items/read/" + item.getDressItemId())
                                         .build()));
+                        }
                     }
                 }
                 case HALL -> {
@@ -391,25 +552,44 @@ public class ChatService {
                     if (detail == null || detail.getItems() == null || detail.getItems().isEmpty()) {
                         sb.append("등록된 홀 대관 옵션이 없습니다.");
                     } else {
-                        detail.getItems().forEach(item -> sb.append(String.format(
-                                "- %s (%,d원, 수용인원: %s명, 식사타입: %s)\n",
-                                item.getItemName(),
-                                item.getPrice() != null ? item.getPrice().longValue() : 0L,
-                                item.getCapacity() != null ? item.getCapacity() : "정보없음",
-                                item.getMealType())));
+                        List<HallItemDTO> items = new ArrayList<>(detail.getItems());
+                        if (hallMealTypeFilter != null) {
+                            final MealType typeFilter = hallMealTypeFilter;
+                            items = items.stream()
+                                    .filter(item -> item.getMealType() == typeFilter)
+                                    .collect(Collectors.toList());
+                        }
 
-                        // 홀 옵션은 별도 상세페이지가 없어서 업체 페이지로 이동시킴
-                        detail.getItems().stream().limit(MAX_REFERENCES).forEach(item ->
-                                refs.add(ChatReferenceDTO.builder()
-                                        .type("HALL_ITEM")
-                                        .id(item.getHallItemId())
-                                        .name(item.getItemName())
-                                        .imageUrl(itemImagePath(item.getImageUrl()))
-                                        .priceLabel(item.getPrice() != null
-                                                ? String.format("%,d원", item.getPrice().longValue())
-                                                : "가격 정보없음")
-                                        .link("/companies/read/" + cmno)
-                                        .build()));
+                        if (items.isEmpty()) {
+                            sb.append("해당 식사 타입의 대관 옵션이 없습니다.");
+                        } else {
+                            if ("PRICE_DESC".equals(sortBy)) {
+                                items.sort(Comparator.comparing(HallItemDTO::getPrice, Comparator.nullsLast(Comparator.naturalOrder())).reversed());
+                            } else if ("PRICE_ASC".equals(sortBy)) {
+                                items.sort(Comparator.comparing(HallItemDTO::getPrice, Comparator.nullsLast(Comparator.naturalOrder())));
+                            }
+                            items = items.stream().limit(effectiveLimit).collect(Collectors.toList());
+
+                            items.forEach(item -> sb.append(String.format(
+                                    "- %s (%,d원, 수용인원: %s명, 식사타입: %s)\n",
+                                    item.getItemName(),
+                                    item.getPrice() != null ? item.getPrice().longValue() : 0L,
+                                    item.getCapacity() != null ? item.getCapacity() : "정보없음",
+                                    item.getMealType())));
+
+                            // 홀 옵션은 별도 상세페이지가 없어서 업체 페이지로 이동시킴
+                            items.forEach(item ->
+                                    refs.add(ChatReferenceDTO.builder()
+                                            .type("HALL_ITEM")
+                                            .id(item.getHallItemId())
+                                            .name(item.getItemName())
+                                            .imageUrl(itemImagePath(item.getImageUrl()))
+                                            .priceLabel(item.getPrice() != null
+                                                    ? String.format("%,d원", item.getPrice().longValue())
+                                                    : "가격 정보없음")
+                                            .link("/companies/read/" + cmno)
+                                            .build()));
+                        }
                     }
                 }
                 case MAKEUP -> {
@@ -417,13 +597,30 @@ public class ChatService {
                     if (detail == null || detail.getPackages() == null || detail.getPackages().isEmpty()) {
                         sb.append("등록된 메이크업 패키지가 없습니다.");
                     } else {
-                        detail.getPackages().forEach(pkg -> sb.append(String.format(
+                        List<MakeupPackageDTO> packages = new ArrayList<>(detail.getPackages());
+                        if (makeupPackageTypeFilter != null) {
+                            final List<MakeupPackageType> typeFilter = makeupPackageTypeFilter;
+                            packages = packages.stream()
+                                    .filter(pkg -> typeFilter.contains(pkg.getPackageType()))
+                                    .collect(Collectors.toList());
+                        }
+
+                        if (packages.isEmpty()) {
+                            sb.append("해당 타입의 메이크업 패키지가 없습니다.");
+                        } else {
+                        // 메이크업 패키지는 절대가격이 없어(할인율만 존재) sortBy를 적용하지 않지만,
+                        // 텍스트/카드가 서로 다른 개수로 어긋나지 않도록 개수 제한은 동일하게 맞춘다
+                        packages = packages.stream()
+                                .limit(effectiveLimit)
+                                .collect(Collectors.toList());
+
+                        packages.forEach(pkg -> sb.append(String.format(
                                 "- %s 패키지 (할인율 %s%%)\n",
                                 pkg.getPackageType(),
                                 pkg.getDiscountRate() != null ? pkg.getDiscountRate().toPlainString() : "0")));
 
                         // 메이크업 패키지도 별도 상세페이지가 없어서 업체 페이지로 이동시킴
-                        detail.getPackages().stream().limit(MAX_REFERENCES).forEach(pkg ->
+                        packages.forEach(pkg ->
                                 refs.add(ChatReferenceDTO.builder()
                                         .type("MAKEUP_PACKAGE")
                                         .id(pkg.getPackageId())
@@ -433,6 +630,7 @@ public class ChatService {
                                                 ? pkg.getDiscountRate().toPlainString() : "0") + "%")
                                         .link("/companies/read/" + cmno)
                                         .build()));
+                        }
                     }
                 }
                 case STUDIO -> {
@@ -459,6 +657,317 @@ public class ChatService {
         }
     }
 
+    // 날짜+카테고리(+지역/가격/옵션) 기반 예약 가능 업체 조회 - 그 날짜에 예약 기록이 하나도 없는
+    // 업체만 반환한다 (옵션 단위가 아니라 업체 단위 기준)
+    private ToolResult executeFindAvailableCompanies(OpenAiMessageDTO.ToolCallDTO toolCall, String lockedCategory) {
+
+        try {
+            JsonNode args = objectMapper.readTree(toolCall.getFunction().getArguments());
+
+            if (lockedCategory == null && !args.hasNonNull("category")) {
+                return ToolResult.textOnly("예약 가능 여부를 확인하려면 업체 종류가 필요합니다.");
+            }
+            if (!args.hasNonNull("date")) {
+                return ToolResult.textOnly("예약 가능 여부를 확인하려면 날짜가 필요합니다.");
+            }
+
+            // 카테고리 버튼으로 고정되어 있으면 모델이 준 category는 무시하고 이 값으로 강제한다
+            CompanyCategory category;
+            try {
+                category = CompanyCategory.valueOf(
+                        (lockedCategory != null ? lockedCategory : args.get("category").asText()).toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return ToolResult.textOnly("업체 종류를 이해하지 못했습니다.");
+            }
+
+            LocalDate date;
+            try {
+                date = LocalDate.parse(args.get("date").asText());
+            } catch (Exception e) {
+                return ToolResult.textOnly("날짜 형식을 이해하지 못했습니다.");
+            }
+
+            String location = args.hasNonNull("location") ? args.get("location").asText() : null;
+            BigDecimal minPrice = args.hasNonNull("minPrice") ? BigDecimal.valueOf(args.get("minPrice").asDouble()) : null;
+            BigDecimal maxPrice = args.hasNonNull("maxPrice") ? BigDecimal.valueOf(args.get("maxPrice").asDouble()) : null;
+            String sortBy = args.hasNonNull("sortBy") ? args.get("sortBy").asText() : null;
+            Integer limit = args.hasNonNull("limit") ? args.get("limit").asInt() : null;
+            int effectiveLimit = (limit != null && limit > 0) ? Math.min(limit, MAX_REFERENCES) : MAX_REFERENCES;
+
+            // 실제 보유 옵션 필터가 지정되면 그걸로 후보를 좁힌다
+            Set<Long> itemFilteredCmnos = null;
+            if (args.hasNonNull("dressItemType")) {
+                try {
+                    DressItemType type = DressItemType.valueOf(args.get("dressItemType").asText().toUpperCase());
+                    itemFilteredCmnos = new HashSet<>(dressItemRepository.findCompanyCmnosByItemType(type));
+                } catch (IllegalArgumentException ignored) {
+                }
+            } else if (args.hasNonNull("hallMealType")) {
+                try {
+                    MealType type = MealType.valueOf(args.get("hallMealType").asText().toUpperCase());
+                    itemFilteredCmnos = new HashSet<>(hallItemRepository.findCompanyCmnosByMealType(type));
+                } catch (IllegalArgumentException ignored) {
+                }
+            } else if (args.hasNonNull("makeupPackageType")) {
+                try {
+                    MakeupPackageType type = MakeupPackageType.valueOf(args.get("makeupPackageType").asText().toUpperCase());
+                    itemFilteredCmnos = new HashSet<>(makeupPackageRepository
+                            .findCompanyCmnosByPackageTypeIn(matchingMakeupPackageTypes(type)));
+                } catch (IllegalArgumentException ignored) {
+                }
+            }
+
+            List<Company> candidates;
+
+            if (itemFilteredCmnos != null) {
+                candidates = new ArrayList<>();
+                for (Long cmno : itemFilteredCmnos) {
+                    companyRepository.selectOne(cmno).ifPresent(c -> {
+                        boolean categoryOk = c.getCategory() == category;
+                        boolean locationOk = location == null || location.isBlank()
+                                || (c.getAddress() != null && c.getAddress().contains(location));
+                        boolean minOk = minPrice == null || c.getPriceAvg().compareTo(minPrice) >= 0;
+                        boolean maxOk = maxPrice == null || c.getPriceAvg().compareTo(maxPrice) <= 0;
+                        if (categoryOk && locationOk && minOk && maxOk) {
+                            candidates.add(c);
+                        }
+                    });
+                }
+            } else {
+                // 후보를 30개까지 넉넉히 가져온 뒤, 그 날짜에 예약이 없는 곳만 걸러서 effectiveLimit개로 맞춘다
+                var page = companyRepository.searchList(category, location, minPrice, maxPrice, PageRequest.of(0, 30));
+                candidates = new ArrayList<>(page.getContent());
+            }
+
+            List<Company> available = candidates.stream()
+                    .filter(c -> !reservationRepository.existsByCmnoAndWeddingDate(c.getCmno(), date))
+                    .collect(Collectors.toList());
+
+            // "예약 가능한 곳 중 가장 저렴한 곳"처럼 순위 질문에 대응
+            if ("PRICE_DESC".equals(sortBy)) {
+                available.sort(Comparator.comparing(Company::getPriceAvg, Comparator.nullsLast(Comparator.naturalOrder())).reversed());
+            } else if ("PRICE_ASC".equals(sortBy)) {
+                available.sort(Comparator.comparing(Company::getPriceAvg, Comparator.nullsLast(Comparator.naturalOrder())));
+            }
+
+            available = available.stream().limit(effectiveLimit).collect(Collectors.toList());
+
+            if (available.isEmpty()) {
+                return ToolResult.textOnly("해당 조건에 예약 가능한 업체를 찾지 못했습니다.");
+            }
+
+            String text = available.stream()
+                    .map(c -> String.format(
+                            "- %s (%s, 업체번호 %d) | 주소: %s | 평균가격: %s",
+                            c.getName(), c.getCategory(), c.getCmno(), c.getAddress(), formatPrice(c.getPriceAvg())))
+                    .collect(Collectors.joining("\n"));
+
+            List<ChatReferenceDTO> refs = available.stream()
+                    .map(c -> ChatReferenceDTO.builder()
+                            .type("COMPANY")
+                            .id(c.getCmno())
+                            .name(c.getName())
+                            .imageUrl(companyImagePath(c))
+                            .priceLabel(formatPrice(c.getPriceAvg()))
+                            // 검색 결과가 아니라 "예약 가능 업체" 조회 결과이므로, 상세페이지가 아니라
+                            // 바로 예약 페이지로 이동시킨다
+                            .link("/companies/reserve/" + c.getCmno())
+                            .build())
+                    .collect(Collectors.toList());
+
+            return new ToolResult(text, refs);
+
+        } catch (Exception e) {
+            return ToolResult.textOnly("예약 가능 업체 조회 중 오류가 발생했습니다.");
+        }
+    }
+
+    // 개별 드레스 상품/홀 대관 옵션을 실제 등록 가격 기준으로 순위 매겨 조회 - search_companies의
+    // sortBy(업체 평균가격)와 달리, tbl_dress_item/tbl_hall_item의 실제 price로 정렬한다.
+    // MAKEUP은 패키지에 절대가격이 없어(discountRate만 존재) 지원하지 않는다
+    private ToolResult executeFindTopItems(OpenAiMessageDTO.ToolCallDTO toolCall, String lockedCategory) {
+
+        try {
+            JsonNode args = objectMapper.readTree(toolCall.getFunction().getArguments());
+
+            if (lockedCategory == null && !args.hasNonNull("category")) {
+                return ToolResult.textOnly("카테고리가 필요합니다.");
+            }
+            if (!args.hasNonNull("sortBy")) {
+                return ToolResult.textOnly("정렬 기준이 필요합니다.");
+            }
+
+            // 카테고리 버튼으로 고정되어 있으면 모델이 준 category는 무시하고 이 값으로 강제한다
+            CompanyCategory category;
+            try {
+                category = CompanyCategory.valueOf(
+                        (lockedCategory != null ? lockedCategory : args.get("category").asText()).toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return ToolResult.textOnly("카테고리를 이해하지 못했습니다.");
+            }
+
+            if (category == CompanyCategory.MAKEUP) {
+                return ToolResult.textOnly("메이크업 패키지는 절대가격이 아니라 할인율 기준이라 가격 순위를 매길 수 없습니다.");
+            }
+            if (category == CompanyCategory.STUDIO) {
+                return ToolResult.textOnly("스튜디오는 개별 상품 데이터가 없어 가격 순위를 매길 수 없습니다.");
+            }
+
+            boolean ascending = "PRICE_ASC".equals(args.get("sortBy").asText());
+            Sort sort = ascending ? Sort.by("price").ascending() : Sort.by("price").descending();
+
+            Integer limit = args.hasNonNull("limit") ? args.get("limit").asInt() : null;
+            int effectiveLimit = (limit != null && limit > 0) ? Math.min(limit, MAX_REFERENCES) : 1;
+
+            String text;
+            List<ChatReferenceDTO> refs;
+
+            if (category == CompanyCategory.DRESS) {
+                List<DressItem> items = dressItemRepository.findAllActive(PageRequest.of(0, effectiveLimit, sort));
+
+                if (items.isEmpty()) {
+                    return ToolResult.textOnly("등록된 드레스 상품을 찾지 못했습니다.");
+                }
+
+                text = items.stream()
+                        .map(item -> String.format("- %s (%,d원, 업체: %s)",
+                                item.getItemName(),
+                                item.getPrice() != null ? item.getPrice().longValue() : 0L,
+                                item.getCompany().getName()))
+                        .collect(Collectors.joining("\n"));
+
+                refs = items.stream()
+                        .map(item -> ChatReferenceDTO.builder()
+                                .type("DRESS_ITEM")
+                                .id(item.getDressItemId())
+                                .name(item.getItemName() + " (" + item.getCompany().getName() + ")")
+                                .imageUrl(itemImagePath(item.getImageUrl()))
+                                .priceLabel(item.getPrice() != null
+                                        ? String.format("%,d원", item.getPrice().longValue())
+                                        : "가격 정보없음")
+                                .link("/dress-items/read/" + item.getDressItemId())
+                                .build())
+                        .collect(Collectors.toList());
+            } else {
+                List<HallItem> items = hallItemRepository.findAllActive(PageRequest.of(0, effectiveLimit, sort));
+
+                if (items.isEmpty()) {
+                    return ToolResult.textOnly("등록된 홀 대관 옵션을 찾지 못했습니다.");
+                }
+
+                text = items.stream()
+                        .map(item -> String.format("- %s (%,d원, 업체: %s)",
+                                item.getItemName(),
+                                item.getPrice() != null ? item.getPrice().longValue() : 0L,
+                                item.getCompany().getName()))
+                        .collect(Collectors.joining("\n"));
+
+                // 홀 옵션은 별도 상세페이지가 없어서 업체 페이지로 이동시킴
+                refs = items.stream()
+                        .map(item -> ChatReferenceDTO.builder()
+                                .type("HALL_ITEM")
+                                .id(item.getHallItemId())
+                                .name(item.getItemName() + " (" + item.getCompany().getName() + ")")
+                                .imageUrl(itemImagePath(item.getImageUrl()))
+                                .priceLabel(item.getPrice() != null
+                                        ? String.format("%,d원", item.getPrice().longValue())
+                                        : "가격 정보없음")
+                                .link("/companies/read/" + item.getCompany().getCmno())
+                                .build())
+                        .collect(Collectors.toList());
+            }
+
+            return new ToolResult(text, refs);
+
+        } catch (Exception e) {
+            return ToolResult.textOnly("상품/옵션 순위 조회 중 오류가 발생했습니다.");
+        }
+    }
+
+    // 드레스 아이템 styleTags에 실제 쓰이는 어휘로 한정해야 사진 분석 결과와 매칭이 된다.
+    // 2026-07-18 기준 dress.json에 실제 등록된 값 - 새 태그가 추가되면 이 목록도 갱신해야 함
+    private static final String DRESS_STYLE_TAG_VOCABULARY =
+            "A라인, 머메이드, 미니드레스, 벨라인, 앵클라인, 오프숄더, 실크, 수입실크, 비즈, 미니멀, " +
+                    "셀프웨딩, 스몰웨딩, 본식, 파티, 화동, 우아한, 글래머러스, 화려한, 클래식, 모던, " +
+                    "청순, 로맨틱";
+
+    // 드레스 사진 업로드 → 유사 아이템 추천 - 버튼으로 목적이 이미 고정된 흐름이라, 함수 판단 없이
+    // "사진 분석 → 스타일 키워드 → DB 검색" 순서로 바로 처리한다 (getAnswer의 함수호출 파이프라인 안 씀)
+    @Transactional
+    public ChatResponseDTO recommendSimilarDresses(String memberEmail, MultipartFile photo) {
+
+        String styleKeyword;
+        try {
+            styleKeyword = openAiClient.describeImage(
+                    photo.getBytes(),
+                    photo.getContentType(),
+                    "이 사진 속 드레스를 분석해서 아래 목록에서만 키워드를 골라줘: " +
+                            DRESS_STYLE_TAG_VOCABULARY + ". 먼저 드레스의 실루엣(A라인/머메이드/미니드레스/" +
+                            "벨라인/앵클라인/오프숄더 등)을 사진을 보고 정확히 판단해서 반드시 1개 포함하고, " +
+                            "그다음 분위기나 소재 키워드를 1~4개 더 골라줘. 목록에 있는 단어만 정확히 그대로, " +
+                            "다른 설명 없이 쉼표로 나열해줘.");
+        } catch (IOException e) {
+            return ChatResponseDTO.of("사진을 읽는 중 문제가 발생했습니다. 다시 시도해주세요.", List.of());
+        } catch (Exception e) {
+            return ChatResponseDTO.of("사진 분석 중 오류가 발생했습니다. 다시 시도해주세요.", List.of());
+        }
+
+        // 여러 키워드가 쉼표로 올 수 있어(예: "머메이드, 우아한, 화려한") 하나로 뭉쳐서 검색하면
+        // 거의 매칭이 안 된다 - 각 키워드로 따로 조회한 뒤 아이템 기준으로 합친다
+        List<String> keywordTerms = Arrays.stream(styleKeyword.split(","))
+                .map(String::trim)
+                .filter(k -> !k.isEmpty())
+                .collect(Collectors.toList());
+
+        // 몇 개의 키워드와 겹치는지도 같이 세어서, 사진마다 실제로 가장 잘 맞는 아이템이 상위에
+        // 오도록 한다 (안 그러면 흔한 태그 하나만으로도 항상 같은 상위 몇 개가 고정되어 나옴)
+        Map<Long, DressItem> itemsById = new LinkedHashMap<>();
+        Map<Long, Integer> matchCount = new HashMap<>();
+        for (String kw : keywordTerms) {
+            for (DressItem item : dressItemRepository.searchByStyleKeyword(kw, null, null)) {
+                itemsById.putIfAbsent(item.getDressItemId(), item);
+                matchCount.merge(item.getDressItemId(), 1, Integer::sum);
+            }
+        }
+        // matchCount가 같은 아이템끼리는 매번 같은 순서로 고정되지 않도록 무작위 순번을 함께 매긴다
+        Map<Long, Double> tieBreaker = new HashMap<>();
+        List<DressItem> items = itemsById.values().stream()
+                .sorted(Comparator
+                        .comparingInt((DressItem item) -> matchCount.get(item.getDressItemId()))
+                        .reversed()
+                        .thenComparing(item -> tieBreaker.computeIfAbsent(item.getDressItemId(), id -> Math.random())))
+                .collect(Collectors.toList());
+
+        String answer;
+        List<ChatReferenceDTO> refs;
+
+        if (items.isEmpty()) {
+            answer = "사진에서 \"" + styleKeyword + "\" 느낌을 읽었지만, 비슷한 드레스를 찾지 못했습니다.";
+            refs = List.of();
+        } else {
+            answer = "사진에서 \"" + styleKeyword + "\" 느낌을 읽었어요. 비슷한 분위기의 드레스를 찾아봤습니다.";
+            refs = items.stream()
+                    .limit(MAX_REFERENCES)
+                    .map(item -> ChatReferenceDTO.builder()
+                            .type("DRESS_ITEM")
+                            .id(item.getDressItemId())
+                            .name(item.getItemName())
+                            .imageUrl(itemImagePath(item.getImageUrl()))
+                            .priceLabel(item.getPrice() != null
+                                    ? String.format("%,d원", item.getPrice().longValue())
+                                    : "가격 정보없음")
+                            .link("/dress-items/read/" + item.getDressItemId())
+                            .build())
+                    .collect(Collectors.toList());
+        }
+
+        // 대화 이력에도 남겨서, 다음 턴에 "그 중 하나 더 자세히" 같은 후속 질문의 문맥이 되게 한다
+        saveAndTrim(memberEmail, "[드레스 사진을 올려서 비슷한 아이템 추천을 요청함]",
+                buildHistoryContent(answer, refs));
+
+        return ChatResponseDTO.of(answer, refs);
+    }
+
     // 프롬프트로 지시해도 모델이 가끔 마크다운을 섞어 보내므로, 화면(일반 텍스트 채팅창)에 기호가
     // 그대로 노출되지 않도록 흔한 마크다운 문법을 걷어낸다 - 목록에 쓰는 "- "는 건드리지 않음
     private String stripMarkdown(String text) {
@@ -473,6 +982,14 @@ public class ChatService {
         result = result.replaceAll("\\[([^\\]]+)\\]\\([^)]+\\)", "$1"); // [텍스트](URL)
 
         return result;
+    }
+
+    // 프롬프트로 지시해도 모델이 내부용 메타데이터 형식("(참고용 메타데이터, 화면에 표시되지
+    // 않음: ...)")을 답변 끝에 그대로 섞어 보내는 경우가 있어, stripMarkdown과 마찬가지로
+    // 화면 노출 전에 정규식으로 한 번 더 제거한다
+    private String stripHiddenMetadata(String text) {
+        if (text == null) return null;
+        return text.replaceAll("(?s)\\n*\\(참고용 메타데이터,?\\s*화면에 표시되지 않음:.*?\\)\\s*$", "").trim();
     }
 
     // 업체 평균가격(BigDecimal, scale 2)을 "11,000,000원" 형태로 통일 - toPlainString()을 쓰면
@@ -512,118 +1029,6 @@ public class ChatService {
         if (fileName == null || fileName.isBlank()) return null;
         if (fileName.startsWith("http") || fileName.startsWith("/")) return fileName;
         return "/api/companies/images/view/" + fileName;
-    }
-
-    // search_gifts 함수 스펙 - 답례품 전용. category enum은 2026-07-15 기준 실제 DB에 등록된 값
-    // (곡물/식품, 과자/한과, 디퓨저/향수, 비누/핸드워시, 생활/건강, 식기/머그, 차/커피, 타월).
-    // 새 카테고리가 추가되면 이 목록도 같이 갱신해야 함.
-    private OpenAiToolDTO searchGiftsTool() {
-
-        Map<String, Object> properties = Map.of(
-                "category", Map.of(
-                        "type", "string",
-                        "description", "답례품 카테고리",
-                        "enum", List.of(
-                                "곡물/식품", "과자/한과", "디퓨저/향수", "비누/핸드워시",
-                                "생활/건강", "식기/머그", "차/커피", "타월")),
-                "keyword", Map.of("type", "string", "description", "상품명/설명에서 찾을 키워드"),
-                "minPrice", Map.of("type", "integer", "description", "최소 가격(원)"),
-                "maxPrice", Map.of("type", "integer", "description", "최대 가격(원)"),
-                "minRating", Map.of("type", "number", "description", "최소 평점 (0~5)"),
-                "limit", Map.of("type", "integer", "description", "사용자가 요청한 결과 개수 (예: '3개만'이면 3). 지정 안 하면 기본 5개")
-        );
-
-        Map<String, Object> parameters = Map.of(
-                "type", "object",
-                "properties", properties,
-                "required", List.of()
-        );
-
-        return OpenAiToolDTO.builder()
-                .function(OpenAiToolDTO.FunctionSpec.builder()
-                        .name("search_gifts")
-                        .description("결혼식 답례품(하객 선물)을 검색합니다. 드레스는 여기서 찾지 말고 " +
-                                "search_companies(category=DRESS)를 사용하세요.")
-                        .parameters(parameters)
-                        .build())
-                .build();
-    }
-
-    // search_companies 함수 스펙 - CompanyRepository.searchList가 받는 파라미터 그대로 노출
-    private OpenAiToolDTO searchCompaniesTool() {
-
-        Map<String, Object> properties = Map.of(
-                "category", Map.of(
-                        "type", "string",
-                        "description", "업체 카테고리",
-                        "enum", List.of("HALL", "DRESS", "STUDIO", "MAKEUP")),
-                "keyword", Map.of("type", "string", "description", "업체명/주소에서 찾을 키워드 (예: 지역명)"),
-                "minPrice", Map.of("type", "number", "description", "최소 평균가격(원)"),
-                "maxPrice", Map.of("type", "number", "description", "최대 평균가격(원)"),
-                "limit", Map.of("type", "integer", "description", "사용자가 요청한 결과 개수 (예: '3개만', '두 곳만'이면 3, 2). 지정 안 하면 기본 5개")
-        );
-
-        Map<String, Object> parameters = Map.of(
-                "type", "object",
-                "properties", properties,
-                "required", List.of()
-        );
-
-        return OpenAiToolDTO.builder()
-                .function(OpenAiToolDTO.FunctionSpec.builder()
-                        .name("search_companies")
-                        .description("웨딩홀/드레스업체/스튜디오/메이크업 업체를 조건에 맞게 검색합니다. " +
-                                "설명(description)과 업체번호(cmno)까지 함께 반환되니, 분위기/느낌에 맞는 곳을 판단해서 추천하고 " +
-                                "세부 상품이 궁금하면 그 업체번호로 get_company_detail을 호출하세요. 정확한 필터 조건이 없어도 " +
-                                "일단 호출해서 실제 데이터를 확인한 뒤 추천하세요.")
-                        .parameters(parameters)
-                        .build())
-                .build();
-    }
-
-    // get_company_detail 함수 스펙 - 업체 하나의 세부 상품/옵션(드레스 아이템, 홀 대관 옵션, 메이크업 패키지) 조회
-    private OpenAiToolDTO getCompanyDetailTool() {
-
-        Map<String, Object> properties = Map.of(
-                "cmno", Map.of("type", "integer", "description", "조회할 업체의 업체번호 (search_companies 결과에서 확인)")
-        );
-
-        Map<String, Object> parameters = Map.of(
-                "type", "object",
-                "properties", properties,
-                "required", List.of("cmno")
-        );
-
-        return OpenAiToolDTO.builder()
-                .function(OpenAiToolDTO.FunctionSpec.builder()
-                        .name("get_company_detail")
-                        .description("업체번호(cmno)로 특정 업체 하나의 세부 상품/옵션을 조회합니다. " +
-                                "드레스업체면 드레스 아이템 목록, 웨딩홀이면 대관 옵션 목록, 메이크업이면 패키지 목록을 반환합니다. " +
-                                "스튜디오는 세부 상품이 없고 테마 태그만 반환됩니다.")
-                        .parameters(parameters)
-                        .build())
-                .build();
-    }
-
-    // answer_directly 함수 스펙 - 실제 DB 조회 없이 답할 수 있는 턴에 tool_choice="required"를 만족시키기 위한 더미 함수
-    private OpenAiToolDTO answerDirectlyTool() {
-
-        Map<String, Object> parameters = Map.of(
-                "type", "object",
-                "properties", Map.of(),
-                "required", List.of()
-        );
-
-        return OpenAiToolDTO.builder()
-                .function(OpenAiToolDTO.FunctionSpec.builder()
-                        .name("answer_directly")
-                        .description("실제 업체/상품 데이터 조회가 필요 없을 때 호출하세요. 결혼 준비와 무관한 질문, " +
-                                "우리 데이터 없이 답할 수 있는 일반 지식/조언 질문, 또는 이전 대화에서 이미 조회한 " +
-                                "내용만으로 충분히 답할 수 있는 질문에 사용합니다. 이 함수는 아무 데이터도 반환하지 " +
-                                "않으며, 호출 후 당신이 직접 답변을 작성하면 됩니다.")
-                        .parameters(parameters)
-                        .build())
-                .build();
     }
 
     // 질문/최종답변을 DB에 저장하고, 회원당 HISTORY_LIMIT개를 넘으면 오래된 것부터 삭제
