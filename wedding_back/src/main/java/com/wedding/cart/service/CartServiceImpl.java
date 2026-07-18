@@ -11,6 +11,7 @@ import com.wedding.product.domain.Product;
 import com.wedding.product.domain.ProductOption;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -36,6 +37,11 @@ public class CartServiceImpl implements CartService {
         Long cino = cartItemDTO.getCino();
 
         if (cino != null) { // 장바구니 아이템 번호가 있으면 수량만 변경
+
+            if(!cartItemRepository.isOwnedByEmail(cino, email)) {
+                throw new AccessDeniedException("본인 소유의 장바구니 아이템이 아닙니다.");
+            }
+
             CartItem cartItem = cartItemRepository.findById(cino)
                     .orElseThrow(() -> new NoSuchElementException("장바구니 아이템이 없습니다. cino=" + cino));
 
@@ -98,7 +104,11 @@ public class CartServiceImpl implements CartService {
 
     // 장바구니 아이템 삭제
     @Override
-    public List<CartItemListDTO> remove(Long cino) {
+    public List<CartItemListDTO> remove(Long cino, String email) {
+
+        if (!cartItemRepository.isOwnedByEmail(cino, email)) {
+            throw new AccessDeniedException("본인 소유의 장바구니 아이템이 아닙니다.");
+        }
 
         Long cno = cartItemRepository.getCartFromItem(cino);
 

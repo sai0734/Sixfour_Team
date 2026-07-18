@@ -16,5 +16,6 @@ public interface CartService {
     List<CartItemListDTO> getCartItems(String email);
 
     // 장바구니 아이템 삭제
-    List<CartItemListDTO> remove(Long cino);
+    List<CartItemListDTO> remove(Long cino, String email);
+
 }

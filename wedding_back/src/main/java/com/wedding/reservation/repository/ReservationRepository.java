@@ -23,6 +23,9 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     boolean existsByCmnoAndOptionNameAndWeddingDate(
             Long cmno, String optionName, LocalDate weddingDate);
 
+    // 특정 업체가 그 날짜에 옵션 무관 예약이 하나라도 있는지 확인
+    boolean existsByCmnoAndWeddingDate(Long cmno, LocalDate weddingDate);
+
     // 승진 추가 - 업체 예약관리 목록
     List<Reservation> findByCmnoOrderByReservationIdDesc(Long cmno);
 

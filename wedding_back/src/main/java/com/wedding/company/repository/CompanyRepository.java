@@ -30,6 +30,24 @@ public interface CompanyRepository extends JpaRepository<Company, Long> {
                            @Param("maxPrice") BigDecimal maxPrice,
                            Pageable pageable);
 
+  // 업체명/주소뿐 아니라 설명(description)까지 키워드로 검색
+  @EntityGraph(attributePaths = "imageList")
+  @Query("""
+      select c from Company c
+      where c.delFlag = false
+        and (:category is null or c.category = :category)
+        and (:keyword is null or c.name like concat('%', :keyword, '%')
+             or c.address like concat('%', :keyword, '%')
+             or c.description like concat('%', :keyword, '%'))
+        and (:minPrice is null or c.priceAvg >= :minPrice)
+        and (:maxPrice is null or c.priceAvg <= :maxPrice)
+      """)
+  Page<Company> searchListWithDescription(@Param("category") CompanyCategory category,
+                                          @Param("keyword") String keyword,
+                                          @Param("minPrice") BigDecimal minPrice,
+                                          @Param("maxPrice") BigDecimal maxPrice,
+                                          Pageable pageable);
+
   @EntityGraph(attributePaths = "imageList")
   @Query("select c from Company c where c.cmno = :cmno")
   Optional<Company> selectOne(@Param("cmno") Long cmno);

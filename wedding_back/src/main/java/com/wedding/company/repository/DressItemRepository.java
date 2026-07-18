@@ -40,4 +40,13 @@ public interface DressItemRepository extends JpaRepository<DressItem, Long> {
       @Param("keyword") String keyword,
       @Param("region") String region,
       @Param("maxPrice") BigDecimal maxPrice);
+
+  // 특정 타입(예: SUIT)의 아이템을 하나라도 보유한 업체 번호 목록
+  @Query("select distinct di.company.cmno from DressItem di "
+      + "where di.itemType = :itemType and di.company.delFlag = false")
+  List<Long> findCompanyCmnosByItemType(@Param("itemType") DressItemType itemType);
+
+  // 삭제되지 않은 업체의 아이템 전체 - Pageable의 Sort/개수 제한을 그대로 활용
+  @Query("select di from DressItem di where di.company.delFlag = false")
+  List<DressItem> findAllActive(Pageable pageable);
 }

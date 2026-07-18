@@ -46,4 +46,10 @@ public interface CartItemRepository extends JpaRepository<CartItem, Long> {
             "order by ci.cino desc")
     List<CartItemListDTO> getItemsOfCartDTOByCart(@Param("cno") Long cno);
 
+    // cino가 실제로 이 email 소유의 장바구니 아이템인지 확인 (IDOR 방지)
+    @Query("select case when count(ci) > 0 then true else false end " +
+            "from CartItem ci inner join ci.cartOrder co " +
+            "where ci.cino = :cino and co.member.email = :email")
+    boolean isOwnedByEmail(@Param("cino") Long cino, @Param("email") String email);
+
 }
