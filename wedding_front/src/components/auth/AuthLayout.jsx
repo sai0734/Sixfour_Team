@@ -1,53 +1,55 @@
-// 로그인/회원가입 등 인증 화면 전용 공통 레이아웃
-// 메인페이지와 같은 무드(크림+블러쉬 배경, 워시테이프, 폴라로이드, Gowun Batang/Gaegu)로 통일
-const AuthLayout = ({
-  eyebrow,
-  title,
-  subtitle,
-  footer,
-  stickerEmoji = "🤍",
-  children,
-}) => {
-  return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-blush-lavender p-4 font-body">
-      <div className="w-full max-w-4xl bg-cream rounded-[28px] shadow-[0_30px_70px_-15px_rgba(150,120,180,0.35)] overflow-hidden flex flex-col md:flex-row">
-        {/* 왼쪽 무드보드 패널 */}
-        <div className="relative md:w-2/5 bg-gradient-to-br from-blush-100 via-blush-50 to-lavender-light p-10 flex flex-col justify-between overflow-hidden min-h-[260px]">
-          {/* 은은한 원형 블러 장식 */}
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/40 rounded-full blur-2xl"></div>
-          <div className="absolute bottom-10 -left-10 w-44 h-44 bg-white/30 rounded-full blur-3xl"></div>
+import { useLocation, useSearchParams } from "react-router-dom";
 
+const AuthLayout = ({ eyebrow, title, subtitle, children }) => {
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+
+  const handleImageError = (e) => {
+    e.target.style.display = "none";
+  };
+
+  return (
+    <div className="min-h-screen w-full flex items-center justify-center bg-blush-50/50 p-4 sm:p-6 lg:p-12">
+      <div className="w-full max-w-6xl bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col md:flex-row md:min-h-[750px]">
+        {/* 왼쪽: 사진 및 문구 영역 */}
+        <div className="w-full md:w-1/2 relative overflow-hidden bg-stone-900 min-h-[400px] md:min-h-full m-0 md:m-4 md:rounded-2xl flex flex-col justify-between p-8 md:p-12 text-white">
+          {/* 배경 이미지 */}
+          <img
+            src="/auth-bg.jpg"
+            alt="Auth background"
+            className="absolute inset-0 w-full h-full object-cover opacity-85 scale-105 pointer-events-none"
+            onError={handleImageError}
+          />
+
+          {/* 어두운 오버레이 */}
+          <div className="absolute inset-0 bg-stone-950/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-stone-950/90 via-stone-950/30 to-transparent" />
+
+          {/* 상단 뱃지 및 메인 타이틀 (z-index로 이미지 위로 배치) */}
           <div className="relative z-10">
             {eyebrow && (
-              <span className="inline-block font-handwrite text-sm bg-white/85 text-brand-deep px-4 py-1 -rotate-2 rounded-sm mb-6 shadow-sm">
+              <span className="inline-block px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-xs font-semibold tracking-wide uppercase mb-4 md:mb-6 text-rose-200 border border-white/15">
                 {eyebrow}
               </span>
             )}
-            <h1 className="font-serifkr text-[30px] md:text-[34px] leading-snug text-ink mb-4">
+            <h1 className="font-display text-3xl md:text-4xl font-bold leading-tight tracking-tight text-white drop-shadow-md">
               {title}
             </h1>
+          </div>
+
+          {/* 하단 서브타이틀 */}
+          <div className="relative z-10 mt-12">
             {subtitle && (
-              <p className="text-ink-soft leading-relaxed text-[14.5px] font-body">
+              <p className="text-stone-100 text-base font-normal leading-relaxed max-w-sm drop-shadow">
                 {subtitle}
               </p>
             )}
           </div>
-
-          {/* 미니 폴라로이드 스티커 - 메인페이지 시그니처 모티프 재사용 */}
-          <div className="relative z-10 mt-8">
-            <div className="inline-block bg-white rounded-[2px] p-2.5 pb-6 shadow-[0_10px_24px_-6px_rgba(80,45,10,0.25)] -rotate-3">
-              <div className="w-28 h-20 rounded-[1px] bg-gradient-to-br from-blush-200 to-lavender flex items-center justify-center text-2xl">
-                {stickerEmoji}
-              </div>
-            </div>
-          </div>
-
-          {footer && <div className="relative z-10 mt-6">{footer}</div>}
         </div>
 
-        {/* 오른쪽 폼 패널 */}
-        <div className="flex-1 p-8 md:p-12 flex flex-col justify-center bg-cream">
-          {children}
+        {/* 오른쪽: 입력 폼 영역 */}
+        <div className="flex-1 flex flex-col justify-center px-6 py-10 sm:px-12 md:px-16 bg-white overflow-y-auto">
+          <div className="w-full max-w-sm mx-auto">{children}</div>
         </div>
       </div>
     </div>
