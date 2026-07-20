@@ -24,7 +24,13 @@ public class AiPlanQuickServiceImpl implements AiPlanQuickService {
 
         String region = blankToNull(requestDTO.getRegion());
 
-        return candidateBuilder.recommend(region, requestDTO.getBudget(), AiPlanCategoryPreferences.empty());
+        AiPlanQuickResultDTO result = candidateBuilder.recommend(
+                region, requestDTO.getBudget(), requestDTO.getGuestCount(), AiPlanCategoryPreferences.empty());
+
+        // weddingDate는 세션이 없는 빠르게 모드에서도 결과 화면(ResultCards)에 그대로 보여주기 위해 실어보냄
+        result.setWeddingDate(requestDTO.getWeddingDate());
+
+        return result;
     }
 
     private String blankToNull(String s) {

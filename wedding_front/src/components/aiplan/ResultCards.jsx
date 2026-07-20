@@ -1,11 +1,24 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getCompanyImageUrl } from "../../api/companyApi";
+import { getCompanyImageUrl, getOne } from "../../api/companyApi";
+import { buildCompanyOptions } from "../../util/companyOptionBuilder";
 import {
   checkCompanyWish,
   addCompanyWish,
   removeCompanyWish,
 } from "../../api/companywishApi";
+
+// MakeupPackageType(백엔드 enum) -> companyOptionBuilder.buildCompanyOptions()가 만드는 옵션 key.
+// buildCompanyOptions는 예약 페이지와 동일한 로직이라, 여기 매핑만 맞으면 예약가와 100% 같은 값이 나온다.
+const MAKEUP_TYPE_TO_OPTION_KEY = {
+  HAIR: "makeup-single-hair",
+  MAKEUP: "makeup-single-makeup",
+  NAIL: "makeup-single-nail",
+  HAIR_MAKEUP: "makeup-pair-hair-makeup",
+  HAIR_NAIL: "makeup-pair-hair-nail",
+  MAKEUP_NAIL: "makeup-pair-makeup-nail",
+  FULL: "makeup-triple-hair-makeup-nail",
+};
 
 const formatWon = (value) => {
   if (value === null || value === undefined) return "-";
@@ -187,10 +200,41 @@ const FavoriteButton = ({ cmno }) => {
 
 // 이 슬롯이 리파인 대화에서 EXCLUDED로 빠졌으면 name이 null로 옴 - 그럴 땐 아예 렌더링 안 함.
 // cmno가 있으면 업체명은 상세페이지(/companies/read/:cmno)로 새 탭 링크.
-const SlotCard = ({ label, cmno, name, imageUrl, reason }) => {
+// price는 카테고리별 참고 가격(Company.priceAvg) - "홀은 얼마, 드레스는 얼마" 요청으로 추가.
+// optionName은 업체명과 별개로 "구체적으로 뭘 추천했는지" - 홀은 연회장 이름(hallRoomName),
+// 드레스는 옵션(아이템) 이름(dressOptionName). 스튜디오/메이크업은 아직 이 단위 데이터가 없어서 null.
+// packageType(메이크업 패키지 취향)이 있으면 그 업체의 실제 옵션가를 다시 계산해서 보여준다 -
+// 없으면(홀/드레스/스튜디오, 또는 취향 없이 고른 메이크업) price prop을 그대로 씀.
+// 조회 실패/매칭 실패 시에도 조용히 price prop으로 폴백 - 카드 렌더링을 막지 않는다.
+const SlotCard = ({ label, cmno, name, optionName, imageUrl, reason, price, packageType }) => {
+  const [resolvedPrice, setResolvedPrice] = useState(null);
+
+  useEffect(() => {
+    if (!cmno || !packageType) {
+      setResolvedPrice(null);
+      return;
+    }
+    let cancelled = false;
+    getOne(cmno)
+      .then((company) => {
+        if (cancelled) return;
+        const options = buildCompanyOptions(company);
+        const optionKey = MAKEUP_TYPE_TO_OPTION_KEY[packageType];
+        const matched = options.find((opt) => opt.key === optionKey);
+        setResolvedPrice(matched ? matched.price : null);
+      })
+      .catch(() => {
+        if (!cancelled) setResolvedPrice(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [cmno, packageType]);
+
   if (!name) return null;
 
   const text = `${label} · ${name}`;
+  const displayPrice = resolvedPrice != null ? resolvedPrice : price;
 
   return (
     <div className="relative">
@@ -207,6 +251,12 @@ const SlotCard = ({ label, cmno, name, imageUrl, reason }) => {
         </a>
       ) : (
         <p className="mt-2 truncate text-sm text-ink-soft">{text}</p>
+      )}
+      {optionName && (
+        <span className="block truncate text-xs text-ink-soft">{optionName}</span>
+      )}
+      {displayPrice != null && (
+        <span className="block text-xs font-medium text-ink-muted">{formatWon(displayPrice)}</span>
       )}
       {reason && <span className="block text-xs text-ink-faint">{reason}</span>}
     </div>
@@ -297,6 +347,12 @@ const ResultCards = ({ result, onSlotAction }) => {
 
   return (
     <div>
+      {result?.weddingDate && (
+        <p className="mb-4 text-center text-sm text-ink-muted">
+          결혼 예정일 · {result.weddingDate}
+        </p>
+      )}
+
       {message && (
         <div className="mb-5 rounded-xl border border-line bg-surface px-5 py-3 text-sm text-ink-soft">
           {message}
@@ -375,15 +431,19 @@ const ResultCards = ({ result, onSlotAction }) => {
                   label="홀"
                   cmno={c.hallCmno}
                   name={c.hallName}
+                  optionName={c.hallRoomName}
                   imageUrl={c.hallImageUrl}
                   reason={c.hallReason}
+                  price={c.hallPrice}
                 />
                 <SlotCard
                   label="드레스"
                   cmno={c.dressCmno}
                   name={c.dressName}
+                  optionName={c.dressOptionName}
                   imageUrl={c.dressImageUrl}
                   reason={c.dressReason}
+                  price={c.dressPrice}
                 />
                 <SlotCard
                   label="스튜디오"
@@ -391,6 +451,7 @@ const ResultCards = ({ result, onSlotAction }) => {
                   name={c.studioName}
                   imageUrl={c.studioImageUrl}
                   reason={c.studioReason}
+                  price={c.studioPrice}
                 />
                 <SlotCard
                   label="메이크업"
@@ -398,6 +459,8 @@ const ResultCards = ({ result, onSlotAction }) => {
                   name={c.makeupName}
                   imageUrl={c.makeupImageUrl}
                   reason={c.makeupReason}
+                  price={c.makeupPrice}
+                  packageType={c.makeupPackageType}
                 />
               </div>
 

@@ -32,6 +32,69 @@ const HALL_TYPE_OPTIONS = [
   { value: "BANQUET", label: "연회장" },
 ];
 
+// StudioDetail.themeTags 실제 더미데이터 값 그대로 - LIKE 매칭이라 여기 적힌 문자열과 정확히 같아야 함
+const STUDIO_MOOD_OPTIONS = [
+  { value: "", label: "상관없음" },
+  { value: "인물중심", label: "인물중심" },
+  { value: "클래식/럭셔리", label: "클래식/럭셔리" },
+  { value: "트렌디/MZ", label: "트렌디/MZ" },
+  { value: "내추럴/감성", label: "내추럴/감성" },
+  { value: "유럽풍/로맨틱", label: "유럽풍/로맨틱" },
+  { value: "모던/미니멀", label: "모던/미니멀" },
+  { value: "스몰웨딩", label: "스몰웨딩" },
+  { value: "야외/자연", label: "야외/자연" },
+];
+
+// DressItem.styleTags 실제 더미데이터에 쓰인 값 전부 - 마찬가지로 LIKE 매칭 대상 문자열 그대로
+const DRESS_STYLE_OPTIONS = [
+  { value: "", label: "상관없음" },
+  { value: "셀프웨딩", label: "셀프웨딩" },
+  { value: "미니드레스", label: "미니드레스" },
+  { value: "청순", label: "청순" },
+  { value: "로맨틱", label: "로맨틱" },
+  { value: "스몰웨딩", label: "스몰웨딩" },
+  { value: "화동", label: "화동" },
+  { value: "A라인", label: "A라인" },
+  { value: "벨라인", label: "벨라인" },
+  { value: "머메이드", label: "머메이드" },
+  { value: "클래식", label: "클래식" },
+  { value: "우아한", label: "우아한" },
+  { value: "글래머러스", label: "글래머러스" },
+  { value: "모던", label: "모던" },
+  { value: "미니멀", label: "미니멀" },
+  { value: "본식", label: "본식" },
+  { value: "만삭", label: "만삭" },
+  { value: "파티", label: "파티" },
+  { value: "앵클라인", label: "앵클라인" },
+  { value: "오프숄더", label: "오프숄더" },
+  { value: "실크", label: "실크" },
+  { value: "수입실크", label: "수입실크" },
+  { value: "비즈", label: "비즈" },
+  { value: "화려한", label: "화려한" },
+  { value: "맞춤제작", label: "맞춤제작" },
+  { value: "2부", label: "2부" },
+  { value: "콩쿨복", label: "콩쿨복" },
+];
+
+// com.wedding.company.domain.MakeupPackageType 그대로 - 한글 라벨만 붙임
+const MAKEUP_TYPE_OPTIONS = [
+  { value: "", label: "상관없음" },
+  { value: "HAIR", label: "헤어만" },
+  { value: "MAKEUP", label: "메이크업만" },
+  { value: "NAIL", label: "네일만" },
+  { value: "HAIR_MAKEUP", label: "헤어 + 메이크업" },
+  { value: "HAIR_NAIL", label: "헤어 + 네일" },
+  { value: "MAKEUP_NAIL", label: "메이크업 + 네일" },
+  { value: "FULL", label: "풀세트 (헤어+메이크업+네일)" },
+];
+
+// 오늘부터 14일 뒤 날짜 - 결혼 날짜 입력 최소값 (준비 기간 최소 2주 확보)
+const MIN_WEDDING_DATE = (() => {
+  const d = new Date();
+  d.setDate(d.getDate() + 14);
+  return d.toISOString().slice(0, 10);
+})();
+
 // 다듬기 텍스트를 아예 처음부터 쓰기 막막해하는 경우가 많아서 자주 쓸 법한 문구를 칩으로 준비해둠
 const REFINE_SUGGESTIONS = [
   "스튜디오는 빼줘",
@@ -54,9 +117,10 @@ const DetailPlanPage = () => {
     groomName: searchParams.get("groomName") || "",
     brideName: searchParams.get("brideName") || "",
     weddingDate: searchParams.get("weddingDate") || "",
-    hallType: "",
-    studioMood: "",
-    dressStyle: "",
+    guestCount: "",
+    hallTypes: [],
+    studioMoods: [],
+    dressStyles: [],
     makeupStyle: "",
     freeText: "",
   });
@@ -147,6 +211,27 @@ const DetailPlanPage = () => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
+  // 칩 하나 클릭 = 단일 선택 (메이크업 패키지 전용). 이미 선택된 칩을 다시 누르면 "상관없음"(빈 값)으로 해제.
+  const handleChipSelect = (field, value) => {
+    setForm((prev) => ({ ...prev, [field]: prev[field] === value ? "" : value }));
+  };
+
+  // 칩 여러 개 클릭 = 중복 선택 (홀/스튜디오/드레스). "상관없음"을 누르면 전체 해제,
+  // 그 외 칩은 이미 선택돼 있으면 빼고 아니면 추가.
+  const handleChipMultiSelect = (field, value) => {
+    if (value === "") {
+      setForm((prev) => ({ ...prev, [field]: [] }));
+      return;
+    }
+    setForm((prev) => {
+      const current = prev[field];
+      const next = current.includes(value)
+        ? current.filter((v) => v !== value)
+        : [...current, value];
+      return { ...prev, [field]: next };
+    });
+  };
+
   // 자세히 모드로 넘어왔다가 다시 빠르게 모드로 돌아가기 - 입력해둔 공통 4개는 쿼리로 들고 감.
   // 지금 세션을 이어보던 흐름은 아니므로 마지막 세션 기억도 같이 지워서, 빠르게 모드가
   // 다시 이쪽으로 자동 복귀시키지 않게 한다.
@@ -168,9 +253,10 @@ const DetailPlanPage = () => {
     groomName: form.groomName || null,
     brideName: form.brideName || null,
     weddingDate: form.weddingDate || null,
-    hallType: form.hallType || null,
-    studioMood: form.studioMood || null,
-    dressStyle: form.dressStyle || null,
+    guestCount: form.guestCount ? Number(form.guestCount) : null,
+    hallType: form.hallTypes.length ? form.hallTypes.join(",") : null,
+    studioMood: form.studioMoods.length ? form.studioMoods.join(",") : null,
+    dressStyle: form.dressStyles.length ? form.dressStyles.join(",") : null,
     makeupStyle: form.makeupStyle || null,
     freeText: form.freeText || null,
   });
@@ -474,13 +560,26 @@ const DetailPlanPage = () => {
                   />
                 </div>
 
-                <div className="md:col-span-2">
+                <div>
                   <label className={labelClass}>결혼 날짜</label>
                   <input
                     type="date"
+                    min={MIN_WEDDING_DATE}
                     value={form.weddingDate}
                     onChange={handleChange("weddingDate")}
-                    className={`${inputClass} md:w-1/2`}
+                    className={inputClass}
+                  />
+                </div>
+
+                <div>
+                  <label className={labelClass}>하객수 (명)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.guestCount}
+                    onChange={handleChange("guestCount")}
+                    placeholder="예: 200"
+                    className={inputClass}
                   />
                 </div>
               </div>
@@ -488,65 +587,112 @@ const DetailPlanPage = () => {
               <p className="mb-3 text-xs font-medium text-ink-muted">
                 카테고리별 취향 (전부 선택 사항)
               </p>
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                <div>
+              <div className="space-y-4">
+                <div className="rounded-xl border border-line bg-white px-4 py-3.5">
                   <label className={labelClass}>홀 분위기</label>
-                  <select
-                    value={form.hallType}
-                    onChange={handleChange("hallType")}
-                    className={inputClass}
-                  >
+                  <p className="mb-2 text-xs text-ink-muted">
+                    여러 개 선택하면 그 중 하나라도 맞는 홀을 찾아요
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
                     {HALL_TYPE_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
+                      <button
+                        key={opt.value || "none"}
+                        type="button"
+                        onClick={() => handleChipMultiSelect("hallTypes", opt.value)}
+                        className={
+                          (opt.value === "" ? form.hallTypes.length === 0 : form.hallTypes.includes(opt.value))
+                            ? "rounded-full border border-brand-dark bg-brand px-3 py-1 text-xs text-white"
+                            : "rounded-full border border-line bg-white px-3 py-1 text-xs text-ink-soft hover:bg-blush-100"
+                        }
+                      >
                         {opt.label}
-                      </option>
+                      </button>
                     ))}
-                  </select>
+                  </div>
                 </div>
 
-                <div>
+                <div className="rounded-xl border border-line bg-white px-4 py-3.5">
                   <label className={labelClass}>스튜디오 분위기</label>
-                  <input
-                    type="text"
-                    value={form.studioMood}
-                    onChange={handleChange("studioMood")}
-                    placeholder="예: 내추럴, 클래식, 시네마틱"
-                    className={inputClass}
-                  />
+                  <p className="mb-2 text-xs text-ink-muted">
+                    여러 개 선택하면 전부 가진 곳을 찾아요
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {STUDIO_MOOD_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value || "none"}
+                        type="button"
+                        onClick={() => handleChipMultiSelect("studioMoods", opt.value)}
+                        className={
+                          (opt.value === "" ? form.studioMoods.length === 0 : form.studioMoods.includes(opt.value))
+                            ? "rounded-full border border-brand-dark bg-brand px-3 py-1 text-xs text-white"
+                            : "rounded-full border border-line bg-white px-3 py-1 text-xs text-ink-soft hover:bg-blush-100"
+                        }
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                <div>
+                <div className="rounded-xl border border-line bg-white px-4 py-3.5">
                   <label className={labelClass}>드레스 스타일</label>
-                  <input
-                    type="text"
-                    value={form.dressStyle}
-                    onChange={handleChange("dressStyle")}
-                    placeholder="예: 머메이드, 미니, 볼륨"
-                    className={inputClass}
-                  />
+                  <p className="mb-2 text-xs text-ink-muted">
+                    여러 개 선택하면 전부 가진 아이템을 찾아요
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {DRESS_STYLE_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value || "none"}
+                        type="button"
+                        onClick={() => handleChipMultiSelect("dressStyles", opt.value)}
+                        className={
+                          (opt.value === "" ? form.dressStyles.length === 0 : form.dressStyles.includes(opt.value))
+                            ? "rounded-full border border-brand-dark bg-brand px-3 py-1 text-xs text-white"
+                            : "rounded-full border border-line bg-white px-3 py-1 text-xs text-ink-soft hover:bg-blush-100"
+                        }
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                <div>
-                  <label className={labelClass}>메이크업 스타일</label>
-                  <input
-                    type="text"
-                    value={form.makeupStyle}
-                    onChange={handleChange("makeupStyle")}
-                    placeholder="예: 내추럴, 화사, 시크"
-                    className={inputClass}
-                  />
+                <div className="rounded-xl border border-line bg-white px-4 py-3.5">
+                  <label className={labelClass}>메이크업 패키지</label>
+                  <p className="mb-2 text-xs text-ink-muted">하나만 선택할 수 있어요</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {MAKEUP_TYPE_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value || "none"}
+                        type="button"
+                        onClick={() => handleChipSelect("makeupStyle", opt.value)}
+                        className={
+                          form.makeupStyle === opt.value
+                            ? "rounded-full border border-brand-dark bg-brand px-3 py-1 text-xs text-white"
+                            : "rounded-full border border-line bg-white px-3 py-1 text-xs text-ink-soft hover:bg-blush-100"
+                        }
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
+              </div>
 
-                <div className="md:col-span-2">
-                  <label className={labelClass}>추가로 하고 싶은 말</label>
-                  <textarea
-                    value={form.freeText}
-                    onChange={handleChange("freeText")}
-                    rows={3}
-                    placeholder="예: 하객이 많아서 넓은 홀이었으면 좋겠어요 (아래 'AI에게 맡기기'로 추천받을 때만 반영돼요)"
-                    className={inputClass}
-                  />
-                </div>
+              <div className="mt-5 rounded-xl border border-dashed border-line bg-surface px-4 py-3.5">
+                <label className={labelClass}>
+                  AI에게 추가로 요청하고 싶은 말
+                </label>
+                <p className="mb-2 text-xs text-ink-muted">
+                  위 칩으로 고르기 애매한 요청은 여기 자유롭게 적어주세요. 'AI에게 맡기기'로 추천받을 때만 반영돼요.
+                </p>
+                <textarea
+                  value={form.freeText}
+                  onChange={handleChange("freeText")}
+                  rows={3}
+                  placeholder="예: 하객이 많아서 넓은 홀이었으면 좋겠어요"
+                  className={inputClass}
+                />
               </div>
 
               {error && (

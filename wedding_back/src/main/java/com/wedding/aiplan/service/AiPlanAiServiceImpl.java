@@ -18,7 +18,12 @@ import com.wedding.aiplan.dto.AiPlanPackageCandidateDTO;
 import com.wedding.aiplan.dto.AiPlanQuickResultDTO;
 import com.wedding.company.domain.Company;
 import com.wedding.company.domain.CompanyCategory;
+import com.wedding.company.domain.DressItem;
+import com.wedding.company.domain.HallDetail;
+import com.wedding.company.domain.HallItem;
+import com.wedding.company.domain.MakeupPackageType;
 import com.wedding.company.repository.CompanyRepository;
+import com.wedding.company.repository.HallDetailRepository;
 import com.wedding.global.util.OpenAiClient;
 import com.wedding.openAIClient.dto.OpenAiMessageDTO;
 import com.wedding.openAIClient.dto.OpenAiResponseDTO;
@@ -39,6 +44,7 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
     private final OpenAiClient openAiClient;
     private final ObjectMapper objectMapper;
     private final CompanyRepository companyRepository;
+    private final HallDetailRepository hallDetailRepository;
     private final AiPlanCandidateBuilder candidateBuilder;
     private final AiPlanSessionSupport sessionSupport;
 
@@ -73,7 +79,8 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
         String region = blankToNull(requestDTO.getRegion());
         Long budget = requestDTO.getBudget();
 
-        Map<CompanyCategory, List<Company>> pools = buildPools(region, budget, requestDTO.getFreeText());
+        Map<CompanyCategory, List<Company>> pools =
+                buildPools(region, budget, requestDTO.getGuestCount(), requestDTO.getFreeText());
 
         if (pools.values().stream().anyMatch(List::isEmpty)) {
             log.warn("AiPlan AI: at least one category has no candidates at all, skipping AI call");
@@ -92,7 +99,7 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
             return fallback(region, budget, requestDTO);
         }
 
-        AiPlanPackageCandidateDTO combo = parseAndValidate(raw, pools);
+        AiPlanPackageCandidateDTO combo = parseAndValidate(raw, pools, requestDTO.getDressStyle(), requestDTO.getMakeupStyle());
 
         if (combo == null) {
             log.warn("AiPlan AI: response failed parsing/grounding validation, falling back. raw={}", raw);
@@ -105,16 +112,17 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
 
         boolean anyExcluded = combo.getHallName() == null || combo.getStudioName() == null
                 || combo.getDressName() == null || combo.getMakeupName() == null;
-        String message = "AI가 취향과 자유 입력을 반영해서 골라줬어요.";
+        StringBuilder message = new StringBuilder("AI가 취향과 자유 입력을 반영해서 골라줬어요.");
         if (anyExcluded) {
-            message += " 요청하신 카테고리는 빼고 나머지만 담았어요.";
+            message.append(" 요청하신 카테고리는 빼고 나머지만 담았어요.");
         }
+        candidateBuilder.appendBudgetGapMessage(message, combo.getPackagePrice(), budget);
 
         return attachSession(AiPlanQuickResultDTO.builder()
                 .candidates(List.of(combo))
                 .regionRelaxed(false)
-                .message(message)
-                .build(), budget, region, "AI");
+                .message(message.toString())
+                .build(), budget, region, requestDTO.getWeddingDate(), "AI");
     }
 
     // 규칙 기반 경로(AiPlanCandidateBuilder)에 넣은 것과 같은 방식 - AI가 고른 조합도 합계가 예산보다
@@ -171,27 +179,38 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
         String reason = "예산에 맞춰 조금 더 여유 있는 곳으로 조정했어요";
         switch (category) {
             case HALL -> {
+                HallItem hallItem = candidateBuilder.resolveHallItem(upgraded);
                 combo.setHallCmno(upgraded.getCmno());
                 combo.setHallName(upgraded.getName());
-                combo.setHallImageUrl(AiPlanCandidateBuilder.firstImage(upgraded));
+                combo.setHallRoomName(hallItem != null ? hallItem.getItemName() : null);
+                combo.setHallImageUrl(hallItem != null ? hallItem.getImageUrl() : AiPlanCandidateBuilder.firstImage(upgraded));
+                combo.setHallPrice(hallItem != null ? hallItem.getPrice() : upgraded.getPriceAvg());
                 combo.setHallReason(reason);
             }
             case STUDIO -> {
                 combo.setStudioCmno(upgraded.getCmno());
                 combo.setStudioName(upgraded.getName());
                 combo.setStudioImageUrl(AiPlanCandidateBuilder.firstImage(upgraded));
+                combo.setStudioPrice(upgraded.getPriceAvg());
                 combo.setStudioReason(reason);
             }
             case DRESS -> {
+                DressItem item = candidateBuilder.resolveDressItem(upgraded, List.of());
                 combo.setDressCmno(upgraded.getCmno());
                 combo.setDressName(upgraded.getName());
-                combo.setDressImageUrl(candidateBuilder.dressOptionImage(upgraded));
+                combo.setDressItemId(item != null ? item.getDressItemId() : null);
+                combo.setDressOptionName(item != null ? item.getItemName() : null);
+                combo.setDressImageUrl(item != null ? item.getImageUrl() : null);
+                combo.setDressPrice(item != null ? item.getPrice() : upgraded.getPriceAvg());
                 combo.setDressReason(reason);
             }
             case MAKEUP -> {
                 combo.setMakeupCmno(upgraded.getCmno());
                 combo.setMakeupName(upgraded.getName());
                 combo.setMakeupImageUrl(AiPlanCandidateBuilder.firstImage(upgraded));
+                combo.setMakeupPrice(upgraded.getPriceAvg());
+                // 예산 업그레이드로 갈아탄 업체라 원래 요청한 패키지 타입을 갖고 있는지 보장 안 됨 - 초기화.
+                combo.setMakeupPackageType(null);
                 combo.setMakeupReason(reason);
             }
         }
@@ -199,27 +218,31 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
 
     private AiPlanQuickResultDTO fallback(String region, Long budget, AiPlanDetailRequestDTO requestDTO) {
         AiPlanQuickResultDTO result = candidateBuilder.recommend(
-                region, budget, AiPlanCategoryPreferences.fromDetailRequest(requestDTO));
-        return attachSession(result, budget, region, "AI_FALLBACK");
+                region, budget, requestDTO.getGuestCount(), AiPlanCategoryPreferences.fromDetailRequest(requestDTO));
+        return attachSession(result, budget, region, requestDTO.getWeddingDate(), "AI_FALLBACK");
     }
 
-    // 조합이 정확히 하나로 나왔을 때만 세션을 만든다 (AiPlanDetailServiceImpl과 동일한 규칙)
-    private AiPlanQuickResultDTO attachSession(AiPlanQuickResultDTO result, Long budget, String region, String mode) {
+    // 조합이 정확히 하나로 나왔을 때만 세션을 만든다 (AiPlanDetailServiceImpl과 동일한 규칙).
+    // weddingDate는 세션 생성 여부와 무관하게 결과에 항상 실어보낸다 - 폼에 입력한 값을 결과 화면에도 보여주기 위함.
+    private AiPlanQuickResultDTO attachSession(AiPlanQuickResultDTO result, Long budget, String region,
+                                               java.time.LocalDate weddingDate, String mode) {
         if (result.getCandidates().size() == 1) {
-            var session = sessionSupport.createSession(budget, region, mode, result.getCandidates().get(0));
+            var session = sessionSupport.createSession(budget, region, weddingDate, mode, result.getCandidates().get(0));
             result.setSessionId(session.getSessionId());
         }
+        result.setWeddingDate(weddingDate);
         return result;
     }
 
     // ── 후보 풀 구성 (SQL 단계) ────────────────────────────────────────
 
-    private Map<CompanyCategory, List<Company>> buildPools(String region, Long budget, String freeText) {
+    private Map<CompanyCategory, List<Company>> buildPools(String region, Long budget, Integer guestCount,
+                                                            String freeText) {
 
         Map<CompanyCategory, List<Company>> pools = new EnumMap<>(CompanyCategory.class);
 
         pools.put(CompanyCategory.HALL, filterExcluded(
-                fetchPool(CompanyCategory.HALL, region, allocate(budget, AiPlanCandidateBuilder.HALL_RATIO)), freeText));
+                fetchHallPool(region, allocate(budget, AiPlanCandidateBuilder.HALL_RATIO), guestCount), freeText));
         pools.put(CompanyCategory.DRESS, filterExcluded(
                 fetchPool(CompanyCategory.DRESS, region, allocate(budget, AiPlanCandidateBuilder.DRESS_RATIO)), freeText));
         pools.put(CompanyCategory.STUDIO, filterExcluded(
@@ -268,6 +291,21 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
         return excluded;
     }
 
+    // 홀 후보 풀 - 하객수(guestCount) 필터가 걸려야 해서 CompanyRepository 대신 HallDetailRepository로 조회.
+    private List<Company> fetchHallPool(String region, Long allocatedBudget, Integer guestCount) {
+
+        BigDecimal maxPrice = allocatedBudget != null ? BigDecimal.valueOf(allocatedBudget) : null;
+        Sort sort = Sort.by("company.priceAvg").descending();
+
+        List<HallDetail> pool = hallDetailRepository.searchByCapacity(region, maxPrice, guestCount, sort);
+
+        if (pool.isEmpty() && region != null) {
+            pool = hallDetailRepository.searchByCapacity(null, maxPrice, guestCount, sort);
+        }
+
+        return pool.stream().map(HallDetail::getCompany).limit(POOL_SIZE).toList();
+    }
+
     private List<Company> fetchPool(CompanyCategory category, String region, Long allocatedBudget) {
 
         BigDecimal maxPrice = allocatedBudget != null ? BigDecimal.valueOf(allocatedBudget) : null;
@@ -298,6 +336,9 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
 
         sb.append("[예산] ").append(dto.getBudget() != null ? dto.getBudget() + "원" : "미입력").append('\n');
         sb.append("[지역] ").append(dto.getRegion() != null ? dto.getRegion() : "무관").append('\n');
+        if (dto.getGuestCount() != null) {
+            sb.append("[하객수] ").append(dto.getGuestCount()).append("명\n");
+        }
 
         appendIfPresent(sb, "홀 분위기 선호", dto.getHallType());
         appendIfPresent(sb, "스튜디오 분위기 선호", dto.getStudioMood());
@@ -328,7 +369,28 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
 
     // ── AI 응답 파싱 + 그라운딩 재검증 ─────────────────────────────────
 
-    private AiPlanPackageCandidateDTO parseAndValidate(String raw, Map<CompanyCategory, List<Company>> pools) {
+    private AiPlanPackageCandidateDTO parseAndValidate(String raw, Map<CompanyCategory, List<Company>> pools,
+                                                       String dressStyleRaw, String makeupStyleRaw) {
+
+        // 프론트가 칩 중복선택 결과를 콤마로 이어붙여 보내므로(예: "머메이드,벨라인") 여기서 쪼갠다.
+        List<String> dressStyleKeywords = dressStyleRaw == null || dressStyleRaw.isBlank()
+                ? List.of()
+                : java.util.stream.Stream.of(dressStyleRaw.split(","))
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .toList();
+
+        // AI가 고른 메이크업 업체가 이 패키지를 실제로 갖고 있는지는 여기서 그라운딩하지 않으므로
+        // (풀 자체가 패키지 타입으로 안 걸러짐), 프론트에서 옵션가를 다시 찾다가 없으면 평균가로
+        // 안전하게 폴백한다는 전제로 요청값을 그대로 담아 보낸다.
+        String makeupPackageType = null;
+        if (makeupStyleRaw != null && !makeupStyleRaw.isBlank()) {
+            try {
+                makeupPackageType = MakeupPackageType.fromString(makeupStyleRaw.trim().toUpperCase()).name();
+            } catch (IllegalArgumentException ignored) {
+                // 잘못된 값이면 그냥 무시 - null 유지
+            }
+        }
 
         try {
             JsonNode root = objectMapper.readTree(raw);
@@ -350,9 +412,16 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
 
             String excludedNote = root.hasNonNull("excludedNote") ? root.get("excludedNote").asText() : null;
 
-            BigDecimal totalPrice = List.of(hall, studio, dress, makeup).stream()
-                    .filter(r -> !r.excluded())
-                    .map(r -> r.company().getPriceAvg() != null ? r.company().getPriceAvg() : BigDecimal.ZERO)
+            DressItem dressItem = dress.excluded() ? null
+                    : candidateBuilder.resolveDressItem(dress.company(), dressStyleKeywords);
+            HallItem hallItem = hall.excluded() ? null : candidateBuilder.resolveHallItem(hall.company());
+
+            BigDecimal totalPrice = java.util.stream.Stream.of(
+                            hall.excluded() ? null : (hallItem != null ? hallItem.getPrice() : hall.company().getPriceAvg()),
+                            studio.excluded() ? null : studio.company().getPriceAvg(),
+                            dress.excluded() ? null : (dressItem != null ? dressItem.getPrice() : dress.company().getPriceAvg()),
+                            makeup.excluded() ? null : makeup.company().getPriceAvg())
+                    .filter(java.util.Objects::nonNull)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
             return AiPlanPackageCandidateDTO.builder()
@@ -363,20 +432,31 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
                     .distanceKm(null)
                     .hallCmno(hall.excluded() ? null : hall.company().getCmno())
                     .hallName(hall.excluded() ? null : hall.company().getName())
+                    .hallRoomName(hallItem != null ? hallItem.getItemName() : null)
                     .hallReason(hall.excluded() ? "요청하신 대로 이번엔 빼고 찾았어요" : hall.reason())
-                    .hallImageUrl(hall.excluded() ? null : AiPlanCandidateBuilder.firstImage(hall.company()))
+                    .hallImageUrl(hall.excluded() ? null
+                            : (hallItem != null ? hallItem.getImageUrl() : AiPlanCandidateBuilder.firstImage(hall.company())))
+                    .hallPrice(hall.excluded() ? null
+                            : (hallItem != null ? hallItem.getPrice() : hall.company().getPriceAvg()))
                     .dressCmno(dress.excluded() ? null : dress.company().getCmno())
                     .dressName(dress.excluded() ? null : dress.company().getName())
                     .dressReason(dress.excluded() ? "요청하신 대로 이번엔 빼고 찾았어요" : dress.reason())
-                    .dressImageUrl(dress.excluded() ? null : candidateBuilder.dressOptionImage(dress.company()))
+                    .dressItemId(dressItem != null ? dressItem.getDressItemId() : null)
+                    .dressOptionName(dressItem != null ? dressItem.getItemName() : null)
+                    .dressImageUrl(dressItem != null ? dressItem.getImageUrl() : null)
+                    .dressPrice(dress.excluded() ? null
+                            : (dressItem != null ? dressItem.getPrice() : dress.company().getPriceAvg()))
                     .studioCmno(studio.excluded() ? null : studio.company().getCmno())
                     .studioName(studio.excluded() ? null : studio.company().getName())
                     .studioReason(studio.excluded() ? "요청하신 대로 이번엔 빼고 찾았어요" : studio.reason())
                     .studioImageUrl(studio.excluded() ? null : AiPlanCandidateBuilder.firstImage(studio.company()))
+                    .studioPrice(studio.excluded() ? null : studio.company().getPriceAvg())
                     .makeupCmno(makeup.excluded() ? null : makeup.company().getCmno())
                     .makeupName(makeup.excluded() ? null : makeup.company().getName())
                     .makeupReason(makeup.excluded() ? "요청하신 대로 이번엔 빼고 찾았어요" : makeup.reason())
                     .makeupImageUrl(makeup.excluded() ? null : AiPlanCandidateBuilder.firstImage(makeup.company()))
+                    .makeupPrice(makeup.excluded() ? null : makeup.company().getPriceAvg())
+                    .makeupPackageType(makeup.excluded() ? null : makeupPackageType)
                     .sourceType("AI_COMBO")
                     .build();
 

@@ -1,6 +1,7 @@
 package com.wedding.aiplan.service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,8 @@ import com.wedding.aiplan.dto.AiPlanPackageCandidateDTO;
 import com.wedding.aiplan.repository.AiPlanSessionHistoryRepository;
 import com.wedding.aiplan.repository.AiPlanSessionRepository;
 import com.wedding.company.domain.Company;
+import com.wedding.company.domain.DressItem;
+import com.wedding.company.domain.HallItem;
 import com.wedding.company.repository.CompanyRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -45,11 +48,13 @@ public class AiPlanSessionSupport {
     private final AiPlanCandidateBuilder candidateBuilder;
     private final ObjectMapper objectMapper;
 
-    public AiPlanSession createSession(Long budget, String region, String mode, AiPlanPackageCandidateDTO combo) {
+    public AiPlanSession createSession(Long budget, String region, LocalDate weddingDate, String mode,
+                                       AiPlanPackageCandidateDTO combo) {
 
         AiPlanSession session = AiPlanSession.builder()
                 .budget(budget)
                 .region(region)
+                .weddingDate(weddingDate)
                 .mode(mode)
                 .hallSlot(slotOf(combo.getHallCmno()))
                 .studioSlot(slotOf(combo.getStudioCmno()))
@@ -146,10 +151,24 @@ public class AiPlanSessionSupport {
         SlotView dress = resolve(session.getDressSlot());
         SlotView makeup = resolve(session.getMakeupSlot());
 
-        BigDecimal totalPrice = Stream.of(hall, studio, dress, makeup)
-                .filter(v -> v.company != null)
+        // 드레스는 "옵션(아이템)" 단위 표시 대상이라, 그 슬롯의 note(재검토 시 남긴 스타일 키워드)를
+        // 같이 넘겨서 항상 같은 업체+키워드면 같은 아이템이 나오게 한다 (5단계).
+        String dressNote = session.getDressSlot().getNote();
+        DressItem dressItem = dress.company != null
+                ? candidateBuilder.resolveDressItem(dress.company, dressNote != null ? List.of(dressNote) : List.of())
+                : null;
+        HallItem hallItem = hall.company != null ? candidateBuilder.resolveHallItem(hall.company) : null;
+
+        BigDecimal hallAmount = hallItem != null ? hallItem.getPrice()
+                : (hall.company != null ? hall.company.getPriceAvg() : null);
+
+        BigDecimal totalPrice = Stream.of(studio, makeup).filter(v -> v.company != null)
                 .map(v -> v.company.getPriceAvg() != null ? v.company.getPriceAvg() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce((hallAmount != null ? hallAmount : BigDecimal.ZERO)
+                                .add(dressItem != null ? dressItem.getPrice()
+                                        : (dress.company != null && dress.company.getPriceAvg() != null
+                                                ? dress.company.getPriceAvg() : BigDecimal.ZERO)),
+                        BigDecimal::add);
 
         return AiPlanPackageCandidateDTO.builder()
                 .pno(null)
@@ -159,22 +178,31 @@ public class AiPlanSessionSupport {
                 .distanceKm(null)
                 .hallCmno(hall.cmno())
                 .hallName(hall.name())
-                .hallImageUrl(hall.company != null ? AiPlanCandidateBuilder.firstImage(hall.company) : null)
+                .hallRoomName(hallItem != null ? hallItem.getItemName() : null)
+                .hallImageUrl(hallItem != null ? hallItem.getImageUrl()
+                        : (hall.company != null ? AiPlanCandidateBuilder.firstImage(hall.company) : null))
+                .hallPrice(hallAmount)
                 .hallReason(hall.reasonLabel())
                 .hallStatus(hall.status.name())
                 .studioCmno(studio.cmno())
                 .studioName(studio.name())
                 .studioImageUrl(studio.company != null ? AiPlanCandidateBuilder.firstImage(studio.company) : null)
+                .studioPrice(studio.company != null ? studio.company.getPriceAvg() : null)
                 .studioReason(studio.reasonLabel())
                 .studioStatus(studio.status.name())
                 .dressCmno(dress.cmno())
                 .dressName(dress.name())
-                .dressImageUrl(dress.company != null ? candidateBuilder.dressOptionImage(dress.company) : null)
+                .dressItemId(dressItem != null ? dressItem.getDressItemId() : null)
+                .dressOptionName(dressItem != null ? dressItem.getItemName() : null)
+                .dressImageUrl(dressItem != null ? dressItem.getImageUrl() : null)
+                .dressPrice(dressItem != null ? dressItem.getPrice()
+                        : (dress.company != null ? dress.company.getPriceAvg() : null))
                 .dressReason(dress.reasonLabel())
                 .dressStatus(dress.status.name())
                 .makeupCmno(makeup.cmno())
                 .makeupName(makeup.name())
                 .makeupImageUrl(makeup.company != null ? AiPlanCandidateBuilder.firstImage(makeup.company) : null)
+                .makeupPrice(makeup.company != null ? makeup.company.getPriceAvg() : null)
                 .makeupReason(makeup.reasonLabel())
                 .makeupStatus(makeup.status.name())
                 .sourceType(sourceType)

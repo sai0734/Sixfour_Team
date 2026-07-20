@@ -75,6 +75,7 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
             AiPlanPackageCandidateDTO unchanged = sessionSupport.toCombo(session, "SESSION_COMBO", null);
             return AiPlanQuickResultDTO.builder()
                     .sessionId(session.getSessionId())
+                    .weddingDate(session.getWeddingDate())
                     .candidates(List.of(unchanged))
                     .message("지금 요청을 정확히 이해하지 못했어요. 조금 더 구체적으로 다시 말씀해주시겠어요?")
                     .build();
@@ -90,6 +91,7 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
 
         return AiPlanQuickResultDTO.builder()
                 .sessionId(session.getSessionId())
+                .weddingDate(session.getWeddingDate())
                 .candidates(List.of(combo))
                 .message("말씀하신 대로 반영했어요.")
                 .build();
@@ -107,6 +109,7 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
             AiPlanPackageCandidateDTO combo = sessionSupport.toCombo(session, "SESSION_COMBO", null);
             return AiPlanQuickResultDTO.builder()
                     .sessionId(sessionId)
+                    .weddingDate(session.getWeddingDate())
                     .candidates(List.of(combo))
                     .message("더 되돌릴 이전 상태가 없어요.")
                     .build();
@@ -120,6 +123,7 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
 
         return AiPlanQuickResultDTO.builder()
                 .sessionId(sessionId)
+                .weddingDate(session.getWeddingDate())
                 .candidates(List.of(combo))
                 .message("이전 상태로 되돌렸어요.")
                 .build();
@@ -164,6 +168,7 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
 
         return AiPlanQuickResultDTO.builder()
                 .sessionId(session.getSessionId())
+                .weddingDate(session.getWeddingDate())
                 .candidates(List.of(combo))
                 .message(message)
                 .build();
@@ -195,12 +200,12 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
                 ? Math.round(remaining * (ratioFor(category) / ratioSum))
                 : null;
 
-        Company picked = candidateBuilder.pickOne(
+        AiPlanCandidateBuilder.PickResult picked = candidateBuilder.pickOne(
                 category, session.getRegion(), categoryBudget, AiPlanCategoryPreferences.empty());
 
         SlotState target = slotFor(session, category);
         target.changeStatus(SlotStatus.PENDING);
-        target.changeSelectedCmno(picked != null ? picked.getCmno() : null);
+        target.changeSelectedCmno(picked != null && picked.company() != null ? picked.company().getCmno() : null);
         target.changeNote(null);
     }
 
@@ -224,6 +229,7 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
 
         return AiPlanQuickResultDTO.builder()
                 .sessionId(sessionId)
+                .weddingDate(session.getWeddingDate())
                 .candidates(List.of(combo))
                 .message(null)
                 .build();
@@ -375,22 +381,26 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
                     : null;
 
             AiPlanCategoryPreferences prefs = preferencesFor(category, action.note());
-            Company picked = candidateBuilder.pickOne(category, session.getRegion(), categoryBudget, prefs);
+            AiPlanCandidateBuilder.PickResult picked =
+                    candidateBuilder.pickOne(category, session.getRegion(), categoryBudget, prefs);
 
             SlotState target = slotFor(session, category);
             target.changeStatus(SlotStatus.PENDING);
-            target.changeSelectedCmno(picked != null ? picked.getCmno() : null);
+            target.changeSelectedCmno(picked != null && picked.company() != null ? picked.company().getCmno() : null);
             target.changeNote(action.note());
         }
     }
 
-    // 홀은 자유 키워드 검색 인프라(HallType enum만 지원)가 없어서 예산/지역만으로 다시 찾음 -
-    // "다른 느낌으로" 같은 뉘앙스는 아직 반영 못 함(추후 개선 여지).
+    // 홀/메이크업은 이제 구조화 값(HallType/MakeupPackageType enum)으로 매칭하는데, 여기 note는
+    // AI가 다듬기 대화에서 만들어낸 자유 텍스트라 enum 토큰으로 안전하게 못 바꾼다 - 그래서 둘 다
+    // 예산/지역만으로 다시 찾는다("다른 느낌으로" 같은 뉘앙스는 아직 반영 못 함, 추후 개선 여지).
+    // 스튜디오/드레스는 태그 문자열 LIKE 매칭이라 note 하나를 그대로 키워드로 써도 된다(단일 항목 리스트).
     private AiPlanCategoryPreferences preferencesFor(CompanyCategory category, String note) {
+        List<String> noteList = note != null ? List.of(note) : List.of();
         return switch (category) {
-            case STUDIO -> AiPlanCategoryPreferences.of(null, note, null, null);
-            case DRESS -> AiPlanCategoryPreferences.of(null, null, note, null);
-            case MAKEUP -> AiPlanCategoryPreferences.of(null, null, null, note);
+            case STUDIO -> AiPlanCategoryPreferences.of(List.of(), noteList, List.of(), null);
+            case DRESS -> AiPlanCategoryPreferences.of(List.of(), List.of(), noteList, null);
+            case MAKEUP -> AiPlanCategoryPreferences.empty();
             case HALL -> AiPlanCategoryPreferences.empty();
         };
     }
