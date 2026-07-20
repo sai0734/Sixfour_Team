@@ -49,6 +49,12 @@ public class AiPlanPackageCandidateDTO {
     private String dressReason;
     private String makeupReason;
 
+    // "PENDING"|"CONFIRMED"|"EXCLUDED" (SlotStatus.name()) - 프론트에서 확정 버튼 렌더링용
+    private String hallStatus;
+    private String studioStatus;
+    private String dressStatus;
+    private String makeupStatus;
+
     // 카드에 보여줄 대표 이미지 - 파일명만 담음(프론트에서 getCompanyImageUrl로 완성된 URL 만듦).
     // 홀/스튜디오/메이크업은 업체 대표 이미지, 드레스는 업체가 아니라 "옵션(드레스 아이템)" 이미지.
     private String hallImageUrl;

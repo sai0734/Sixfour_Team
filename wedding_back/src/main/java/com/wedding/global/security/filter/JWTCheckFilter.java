@@ -154,6 +154,30 @@ public class JWTCheckFilter extends OncePerRequestFilter{
             return true;
         }
 
+        // AI 웨딩플랜 다듬기(리파인)/되돌리기도 비로그인 허용 - 결과를 다듬는 것까진 로그인 없이 가능해야 함
+        if(method.equals("POST") && path.equals("/api/aiplan/refine")) {
+            return true;
+        }
+
+        if(method.equals("POST") && path.matches("/api/aiplan/rollback/\\d+")) {
+            return true;
+        }
+
+        // AI 웨딩플랜 사이드패널 확정/해제 버튼도 비로그인 허용 - 리파인과 동일한 편집 흐름
+        if(method.equals("POST") && path.equals("/api/aiplan/slot")) {
+            return true;
+        }
+
+        // AI 웨딩플랜 새로고침 복원도 비로그인 허용 - 세션 조회만 하는 GET
+        if(method.equals("GET") && path.matches("/api/aiplan/session/\\d+")) {
+            return true;
+        }
+
+        // AI 웨딩플랜 다듬기 대화 기록 조회도 비로그인 허용 - 세션 조회만 하는 GET
+        if(method.equals("GET") && path.matches("/api/aiplan/session/\\d+/history")) {
+            return true;
+        }
+
         // AI 드레스 — 드레스 목록은 공개 조회 (합성·내 사진은 JWT 필요)
         if(method.equals("GET") && path.equals("/api/ai-dress/dresses")) {
             return true;

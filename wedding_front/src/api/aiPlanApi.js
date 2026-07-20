@@ -36,3 +36,25 @@ export const rollbackRecommendation = async (sessionId) => {
 
   return res.data;
 };
+
+// 사이드패널 확정/해제 버튼 - AI 안 거치고 바로 슬롯 상태 반영
+export const updateSlotStatus = async (payload) => {
+  const res = await axios.post(`${prefix}/slot`, payload);
+
+  return res.data;
+};
+
+// 새로고침 복원 - URL의 sessionId로 현재 세션 상태를 다시 불러옴
+export const getSessionResult = async (sessionId) => {
+  const res = await axios.get(`${prefix}/session/${sessionId}`);
+
+  return res.data;
+};
+
+// 다듬기 대화 기록 - "다듬은 기록 보기" 펼치기용. aiPlanHistory.js의 getSessionHistory(브라우저
+// 로컬 회차 목록)와는 다른 것 - 이건 서버에 저장된 한 세션 안의 턴별 발화 기록.
+export const getRefineHistory = async (sessionId) => {
+  const res = await axios.get(`${prefix}/session/${sessionId}/history`);
+
+  return res.data;
+};

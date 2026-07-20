@@ -1,39 +1,57 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import TapeLabel from "../../components/common/TapeLabel";
-import FetchingModal from "../../components/common/FetchingModal";
+import AiPlanLoadingModal from "../../components/aiplan/AiPlanLoadingModal";
 import ResultCards from "../../components/aiplan/ResultCards";
 import { getQuickRecommendations } from "../../api/aiPlanApi";
 
-const initForm = {
-  budgetManwon: "", // 화면 입력은 "만원" 단위, API로 보낼 땐 *10000
-  region: "",
-  groomName: "",
-  brideName: "",
-  weddingDate: "",
-};
+// DetailPlanPage.jsx와 동일한 키 - 자세히/AI 모드 결과를 이어서 볼 수 있게 저장해둔 마지막 세션 id
+const LAST_SESSION_KEY = "aiplan_last_session_id";
 
 const QuickPlanPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  const [form, setForm] = useState(initForm);
+  // 자세히 모드에서 "빠르게 모드로 돌아가기"를 누르면 공통 필수 4개를 쿼리로 들고 와서 이어 쓴다
+  const [form, setForm] = useState({
+    budgetManwon: searchParams.get("budgetManwon") || "",
+    region: searchParams.get("region") || "",
+    groomName: searchParams.get("groomName") || "",
+    brideName: searchParams.get("brideName") || "",
+    weddingDate: searchParams.get("weddingDate") || "",
+  });
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [retryAction, setRetryAction] = useState(null);
+
+  // 마지막 세션이 있으면 아래 useEffect가 곧장 다른 페이지(자세히 모드)로 튕겨낸다. 그 판단이
+  // 끝날 때까지는 빈 폼이 잠깐 번쩍이지 않도록 로딩 오버레이로 가려둔다.
+  const [redirecting] = useState(() => Boolean(localStorage.getItem(LAST_SESSION_KEY)));
+
+  // "AI 웨딩플랜" 메뉴는 항상 여기(/aiplan/quick)로 먼저 들어오게 라우팅돼 있다. 다른 페이지 갔다가
+  // 돌아왔을 때도 마지막으로 보던 자세히/AI 모드 결과가 있으면 빈 폼 대신 그걸로 바로 이어준다.
+  useEffect(() => {
+    const lastSessionId = localStorage.getItem(LAST_SESSION_KEY);
+    if (lastSessionId) {
+      navigate(`/aiplan/detail?sessionId=${lastSessionId}`, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleChange = (field) => (e) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
+  // submitQuick은 재사용 가능한 "다시 시도" 대상이라 이벤트 객체 없이 독립적으로 동작하게 뺐다.
+  const submitQuick = () => {
     if (!form.budgetManwon || !form.region) {
       setError("총 예산과 지역은 필수로 입력해주세요.");
       return;
     }
 
     setError(null);
+    setRetryAction(null);
     setLoading(true);
 
     getQuickRecommendations({
@@ -49,8 +67,14 @@ const QuickPlanPage = () => {
         setError(
           "추천을 불러오는 중 문제가 발생했어요. 잠시 후 다시 시도해주세요.",
         );
+        setRetryAction(() => submitQuick);
       })
       .finally(() => setLoading(false));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    submitQuick();
   };
 
   const goDetailMode = () => {
@@ -72,7 +96,11 @@ const QuickPlanPage = () => {
 
   return (
     <div className="mx-auto max-w-[900px] px-4 py-10">
-      {loading && <FetchingModal />}
+      {(loading || redirecting) && (
+        <AiPlanLoadingModal
+          message={redirecting ? "이어서 보여드릴게요" : "지금 등록된 업체 중에서 찾고 있어요"}
+        />
+      )}
 
       <div className="mb-8 text-center">
         <TapeLabel className="mb-4">AI WEDDING PLAN · 빠르게 모드</TapeLabel>
@@ -154,7 +182,20 @@ const QuickPlanPage = () => {
             </div>
           </div>
 
-          {error && <p className="mt-4 text-sm text-red-500">{error}</p>}
+          {error && (
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#F0C4C4] bg-[#FDEEEE] px-4 py-2.5 text-sm text-[#B23B3B]">
+              <span>{error}</span>
+              {retryAction && (
+                <button
+                  type="button"
+                  onClick={() => retryAction()}
+                  className="shrink-0 font-medium underline underline-offset-2"
+                >
+                  다시 시도
+                </button>
+              )}
+            </div>
+          )}
 
           <div className="mt-6 flex flex-col gap-3 md:flex-row">
             <button
@@ -169,7 +210,7 @@ const QuickPlanPage = () => {
               onClick={goDetailMode}
               className="h-12 flex-1 rounded-full border border-line text-sm font-medium text-ink-soft hover:bg-surface"
             >
-              자세히 설정하기
+              자세히 설정하기 →
             </button>
           </div>
         </form>
