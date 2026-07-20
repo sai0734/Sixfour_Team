@@ -112,6 +112,29 @@ public class AiPlanCandidateBuilder {
                     .build();
         }
 
+        // 하객수/취향(홀타입, 스타일 등) 같은 조건 때문에 합계가 예산을 톨러런스 넘게 초과했으면,
+        // 이 조합을 바로 보여주는 대신 예산 안에서(하객수/취향은 다 내려놓고) 고른 대안을 먼저
+        // 보여주고 얼마를 더 잡아야 원래 조건에 맞는 곳을 볼 수 있는지 알려준다. 이미 하객수도
+        // 없고 취향도 없는 상태(=이미 최대한 완화된 상태)에서도 초과했다면 더 내려놓을 게 없다는
+        // 뜻이라(무한 재귀 방지 겸) 그냥 지나간다 - 아래 appendBudgetGapMessage가 안내한다.
+        // 프론트 "예산 늘려서 다시 찾기" 버튼이 그 금액으로 예산을 채워 원래 조건 그대로 재요청하면,
+        // 이번에 계산한 이 조합이 그대로 나온다.
+        boolean alreadyFullyRelaxed = guestCount == null && prefs.isEmpty();
+        if (!alreadyFullyRelaxed && budget != null && budget > 0) {
+            long gap = combo.dto.getPackagePrice().longValue() - budget;
+            if (gap > BUDGET_TOLERANCE) {
+                AiPlanQuickResultDTO budgetFit = recommend(region, budget, null, AiPlanCategoryPreferences.empty());
+                if (!budgetFit.getCandidates().isEmpty()) {
+                    budgetFit.setSuggestedBudget(budget + gap);
+                    budgetFit.setMessage(String.format(
+                            "우선 예산에 맞는 조합으로 보여드렸어요. 예산을 %,d원 더 늘리면 요청하신 조건에 "
+                                    + "더 맞는 곳을 찾아드릴 수 있어요.",
+                            gap));
+                    return budgetFit;
+                }
+            }
+        }
+
         StringBuilder message = new StringBuilder();
         if (prefs.isEmpty()) {
             message.append("조건에 맞는 패키지가 없어서 업체를 개별로 조합해 추천했어요.");

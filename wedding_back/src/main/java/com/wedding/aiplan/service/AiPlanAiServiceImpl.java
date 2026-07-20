@@ -110,6 +110,27 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
             fillComboTowardBudget(combo, region, budget);
         }
 
+        // 하객수/취향 조건 때문에 AI가 고른 조합이 예산을 톨러런스 넘게 초과했으면, 그 조합 대신 예산
+        // 안에서(조건은 다 내려놓고) 고른 대안을 규칙 기반 엔진으로 다시 찾아 먼저 보여준다 - AI를 한 번
+        // 더 호출하는 비용을 안 쓰기 위해 AiPlanCandidateBuilder(규칙 기반)로 대체한다. 규칙 기반 쪽은
+        // 자기 자신을 재귀 호출하는 구조라 "이미 완화된 상태" 가드가 필요했지만, 여긴 완전히 별개
+        // 호출(AiPlanCategoryPreferences.empty())이라 그 가드가 필요 없다.
+        if (budget != null && budget > 0) {
+            long gap = combo.getPackagePrice().longValue() - budget;
+            if (gap > AiPlanCandidateBuilder.BUDGET_TOLERANCE) {
+                AiPlanQuickResultDTO budgetFit = candidateBuilder.recommend(
+                        region, budget, null, AiPlanCategoryPreferences.empty());
+                if (!budgetFit.getCandidates().isEmpty()) {
+                    budgetFit.setSuggestedBudget(budget + gap);
+                    budgetFit.setMessage(String.format(
+                            "우선 예산에 맞는 조합으로 보여드렸어요. 예산을 %,d원 더 늘리면 요청하신 조건에 "
+                                    + "더 맞는 곳을 찾아드릴 수 있어요.",
+                            gap));
+                    return attachSession(budgetFit, budget, region, requestDTO.getWeddingDate(), "AI_FALLBACK");
+                }
+            }
+        }
+
         boolean anyExcluded = combo.getHallName() == null || combo.getStudioName() == null
                 || combo.getDressName() == null || combo.getMakeupName() == null;
         StringBuilder message = new StringBuilder("AI가 취향과 자유 입력을 반영해서 골라줬어요.");

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import TapeLabel from "../../components/common/TapeLabel";
 import AiPlanLoadingModal from "../../components/aiplan/AiPlanLoadingModal";
@@ -247,8 +247,8 @@ const DetailPlanPage = () => {
     navigate(`/aiplan/quick?${params.toString()}`);
   };
 
-  const buildPayload = () => ({
-    budget: Number(form.budgetManwon) * 10000,
+  const buildPayload = (overrideBudgetManwon) => ({
+    budget: Number(overrideBudgetManwon ?? form.budgetManwon) * 10000,
     region: form.region,
     groomName: form.groomName || null,
     brideName: form.brideName || null,
@@ -261,19 +261,27 @@ const DetailPlanPage = () => {
     freeText: form.freeText || null,
   });
 
+  // "예산 늘려서 다시 찾기" 버튼(handleBumpBudget)이 방금 어떤 모드로 찾았었는지 기억해뒀다가
+  // 같은 모드로 재요청하기 위한 용도 - state로 두면 리렌더가 걸려서 ref로 충분.
+  const lastModeRef = useRef("rule");
+
   // submitRuleBased/submitAi는 "다시 시도" 버튼에서도 그대로 재호출할 수 있게 이벤트 객체 없이 독립시켰다.
-  const submitRuleBased = () => {
-    if (!form.budgetManwon || !form.region) {
+  // overrideBudgetManwon은 "예산 늘려서 다시 찾기" 전용 - form 상태 업데이트를 기다리지 않고 바로 그
+  // 값으로 요청하기 위해 받는다.
+  const submitRuleBased = (overrideBudgetManwon) => {
+    const budgetManwon = overrideBudgetManwon ?? form.budgetManwon;
+    if (!budgetManwon || !form.region) {
       setError("총 예산과 지역은 필수로 입력해주세요.");
       return;
     }
 
+    lastModeRef.current = "rule";
     setError(null);
     setRetryAction(null);
     setLoading(true);
 
-    getDetailRecommendations(buildPayload())
-      .then((data) => applyResult(data, { budgetManwon: form.budgetManwon, region: form.region }))
+    getDetailRecommendations(buildPayload(overrideBudgetManwon))
+      .then((data) => applyResult(data, { budgetManwon, region: form.region }))
       .catch((err) => {
         console.error(err);
         setError(
@@ -284,18 +292,20 @@ const DetailPlanPage = () => {
       .finally(() => setLoading(false));
   };
 
-  const submitAi = () => {
-    if (!form.budgetManwon || !form.region) {
+  const submitAi = (overrideBudgetManwon) => {
+    const budgetManwon = overrideBudgetManwon ?? form.budgetManwon;
+    if (!budgetManwon || !form.region) {
       setError("총 예산과 지역은 필수로 입력해주세요.");
       return;
     }
 
+    lastModeRef.current = "ai";
     setError(null);
     setRetryAction(null);
     setLoading(true);
 
-    getAiRecommendations(buildPayload())
-      .then((data) => applyResult(data, { budgetManwon: form.budgetManwon, region: form.region }))
+    getAiRecommendations(buildPayload(overrideBudgetManwon))
+      .then((data) => applyResult(data, { budgetManwon, region: form.region }))
       .catch((err) => {
         console.error(err);
         setError(
@@ -314,6 +324,18 @@ const DetailPlanPage = () => {
   const handleSubmitAi = (e) => {
     e.preventDefault();
     submitAi();
+  };
+
+  // 결과 화면의 "예산 늘려서 다시 찾기" 버튼 - suggestedBudget(원)을 만원 단위로 바꿔 폼에도
+  // 반영해두고, 방금 썼던 모드(규칙 기반/AI) 그대로 그 예산으로 재요청한다.
+  const handleBumpBudget = (suggestedBudgetWon) => {
+    const manwon = String(Math.ceil(suggestedBudgetWon / 10000));
+    setForm((prev) => ({ ...prev, budgetManwon: manwon }));
+    if (lastModeRef.current === "ai") {
+      submitAi(manwon);
+    } else {
+      submitRuleBased(manwon);
+    }
   };
 
   const handleReset = () => {
@@ -445,7 +467,28 @@ const DetailPlanPage = () => {
   const labelClass = "mb-1 block text-sm font-medium text-ink-soft";
 
   return (
-    <div className="mx-auto max-w-[1160px] px-4 py-10">
+    <>
+      {/* 답례품(GIFT SHOP) 페이지와 같은 구조의 상단 히어로 배너 - 배경 이미지는
+          public/aiplan-hero.jpg 자리에 넣으면 바로 반영됨 (지금은 빈 자리만 잡아둠). */}
+      <section
+        className="relative -mx-5 -mt-12 bg-cover bg-center pb-10 pt-16 text-center md:pb-12"
+        style={{ backgroundImage: "url('/aiplan-hero.jpg')" }}
+      >
+        <div className="absolute inset-0 bg-black/45" />
+        <div className="relative z-10 mx-auto max-w-[720px] px-5">
+          <TapeLabel tone="white" className="mb-5">
+            AI WEDDING PLAN
+          </TapeLabel>
+          <h1 className="mb-2.5 font-['Gowun_Batang'] text-2xl leading-snug text-white md:mb-3.5 md:text-4xl">
+            예산부터 취향까지, 한 번에 맞추는 웨딩플랜
+          </h1>
+          <p className="whitespace-pre-line text-sm leading-relaxed text-white/85 md:text-[15px]">
+            홀·스튜디오·드레스·메이크업까지{"\n"}조건에 맞게 골라 조합해드려요
+          </p>
+        </div>
+      </section>
+
+      <div className="mx-auto max-w-[1160px] px-4 py-10">
       {loading && (
         <AiPlanLoadingModal
           message={result ? "불러오는 중이에요" : "조건에 맞는 곳을 찾고 있어요"}
@@ -500,15 +543,13 @@ const DetailPlanPage = () => {
             ← 빠르게 모드로 돌아가기
           </button>
 
-          <div className="mb-8 text-center">
-            <TapeLabel className="mb-4">AI WEDDING PLAN · 자세히 모드</TapeLabel>
-            <h1 className="mb-2 font-display text-2xl text-ink md:text-3xl">
-              카테고리별 취향까지 알려주세요
-            </h1>
-            <p className="text-sm text-ink-muted">
-              비워두면 취향 없이, 입력한 항목만 반영해서 추천해드려요
-            </p>
-          </div>
+          {!result && (
+            <div className="mb-8 text-center">
+              <p className="text-sm text-ink-muted">
+                비워두면 취향 없이, 입력한 항목만 반영해서 추천해드려요
+              </p>
+            </div>
+          )}
 
           {!result ? (
             <form
@@ -730,7 +771,7 @@ const DetailPlanPage = () => {
             </form>
           ) : (
             <div>
-              <ResultCards result={result} onSlotAction={handleSlotAction} />
+              <ResultCards result={result} onSlotAction={handleSlotAction} onBumpBudget={handleBumpBudget} />
 
               {error && (
                 <div className="mt-4 flex flex-wrap items-center justify-center gap-2 rounded-xl border border-[#F0C4C4] bg-[#FDEEEE] px-4 py-2.5 text-sm text-[#B23B3B]">
@@ -831,7 +872,8 @@ const DetailPlanPage = () => {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 
