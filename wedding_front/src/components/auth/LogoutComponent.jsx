@@ -39,11 +39,11 @@ const LogoutComponent = () => {
       stickerEmoji="👋"
     >
       <div className="max-w-sm w-full mx-auto text-center">
-        <h2 className="font-serifkr text-2xl text-ink mb-2">로그아웃</h2>
+        <h2 className="font-display text-2xl text-ink mb-2">로그아웃</h2>
         <p className="text-ink-muted text-sm mb-8">정말 로그아웃 하시겠어요?</p>
 
         <button
-          className="w-full py-3 rounded-full bg-brand-gradient text-ink font-semibold shadow-lg shadow-blush-200/60 hover:shadow-blush-300/70 hover:-translate-y-0.5 transition-all"
+          className="w-full py-3 rounded-full bg-gradient-to-r from-rose-100 to-pink-100 text-rose-700 font-semibold shadow-md shadow-rose-100 hover:shadow-rose-200 hover:-translate-y-0.5 transition-all"
           onClick={handleClickLogout}
         >
           로그아웃

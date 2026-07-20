@@ -297,8 +297,6 @@ const JoinComponent = () => {
       });
   };
 
-  // ---- 필드별 메시지 계산 ----
-
   const renderEmailMsg = () => {
     if (touched.email && !joinParam.email)
       return <div className={errMsgClass}>이메일은 필수 입력 항목입니다.</div>;
@@ -330,7 +328,6 @@ const JoinComponent = () => {
   };
 
   const renderPwCheckMsg = () => {
-    // 비밀번호 자체가 아직 유효하지 않으면(비어있거나 규칙 미충족) 비밀번호 확인란은 반응하지 않음
     if (!PW_REGEX.test(joinParam.pw)) return null;
 
     if (touched.pwCheck && !joinParam.pwCheck)
@@ -426,12 +423,14 @@ const JoinComponent = () => {
           </p>
 
           <button
-            className="w-full py-3 rounded-xl bg-rose-gradient text-white font-semibold shadow-lg shadow-rose-200 hover:shadow-rose-300 hover:-translate-y-0.5 transition-all mb-3"
+            type="button"
+            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 text-white font-semibold shadow-lg shadow-rose-200 hover:shadow-rose-300 hover:-translate-y-0.5 transition-all mb-3"
             onClick={() => moveToLogin()}
           >
             로그인 화면으로
           </button>
           <button
+            type="button"
             className="w-full py-3 rounded-xl border border-rose-200 text-rose-600 font-semibold hover:bg-blush-50 transition"
             onClick={handleClickResend}
           >
@@ -439,6 +438,7 @@ const JoinComponent = () => {
           </button>
 
           <button
+            type="button"
             className="text-sm text-plum-500 underline mt-6"
             onClick={() => setPendingEmail(null)}
           >
@@ -651,16 +651,18 @@ const JoinComponent = () => {
         </div>
 
         <button
-          className="w-full py-3 rounded-xl bg-rose-gradient text-white font-semibold shadow-lg shadow-rose-200 hover:shadow-rose-300 hover:-translate-y-0.5 transition-all"
+          type="button"
+          className="w-full py-4 rounded-xl bg-gradient-to-r from-rose-100 to-pink-100 text-rose-700 font-semibold shadow-md shadow-rose-100 hover:shadow-rose-200 hover:-translate-y-0.5 transition-all"
           onClick={handleClickJoin}
         >
           가입하기
         </button>
 
-        <div className="text-center mt-6 text-sm text-plum-500">
+        <div className="text-center mt-6 mb-10 text-sm text-plum-500">
           이미 계정이 있으신가요?{" "}
           <button
-            className="text-rose-600 font-semibold hover:text-rose-700"
+            type="button"
+            className="text-rose-600 font-semibold hover:text-rose-700 ml-1"
             onClick={() => moveToLogin()}
           >
             로그인
