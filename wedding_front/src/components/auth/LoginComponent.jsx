@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import AuthLayout from "./AuthLayout";
 import KakaoLoginComponent from "./KakaoLoginComponent";
 import useCustomLogin from "../../hooks/useCustomLogin";
+import { getMyManagedCompany } from "../../api/companyApi";
 
 const inputClass =
   "w-full px-4 py-3 rounded-xl border border-rose-100 bg-blush-50/40 text-plum-900 placeholder:text-plum-500/50 focus:border-rose-400 focus:ring-4 focus:ring-rose-100 outline-none transition";
@@ -22,7 +23,9 @@ const LoginComponent = () => {
     pw: false,
   });
 
-  const { doLogin, moveToPath } = useCustomLogin();
+  const location = useLocation();
+  const { doLogin, moveToPath, getLoginRedirectPath, clearLoginRedirectPath } =
+    useCustomLogin();
 
   const handleChange = (e) => {
     setLoginParam({
@@ -57,9 +60,37 @@ const LoginComponent = () => {
     doLogin(loginParam).then((data) => {
       if (data.error) {
         alert("이메일 또는 비밀번호가 일치하지 않습니다.");
-      } else {
-        moveToPath("/");
+        return;
       }
+
+      // 로그인 페이지로 오기 전 보고 있던(혹은 가려던) 경로가 있으면 역할과 무관하게 그곳으로 우선 복귀
+      const redirectPath = location.state?.from || getLoginRedirectPath() || null;
+      const isValidRedirect =
+        typeof redirectPath === "string" && redirectPath.startsWith("/");
+
+      if (isValidRedirect) {
+        clearLoginRedirectPath();
+        moveToPath(redirectPath);
+        return;
+      }
+
+      const isAdmin = data.roleNames?.some((roleName) =>
+        ["ADMIN", "ROLE_ADMIN"].includes(roleName),
+      );
+
+      if (isAdmin) {
+        moveToPath("/admin");
+        return;
+      }
+
+      // 업체 담당자(매니저)면 문의 관리 화면으로, 아니면 메인으로
+      getMyManagedCompany()
+        .then((managed) => {
+          moveToPath(managed?.isManager ? "/manager/inquiries" : "/");
+        })
+        .catch(() => {
+          moveToPath("/");
+        });
     });
   };
 
