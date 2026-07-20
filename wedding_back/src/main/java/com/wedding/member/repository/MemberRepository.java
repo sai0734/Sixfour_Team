@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import com.wedding.member.domain.Member;
+import com.wedding.member.domain.MemberRole;
 
 public interface MemberRepository extends JpaRepository<Member, String> {
 
@@ -29,6 +30,16 @@ public interface MemberRepository extends JpaRepository<Member, String> {
   @Query("select m from Member m where m.status = 'BLACKLIST' " +
           "and m.suspendUntil is not null and m.suspendUntil <= :now")
   List<Member> findExpiredSuspensions(@Param("now") LocalDateTime now);
+
+  // 자동 휴면 전환용 - 정상(ACTIVE) 회원 중 마지막 로그인(없으면 가입일 기준)이 cutoff 이전인 회원
+  @Query("select m from Member m where m.status = 'ACTIVE' " +
+          "and coalesce(m.lastLoginAt, m.regDate) <= :cutoff")
+  List<Member> findInactiveForAutoDormant(@Param("cutoff") LocalDateTime cutoff);
+
+  // 회원 관리 "관리자 목록" 탭 - 관리자 권한을 가진 회원 전체
+  @EntityGraph(attributePaths = {"memberRoleList"})
+  @Query("select m from Member m where :role member of m.memberRoleList order by m.email")
+  List<Member> findByRoleContaining(@Param("role") MemberRole role);
 
   // 관리자 대시보드용 집계
   long countByStatus(String status);

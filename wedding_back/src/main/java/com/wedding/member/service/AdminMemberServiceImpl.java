@@ -49,12 +49,44 @@ public class AdminMemberServiceImpl implements AdminMemberService {
         memberRepository.save(member);
     }
 
+    @Override
+    public void changeRole(String email, String role, String requesterEmail) {
+        if (email.equals(requesterEmail)) {
+            throw new IllegalStateException("본인의 권한은 변경할 수 없습니다.");
+        }
+
+        Member member = memberRepository.findById(email).orElseThrow();
+
+        if ("ADMIN".equals(role)) {
+            member.addRole(MemberRole.ADMIN);
+        } else if ("USER".equals(role)) {
+            member.removeRole(MemberRole.ADMIN);
+        } else {
+            throw new IllegalArgumentException("알 수 없는 권한: " + role);
+        }
+
+        memberRepository.save(member);
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AdminMemberDTO> getAdminList() {
+        return memberRepository.findByRoleContaining(MemberRole.ADMIN).stream()
+                .map(this::toDTO)
+                .toList();
+    }
 
     private AdminMemberDTO toDTO(Member member) {
         return AdminMemberDTO.builder()
                 .email(member.getEmail())
                 .nickname(member.getNickname())
+                .regDate(member.getRegDate())
+                .lastLoginAt(member.getLastLoginAt())
                 .status(member.getStatus())
+                .suspendReason(member.getSuspendReason())
+                .suspendUntil(member.getSuspendUntil())
+                .emailVerified(member.isEmailVerified())
                 .admin(member.getMemberRoleList().contains(MemberRole.ADMIN))
                 .build();
     }
