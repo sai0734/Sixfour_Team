@@ -31,4 +31,9 @@ public class AiPlanQuickResultDTO {
     private boolean regionRelaxed = false;
 
     private String message;
+
+    // 하객수처럼 양보 못 하는 조건 때문에 지금 보여주는 조합(candidates)이 예산에 맞춰 대신 고른
+    // 대안일 때만 채워짐 - "예산을 이만큼 늘리면 조건에 더 맞는 곳을 보여줄 수 있어요"의 그 금액(원).
+    // 프론트가 이 값으로 예산을 다시 채워서 재요청하면 그 조건까지 만족하는 조합을 받을 수 있다.
+    private Long suggestedBudget;
 }

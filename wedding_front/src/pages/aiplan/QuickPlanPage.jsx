@@ -52,8 +52,11 @@ const QuickPlanPage = () => {
   };
 
   // submitQuick은 재사용 가능한 "다시 시도" 대상이라 이벤트 객체 없이 독립적으로 동작하게 뺐다.
-  const submitQuick = () => {
-    if (!form.budgetManwon || !form.region) {
+  // overrideBudgetManwon은 "예산 늘려서 다시 찾기" 전용 - form 상태 업데이트를 기다리지 않고 바로
+  // 그 값으로 요청하기 위해 받는다.
+  const submitQuick = (overrideBudgetManwon) => {
+    const budgetManwon = overrideBudgetManwon ?? form.budgetManwon;
+    if (!budgetManwon || !form.region) {
       setError("총 예산과 지역은 필수로 입력해주세요.");
       return;
     }
@@ -63,7 +66,7 @@ const QuickPlanPage = () => {
     setLoading(true);
 
     getQuickRecommendations({
-      budget: Number(form.budgetManwon) * 10000,
+      budget: Number(budgetManwon) * 10000,
       region: form.region,
       groomName: form.groomName || null,
       brideName: form.brideName || null,
@@ -86,6 +89,14 @@ const QuickPlanPage = () => {
     submitQuick();
   };
 
+  // 결과 화면의 "예산 늘려서 다시 찾기" 버튼 - suggestedBudget(원)을 만원 단위로 바꿔 폼에도
+  // 반영해두고 그 예산으로 재요청한다.
+  const handleBumpBudget = (suggestedBudgetWon) => {
+    const manwon = String(Math.ceil(suggestedBudgetWon / 10000));
+    setForm((prev) => ({ ...prev, budgetManwon: manwon }));
+    submitQuick(manwon);
+  };
+
   const goDetailMode = () => {
     // 공통 필수 4개는 자세히 모드 화면에서 이어서 쓸 수 있게 쿼리로 넘겨줌
     const params = new URLSearchParams({
@@ -104,22 +115,41 @@ const QuickPlanPage = () => {
   };
 
   return (
-    <div className="mx-auto max-w-[900px] px-4 py-10">
+    <>
+      {/* DetailPlanPage.jsx와 동일한 히어로 배너 - 배경 이미지는 public/aiplan-hero.jpg
+          자리에 넣으면 바로 반영됨 (지금은 빈 자리만 잡아둠). */}
+      <section
+        className="relative -mx-5 -mt-12 bg-cover bg-center pb-10 pt-16 text-center md:pb-12"
+        style={{ backgroundImage: "url('/aiplan-hero.jpg')" }}
+      >
+        <div className="absolute inset-0 bg-black/45" />
+        <div className="relative z-10 mx-auto max-w-[720px] px-5">
+          <TapeLabel tone="white" className="mb-5">
+            AI WEDDING PLAN
+          </TapeLabel>
+          <h1 className="mb-2.5 font-['Gowun_Batang'] text-2xl leading-snug text-white md:mb-3.5 md:text-4xl">
+            예산부터 취향까지, 한 번에 맞추는 웨딩플랜
+          </h1>
+          <p className="whitespace-pre-line text-sm leading-relaxed text-white/85 md:text-[15px]">
+            홀·스튜디오·드레스·메이크업까지{"\n"}조건에 맞게 골라 조합해드려요
+          </p>
+        </div>
+      </section>
+
+      <div className="mx-auto max-w-[900px] px-4 py-10">
       {(loading || redirecting) && (
         <AiPlanLoadingModal
           message={redirecting ? "이어서 보여드릴게요" : "지금 등록된 업체 중에서 찾고 있어요"}
         />
       )}
 
-      <div className="mb-8 text-center">
-        <TapeLabel className="mb-4">AI WEDDING PLAN · 빠르게 모드</TapeLabel>
-        <h1 className="mb-2 font-display text-2xl text-ink md:text-3xl">
-          예산과 지역만 알려주세요
-        </h1>
-        <p className="text-sm text-ink-muted">
-          AI 호출 없이, 지금 등록된 업체/패키지 중에서 바로 추천해드려요
-        </p>
-      </div>
+      {!result && (
+        <div className="mb-8 text-center">
+          <p className="text-sm text-ink-muted">
+            AI 호출 없이, 지금 등록된 업체/패키지 중에서 바로 추천해드려요
+          </p>
+        </div>
+      )}
 
       {!result ? (
         <form
@@ -240,7 +270,7 @@ const QuickPlanPage = () => {
         </form>
       ) : (
         <div>
-          <ResultCards result={result} />
+          <ResultCards result={result} onBumpBudget={handleBumpBudget} />
 
           <div className="mt-8 text-center">
             <button
@@ -253,7 +283,8 @@ const QuickPlanPage = () => {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 };
 

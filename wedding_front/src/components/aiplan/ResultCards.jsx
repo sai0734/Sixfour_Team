@@ -25,6 +25,24 @@ const formatWon = (value) => {
   return `${Number(value).toLocaleString()}원`;
 };
 
+const formatKoreanDate = (dateStr) => {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
+};
+
+// MainPage.jsx의 D-day 위젯과 같은 계산 방식 - 결과 화면에서도 같은 감각으로 보여주기 위해 재사용.
+const calcDday = (dateStr) => {
+  if (!dateStr) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(dateStr);
+  const diff = Math.ceil((target - today) / 86400000);
+  if (diff > 0) return `D-${diff}`;
+  if (diff === 0) return "D-DAY";
+  return `D+${Math.abs(diff)}`;
+};
+
 const SOURCE_LABEL = {
   PACKAGE: "패키지 할인가",
   INDIVIDUAL_COMBO: "개별 조합",
@@ -278,7 +296,7 @@ const reservableSlots = (combo) =>
     name: combo[`${key}Name`],
   })).filter((slot) => slot.cmno);
 
-const ResultCards = ({ result, onSlotAction }) => {
+const ResultCards = ({ result, onSlotAction, onBumpBudget }) => {
   const navigate = useNavigate();
 
   // 예약 체크박스 선택 상태 - 조합의 예약 가능 슬롯 구성이 바뀌면(다듬기로 카테고리가
@@ -290,6 +308,7 @@ const ResultCards = ({ result, onSlotAction }) => {
   const candidates = result?.candidates ?? [];
   const message = result?.message;
   const sessionId = result?.sessionId;
+  const suggestedBudget = result?.suggestedBudget;
   const soleCombo =
     candidates.length === 1 &&
     ["INDIVIDUAL_COMBO", "AI_COMBO", "AI_FALLBACK", "SESSION_COMBO"].includes(
@@ -348,14 +367,30 @@ const ResultCards = ({ result, onSlotAction }) => {
   return (
     <div>
       {result?.weddingDate && (
-        <p className="mb-4 text-center text-sm text-ink-muted">
-          결혼 예정일 · {result.weddingDate}
-        </p>
+        <div className="mb-6 flex justify-center">
+          <div className="inline-flex items-center gap-2.5 rounded-full border border-brand-dark bg-blush-50 px-5 py-2 shadow-sm">
+            <span className="rounded-full bg-brand-deep px-2.5 py-0.5 text-xs font-bold text-white">
+              {calcDday(result.weddingDate)}
+            </span>
+            <span className="font-['Gowun_Batang'] text-sm text-brand-deep">
+              {formatKoreanDate(result.weddingDate)} 결혼 예정
+            </span>
+          </div>
+        </div>
       )}
 
       {message && (
-        <div className="mb-5 rounded-xl border border-line bg-surface px-5 py-3 text-sm text-ink-soft">
-          {message}
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-surface px-5 py-3 text-sm text-ink-soft">
+          <span>{message}</span>
+          {suggestedBudget != null && onBumpBudget && (
+            <button
+              type="button"
+              onClick={() => onBumpBudget(suggestedBudget)}
+              className="shrink-0 rounded-full bg-brand px-4 py-1.5 text-xs font-medium text-white hover:bg-brand-dark"
+            >
+              예산 늘려서 다시 찾기
+            </button>
+          )}
         </div>
       )}
 
