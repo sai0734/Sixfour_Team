@@ -24,4 +24,7 @@ public class AiPlanQuickRequestDTO {
     private String brideName;
 
     private LocalDate weddingDate;
+
+    // 하객수 - 홀 후보를 고를 때 HallDetail.maxCapacity보다 적게 수용하는 곳은 걸러냄
+    private Integer guestCount;
 }

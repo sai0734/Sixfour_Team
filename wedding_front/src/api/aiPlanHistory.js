@@ -3,6 +3,11 @@
 // 사용자가 붙인 이름은 순전히 이 브라우저에서만 의미 있는 라벨이라 로컬에만 저장한다.
 const HISTORY_KEY = "aiplan_session_history";
 
+// "N번째 추천" 라벨용 전역 카운터 - 항목을 지워도 절대 줄어들지 않는다.
+// (예전엔 매번 history.length+1로 라벨을 매겨서, 앞쪽 항목을 지우면 배열 길이가 줄어들어
+// 다음 새 항목이 이미 썼던 번호를 다시 받는 문제가 있었다)
+const HISTORY_SEQ_KEY = "aiplan_session_history_seq";
+
 const readHistory = () => {
   try {
     const raw = localStorage.getItem(HISTORY_KEY);
@@ -14,6 +19,17 @@ const readHistory = () => {
 
 const writeHistory = (history) => {
   localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+};
+
+// 카운터가 아직 없으면(이 수정 이전부터 쓰던 사용자) 지금 남아있는 개수를 시작값으로 삼아서
+// 최소한 그만큼은 이미 번호가 나갔다고 보고 이어서 매긴다.
+const nextSeq = () => {
+  const raw = localStorage.getItem(HISTORY_SEQ_KEY);
+  const parsed = raw ? parseInt(raw, 10) : NaN;
+  const base = Number.isFinite(parsed) ? parsed : readHistory().length;
+  const next = base + 1;
+  localStorage.setItem(HISTORY_SEQ_KEY, String(next));
+  return next;
 };
 
 export const getSessionHistory = () => readHistory();
@@ -33,7 +49,7 @@ export const addSessionHistoryEntry = (sessionId, meta = {}) => {
     ...history,
     {
       sessionId: id,
-      label: `${history.length + 1}번째 추천`,
+      label: `${nextSeq()}번째 추천`,
       budgetManwon: meta.budgetManwon || null,
       region: meta.region || null,
     },

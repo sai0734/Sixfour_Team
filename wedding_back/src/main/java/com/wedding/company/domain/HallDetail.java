@@ -48,6 +48,10 @@ public class HallDetail {
 
   private String imageUrl;
 
+  // 최대 수용 인원 - AI 웨딩플랜 하객수 필터용. 기존 더미데이터엔 값이 없어서 당분간 전부 null이고,
+  // null이면 "수용 가능"으로 간주해서 필터에서 제외되지 않는다 (AiPlanCandidateBuilder 쪽 쿼리 참고).
+  private Integer maxCapacity;
+
   public void change(String hallName, String address, Double latitude, Double longitude, String phone,
       String representative, HallType hallType, String description, String imageUrl) {
     this.hallName = hallName;
@@ -59,5 +63,9 @@ public class HallDetail {
     this.hallType = hallType;
     this.description = description;
     this.imageUrl = imageUrl;
+  }
+
+  public void changeMaxCapacity(Integer maxCapacity) {
+    this.maxCapacity = maxCapacity;
   }
 }

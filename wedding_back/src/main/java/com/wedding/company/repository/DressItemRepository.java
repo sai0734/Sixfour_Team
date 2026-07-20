@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -49,4 +50,15 @@ public interface DressItemRepository extends JpaRepository<DressItem, Long> {
   // 삭제되지 않은 업체의 아이템 전체 - Pageable의 Sort/개수 제한을 그대로 활용
   @Query("select di from DressItem di where di.company.delFlag = false")
   List<DressItem> findAllActive(Pageable pageable);
+
+  // AI 웨딩플랜 - 드레스 스타일 취향 없이(또는 매칭 실패 후) 아이템 단위로 예산/지역만으로 찾을 때.
+  // 5단계(아이템 단위 추천) 이전엔 이 경로도 업체 단위(CompanyRepository)로 찾았는데, 이제 처음부터
+  // 구체적인 아이템 하나를 고르도록 바꿈 - 그래야 결과 화면에 뜨는 이미지/가격이 실제로 그 아이템 것이 됨.
+  @Query("select di from DressItem di where di.company.delFlag = false "
+      + "and (:region is null or di.company.address like concat('%', :region, '%')) "
+      + "and (:maxPrice is null or di.price <= :maxPrice)")
+  List<DressItem> searchByBudget(
+      @Param("region") String region,
+      @Param("maxPrice") BigDecimal maxPrice,
+      Sort sort);
 }

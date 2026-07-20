@@ -8,6 +8,13 @@ import { getQuickRecommendations } from "../../api/aiPlanApi";
 // DetailPlanPage.jsx와 동일한 키 - 자세히/AI 모드 결과를 이어서 볼 수 있게 저장해둔 마지막 세션 id
 const LAST_SESSION_KEY = "aiplan_last_session_id";
 
+// 오늘부터 14일 뒤 날짜 - 결혼 날짜 입력 최소값 (준비 기간 최소 2주 확보)
+const MIN_WEDDING_DATE = (() => {
+  const d = new Date();
+  d.setDate(d.getDate() + 14);
+  return d.toISOString().slice(0, 10);
+})();
+
 const QuickPlanPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -19,6 +26,7 @@ const QuickPlanPage = () => {
     groomName: searchParams.get("groomName") || "",
     brideName: searchParams.get("brideName") || "",
     weddingDate: searchParams.get("weddingDate") || "",
+    guestCount: "",
   });
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -60,6 +68,7 @@ const QuickPlanPage = () => {
       groomName: form.groomName || null,
       brideName: form.brideName || null,
       weddingDate: form.weddingDate || null,
+      guestCount: form.guestCount ? Number(form.guestCount) : null,
     })
       .then((data) => setResult(data))
       .catch((err) => {
@@ -169,15 +178,30 @@ const QuickPlanPage = () => {
               />
             </div>
 
-            <div className="md:col-span-2">
+            <div>
               <label className="mb-1 block text-sm font-medium text-ink-soft">
                 결혼 날짜
               </label>
               <input
                 type="date"
+                min={MIN_WEDDING_DATE}
                 value={form.weddingDate}
                 onChange={handleChange("weddingDate")}
-                className="w-full rounded-xl border border-line px-4 py-2.5 text-ink outline-none focus:border-brand-dark md:w-1/2"
+                className="w-full rounded-xl border border-line px-4 py-2.5 text-ink outline-none focus:border-brand-dark"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium text-ink-soft">
+                하객수 (명)
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={form.guestCount}
+                onChange={handleChange("guestCount")}
+                placeholder="예: 200"
+                className="w-full rounded-xl border border-line px-4 py-2.5 text-ink outline-none focus:border-brand-dark"
               />
             </div>
           </div>
