@@ -1,101 +1,63 @@
 import { useState } from "react";
-import { useLocation } from "react-router-dom";
-import useCustomLogin from "../../hooks/useCustomLogin";
-import KakaoLoginComponent from "./KakaoLoginComponent";
+import { Link } from "react-router-dom";
 import AuthLayout from "./AuthLayout";
-import { getMyManagedCompany } from "../../api/companyApi";
-
-const initState = {
-  email: "",
-  pw: "",
-  rememberMe: false,
-};
+import useCustomLogin from "../../hooks/useCustomLogin";
 
 const inputClass =
   "w-full px-4 py-3 rounded-xl border border-rose-100 bg-blush-50/40 text-plum-900 placeholder:text-plum-500/50 focus:border-rose-400 focus:ring-4 focus:ring-rose-100 outline-none transition";
 const labelClass = "block text-sm font-semibold text-plum-900/80 mb-1.5";
+const errMsgClass = "text-rose-600 text-xs mt-1";
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const LoginComponent = () => {
-  const [loginParam, setLoginParam] = useState({ ...initState });
-  const [failInfo, setFailInfo] = useState(null);
+  const [loginParam, setLoginParam] = useState({
+    email: "",
+    pw: "",
+  });
 
-  const location = useLocation();
-  const { doLogin, moveToPath, getLoginRedirectPath, clearLoginRedirectPath } =
-    useCustomLogin();
+  const [touched, setTouched] = useState({
+    email: false,
+    pw: false,
+  });
+
+  const { doLogin, moveToPath } = useCustomLogin();
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    setLoginParam({
+      ...loginParam,
+      [e.target.name]: e.target.value,
+    });
+  };
 
-    loginParam[name] = type === "checkbox" ? checked : value;
-
-    setLoginParam({ ...loginParam });
+  const handleBlur = (field) => {
+    setTouched({
+      ...touched,
+      [field]: true,
+    });
   };
 
   const handleClickLogin = (e) => {
-    e.preventDefault();
+    setTouched({
+      email: true,
+      pw: true,
+    });
+
+    if (!loginParam.email || !EMAIL_REGEX.test(loginParam.email)) {
+      alert("올바른 이메일을 입력해 주세요.");
+      return;
+    }
+
+    if (!loginParam.pw) {
+      alert("비밀번호를 입력해 주세요.");
+      return;
+    }
 
     doLogin(loginParam).then((data) => {
-      console.log(data);
       if (data.error) {
-        if (data.error === "ERROR_ACCOUNT_LOCKED") {
-          alert(
-            "로그인 5회 실패로 계정이 잠겼습니다. 비밀번호 재설정 페이지로 이동합니다.",
-          );
-          moveToPath("/auth/password-reset");
-        } else if (
-          data.error === "ERROR_ACCOUNT_SUSPENDED" ||
-          data.error === "ERROR_ACCOUNT_DORMANT"
-        ) {
-          alert("차단(정지·휴면)된 회원입니다. 관리자에게 문의해주세요.");
-        } else if (data.error === "ERROR_ACCOUNT_WITHDRAWN") {
-          alert("탈퇴한 계정입니다.");
-        } else if (data.error === "ERROR_EMAIL_NOT_VERIFIED") {
-          alert(
-            "전송된 이메일을 확인해주세요. 인증을 완료해야 로그인할 수 있어요.",
-          );
-        } else {
-          if (data.failCount) {
-            setFailInfo({
-              failCount: data.failCount,
-              maxFailCount: data.maxFailCount,
-            });
-          }
-          alert("이메일과 패스워드를 다시 확인하세요");
-        }
+        alert("이메일 또는 비밀번호가 일치하지 않습니다.");
       } else {
-        setFailInfo(null);
-
-        const redirectPath =
-          location.state?.from || getLoginRedirectPath() || null;
-
-        // location.state.from은 다른 화면에서 실수로 객체를 넘겼을 가능성을 배제할 수 없어서,
-        // "/"로 시작하는 문자열일 때만 실제 경로로 인정 (아니면 무시하고 기본 이동)
-        const isValidRedirect =
-          typeof redirectPath === "string" && redirectPath.startsWith("/");
-
-        if (isValidRedirect) {
-          clearLoginRedirectPath();
-          alert("로그인 성공");
-          moveToPath(redirectPath);
-          return;
-        }
-
-        alert("로그인 성공");
-
-        const isAdmin = data.roleNames?.some((roleName) =>
-          ["ADMIN", "ROLE_ADMIN"].includes(roleName),
-        );
-        if (isAdmin) {
-          moveToPath("/admin");
-          return;
-        }
-        getMyManagedCompany()
-          .then((managed) => {
-            moveToPath(managed?.isManager ? "/manager/inquiries" : "/");
-          })
-          .catch(() => {
-            moveToPath("/");
-          });
+        moveToPath("/");
       }
     });
   };
@@ -106,117 +68,124 @@ const LoginComponent = () => {
     }
   };
 
+  const renderEmailMsg = () => {
+    if (touched.email && !loginParam.email)
+      return <div className={errMsgClass}>이메일은 필수 입력 항목입니다.</div>;
+    if (
+      touched.email &&
+      loginParam.email &&
+      !EMAIL_REGEX.test(loginParam.email)
+    )
+      return <div className={errMsgClass}>올바른 이메일 형식이 아니에요</div>;
+    return null;
+  };
+
+  const renderPwMsg = () => {
+    if (touched.pw && !loginParam.pw)
+      return (
+        <div className={errMsgClass}>비밀번호는 필수 입력 항목입니다.</div>
+      );
+    return null;
+  };
+
   return (
     <AuthLayout
-      eyebrow="안전한 로그인"
+      eyebrow="Wedding All In One"
       title={
         <>
-          다시 만나서
+          소중한 날을 위한
           <br />
-          반가워요
+          특별한 시작
         </>
       }
-      subtitle="로그인하고 다양한 서비스를 이용해보세요"
+      subtitle="로그인하고 나만의 맞춤 웨딩 플랜과 일정을 확인해보세요."
     >
       <div className="max-w-sm w-full mx-auto">
         <h2 className="font-display text-2xl text-plum-900 mb-1">로그인</h2>
-        <p className="text-plum-500 text-sm mb-8">계정에 로그인하세요</p>
+        <p className="text-plum-500 text-sm mb-6">
+          웨딩올인원 서비스에 오신 것을 환영합니다.
+        </p>
 
-        <form onSubmit={handleClickLogin}>
-          <div className="mb-4">
-            <label className={labelClass}>이메일</label>
-            <input
-              className={inputClass}
-              name="email"
-              type="email"
-              lang="en"
-              inputMode="email"
-              autoComplete="email"
-              autoCapitalize="off"
-              autoCorrect="off"
-              spellCheck={false}
-              placeholder="example@email.com"
-              value={loginParam.email}
-              onChange={handleChange}
-              onKeyDown={handleKeyDown}
-            ></input>
-          </div>
+        <div className="mb-4">
+          <label className={labelClass}>이메일</label>
+          <input
+            className={inputClass}
+            name="email"
+            type="text"
+            value={loginParam.email}
+            placeholder="example@email.com"
+            onChange={handleChange}
+            onBlur={() => handleBlur("email")}
+            onKeyDown={handleKeyDown}
+          />
+          {renderEmailMsg()}
+        </div>
 
-          <div className="mb-2">
-            <label className={labelClass}>비밀번호</label>
+        <div className="mb-6">
+          <label className={labelClass}>비밀번호</label>
+          <div className="relative">
             <input
               className={inputClass}
               name="pw"
               type="password"
-              placeholder="비밀번호를 입력하세요"
               value={loginParam.pw}
+              placeholder="비밀번호를 입력해주세요"
               onChange={handleChange}
+              onBlur={() => handleBlur("pw")}
               onKeyDown={handleKeyDown}
-            ></input>
+            />
           </div>
-
-          {failInfo && (
-            <div className="mb-4">
-              <div className="text-rose-600 text-xs font-medium mb-1">
-                ⚠ 비밀번호가 틀렸어요 ({failInfo.failCount}/
-                {failInfo.maxFailCount}회)
-              </div>
-              <div className="w-full h-1.5 bg-rose-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-rose-500 transition-all"
-                  style={{
-                    width: `${(failInfo.failCount / failInfo.maxFailCount) * 100}%`,
-                  }}
-                ></div>
-              </div>
-            </div>
-          )}
-
-          <div className="flex items-center justify-between mb-6 mt-4">
-            <label className="flex items-center gap-2 text-sm text-plum-900/70">
-              <input
-                type="checkbox"
-                name="rememberMe"
-                checked={loginParam.rememberMe}
-                onChange={handleChange}
-                className="accent-rose-500"
-              />
-              로그인 유지
-            </label>
-            <button
-              type="button"
-              className="text-sm text-rose-600 hover:text-rose-700 font-medium"
-              onClick={() => moveToPath("/auth/password-reset")}
-            >
-              비밀번호 찾기
-            </button>
-          </div>
-
-          <button
-            type="submit"
-            className="w-full py-3 rounded-xl bg-rose-gradient text-white font-semibold shadow-lg shadow-rose-200 hover:shadow-rose-300 hover:-translate-y-0.5 transition-all"
-          >
-            로그인
-          </button>
-        </form>
-
-        <div className="flex items-center gap-3 my-6">
-          <div className="flex-1 h-px bg-plum-900/10"></div>
-          <span className="text-xs text-plum-500">또는</span>
-          <div className="flex-1 h-px bg-plum-900/10"></div>
+          {renderPwMsg()}
         </div>
 
-        <KakaoLoginComponent />
+        <div className="flex items-center justify-between mb-6 text-sm">
+          <label className="flex items-center gap-2 cursor-pointer text-plum-700 select-none">
+            <input
+              type="checkbox"
+              className="w-4 h-4 rounded border-rose-200 text-rose-500 focus:ring-rose-400"
+            />
+            <span>로그인 유지</span>
+          </label>
+          <Link
+            to="/auth/password-reset"
+            className="text-plum-500 hover:text-rose-600 transition"
+          >
+            비밀번호 찾기
+          </Link>
+        </div>
 
-        <div className="text-center mt-6 text-sm text-plum-500">
+        <button
+          type="button"
+          className="w-full py-4 rounded-xl bg-gradient-to-r from-rose-100 to-pink-100 text-rose-700 font-semibold shadow-md shadow-rose-100 hover:shadow-rose-200 hover:-translate-y-0.5 transition-all mb-4"
+          onClick={handleClickLogin}
+        >
+          로그인하기
+        </button>
+
+        <div className="relative flex py-4 items-center">
+          <div className="flex-grow border-t border-rose-100"></div>
+          <span className="flex-shrink mx-4 text-plum-400 text-xs uppercase tracking-wider">
+            간편 로그인
+          </span>
+          <div className="flex-grow border-t border-rose-100"></div>
+        </div>
+
+        <Link
+          to="#"
+          className="w-full py-3.5 rounded-xl bg-yellow-300 text-stone-900 font-semibold shadow-md hover:bg-yellow-400 transition-all flex items-center justify-center gap-2 mb-6"
+        >
+          카카오로 로그인
+        </Link>
+
+        <p className="text-center text-sm text-plum-500">
           계정이 없으신가요?{" "}
-          <button
-            className="text-rose-600 font-semibold hover:text-rose-700"
-            onClick={() => moveToPath("/auth/join")}
+          <Link
+            to="/auth/join"
+            className="text-rose-600 font-semibold hover:underline"
           >
-            회원가입
-          </button>
-        </div>
+            회원가입하기
+          </Link>
+        </p>
       </div>
     </AuthLayout>
   );

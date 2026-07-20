@@ -349,7 +349,7 @@ const BasicMenu = () => {
         /* 데스크톱 네비 링크 — flex 중앙 정렬 (absolute 제거) */
         #mainNav .navlinks {
           display: flex;
-          gap: 28px;
+          gap: 44px;
           font-size: 17.5px;
           list-style: none;
           flex: 1;
@@ -501,7 +501,7 @@ const BasicMenu = () => {
         /* ===== 반응형 ===== */
         @media (max-width: 1100px) {
           #mainNav { padding: 18px 32px; }
-          #mainNav .navlinks { gap: 20px; font-size: 16px; }
+          #mainNav .navlinks { gap: 28px; font-size: 16px; }
         }
         @media (max-width: 960px) {
           #mainNav .navlinks { gap: 12px; font-size: 14.5px; }
