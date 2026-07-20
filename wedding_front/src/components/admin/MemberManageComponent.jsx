@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import {
+  changeMemberRole,
+  getAdminList,
   getMemberList,
   reactivateMember,
-  setDormantMember,
   suspendMember,
 } from "../../api/adminMemberApi";
 import {
@@ -44,6 +46,8 @@ const formatDate = (value) => {
 };
 
 const MemberManageComponent = () => {
+  const currentEmail = useSelector((state) => state.loginSlice?.email);
+
   const [serverData, setServerData] = useState(initState);
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState("");
@@ -73,10 +77,12 @@ const MemberManageComponent = () => {
   const [selectedCmno, setSelectedCmno] = useState("");
   const [managerLoading, setManagerLoading] = useState(false);
 
-  // 회원 목록 / 담당자 목록 탭
-  const [activeTab, setActiveTab] = useState("members"); // "members" | "managers"
+  // 회원 목록 / 담당자 목록 / 관리자 목록 탭
+  const [activeTab, setActiveTab] = useState("members"); // "members" | "managers" | "admins"
   const [managerList, setManagerList] = useState([]);
   const [managerListLoading, setManagerListLoading] = useState(false);
+  const [adminList, setAdminList] = useState([]);
+  const [adminListLoading, setAdminListLoading] = useState(false);
 
   const fetchManagerList = () => {
     setManagerListLoading(true);
@@ -89,9 +95,22 @@ const MemberManageComponent = () => {
       .finally(() => setManagerListLoading(false));
   };
 
+  const fetchAdminList = () => {
+    setAdminListLoading(true);
+    getAdminList()
+      .then((data) => setAdminList(data))
+      .catch((err) => {
+        console.error(err);
+        alert("관리자 목록을 불러오지 못했습니다.");
+      })
+      .finally(() => setAdminListLoading(false));
+  };
+
   useEffect(() => {
     if (activeTab === "managers") {
       fetchManagerList();
+    } else if (activeTab === "admins") {
+      fetchAdminList();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
@@ -260,27 +279,6 @@ const MemberManageComponent = () => {
     }
   };
 
-  const handleDormant = async (member) => {
-    if (
-      !window.confirm(
-        `${member.nickname}(${member.email}) 님을 휴면 계정으로 전환할까요?`,
-      )
-    ) {
-      return;
-    }
-
-    try {
-      setActionEmail(member.email);
-      await setDormantMember(member.email);
-      fetchList(queryParam);
-    } catch (err) {
-      console.error(err);
-      alert("휴면 전환 중 오류가 발생했습니다.");
-    } finally {
-      setActionEmail(null);
-    }
-  };
-
   const handleReactivate = async (member) => {
     if (
       !window.confirm(
@@ -302,6 +300,29 @@ const MemberManageComponent = () => {
     }
   };
 
+  const handleRoleChange = async (member, role) => {
+    const roleLabel = role === "ADMIN" ? "관리자" : "일반 사용자";
+
+    if (
+      !window.confirm(
+        `${member.nickname}(${member.email}) 님을 ${roleLabel}(으)로 변경할까요?`,
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setActionEmail(member.email);
+      await changeMemberRole(member.email, role);
+      fetchList(queryParam);
+    } catch (err) {
+      console.error(err);
+      alert("권한 변경 중 오류가 발생했습니다.");
+    } finally {
+      setActionEmail(null);
+    }
+  };
+
   return (
     <section className="mx-auto max-w-6xl p-4 text-slate-800">
       <div className="mb-6">
@@ -318,7 +339,7 @@ const MemberManageComponent = () => {
         </div>
       ) : null}
 
-      {/* 회원 목록 / 담당자 목록 탭 */}
+      {/* 회원 목록 / 담당자 목록 / 관리자 목록 탭 */}
       <div className="mb-4 flex gap-1 border-b border-slate-200">
         <button
           onClick={() => setActiveTab("members")}
@@ -340,9 +361,89 @@ const MemberManageComponent = () => {
         >
           담당자 목록
         </button>
+        <button
+          onClick={() => setActiveTab("admins")}
+          className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
+            activeTab === "admins"
+              ? "border-blue-600 text-blue-600"
+              : "border-transparent text-slate-500 hover:text-slate-700"
+          }`}
+        >
+          관리자 목록
+        </button>
       </div>
 
-      {activeTab === "managers" ? (
+      {activeTab === "admins" ? (
+        <div className="overflow-x-auto rounded-lg border border-slate-200">
+          <table className="w-full min-w-[600px] text-left text-sm">
+            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+              <tr>
+                <th className="px-4 py-3">닉네임</th>
+                <th className="px-4 py-3">이메일</th>
+                <th className="px-4 py-3">가입일</th>
+                <th className="px-4 py-3">최근 로그인</th>
+                <th className="px-4 py-3">관리</th>
+              </tr>
+            </thead>
+            <tbody>
+              {adminListLoading ? (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="px-4 py-8 text-center text-slate-400"
+                  >
+                    불러오는 중...
+                  </td>
+                </tr>
+              ) : adminList.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="px-4 py-8 text-center text-slate-400"
+                  >
+                    관리자 계정이 없습니다.
+                  </td>
+                </tr>
+              ) : (
+                adminList.map((member) => (
+                  <tr key={member.email} className="border-t border-slate-100">
+                    <td className="px-4 py-3 font-medium">
+                      {member.nickname}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">
+                      {member.email}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">
+                      {formatDate(member.regDate)}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">
+                      {formatDate(member.lastLoginAt)}
+                    </td>
+                    <td className="px-4 py-3">
+                      {member.email === currentEmail ? (
+                        <span className="text-xs text-slate-400">
+                          본인 계정이에요
+                        </span>
+                      ) : (
+                        <button
+                          disabled={actionEmail === member.email}
+                          onClick={async () => {
+                            await handleRoleChange(member, "USER");
+                            fetchAdminList();
+                          }}
+                          className="rounded-md bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-100 disabled:opacity-50"
+                        >
+                          권한 해제
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      ) : activeTab === "managers" ? (
         <div className="overflow-x-auto rounded-lg border border-slate-200">
           <table className="w-full min-w-[600px] text-left text-sm">
             <thead className="bg-slate-50 text-xs uppercase text-slate-500">
@@ -446,6 +547,7 @@ const MemberManageComponent = () => {
                 <tr>
                   <th className="px-4 py-3">닉네임</th>
                   <th className="px-4 py-3">이메일</th>
+                  <th className="px-4 py-3">권한</th>
                   <th className="px-4 py-3">가입일</th>
                   <th className="px-4 py-3">최근 로그인</th>
                   <th className="px-4 py-3">포인트</th>
@@ -457,7 +559,7 @@ const MemberManageComponent = () => {
                 {fetching ? (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={8}
                       className="px-4 py-8 text-center text-slate-400"
                     >
                       불러오는 중...
@@ -466,7 +568,7 @@ const MemberManageComponent = () => {
                 ) : serverData.dtoList.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={8}
                       className="px-4 py-8 text-center text-slate-400"
                     >
                       조건에 맞는 회원이 없습니다.
@@ -484,6 +586,29 @@ const MemberManageComponent = () => {
                       <td className="px-4 py-3 text-slate-600">
                         {member.email}
                       </td>
+                      <td className="px-4 py-3">
+                        <select
+                          value={member.admin ? "ADMIN" : "USER"}
+                          disabled={
+                            member.email === currentEmail ||
+                            member.status === "WITHDRAWN" ||
+                            actionEmail === member.email
+                          }
+                          onChange={(e) => {
+                            const role = e.target.value;
+                            if (role === "MANAGER") {
+                              openManagerModal(member);
+                              return;
+                            }
+                            handleRoleChange(member, role);
+                          }}
+                          className="rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-600 disabled:opacity-50"
+                        >
+                          <option value="USER">일반 사용자</option>
+                          <option value="ADMIN">관리자</option>
+                          <option value="MANAGER">업체 담당자</option>
+                        </select>
+                      </td>
                       <td className="px-4 py-3 text-slate-600">
                         {formatDate(member.regDate)}
                       </td>
@@ -498,11 +623,6 @@ const MemberManageComponent = () => {
                         >
                           {statusLabel[member.status] || member.status}
                         </span>
-                        {member.admin ? (
-                          <span className="ml-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 border border-blue-200">
-                            관리자
-                          </span>
-                        ) : null}
                         {member.status === "BLACKLIST" &&
                         member.suspendReason ? (
                           <div className="mt-1 text-xs text-slate-400">
@@ -533,32 +653,24 @@ const MemberManageComponent = () => {
                                 정지
                               </button>
                             )}
-                            {member.status === "ACTIVE" && (
-                              <button
-                                disabled={actionEmail === member.email}
-                                onClick={() => handleDormant(member)}
-                                className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-200 disabled:opacity-50"
-                              >
-                                휴면 전환
-                              </button>
-                            )}
-                            {(member.status === "BLACKLIST" ||
-                              member.status === "DORMANT") && (
+                            {member.status === "BLACKLIST" && (
                               <button
                                 disabled={actionEmail === member.email}
                                 onClick={() => handleReactivate(member)}
                                 className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
                               >
-                                정상 복귀
+                                정지 해제
                               </button>
                             )}
-                            <button
-                              disabled={actionEmail === member.email}
-                              onClick={() => openManagerModal(member)}
-                              className="rounded-md bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-100 disabled:opacity-50"
-                            >
-                              업체 담당자 임명
-                            </button>
+                            {member.status === "DORMANT" && (
+                              <button
+                                disabled={actionEmail === member.email}
+                                onClick={() => handleReactivate(member)}
+                                className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
+                              >
+                                휴면 해제
+                              </button>
+                            )}
                           </div>
                         )}
                       </td>
