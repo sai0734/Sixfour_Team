@@ -22,20 +22,26 @@ export const suspendMember = async (email, reason, suspendDays) => {
   return res.data;
 };
 
-export const setDormantMember = async (email) => {
-  const res = await jwtAxios.put(
-    `${host}/${encodeURIComponent(email)}/status`,
-    { status: "DORMANT" },
-  );
-
-  return res.data;
-};
-
 export const reactivateMember = async (email) => {
   const res = await jwtAxios.put(
     `${host}/${encodeURIComponent(email)}/status`,
     { status: "ACTIVE" },
   );
+
+  return res.data;
+};
+
+export const changeMemberRole = async (email, role) => {
+  const res = await jwtAxios.put(
+    `${host}/${encodeURIComponent(email)}/role`,
+    { role },
+  );
+
+  return res.data;
+};
+
+export const getAdminList = async () => {
+  const res = await jwtAxios.get(`${host}/admins`);
 
   return res.data;
 };
