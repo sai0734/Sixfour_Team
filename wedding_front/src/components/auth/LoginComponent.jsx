@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import AuthLayout from "./AuthLayout";
+import KakaoLoginComponent from "./KakaoLoginComponent";
 import useCustomLogin from "../../hooks/useCustomLogin";
 
 const inputClass =
@@ -170,12 +171,9 @@ const LoginComponent = () => {
           <div className="flex-grow border-t border-rose-100"></div>
         </div>
 
-        <Link
-          to="#"
-          className="w-full py-3.5 rounded-xl bg-yellow-300 text-stone-900 font-semibold shadow-md hover:bg-yellow-400 transition-all flex items-center justify-center gap-2 mb-6"
-        >
-          카카오로 로그인
-        </Link>
+        <div className="mb-6">
+          <KakaoLoginComponent />
+        </div>
 
         <p className="text-center text-sm text-plum-500">
           계정이 없으신가요?{" "}
