@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import {
   getOne as getCompanyOne,
@@ -18,13 +18,27 @@ import {
 const ReservationReserveComponent = () => {
   const { cmno } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const loginState = useSelector((state) => state.loginSlice);
+
+  // AI 웨딩플랜 결과에서 "이 조합으로 예약 진행"을 누르면 이 값들이 붙어서 들어온다.
+  // flow=aiplan이면 이 예약 하나가 끝난 뒤 큐에 남은 다음 업체로 자동으로 이어준다.
+  const flow = searchParams.get("flow");
+  const flowQueue = searchParams.get("queue");
+  const flowIndex = Number(searchParams.get("flowIndex")) || 1;
+  const flowTotal = Number(searchParams.get("flowTotal")) || 1;
+  const returnSessionId = searchParams.get("returnSessionId");
+  const isAiPlanFlow = flow === "aiplan";
 
   const [company, setCompany] = useState(null);
   const [fetching, setFetching] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  const [weddingDate, setWeddingDate] = useState("");
+  // flowDate가 있으면(먼저 예약한 업체에서 고른 날짜) 그대로 미리 채워서, 조합 안 업체들끼리
+  // 결혼 날짜가 따로 놀지 않게 한다. 수정은 그대로 가능.
+  const [weddingDate, setWeddingDate] = useState(
+    () => searchParams.get("flowDate") || "",
+  );
   const [selectedKey, setSelectedKey] = useState("");
   const [memo, setMemo] = useState("");
 
@@ -159,6 +173,36 @@ const ReservationReserveComponent = () => {
         amount: selectedOption ? selectedOption.price : 0,
       });
 
+      // AI 웨딩플랜 조합 예약 흐름이면 마이페이지로 보내는 대신 큐에 남은 다음 업체로 이어준다.
+      if (isAiPlanFlow) {
+        const remaining = flowQueue ? flowQueue.split(",").filter(Boolean) : [];
+
+        if (remaining.length > 0) {
+          const [nextCmno, ...rest] = remaining;
+          alert("예약이 등록되었습니다. 이어서 다음 업체를 예약할게요.");
+
+          const nextParams = new URLSearchParams({
+            flow: "aiplan",
+            flowIndex: String(flowIndex + 1),
+            flowTotal: String(flowTotal),
+            queue: rest.join(","),
+            flowDate: weddingDate,
+          });
+          if (returnSessionId) nextParams.set("returnSessionId", returnSessionId);
+
+          navigate(`/companies/reserve/${nextCmno}?${nextParams.toString()}`);
+          return;
+        }
+
+        alert("구성하신 조합 전체 예약 신청이 완료됐어요. 업체 확인 후 결제를 진행할 수 있어요.");
+        navigate(
+          returnSessionId
+            ? `/aiplan/detail?sessionId=${returnSessionId}&reserved=1`
+            : "/mypage?tab=reservation",
+        );
+        return;
+      }
+
       alert(
         selectedOption && selectedOption.price > 0
           ? "예약이 등록되었습니다. 업체 확인 후 결제를 진행할 수 있습니다."
@@ -181,6 +225,11 @@ const ReservationReserveComponent = () => {
 
   return (
     <div className="max-w-[700px] mx-auto px-4 py-10">
+      {isAiPlanFlow && (
+        <p className="mb-3 inline-block rounded-full bg-blush-100 px-3 py-1 text-xs font-medium text-brand-deep">
+          AI 웨딩플랜 조합 예약 · {flowIndex}/{flowTotal}곳
+        </p>
+      )}
       <p className="mb-1 text-xs text-ink-faint">
         {categoryLabel[company.category] || company.category} {" > "}
         <span className="text-ink-soft">{company.name}</span>
@@ -218,6 +267,11 @@ const ReservationReserveComponent = () => {
           {formatDate(new Date(minWeddingDate))} 이후 날짜만 선택할 수 있어요.
         </p>
         {/* 재원 추가 끝 */}
+        {isAiPlanFlow && flowIndex > 1 && (
+          <p className="mt-1 text-xs text-ink-faint">
+            앞서 고르신 날짜로 미리 채워뒀어요. 다른 업체와 날짜를 맞추려면 그대로 두세요.
+          </p>
+        )}
         {/* 재원 추가 - 중복 예약(같은 옵션+같은 날짜) 확인 결과 */}
         {selectedOption && weddingDate && checkingDate && (
           <p className="mt-2 text-xs text-ink-faint">확인 중...</p>

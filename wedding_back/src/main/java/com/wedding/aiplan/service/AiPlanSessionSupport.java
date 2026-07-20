@@ -59,11 +59,24 @@ public class AiPlanSessionSupport {
 
         session = sessionRepository.save(session);
         saveHistory(session, 0, null);
+        markPendingStatus(combo); // 새로 만든 세션은 전부 PENDING - 프론트에 상태 필드로 알려줌
         return session;
     }
 
+    private void markPendingStatus(AiPlanPackageCandidateDTO combo) {
+        combo.setHallStatus(combo.getHallName() != null ? SlotStatus.PENDING.name() : null);
+        combo.setStudioStatus(combo.getStudioName() != null ? SlotStatus.PENDING.name() : null);
+        combo.setDressStatus(combo.getDressName() != null ? SlotStatus.PENDING.name() : null);
+        combo.setMakeupStatus(combo.getMakeupName() != null ? SlotStatus.PENDING.name() : null);
+    }
+
+    // cmno가 없으면(예: AI 모드에서 카테고리를 통째로 제외한 조합) 처음부터 EXCLUDED로 시작한다 -
+    // 안 그러면 리파인 프롬프트/사이드패널 상태가 "아직 안 고른 PENDING"으로 잘못 표시된다.
     private SlotState slotOf(Long cmno) {
-        return SlotState.builder().status(SlotStatus.PENDING).selectedCmno(cmno).build();
+        return SlotState.builder()
+                .status(cmno != null ? SlotStatus.PENDING : SlotStatus.EXCLUDED)
+                .selectedCmno(cmno)
+                .build();
     }
 
     public Optional<AiPlanSession> findSession(Long sessionId) {
@@ -148,18 +161,22 @@ public class AiPlanSessionSupport {
                 .hallName(hall.name())
                 .hallImageUrl(hall.company != null ? AiPlanCandidateBuilder.firstImage(hall.company) : null)
                 .hallReason(hall.reasonLabel())
+                .hallStatus(hall.status.name())
                 .studioCmno(studio.cmno())
                 .studioName(studio.name())
                 .studioImageUrl(studio.company != null ? AiPlanCandidateBuilder.firstImage(studio.company) : null)
                 .studioReason(studio.reasonLabel())
+                .studioStatus(studio.status.name())
                 .dressCmno(dress.cmno())
                 .dressName(dress.name())
                 .dressImageUrl(dress.company != null ? candidateBuilder.dressOptionImage(dress.company) : null)
                 .dressReason(dress.reasonLabel())
+                .dressStatus(dress.status.name())
                 .makeupCmno(makeup.cmno())
                 .makeupName(makeup.name())
                 .makeupImageUrl(makeup.company != null ? AiPlanCandidateBuilder.firstImage(makeup.company) : null)
                 .makeupReason(makeup.reasonLabel())
+                .makeupStatus(makeup.status.name())
                 .sourceType(sourceType)
                 .build();
     }

@@ -2,6 +2,7 @@ package com.wedding.aiplan.service;
 
 import java.math.BigDecimal;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +57,13 @@ public class AiPlanCandidateBuilder {
     static final double DRESS_RATIO = 0.25;
     static final double STUDIO_RATIO = 0.15;
     static final double MAKEUP_RATIO = 0.15;
+
+    // 개별 조합 합계가 예산보다 이만큼(500만원) 넘게 모자라면, 카테고리 캡을 넘어서라도
+    // 더 비싼 대안으로 갈아타서 합계를 예산 가까이로 끌어올린다.
+    // AiPlanAiServiceImpl(AI 모드)도 동일한 업그레이드 폭/순서를 재사용한다 (같은 패키지라 접근 가능하게 package-private).
+    static final long BUDGET_TOLERANCE = 5_000_000L;
+    static final List<CompanyCategory> UPGRADE_ORDER =
+            List.of(CompanyCategory.HALL, CompanyCategory.DRESS, CompanyCategory.STUDIO, CompanyCategory.MAKEUP);
 
     public AiPlanQuickResultDTO recommend(String region, Long budget, AiPlanCategoryPreferences prefs) {
 
@@ -122,10 +130,18 @@ public class AiPlanCandidateBuilder {
             return pool;
         }
 
-        BigDecimal limit = BigDecimal.valueOf(budget).multiply(BigDecimal.valueOf(PACKAGE_FIT_TOLERANCE));
+        BigDecimal upperLimit = BigDecimal.valueOf(budget).multiply(BigDecimal.valueOf(PACKAGE_FIT_TOLERANCE));
+
+        // 상한선만 있으면 예산보다 한참 싼 패키지도 "적합"으로 통과해버린다. 패키지는 미리 고정된
+        // 묶음이라 개별조합처럼 부족한 만큼 더 비싼 대안으로 갈아탈 수가 없으니, 하한선(예산-500만원)도
+        // 걸어서 너무 싼 건 후보에서 뺀다. 그 결과 남는 패키지가 없으면 recommend()에서 자동으로
+        // 개별조합 경로(예산 근접도 보정 있음, fillTowardBudget)로 넘어간다.
+        BigDecimal lowerLimit = BigDecimal.valueOf(Math.max(budget - BUDGET_TOLERANCE, 0));
 
         return pool.stream()
-                .filter(p -> p.getPackagePrice() != null && p.getPackagePrice().compareTo(limit) <= 0)
+                .filter(p -> p.getPackagePrice() != null
+                        && p.getPackagePrice().compareTo(upperLimit) <= 0
+                        && p.getPackagePrice().compareTo(lowerLimit) >= 0)
                 .toList();
     }
 
@@ -201,6 +217,21 @@ public class AiPlanCandidateBuilder {
             return null;
         }
 
+        if (budget != null && budget > 0) {
+            Map<CompanyCategory, Pick> picks = new EnumMap<>(CompanyCategory.class);
+            picks.put(CompanyCategory.HALL, hall);
+            picks.put(CompanyCategory.DRESS, dress);
+            picks.put(CompanyCategory.STUDIO, studio);
+            picks.put(CompanyCategory.MAKEUP, makeup);
+
+            fillTowardBudget(picks, region, budget, prefs);
+
+            hall = picks.get(CompanyCategory.HALL);
+            dress = picks.get(CompanyCategory.DRESS);
+            studio = picks.get(CompanyCategory.STUDIO);
+            makeup = picks.get(CompanyCategory.MAKEUP);
+        }
+
         boolean usedRegionFallback = hall.usedRegionFallback || dress.usedRegionFallback
                 || studio.usedRegionFallback || makeup.usedRegionFallback;
         boolean usedStyleFallback = hall.usedStyleFallback || dress.usedStyleFallback
@@ -256,6 +287,54 @@ public class AiPlanCandidateBuilder {
         return budget != null && budget > 0 ? Math.round(budget * ratio) : null;
     }
 
+    // 카테고리별 예산을 ratio로 미리 쪼개서 고르면, 더미데이터가 부실할 때 카테고리 각각은
+    // "그 캡 안에서 최선"이어도 합계가 전체 예산보다 한참 못 미칠 수 있다. 오차가 톨러런스보다
+    // 크면 남은 여유 예산을 카테고리 순서대로 흘려보내서 더 비싼 대안이 있으면 갈아탄다.
+    // 취향(prefs)이 실제로 매칭된 카테고리는 예산 때문에 임의로 바꾸지 않는다.
+    private void fillTowardBudget(Map<CompanyCategory, Pick> picks, String region, Long budget,
+                                  AiPlanCategoryPreferences prefs) {
+
+        long total = picks.values().stream()
+                .mapToLong(p -> p.company.getPriceAvg() != null ? p.company.getPriceAvg().longValue() : 0L)
+                .sum();
+        long leftover = budget - total;
+
+        for (CompanyCategory category : UPGRADE_ORDER) {
+            if (leftover <= BUDGET_TOLERANCE) {
+                break;
+            }
+
+            Pick current = picks.get(category);
+            if (hasPreference(category, prefs) && !current.usedStyleFallback) {
+                continue; // 취향에 맞춰 고른 곳은 예산 때문에 임의로 안 바꿈
+            }
+
+            BigDecimal currentPrice = current.company.getPriceAvg() != null
+                    ? current.company.getPriceAvg() : BigDecimal.ZERO;
+            BigDecimal newCap = currentPrice.add(BigDecimal.valueOf(leftover));
+            String searchRegion = current.usedRegionFallback ? null : region;
+
+            Company upgraded = searchOne(category, searchRegion,
+                    currentPrice.add(BigDecimal.ONE), newCap, Sort.by("priceAvg").descending());
+
+            if (upgraded != null && upgraded.getPriceAvg() != null
+                    && upgraded.getPriceAvg().compareTo(currentPrice) > 0) {
+                long gained = upgraded.getPriceAvg().longValue() - currentPrice.longValue();
+                picks.put(category, new Pick(upgraded, current.usedRegionFallback, current.usedStyleFallback));
+                leftover -= gained;
+            }
+        }
+    }
+
+    private boolean hasPreference(CompanyCategory category, AiPlanCategoryPreferences prefs) {
+        return switch (category) {
+            case HALL -> prefs.getHallType() != null;
+            case STUDIO -> prefs.getStudioKeyword() != null;
+            case DRESS -> prefs.getDressKeyword() != null;
+            case MAKEUP -> prefs.getMakeupKeyword() != null;
+        };
+    }
+
     // 홀/스튜디오/메이크업 대표 이미지 - 업체 대표 이미지 첫 장 (Company.imageList ord=0).
     static String firstImage(Company company) {
         if (company == null || company.getImageList() == null || company.getImageList().isEmpty()) {
@@ -287,12 +366,7 @@ public class AiPlanCandidateBuilder {
 
         BigDecimal maxPrice = allocatedBudget != null ? BigDecimal.valueOf(allocatedBudget) : null;
 
-        boolean hasPreference = switch (category) {
-            case HALL -> prefs.getHallType() != null;
-            case STUDIO -> prefs.getStudioKeyword() != null;
-            case DRESS -> prefs.getDressKeyword() != null;
-            case MAKEUP -> prefs.getMakeupKeyword() != null;
-        };
+        boolean hasPreference = hasPreference(category, prefs);
 
         if (hasPreference) {
             Company styled = findStyled(category, region, maxPrice, prefs);
@@ -350,19 +424,19 @@ public class AiPlanCandidateBuilder {
 
         BigDecimal maxPrice = allocatedBudget != null ? BigDecimal.valueOf(allocatedBudget) : null;
 
-        Company found = searchOne(category, region, maxPrice, Sort.by("priceAvg").descending());
+        Company found = searchOne(category, region, null, maxPrice, Sort.by("priceAvg").descending());
         if (found != null) {
             return new Pick(found, false, false);
         }
 
         if (region != null) {
-            found = searchOne(category, null, maxPrice, Sort.by("priceAvg").descending());
+            found = searchOne(category, null, null, maxPrice, Sort.by("priceAvg").descending());
             if (found != null) {
                 return new Pick(found, true, false);
             }
         }
 
-        found = searchOne(category, null, null, Sort.by("priceAvg").ascending());
+        found = searchOne(category, null, null, null, Sort.by("priceAvg").ascending());
         if (found != null) {
             return new Pick(found, region != null, false);
         }
@@ -370,13 +444,19 @@ public class AiPlanCandidateBuilder {
         return null;
     }
 
-    private Company searchOne(CompanyCategory category, String keyword, BigDecimal maxPrice, Sort sort) {
+    private Company searchOne(CompanyCategory category, String keyword, BigDecimal minPrice, BigDecimal maxPrice,
+                              Sort sort) {
 
         List<Company> content = companyRepository
-                .searchList(category, keyword, null, maxPrice, PageRequest.of(0, 1, sort))
+                .searchList(category, keyword, minPrice, maxPrice, PageRequest.of(0, 1, sort))
                 .getContent();
 
         return content.isEmpty() ? null : content.get(0);
+    }
+
+    // AiPlanAiServiceImpl(AI 모드)의 예산 근접도 보정에서 재사용 - 가격 구간 안에서 가장 비싼 후보 하나.
+    Company findMostExpensiveWithin(CompanyCategory category, String region, BigDecimal minPrice, BigDecimal maxPrice) {
+        return searchOne(category, region, minPrice, maxPrice, Sort.by("priceAvg").descending());
     }
 
     private Company findFirstDistinctCompany(List<DressItem> items) {

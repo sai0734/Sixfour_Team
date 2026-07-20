@@ -1,5 +1,7 @@
 package com.wedding.aiplan.controller;
 
+import java.util.List;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,6 +13,8 @@ import com.wedding.aiplan.dto.AiPlanDetailRequestDTO;
 import com.wedding.aiplan.dto.AiPlanQuickRequestDTO;
 import com.wedding.aiplan.dto.AiPlanQuickResultDTO;
 import com.wedding.aiplan.dto.AiPlanRefineRequestDTO;
+import com.wedding.aiplan.dto.AiPlanSlotActionRequestDTO;
+import com.wedding.aiplan.dto.AiPlanTurnDTO;
 import com.wedding.aiplan.service.AiPlanAiService;
 import com.wedding.aiplan.service.AiPlanDetailService;
 import com.wedding.aiplan.service.AiPlanQuickService;
@@ -75,6 +79,33 @@ public class AiPlanController {
         log.info("AiPlan rollback request: sessionId={}", sessionId);
 
         return aiPlanRefineService.rollback(sessionId);
+    }
+
+    // 사이드패널 확정/해제 버튼 - AI 안 거치고 슬롯 상태 직접 반영
+    @PostMapping("/slot")
+    public AiPlanQuickResultDTO slot(@RequestBody AiPlanSlotActionRequestDTO requestDTO) {
+
+        log.info("AiPlan slot action request: {}", requestDTO);
+
+        return aiPlanRefineService.applySlotAction(requestDTO);
+    }
+
+    // 새로고침해도 결과가 안 날아가게 - 프론트가 URL에 들고 있는 sessionId로 복원
+    @GetMapping("/session/{sessionId}")
+    public AiPlanQuickResultDTO session(@PathVariable Long sessionId) {
+
+        log.info("AiPlan session restore request: sessionId={}", sessionId);
+
+        return aiPlanRefineService.getSession(sessionId);
+    }
+
+    // 다듬기 대화 기록 - 사이드바 "다듬은 기록 보기" 펼치기용
+    @GetMapping("/session/{sessionId}/history")
+    public List<AiPlanTurnDTO> refineHistory(@PathVariable Long sessionId) {
+
+        log.info("AiPlan refine history request: sessionId={}", sessionId);
+
+        return aiPlanRefineService.getRefineHistory(sessionId);
     }
 
 }
