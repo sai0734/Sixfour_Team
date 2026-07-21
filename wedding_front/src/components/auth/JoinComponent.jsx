@@ -8,6 +8,7 @@ import {
 } from "../../api/authApi";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import AuthLayout from "./AuthLayout";
+import AlertModal from "./AlertModal";
 
 const initState = {
   email: "",
@@ -51,7 +52,16 @@ const JoinComponent = () => {
     phone: false,
     address: false,
   });
+  const [alertMessage, setAlertMessage] = useState("");
+  const [pendingLoginRedirect, setPendingLoginRedirect] = useState(false);
   const { moveToLogin } = useCustomLogin();
+
+  const closeAlert = () => {
+    setAlertMessage("");
+    if (pendingLoginRedirect) {
+      moveToLogin();
+    }
+  };
 
   const formatPhoneNumber = (value) => {
     const digits = value.replace(/[^0-9]/g, "").slice(0, 11);
@@ -161,7 +171,7 @@ const JoinComponent = () => {
     markTouched("address");
 
     if (!window.daum || !window.daum.Postcode) {
-      alert(
+      setAlertMessage(
         "주소 검색 기능을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
       );
       return;
@@ -188,71 +198,71 @@ const JoinComponent = () => {
     });
 
     if (!joinParam.email || !joinParam.pw || !joinParam.nickname) {
-      alert("이메일, 비밀번호, 닉네임은 필수입니다.");
+      setAlertMessage("이메일, 비밀번호, 닉네임은 필수입니다.");
       return;
     }
 
     if (!EMAIL_REGEX.test(joinParam.email)) {
-      alert("올바른 이메일 형식이 아닙니다.");
+      setAlertMessage("올바른 이메일 형식이 아닙니다.");
       return;
     }
 
     if (emailStatus === "unavailable") {
-      alert("이미 사용 중인 이메일입니다.");
+      setAlertMessage("이미 사용 중인 이메일입니다.");
       return;
     }
 
     if (!PW_REGEX.test(joinParam.pw)) {
-      alert(
+      setAlertMessage(
         "비밀번호는 영문, 숫자, 특수문자를 모두 포함해 8자 이상이어야 합니다.",
       );
       return;
     }
 
     if (joinParam.pw !== joinParam.pwCheck) {
-      alert("비밀번호가 일치하지 않습니다.");
+      setAlertMessage("비밀번호가 일치하지 않습니다.");
       return;
     }
 
     if (nicknameStatus === "unavailable") {
-      alert("이미 사용 중인 닉네임입니다. 다른 닉네임을 사용해주세요.");
+      setAlertMessage("이미 사용 중인 닉네임입니다. 다른 닉네임을 사용해주세요.");
       return;
     }
 
     if (!joinParam.name) {
-      alert("이름은 필수입니다.");
+      setAlertMessage("이름은 필수입니다.");
       return;
     }
 
     if (!joinParam.phone) {
-      alert("휴대폰 번호는 필수입니다.");
+      setAlertMessage("휴대폰 번호는 필수입니다.");
       return;
     }
 
     if (!PHONE_REGEX.test(joinParam.phone)) {
-      alert("올바른 휴대폰 번호 형식이 아닙니다. (예: 010-1234-5678)");
+      setAlertMessage("올바른 휴대폰 번호 형식이 아닙니다. (예: 010-1234-5678)");
       return;
     }
 
     if (phoneStatus === "unavailable") {
-      alert("이미 사용 중인 휴대폰 번호입니다.");
+      setAlertMessage("이미 사용 중인 휴대폰 번호입니다.");
       return;
     }
 
     if (phoneStatus === "blocked") {
-      alert(
+      setAlertMessage(
         "정지 또는 휴면 처리된 회원과 동일한 전화번호입니다. 관리자에게 문의해주세요.",
       );
       return;
     }
 
     if (!joinParam.address) {
-      alert("주소는 필수입니다.");
+      setAlertMessage("주소는 필수입니다.");
       return;
     }
 
     if (!joinParam.termsAgree || !joinParam.privacyAgree) {
-      alert("이용약관과 개인정보처리방침에 동의해야 가입할 수 있습니다.");
+      setAlertMessage("이용약관과 개인정보처리방침에 동의해야 가입할 수 있습니다.");
       return;
     }
 
@@ -267,11 +277,11 @@ const JoinComponent = () => {
       .catch((err) => {
         console.log(err);
         if (err.response && err.response.status === 409) {
-          alert("이미 가입된 이메일입니다.");
+          setAlertMessage("이미 가입된 이메일입니다.");
         } else if (err.response && err.response.status === 400) {
-          alert("입력값을 다시 확인해 주세요.");
+          setAlertMessage("입력값을 다시 확인해 주세요.");
         } else {
-          alert("회원가입 중 오류가 발생했습니다.");
+          setAlertMessage("회원가입 중 오류가 발생했습니다.");
         }
       });
   };
@@ -281,19 +291,19 @@ const JoinComponent = () => {
       .then((data) => {
         console.log(data);
         if (data.result === "success") {
-          alert(
+          setAlertMessage(
             "인증 메일을 다시 보냈습니다. 메일함(스팸함 포함)을 확인해 주세요.",
           );
         } else if (data.reason === "ALREADY_VERIFIED") {
-          alert("이미 인증이 완료된 계정입니다. 로그인해 주세요.");
-          moveToLogin();
+          setPendingLoginRedirect(true);
+          setAlertMessage("이미 인증이 완료된 계정입니다. 로그인해 주세요.");
         } else {
-          alert("재발송에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+          setAlertMessage("재발송에 실패했습니다. 잠시 후 다시 시도해 주세요.");
         }
       })
       .catch((err) => {
         console.log(err);
-        alert("재발송 중 오류가 발생했습니다.");
+        setAlertMessage("재발송 중 오류가 발생했습니다.");
       });
   };
 
@@ -412,7 +422,7 @@ const JoinComponent = () => {
           <div className="w-16 h-16 rounded-full bg-blush-100 flex items-center justify-center mx-auto mb-6 text-3xl">
             ✉️
           </div>
-          <h2 className="font-display text-2xl text-plum-900 mb-2">
+          <h2 className="font-body text-2xl text-plum-900 mb-2">
             메일함을 확인해 주세요
           </h2>
           <p className="text-plum-500 text-sm mb-1">
@@ -445,6 +455,8 @@ const JoinComponent = () => {
             이메일을 잘못 입력했나요? 다시 입력하기
           </button>
         </div>
+
+        <AlertModal message={alertMessage} onClose={closeAlert} />
       </AuthLayout>
     );
   }
@@ -464,7 +476,7 @@ const JoinComponent = () => {
       subtitle="가입 후 모든 서비스를 자유롭게 이용하세요"
     >
       <div className="max-w-sm w-full mx-auto">
-        <h2 className="font-display text-2xl text-plum-900 mb-1">
+        <h2 className="font-body text-2xl text-plum-900 mb-1">
           계정 만들기
         </h2>
         <p className="text-plum-500 text-sm mb-6">
@@ -669,6 +681,8 @@ const JoinComponent = () => {
           </button>
         </div>
       </div>
+
+      <AlertModal message={alertMessage} onClose={closeAlert} />
     </AuthLayout>
   );
 };
