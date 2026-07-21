@@ -3,16 +3,22 @@ package com.wedding.aidress.controller;
 import com.wedding.aidress.dto.AiDressTryOnRequestDTO;
 import com.wedding.aidress.dto.AiDressTryOnResponseDTO;
 import com.wedding.aidress.dto.DressTryOnItemDTO;
+import com.wedding.aidress.dto.TryOnHistoryDTO;
+import com.wedding.aidress.dto.TryOnHistoryUpdateDTO;
 import com.wedding.aidress.service.AiDressTryOnService;
 import com.wedding.global.dto.PageRequestDTO;
 import com.wedding.global.dto.PageResponseDTO;
 import java.security.Principal;
+import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -26,13 +32,11 @@ public class AiDressTryOnController {
 
   private final AiDressTryOnService aiDressTryOnService;
 
-  // 드레스 목록 (DB)
   @GetMapping("/dresses")
   public PageResponseDTO<DressTryOnItemDTO> dresses(PageRequestDTO pageRequestDTO) {
     return aiDressTryOnService.getDressList(pageRequestDTO);
   }
 
-  // 내 사진 저장
   @PreAuthorize("hasAnyRole('USER')")
   @PostMapping(value = "/my-photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public Map<String, String> uploadMyPhoto(
@@ -42,19 +46,43 @@ public class AiDressTryOnController {
     return Map.of("photoFileName", fileName);
   }
 
-  // 내 사진 조회
   @PreAuthorize("hasAnyRole('USER')")
   @GetMapping("/my-photo")
   public Map<String, String> getMyPhoto(Principal principal) {
     return Map.of("photoFileName", aiDressTryOnService.getMyPhoto(principal.getName()));
   }
 
-  // 합성 실행
   @PreAuthorize("hasAnyRole('USER')")
   @PostMapping("/try-on")
   public AiDressTryOnResponseDTO tryOn(
       Principal principal,
       @RequestBody AiDressTryOnRequestDTO requestDTO) {
     return aiDressTryOnService.tryOn(principal.getName(), requestDTO);
+  }
+
+  /** 이전 합성 결과 기록 (최신순) */
+  @PreAuthorize("hasAnyRole('USER')")
+  @GetMapping("/history")
+  public List<TryOnHistoryDTO> history(Principal principal) {
+    return aiDressTryOnService.getHistory(principal.getName());
+  }
+
+  /** 배경 프롬프트 수정(재합성). 프롬프트 비우면 CatVTON 원본으로 되돌림 */
+  @PreAuthorize("hasAnyRole('USER')")
+  @PutMapping("/history/{historyId}")
+  public TryOnHistoryDTO updateHistory(
+      Principal principal,
+      @PathVariable Long historyId,
+      @RequestBody TryOnHistoryUpdateDTO updateDTO) {
+    return aiDressTryOnService.updateHistory(principal.getName(), historyId, updateDTO);
+  }
+
+  @PreAuthorize("hasAnyRole('USER')")
+  @DeleteMapping("/history/{historyId}")
+  public Map<String, String> deleteHistory(
+      Principal principal,
+      @PathVariable Long historyId) {
+    aiDressTryOnService.deleteHistory(principal.getName(), historyId);
+    return Map.of("result", "SUCCESS");
   }
 }
