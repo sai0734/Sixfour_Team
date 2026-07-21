@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,7 @@ import com.wedding.company.domain.Company;
 import com.wedding.company.domain.DressItem;
 import com.wedding.company.domain.HallItem;
 import com.wedding.company.repository.CompanyRepository;
+import com.wedding.member.dto.MemberDTO;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -52,6 +55,7 @@ public class AiPlanSessionSupport {
                                        AiPlanPackageCandidateDTO combo) {
 
         AiPlanSession session = AiPlanSession.builder()
+                .memberEmail(currentMemberEmailOrNull())
                 .budget(budget)
                 .region(region)
                 .weddingDate(weddingDate)
@@ -66,6 +70,16 @@ public class AiPlanSessionSupport {
         saveHistory(session, 0, null);
         markPendingStatus(combo); // 새로 만든 세션은 전부 PENDING - 프론트에 상태 필드로 알려줌
         return session;
+    }
+
+    // JWTCheckFilter가 aiplan 공개 경로에서도 토큰이 있으면 SecurityContext를 채워두므로,
+    // 로그인 상태로 세션을 만들면 여기서 이메일을 꺼내 세션에 남긴다. 비로그인이면 null 그대로.
+    private String currentMemberEmailOrNull() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !(auth.getPrincipal() instanceof MemberDTO memberDTO)) {
+            return null;
+        }
+        return memberDTO.getEmail();
     }
 
     private void markPendingStatus(AiPlanPackageCandidateDTO combo) {
