@@ -24,6 +24,8 @@ import com.wedding.company.domain.DressItem;
 import com.wedding.company.domain.HallDetail;
 import com.wedding.company.domain.HallItem;
 import com.wedding.company.domain.HallType;
+import com.wedding.company.domain.MakeupDetail;
+import com.wedding.company.domain.MakeupPackage;
 import com.wedding.company.domain.MakeupPackageType;
 import com.wedding.company.domain.StudioDetail;
 import com.wedding.company.repository.CompanyPackageRepository;
@@ -31,6 +33,7 @@ import com.wedding.company.repository.CompanyRepository;
 import com.wedding.company.repository.DressItemRepository;
 import com.wedding.company.repository.HallDetailRepository;
 import com.wedding.company.repository.HallItemRepository;
+import com.wedding.company.repository.MakeupDetailRepository;
 import com.wedding.company.repository.MakeupPackageRepository;
 import com.wedding.company.repository.StudioDetailRepository;
 
@@ -53,11 +56,15 @@ public class AiPlanCandidateBuilder {
     private final StudioDetailRepository studioDetailRepository;
     private final DressItemRepository dressItemRepository;
     private final MakeupPackageRepository makeupPackageRepository;
+    private final MakeupDetailRepository makeupDetailRepository;
 
     private static final int MAX_CANDIDATES = 5;
 
     // 메이크업 패키지 타입 매칭 후보 풀 크기 - 현재 더미데이터가 메이크업 업체 10곳뿐이라 넉넉히 잡음
     private static final int MAKEUP_POOL_SIZE = 30;
+
+    // "다시 찾기"에서 지금 고른 업체를 뺀 다음 순위를 찾기 위해, 원래 1개만 가져오던 걸 이만큼 넉넉히 가져온다.
+    private static final int EXCLUDE_FETCH_SIZE = 5;
     private static final double BUDGET_WEIGHT = 0.7;
     private static final double DISTANCE_WEIGHT = 0.3;
 
@@ -306,10 +313,11 @@ public class AiPlanCandidateBuilder {
     private ComboResult buildIndividualCombo(String region, Long budget, Integer guestCount,
                                              AiPlanCategoryPreferences prefs) {
 
-        Pick hall = pickBestCompany(CompanyCategory.HALL, region, allocate(budget, HALL_RATIO), guestCount, prefs);
-        Pick dress = pickBestCompany(CompanyCategory.DRESS, region, allocate(budget, DRESS_RATIO), guestCount, prefs);
-        Pick studio = pickBestCompany(CompanyCategory.STUDIO, region, allocate(budget, STUDIO_RATIO), guestCount, prefs);
-        Pick makeup = pickBestCompany(CompanyCategory.MAKEUP, region, allocate(budget, MAKEUP_RATIO), guestCount, prefs);
+        // 처음 추천 시점이라 아직 제외할 업체가 없음(null) - "다시 찾기"용 exclude는 pickOne()에서만 씀.
+        Pick hall = pickBestCompany(CompanyCategory.HALL, region, allocate(budget, HALL_RATIO), guestCount, prefs, null);
+        Pick dress = pickBestCompany(CompanyCategory.DRESS, region, allocate(budget, DRESS_RATIO), guestCount, prefs, null);
+        Pick studio = pickBestCompany(CompanyCategory.STUDIO, region, allocate(budget, STUDIO_RATIO), guestCount, prefs, null);
+        Pick makeup = pickBestCompany(CompanyCategory.MAKEUP, region, allocate(budget, MAKEUP_RATIO), guestCount, prefs, null);
 
         if (hall == null || dress == null || studio == null || makeup == null) {
             return null;
@@ -340,16 +348,19 @@ public class AiPlanCandidateBuilder {
 
         // 요청한 패키지 타입과 정확히 일치하는 업체를 찾았을 때만(취향 폴백이 아닐 때만) 채운다 -
         // 폴백으로 고른 업체는 그 패키지를 실제로 안 가지고 있을 수 있어서.
-        String makeupPackageType = (prefs.getMakeupType() != null && !makeup.usedStyleFallback)
-                ? prefs.getMakeupType().name()
+        MakeupPackageType groundedMakeupType = (prefs.getMakeupType() != null && !makeup.usedStyleFallback)
+                ? prefs.getMakeupType()
                 : null;
+        String makeupPackageType = groundedMakeupType != null ? groundedMakeupType.name() : null;
 
         // 홀/드레스는 구체적인 옵션(아이템) 가격이 있으면 그 값을, 없으면 업체 평균가로 - 합계도
         // 카드에 표시하는 카테고리별 가격(hallPrice/dressPrice)과 실제로 더한 값이 맞도록 맞춘다.
+        // 메이크업은 패키지 취향이 확정됐으면 그 패키지 실제가(resolveMakeupPrice)를 쓴다 - 안 그러면
+        // 카드엔 풀 패키지 가격을 보여주고 합계엔 업체 평균가만 더해지는 불일치가 생긴다.
         BigDecimal hallAmount = hallItem != null ? hallItem.getPrice() : hall.company.getPriceAvg();
         BigDecimal dressAmount = dressItem != null ? dressItem.getPrice() : dress.company.getPriceAvg();
-        BigDecimal totalPrice = Stream.of(hallAmount, dressAmount, studio.company.getPriceAvg(),
-                        makeup.company.getPriceAvg())
+        BigDecimal makeupAmount = resolveMakeupPrice(makeup.company, groundedMakeupType);
+        BigDecimal totalPrice = Stream.of(hallAmount, dressAmount, studio.company.getPriceAvg(), makeupAmount)
                 .map(v -> v != null ? v : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -377,7 +388,7 @@ public class AiPlanCandidateBuilder {
                 .makeupCmno(makeup.company.getCmno())
                 .makeupName(makeup.company.getName())
                 .makeupImageUrl(firstImage(makeup.company))
-                .makeupPrice(makeup.company.getPriceAvg())
+                .makeupPrice(makeupAmount)
                 .makeupPackageType(makeupPackageType)
                 .reason(buildComboReason(totalPrice, budget))
                 .sourceType("INDIVIDUAL_COMBO")
@@ -438,7 +449,7 @@ public class AiPlanCandidateBuilder {
             String searchRegion = current.usedRegionFallback ? null : region;
 
             Company upgraded = searchOne(category, searchRegion,
-                    currentPrice.add(BigDecimal.ONE), newCap, Sort.by("priceAvg").descending());
+                    currentPrice.add(BigDecimal.ONE), newCap, Sort.by("priceAvg").descending(), null);
 
             if (upgraded != null && upgraded.getPriceAvg() != null
                     && upgraded.getPriceAvg().compareTo(currentPrice) > 0) {
@@ -505,11 +516,75 @@ public class AiPlanCandidateBuilder {
         return items.get(0);
     }
 
-    // 6단계 리파인 대화/사이드패널에서 카테고리 하나만 다시 찾을 때 씀.
+    // 메이크업은 "패키지 취향(makeupPackageType)"이 실제로 확정돼도 가격은 여전히
+    // company.getPriceAvg()(업체 전체 평균가)를 쓰고 있었다 - 예: 풀 패키지 734,800원을
+    // 추천해놓고 합계엔 평균가 278,333원이 더해지는 버그. 예약 화면(companyOptionBuilder.js)과
+    // 똑같이 "단품가 합계 - 그 조합 전용 할인율"로 다시 계산해서, 카드에 보여주는 가격과 실제
+    // 조합 합계(packagePrice)가 맞도록 한다. 필요한 단가/할인율 데이터가 없으면 평균가로 폴백.
+    BigDecimal resolveMakeupPrice(Company makeupCompany, MakeupPackageType type) {
+        if (makeupCompany == null) {
+            return null;
+        }
+        if (type == null) {
+            return makeupCompany.getPriceAvg();
+        }
+
+        MakeupDetail detail = makeupDetailRepository.findByCompany_Cmno(makeupCompany.getCmno()).orElse(null);
+        if (detail == null) {
+            return makeupCompany.getPriceAvg();
+        }
+
+        BigDecimal basePrice = switch (type) {
+            case HAIR -> detail.getHairPrice();
+            case MAKEUP -> detail.getMakeupPrice();
+            case NAIL -> detail.getNailPrice();
+            case HAIR_MAKEUP -> sumIfPresent(detail.getHairPrice(), detail.getMakeupPrice());
+            case HAIR_NAIL -> sumIfPresent(detail.getHairPrice(), detail.getNailPrice());
+            case MAKEUP_NAIL -> sumIfPresent(detail.getMakeupPrice(), detail.getNailPrice());
+            case FULL -> sumIfPresent(detail.getHairPrice(), detail.getMakeupPrice(), detail.getNailPrice());
+        };
+
+        if (basePrice == null) {
+            return makeupCompany.getPriceAvg();
+        }
+
+        BigDecimal discountRate = makeupPackageRepository.findByCompany_Cmno(makeupCompany.getCmno()).stream()
+                .filter(p -> p.getPackageType() == type)
+                .map(MakeupPackage::getDiscountRate)
+                .filter(rate -> rate != null && rate.signum() > 0)
+                .map(rate -> rate.compareTo(BigDecimal.ONE) > 0
+                        ? rate.divide(BigDecimal.valueOf(100))
+                        : rate)
+                .findFirst()
+                .orElse(null);
+
+        if (discountRate == null) {
+            return basePrice;
+        }
+        return basePrice.multiply(BigDecimal.ONE.subtract(discountRate))
+                .setScale(0, java.math.RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal sumIfPresent(BigDecimal... values) {
+        BigDecimal sum = BigDecimal.ZERO;
+        for (BigDecimal v : values) {
+            if (v == null) {
+                return null;
+            }
+            sum = sum.add(v);
+        }
+        return sum;
+    }
+
+    // 6단계 리파인 대화/사이드패널에서 카테고리 하나만 다시 찾을 때 씀. excludeCmno에 지금 그 슬롯에
+    // 들어있는 업체를 넘기면, 아래 탐색 체인 전체가 그 업체를 후보에서 빼고 찾는다 - 이게 없으면
+    // "예산/지역/취향이 그대로인데 다시 찾아달라"는 요청이 매번 결정적으로 같은 업체를 돌려줘서
+    // "다른 걸로 바꿔줘"가 겉보기엔 아무것도 안 바뀐 것처럼 보였다.
     // Pick은 private 중첩 클래스라 바깥(AiPlanRefineServiceImpl)에 그대로 못 넘기니, 필요한 값만
     // PickResult 레코드로 옮겨 담아서 반환한다.
-    PickResult pickOne(CompanyCategory category, String region, Long budgetForCategory, AiPlanCategoryPreferences prefs) {
-        Pick pick = pickBestCompany(category, region, budgetForCategory, null, prefs);
+    PickResult pickOne(CompanyCategory category, String region, Long budgetForCategory, AiPlanCategoryPreferences prefs,
+                        Long excludeCmno) {
+        Pick pick = pickBestCompany(category, region, budgetForCategory, null, prefs, excludeCmno);
         return pick == null ? null : new PickResult(pick.company, pick.dressItemId);
     }
 
@@ -519,31 +594,32 @@ public class AiPlanCandidateBuilder {
 
     // 카테고리별로 취향이 있으면 취향 우선 탐색, 없으면 바로 기본(지역/예산) 탐색으로.
     // 드레스는 업체가 아니라 아이템 단위로 골라야 해서 처음부터 별도 경로(pickDress)로 분리.
+    // excludeCmno: "다시 찾기"에서 지금 고른 업체를 다시 안 고르게 뺄 때만 씀(처음 추천 시엔 null).
     private Pick pickBestCompany(CompanyCategory category, String region, Long allocatedBudget,
-                                 Integer guestCount, AiPlanCategoryPreferences prefs) {
+                                 Integer guestCount, AiPlanCategoryPreferences prefs, Long excludeCmno) {
 
         if (category == CompanyCategory.DRESS) {
-            return pickDress(region, allocatedBudget, prefs.getDressKeywords());
+            return pickDress(region, allocatedBudget, prefs.getDressKeywords(), excludeCmno);
         }
 
         BigDecimal maxPrice = allocatedBudget != null ? BigDecimal.valueOf(allocatedBudget) : null;
         boolean hasPreference = hasPreference(category, prefs);
 
         if (hasPreference) {
-            Company styled = findStyled(category, region, maxPrice, guestCount, prefs);
+            Company styled = findStyled(category, region, maxPrice, guestCount, prefs, excludeCmno);
             if (styled != null) {
                 return new Pick(styled, false, false);
             }
 
             if (region != null) {
-                Company styledNoRegion = findStyled(category, null, maxPrice, guestCount, prefs);
+                Company styledNoRegion = findStyled(category, null, maxPrice, guestCount, prefs, excludeCmno);
                 if (styledNoRegion != null) {
                     return new Pick(styledNoRegion, true, false);
                 }
             }
         }
 
-        Pick plain = pickBestCompanyPlain(category, region, allocatedBudget, guestCount);
+        Pick plain = pickBestCompanyPlain(category, region, allocatedBudget, guestCount, excludeCmno);
 
         if (plain == null) {
             return null;
@@ -558,7 +634,7 @@ public class AiPlanCandidateBuilder {
     // 최선, 없으면(또는 매칭 실패시) 예산/지역만으로 아이템을 고른다. 어느 경로든 "업체"가 아니라
     // 구체적인 아이템을 반환. DB 쿼리는 첫 키워드로만 걸고(searchByStyleKeyword가 단일 키워드 전용이라),
     // 키워드가 2개 이상이면 나머지는 Java에서 추가로 AND 필터링한다.
-    private Pick pickDress(String region, Long allocatedBudget, List<String> styleKeywords) {
+    private Pick pickDress(String region, Long allocatedBudget, List<String> styleKeywords, Long excludeCmno) {
 
         BigDecimal maxPrice = allocatedBudget != null ? BigDecimal.valueOf(allocatedBudget) : null;
 
@@ -567,19 +643,19 @@ public class AiPlanCandidateBuilder {
 
             List<DressItem> found = filterByAllStyleKeywords(
                     dressItemRepository.searchByStyleKeyword(primaryKeyword, region, maxPrice), styleKeywords);
-            if (!found.isEmpty()) {
-                DressItem item = found.get(0);
+            DressItem item = firstExcludingItem(found, excludeCmno);
+            if (item != null) {
                 return new Pick(item.getCompany(), item.getDressItemId(), false, false);
             }
             List<DressItem> foundNoRegion = filterByAllStyleKeywords(
                     dressItemRepository.searchByStyleKeyword(primaryKeyword, null, maxPrice), styleKeywords);
-            if (!foundNoRegion.isEmpty()) {
-                DressItem item = foundNoRegion.get(0);
+            item = firstExcludingItem(foundNoRegion, excludeCmno);
+            if (item != null) {
                 return new Pick(item.getCompany(), item.getDressItemId(), true, false);
             }
         }
 
-        Pick plain = pickDressPlain(region, allocatedBudget);
+        Pick plain = pickDressPlain(region, allocatedBudget, excludeCmno);
         if (plain == null) {
             return null;
         }
@@ -587,6 +663,14 @@ public class AiPlanCandidateBuilder {
         return !styleKeywords.isEmpty()
                 ? new Pick(plain.company, plain.dressItemId, plain.usedRegionFallback, true)
                 : plain;
+    }
+
+    // 목록에서 excludeCmno(있으면)를 뺀 첫 번째 드레스 아이템 - pickDress/pickDressPlain 공용.
+    private DressItem firstExcludingItem(List<DressItem> items, Long excludeCmno) {
+        return items.stream()
+                .filter(i -> excludeCmno == null || !i.getCompany().getCmno().equals(excludeCmno))
+                .findFirst()
+                .orElse(null);
     }
 
     // 키워드가 하나뿐이면 이미 SQL에서 걸러졌으니 그대로 두고, 여러 개면 나머지 키워드까지 전부
@@ -601,27 +685,27 @@ public class AiPlanCandidateBuilder {
                 .toList();
     }
 
-    private Pick pickDressPlain(String region, Long allocatedBudget) {
+    private Pick pickDressPlain(String region, Long allocatedBudget, Long excludeCmno) {
 
         BigDecimal maxPrice = allocatedBudget != null ? BigDecimal.valueOf(allocatedBudget) : null;
 
         List<DressItem> found = dressItemRepository.searchByBudget(region, maxPrice, Sort.by("price").descending());
-        if (!found.isEmpty()) {
-            DressItem item = found.get(0);
+        DressItem item = firstExcludingItem(found, excludeCmno);
+        if (item != null) {
             return new Pick(item.getCompany(), item.getDressItemId(), false, false);
         }
 
         if (region != null) {
             found = dressItemRepository.searchByBudget(null, maxPrice, Sort.by("price").descending());
-            if (!found.isEmpty()) {
-                DressItem item = found.get(0);
+            item = firstExcludingItem(found, excludeCmno);
+            if (item != null) {
                 return new Pick(item.getCompany(), item.getDressItemId(), true, false);
             }
         }
 
         found = dressItemRepository.searchByBudget(null, null, Sort.by("price").ascending());
-        if (!found.isEmpty()) {
-            DressItem item = found.get(0);
+        item = firstExcludingItem(found, excludeCmno);
+        if (item != null) {
             return new Pick(item.getCompany(), item.getDressItemId(), region != null, false);
         }
 
@@ -629,28 +713,32 @@ public class AiPlanCandidateBuilder {
     }
 
     private Company findStyled(CompanyCategory category, String region, BigDecimal maxPrice,
-                               Integer guestCount, AiPlanCategoryPreferences prefs) {
+                               Integer guestCount, AiPlanCategoryPreferences prefs, Long excludeCmno) {
 
         return switch (category) {
-            case HALL -> findStyledHall(prefs.getHallTypes(), region, maxPrice, guestCount);
-            case STUDIO -> findStyledStudio(prefs.getStudioKeywords(), region, maxPrice);
+            case HALL -> findStyledHall(prefs.getHallTypes(), region, maxPrice, guestCount, excludeCmno);
+            case STUDIO -> findStyledStudio(prefs.getStudioKeywords(), region, maxPrice, excludeCmno);
             case DRESS -> throw new IllegalStateException("DRESS는 pickDress()에서 별도 처리됨");
-            case MAKEUP -> findStyledMakeup(region, maxPrice, prefs.getMakeupType());
+            case MAKEUP -> findStyledMakeup(region, maxPrice, prefs.getMakeupType(), excludeCmno);
         };
     }
 
     // 홀은 업체 하나에 타입이 하나뿐이라 칩 중복선택시 "그 중 하나라도 맞으면"(OR)으로 찾는다.
     // 타입별로 따로 조회해서 합친 뒤, 예산에 가장 근접한(비싼) 것 하나를 고른다.
     private Company findStyledHall(List<HallType> hallTypes, String region, BigDecimal maxPrice,
-                                   Integer guestCount) {
+                                   Integer guestCount, Long excludeCmno) {
         Company best = null;
         BigDecimal bestPrice = null;
         for (HallType type : hallTypes) {
             List<HallDetail> found = hallDetailRepository.searchByType(type, region, maxPrice, guestCount);
-            if (found.isEmpty()) {
+            Company candidate = found.stream()
+                    .map(HallDetail::getCompany)
+                    .filter(c -> excludeCmno == null || !c.getCmno().equals(excludeCmno))
+                    .findFirst()
+                    .orElse(null);
+            if (candidate == null) {
                 continue;
             }
-            Company candidate = found.get(0).getCompany();
             BigDecimal candidatePrice = candidate.getPriceAvg();
             if (best == null || (candidatePrice != null && (bestPrice == null || candidatePrice.compareTo(bestPrice) > 0))) {
                 best = candidate;
@@ -662,7 +750,7 @@ public class AiPlanCandidateBuilder {
 
     // 스튜디오는 태그 여러 개가 한 업체에 같이 붙어있는 값이라 칩 중복선택시 "전부 가진"(AND)으로 찾는다.
     // DB 쿼리는 첫 키워드로만 걸고, 나머지는 Java에서 추가로 AND 필터링한다 (드레스와 동일한 패턴).
-    private Company findStyledStudio(List<String> keywords, String region, BigDecimal maxPrice) {
+    private Company findStyledStudio(List<String> keywords, String region, BigDecimal maxPrice, Long excludeCmno) {
         if (keywords.isEmpty()) {
             return null;
         }
@@ -670,8 +758,9 @@ public class AiPlanCandidateBuilder {
         return found.stream()
                 .filter(sd -> sd.getThemeTags() != null
                         && keywords.stream().allMatch(k -> sd.getThemeTags().contains(k)))
-                .findFirst()
                 .map(StudioDetail::getCompany)
+                .filter(c -> excludeCmno == null || !c.getCmno().equals(excludeCmno))
+                .findFirst()
                 .orElse(null);
     }
 
@@ -679,7 +768,7 @@ public class AiPlanCandidateBuilder {
     // MakeupPackageRepository로 먼저 타입이 맞는 업체 cmno들을 구하고, 그 안에서 예산/지역 순으로
     // 고른다 (HALL/STUDIO/DRESS처럼 조건 하나로 바로 쿼리하지 않는 이유는, "패키지 타입 보유 여부"가
     // Company가 아니라 그 하위 MakeupPackage 엔티티에 있는 값이라 조인 쿼리보다 이 편이 간단해서).
-    private Company findStyledMakeup(String region, BigDecimal maxPrice, MakeupPackageType type) {
+    private Company findStyledMakeup(String region, BigDecimal maxPrice, MakeupPackageType type, Long excludeCmno) {
         if (type == null) {
             return null;
         }
@@ -692,31 +781,35 @@ public class AiPlanCandidateBuilder {
                 .searchList(CompanyCategory.MAKEUP, region, null, maxPrice,
                         PageRequest.of(0, MAKEUP_POOL_SIZE, Sort.by("priceAvg").descending()))
                 .getContent();
-        return pool.stream().filter(c -> matchedSet.contains(c.getCmno())).findFirst().orElse(null);
+        return pool.stream()
+                .filter(c -> matchedSet.contains(c.getCmno()))
+                .filter(c -> excludeCmno == null || !c.getCmno().equals(excludeCmno))
+                .findFirst()
+                .orElse(null);
     }
 
     private Pick pickBestCompanyPlain(CompanyCategory category, String region, Long allocatedBudget,
-                                      Integer guestCount) {
+                                      Integer guestCount, Long excludeCmno) {
 
         if (category == CompanyCategory.HALL) {
-            return pickHallPlain(region, allocatedBudget, guestCount);
+            return pickHallPlain(region, allocatedBudget, guestCount, excludeCmno);
         }
 
         BigDecimal maxPrice = allocatedBudget != null ? BigDecimal.valueOf(allocatedBudget) : null;
 
-        Company found = searchOne(category, region, null, maxPrice, Sort.by("priceAvg").descending());
+        Company found = searchOne(category, region, null, maxPrice, Sort.by("priceAvg").descending(), excludeCmno);
         if (found != null) {
             return new Pick(found, false, false);
         }
 
         if (region != null) {
-            found = searchOne(category, null, null, maxPrice, Sort.by("priceAvg").descending());
+            found = searchOne(category, null, null, maxPrice, Sort.by("priceAvg").descending(), excludeCmno);
             if (found != null) {
                 return new Pick(found, true, false);
             }
         }
 
-        found = searchOne(category, null, null, null, Sort.by("priceAvg").ascending());
+        found = searchOne(category, null, null, null, Sort.by("priceAvg").ascending(), excludeCmno);
         if (found != null) {
             return new Pick(found, region != null, false);
         }
@@ -725,46 +818,63 @@ public class AiPlanCandidateBuilder {
     }
 
     // 홀 전용 plain 경로 - 하객수 필터를 걸어야 해서 CompanyRepository 대신 HallDetailRepository로 검색.
-    private Pick pickHallPlain(String region, Long allocatedBudget, Integer guestCount) {
+    private Pick pickHallPlain(String region, Long allocatedBudget, Integer guestCount, Long excludeCmno) {
 
         BigDecimal maxPrice = allocatedBudget != null ? BigDecimal.valueOf(allocatedBudget) : null;
 
         List<HallDetail> found = hallDetailRepository
                 .searchByCapacity(region, maxPrice, guestCount, Sort.by("company.priceAvg").descending());
-        if (!found.isEmpty()) {
-            return new Pick(found.get(0).getCompany(), false, false);
+        Company picked = firstExcludingHall(found, excludeCmno);
+        if (picked != null) {
+            return new Pick(picked, false, false);
         }
 
         if (region != null) {
             found = hallDetailRepository
                     .searchByCapacity(null, maxPrice, guestCount, Sort.by("company.priceAvg").descending());
-            if (!found.isEmpty()) {
-                return new Pick(found.get(0).getCompany(), true, false);
+            picked = firstExcludingHall(found, excludeCmno);
+            if (picked != null) {
+                return new Pick(picked, true, false);
             }
         }
 
         found = hallDetailRepository.searchByCapacity(null, null, guestCount, Sort.by("company.priceAvg").ascending());
-        if (!found.isEmpty()) {
-            return new Pick(found.get(0).getCompany(), region != null, false);
+        picked = firstExcludingHall(found, excludeCmno);
+        if (picked != null) {
+            return new Pick(picked, region != null, false);
         }
 
         return null;
     }
 
+    private Company firstExcludingHall(List<HallDetail> found, Long excludeCmno) {
+        return found.stream()
+                .map(HallDetail::getCompany)
+                .filter(c -> excludeCmno == null || !c.getCmno().equals(excludeCmno))
+                .findFirst()
+                .orElse(null);
+    }
+
+    // excludeCmno가 있으면(=다시 찾기) 원래 1개만 가져오던 걸 넉넉히 가져와서 그 업체를 뺀 첫 번째를
+    // 고른다 - limit(1)로만 가져오면 제외할 대상이 하필 그 1개일 때 대안이 아예 없어져 버린다.
     private Company searchOne(CompanyCategory category, String keyword, BigDecimal minPrice, BigDecimal maxPrice,
-                              Sort sort) {
+                              Sort sort, Long excludeCmno) {
 
         List<Company> content = companyRepository
-                .searchList(category, keyword, minPrice, maxPrice, PageRequest.of(0, 1, sort))
+                .searchList(category, keyword, minPrice, maxPrice, PageRequest.of(0, EXCLUDE_FETCH_SIZE, sort))
                 .getContent();
 
-        return content.isEmpty() ? null : content.get(0);
+        return content.stream()
+                .filter(c -> excludeCmno == null || !c.getCmno().equals(excludeCmno))
+                .findFirst()
+                .orElse(null);
     }
 
     // AiPlanAiServiceImpl(AI 모드)의 예산 근접도 보정에서 재사용 - 가격 구간 안에서 가장 비싼 후보 하나.
     // (드레스도 여기선 업체 단위로 갈아타고, 최종 표시 아이템은 resolveDressItem이 그 업체 기준으로 다시 정함)
+    // 여긴 "다른 걸로 바꾸기"가 아니라 예산을 더 쓸 대안을 찾는 것뿐이라 제외 대상이 없다.
     Company findMostExpensiveWithin(CompanyCategory category, String region, BigDecimal minPrice, BigDecimal maxPrice) {
-        return searchOne(category, region, minPrice, maxPrice, Sort.by("priceAvg").descending());
+        return searchOne(category, region, minPrice, maxPrice, Sort.by("priceAvg").descending(), null);
     }
 
     private static class Pick {

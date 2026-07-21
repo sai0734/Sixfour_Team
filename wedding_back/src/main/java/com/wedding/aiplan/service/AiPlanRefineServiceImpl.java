@@ -159,6 +159,15 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
                     message = "다시 찾아봤어요.";
                 }
             }
+            case "EXCLUDE" -> {
+                if (slot.getStatus() == SlotStatus.CONFIRMED) {
+                    message = "확정된 카테고리는 제외할 수 없어요. 먼저 해제해주세요.";
+                } else {
+                    slot.changeStatus(SlotStatus.EXCLUDED);
+                    slot.changeSelectedCmno(null);
+                    message = "제외했어요. 다른 곳에서 예약하신 걸로 볼게요.";
+                }
+            }
             default -> {
                 slot.changeStatus(SlotStatus.PENDING);
                 message = "확정을 해제했어요.";
@@ -182,6 +191,7 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
         return switch (action) {
             case "CONFIRM" -> "(확정: " + category + ")";
             case "RECONSIDER" -> "(다시 찾기: " + category + ")";
+            case "EXCLUDE" -> "(제외: " + category + ")";
             default -> "(확정 해제: " + category + ")";
         };
     }
@@ -204,8 +214,10 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
                 ? Math.round(remaining * (ratioFor(category) / ratioSum))
                 : null;
 
+        // 지금 이 슬롯에 들어있는 업체를 후보에서 빼야 "다시 찾기"가 실제로 다른 곳을 돌려준다.
+        Long currentCmno = slotFor(session, category).getSelectedCmno();
         AiPlanCandidateBuilder.PickResult picked = candidateBuilder.pickOne(
-                category, session.getRegion(), categoryBudget, preferencesForReconsider(category, session));
+                category, session.getRegion(), categoryBudget, preferencesForReconsider(category, session), currentCmno);
 
         SlotState target = slotFor(session, category);
         target.changeStatus(SlotStatus.PENDING);
@@ -451,8 +463,10 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
                     : null;
 
             AiPlanCategoryPreferences prefs = preferencesFor(category, action.note(), session);
+            // 지금 이 슬롯에 들어있는 업체를 후보에서 빼야 "다른 걸로 바꿔줘"가 실제로 다른 곳을 돌려준다.
+            Long currentCmno = slotFor(session, category).getSelectedCmno();
             AiPlanCandidateBuilder.PickResult picked =
-                    candidateBuilder.pickOne(category, session.getRegion(), categoryBudget, prefs);
+                    candidateBuilder.pickOne(category, session.getRegion(), categoryBudget, prefs, currentCmno);
 
             SlotState target = slotFor(session, category);
             target.changeStatus(SlotStatus.PENDING);

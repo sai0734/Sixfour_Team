@@ -183,14 +183,19 @@ public class AiPlanSessionSupport {
 
         BigDecimal hallAmount = hallItem != null ? hallItem.getPrice()
                 : (hall.company != null ? hall.company.getPriceAvg() : null);
+        BigDecimal dressAmount = dressItem != null ? dressItem.getPrice()
+                : (dress.company != null ? dress.company.getPriceAvg() : null);
+        BigDecimal studioAmount = studio.company != null ? studio.company.getPriceAvg() : null;
 
-        BigDecimal totalPrice = Stream.of(studio, makeup).filter(v -> v.company != null)
-                .map(v -> v.company.getPriceAvg() != null ? v.company.getPriceAvg() : BigDecimal.ZERO)
-                .reduce((hallAmount != null ? hallAmount : BigDecimal.ZERO)
-                                .add(dressItem != null ? dressItem.getPrice()
-                                        : (dress.company != null && dress.company.getPriceAvg() != null
-                                                ? dress.company.getPriceAvg() : BigDecimal.ZERO)),
-                        BigDecimal::add);
+        // 세션에 저장해둔 원래 메이크업 취향이 지금 슬롯 업체에서도 실제로 유효한지 다시 확인하고
+        // (groundedMakeupType), 유효하면 그 패키지 실제가(할인 반영)를 합계/카드 가격 양쪽에 쓴다 -
+        // 안 그러면 카드엔 풀 패키지 가격을 보여주고 합계엔 업체 평균가만 더해지는 불일치가 생긴다.
+        MakeupPackageType groundedMakeupType = groundedMakeupType(session, makeup.company);
+        BigDecimal makeupAmount = candidateBuilder.resolveMakeupPrice(makeup.company, groundedMakeupType);
+
+        BigDecimal totalPrice = Stream.of(hallAmount, dressAmount, studioAmount, makeupAmount)
+                .map(v -> v != null ? v : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         return AiPlanPackageCandidateDTO.builder()
                 .pno(null)
@@ -209,7 +214,7 @@ public class AiPlanSessionSupport {
                 .studioCmno(studio.cmno())
                 .studioName(studio.name())
                 .studioImageUrl(studio.company != null ? AiPlanCandidateBuilder.firstImage(studio.company) : null)
-                .studioPrice(studio.company != null ? studio.company.getPriceAvg() : null)
+                .studioPrice(studioAmount)
                 .studioReason(studio.reasonLabel())
                 .studioStatus(studio.status.name())
                 .dressCmno(dress.cmno())
@@ -217,17 +222,16 @@ public class AiPlanSessionSupport {
                 .dressItemId(dressItem != null ? dressItem.getDressItemId() : null)
                 .dressOptionName(dressItem != null ? dressItem.getItemName() : null)
                 .dressImageUrl(dressItem != null ? dressItem.getImageUrl() : null)
-                .dressPrice(dressItem != null ? dressItem.getPrice()
-                        : (dress.company != null ? dress.company.getPriceAvg() : null))
+                .dressPrice(dressAmount)
                 .dressReason(dress.reasonLabel())
                 .dressStatus(dress.status.name())
                 .makeupCmno(makeup.cmno())
                 .makeupName(makeup.name())
                 .makeupImageUrl(makeup.company != null ? AiPlanCandidateBuilder.firstImage(makeup.company) : null)
-                .makeupPrice(makeup.company != null ? makeup.company.getPriceAvg() : null)
+                .makeupPrice(makeupAmount)
                 .makeupReason(makeup.reasonLabel())
                 .makeupStatus(makeup.status.name())
-                .makeupPackageType(groundedMakeupPackageType(session, makeup.company))
+                .makeupPackageType(groundedMakeupType != null ? groundedMakeupType.name() : null)
                 .sourceType(sourceType)
                 .build();
     }
@@ -235,7 +239,7 @@ public class AiPlanSessionSupport {
     // 세션에 저장해둔 원래 메이크업 취향(makeupPackageType)이 있어도, 지금 이 슬롯에 들어있는
     // 업체가 실제로 그 패키지를 파는지 매번 다시 확인한다 - "다시 찾기"/다듬기로 업체가 바뀌었는데
     // 취향 매칭에 실패해 아무 업체나 들어간 경우까지 그 패키지를 판다고 잘못 표시하면 안 된다.
-    private String groundedMakeupPackageType(AiPlanSession session, Company makeupCompany) {
+    private MakeupPackageType groundedMakeupType(AiPlanSession session, Company makeupCompany) {
         if (session.getMakeupPackageType() == null || makeupCompany == null) {
             return null;
         }
@@ -246,7 +250,7 @@ public class AiPlanSessionSupport {
             return null;
         }
         List<Long> supportingCmnos = makeupPackageRepository.findCompanyCmnosByPackageTypeIn(List.of(type));
-        return supportingCmnos.contains(makeupCompany.getCmno()) ? type.name() : null;
+        return supportingCmnos.contains(makeupCompany.getCmno()) ? type : null;
     }
 
     private SlotView resolve(SlotState slot) {

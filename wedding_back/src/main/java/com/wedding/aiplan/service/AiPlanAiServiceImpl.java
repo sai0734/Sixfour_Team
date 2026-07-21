@@ -486,20 +486,25 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
             // 목록(makeupTypeCmnos)에 있을 때만 packageType을 채운다. 후보 풀 자체를 못 좁혀서
             // 일반 풀로 폴백했던 경우까지 여기서 한 번 더 걸러내는 마지막 방어선 - 이게 없으면
             // "블랑쉬 웨딩뷰티"처럼 그 패키지를 안 파는 업체가 그 패키지를 파는 것처럼 나간다.
-            String makeupPackageType = (!makeup.excluded() && requestedMakeupType != null
+            MakeupPackageType groundedMakeupType = (!makeup.excluded() && requestedMakeupType != null
                     && makeupTypeCmnos.contains(makeup.company().getCmno()))
-                    ? requestedMakeupType.name()
+                    ? requestedMakeupType
                     : null;
+            String makeupPackageType = groundedMakeupType != null ? groundedMakeupType.name() : null;
 
             DressItem dressItem = dress.excluded() ? null
                     : candidateBuilder.resolveDressItem(dress.company(), dressStyleKeywords);
             HallItem hallItem = hall.excluded() ? null : candidateBuilder.resolveHallItem(hall.company());
+            // 패키지 취향이 그라운딩됐으면 그 패키지 실제가(할인 반영)를 쓴다 - 안 그러면 카드엔 풀
+            // 패키지 가격을 보여주고 합계엔 업체 평균가만 더해지는 불일치가 생긴다.
+            BigDecimal makeupAmount = makeup.excluded() ? null
+                    : candidateBuilder.resolveMakeupPrice(makeup.company(), groundedMakeupType);
 
             BigDecimal totalPrice = java.util.stream.Stream.of(
                             hall.excluded() ? null : (hallItem != null ? hallItem.getPrice() : hall.company().getPriceAvg()),
                             studio.excluded() ? null : studio.company().getPriceAvg(),
                             dress.excluded() ? null : (dressItem != null ? dressItem.getPrice() : dress.company().getPriceAvg()),
-                            makeup.excluded() ? null : makeup.company().getPriceAvg())
+                            makeupAmount)
                     .filter(java.util.Objects::nonNull)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -534,7 +539,7 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
                     .makeupName(makeup.excluded() ? null : makeup.company().getName())
                     .makeupReason(makeup.excluded() ? "요청하신 대로 이번엔 빼고 찾았어요" : makeup.reason())
                     .makeupImageUrl(makeup.excluded() ? null : AiPlanCandidateBuilder.firstImage(makeup.company()))
-                    .makeupPrice(makeup.excluded() ? null : makeup.company().getPriceAvg())
+                    .makeupPrice(makeupAmount)
                     .makeupPackageType(makeupPackageType)
                     .sourceType("AI_COMBO")
                     .build();
