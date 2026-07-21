@@ -20,10 +20,32 @@ export const uploadMyPhoto = async (file) => {
   return res.data;
 };
 
-export const requestTryOn = async ({ dressItemId, photoFileName }) => {
+export const requestTryOn = async ({
+  dressItemId,
+  photoFileName,
+  backgroundPrompt,
+}) => {
   const res = await jwtAxios.post(`${host}/try-on`, {
     dressItemId,
     photoFileName,
+    backgroundPrompt: backgroundPrompt?.trim() || null,
   });
+  return res.data;
+};
+
+export const getTryOnHistory = async () => {
+  const res = await jwtAxios.get(`${host}/history`);
+  return res.data;
+};
+
+export const updateTryOnHistory = async (historyId, { backgroundPrompt }) => {
+  const res = await jwtAxios.put(`${host}/history/${historyId}`, {
+    backgroundPrompt: backgroundPrompt?.trim() || null,
+  });
+  return res.data;
+};
+
+export const deleteTryOnHistory = async (historyId) => {
+  const res = await jwtAxios.delete(`${host}/history/${historyId}`);
   return res.data;
 };
