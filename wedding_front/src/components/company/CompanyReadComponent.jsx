@@ -26,6 +26,7 @@ import CompanyWishOptionModal from "../companywish/CompanyWishOptionModal";
 import { buildCompanyOptions } from "../../util/companyOptionBuilder";
 import FetchingModal from "../common/FetchingModal";
 import KakaoMap from "../common/KakaoMap";
+import ShopTapeLabel from "../product/ShopTapeLabel";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import useManagedCompany from "../../hooks/useManagedCompany";
 import useInquiryChat from "../../context/InquiryChatContext";
@@ -135,7 +136,7 @@ const CompanyReadComponent = () => {
     const el = sectionRefs.current[key];
     if (el) {
       const top =
-        el.getBoundingClientRect().top + window.scrollY - (headerHeight + 8);
+        el.getBoundingClientRect().top + window.scrollY - (headerHeight + 50);
       window.scrollTo({ top, behavior: "smooth" });
     }
   };
@@ -374,113 +375,91 @@ const CompanyReadComponent = () => {
     }
   };
 
-  const mainImage = company.uploadFileNames?.[0];
+  const galleryImages = useMemo(
+    () => (company.uploadFileNames || []).filter(Boolean),
+    [company.uploadFileNames],
+  );
+  const [selectedImageIdx, setSelectedImageIdx] = useState(0);
 
-  const detailImageClassByCategory = {
-    DRESS: "h-[260px] sm:h-[400px] lg:h-[520px] w-full",
-    MAKEUP: "h-[220px] sm:h-[320px] lg:h-[420px] w-full",
-    STUDIO: "h-[240px] sm:h-[360px] lg:h-[460px] w-full",
-  };
+  useEffect(() => {
+    setSelectedImageIdx(0);
+  }, [cmno, galleryImages.length]);
 
-  const thumbnailImageClassByCategory = {
-    DRESS: "h-28 sm:h-40 w-full",
-    MAKEUP: "h-32 sm:h-52 w-full",
-    STUDIO: "h-28 sm:h-40 w-full",
-  };
-
-  const getDetailImageClass = (category) =>
-    detailImageClassByCategory[category] || "h-80 w-full";
-  const getThumbnailImageClass = (category) =>
-    thumbnailImageClassByCategory[category] || "h-28 w-full";
+  const mainImage = galleryImages[selectedImageIdx] || galleryImages[0];
 
   return (
-    <div className="bg-white text-ink pb-16">
+    <div className="-mx-3 sm:-mx-6 -mb-4 sm:-mb-8 min-h-[calc(100vh-6rem)] bg-cream pt-2 text-ink">
       {fetching ? <FetchingModal /> : null}
 
       {/* ── 브레드크럼 ── */}
-      <p className="mb-5 text-xs text-ink-faint">
+      <p className="max-w-[1320px] mx-auto px-6 text-xs text-ink-faint">
         {companyPathPrefix === "/admin/companies" ? "관리자" : "홀/스드메"}
-        {" > "}
-        {categoryLabel[company.category] || company.category || "업체"}
+        {company.category
+          ? ` > ${categoryLabel[company.category] || company.category}`
+          : ""}
         {" > "}
         <span className="text-ink-soft">{company.name}</span>
       </p>
 
       {/* ── 메인 그리드: 갤러리 + 정보 패널 ── */}
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[420px_1fr] lg:gap-12">
-        {/* 이미지 갤러리 */}
+      <div className="max-w-[1320px] mx-auto px-6 pt-5 grid grid-cols-1 gap-8 lg:grid-cols-[460px_1fr] lg:gap-14">
+        {/* 이미지 갤러리 (답례품 ProductGallery와 동일 패턴) */}
         <div>
-          {mainImage ? (
-            <img
-              className={`${getDetailImageClass(company.category)} w-full object-cover rounded-2xl`}
-              src={getCompanyImageUrl(mainImage)}
-              alt={company.name}
-            />
-          ) : (
-            <div className="flex h-48 sm:h-72 items-center justify-center rounded-2xl bg-blush-50 text-ink-muted text-sm">
-              대표 이미지가 없습니다.
-            </div>
-          )}
-          {(company.uploadFileNames || []).length > 1 && (
-            <div className="mt-2.5 grid grid-cols-3 gap-2">
-              {(company.uploadFileNames || []).slice(1, 7).map((fileName) => (
-                <img
+          <div className="aspect-square rounded-2xl overflow-hidden bg-surface">
+            {mainImage ? (
+              <img
+                className="w-full h-full object-cover"
+                src={getCompanyImageUrl(mainImage)}
+                alt={company.name}
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center text-sm text-ink-faint">
+                대표 이미지가 없습니다.
+              </div>
+            )}
+          </div>
+          {galleryImages.length > 1 && (
+            <div className="flex gap-2.5 mt-3 flex-wrap">
+              {galleryImages.map((fileName, i) => (
+                <div
                   key={fileName}
-                  className={`${getThumbnailImageClass(company.category)} w-full object-cover rounded-xl`}
-                  src={getCompanyImageUrl(fileName, true)}
-                  alt={company.name}
-                />
+                  onMouseEnter={() => setSelectedImageIdx(i)}
+                  onClick={() => setSelectedImageIdx(i)}
+                  className={`w-16 h-16 rounded-lg overflow-hidden bg-surface cursor-pointer ${
+                    selectedImageIdx === i
+                      ? "outline outline-2 outline-brand"
+                      : ""
+                  }`}
+                >
+                  <img
+                    className="w-full h-full object-cover pointer-events-none"
+                    src={getCompanyImageUrl(fileName, true)}
+                    alt=""
+                  />
+                </div>
               ))}
             </div>
           )}
         </div>
 
         {/* 정보 패널 */}
-        <div className="flex flex-col">
-          {/* 카테고리 태그 */}
-          <span className="inline-block -rotate-2 bg-blush-100 px-3 py-1 mb-3 font-['Gaegu'] text-[13px] text-brand-deep w-fit">
-            {categoryLabel[company.category] || company.category}
-          </span>
+        <div>
+          <ShopTapeLabel className="mb-3">
+            {categoryLabel[company.category] || company.category || "업체"}
+          </ShopTapeLabel>
 
-          {/* 업체명 */}
-          <p className="font-['Gowun_Batang'] text-2xl sm:text-3xl mb-1 leading-snug">
+          <p className="font-['Gowun_Batang'] text-2xl mb-1.5 mt-1">
             {company.name || "업체명 로딩 중..."}
           </p>
 
-          {/* 재원 추가 - 결제 완료 건수 (인기 업체 참고 지표) */}
-          {paymentCount != null && paymentCount > 0 && (
+          {paymentCount != null && paymentCount > 0 ? (
             <p className="text-xs text-ink-faint mb-3">
               결제 완료 {paymentCount}건
             </p>
+          ) : (
+            <div className="mb-3" />
           )}
-          {(paymentCount == null || paymentCount === 0) && (
-            <div className="mb-4" />
-          )}
-          {/* 재원 추가 끝 */}
 
-          {/* 기본 정보 */}
-          <div className="space-y-2.5 border-t border-line pt-4 mb-5 text-sm text-ink-muted">
-            {company.address && (
-              <div className="flex gap-2 items-start">
-                <span className="shrink-0 mt-0.5">📍</span>
-                <span className="leading-relaxed">{company.address}</span>
-              </div>
-            )}
-            {company.phone && (
-              <div className="flex gap-2">
-                <span className="shrink-0">📞</span>
-                <span>{company.phone}</span>
-              </div>
-            )}
-            {company.ceoName && (
-              <div className="flex gap-2">
-                <span className="shrink-0">👤</span>
-                <span>대표 {company.ceoName}</span>
-              </div>
-            )}
-          </div>
-
-          {/* 가격 */}
           {company.priceAvg ? (
             <p className="text-2xl font-medium mb-5">
               {Number(company.priceAvg).toLocaleString()}원~
@@ -489,107 +468,121 @@ const CompanyReadComponent = () => {
             <div className="mb-5" />
           )}
 
-          {/* 액션 버튼 */}
-          <div className="space-y-2.5">
-            <div className="flex gap-2.5">
-              <button
-                className={`w-[46px] h-[46px] shrink-0 border rounded-full flex items-center justify-center text-lg transition disabled:cursor-not-allowed disabled:opacity-60 ${
-                  liked
-                    ? "border-rose-300 bg-rose-50 text-rose-500"
-                    : "border-line bg-white text-brand hover:bg-blush-50"
-                }`}
-                type="button"
-                title={liked ? "찜 해제" : "찜하기"}
-                aria-label={
-                  liked ? `${company.name} 찜 해제` : `${company.name} 찜하기`
-                }
-                aria-pressed={liked}
-                onClick={handleFavoriteClick}
-                disabled={favoriteLoading}
-              >
-                {favoriteLoading ? "…" : liked ? "♥" : "♡"}
-              </button>
-              {/* 승진 코드 추가 - 예약하기 */}
-              <button
-                className="flex-1 h-[46px] rounded-full border border-line bg-white text-sm font-medium transition hover:border-brand hover:text-brand"
-                type="button"
-                onClick={() => {
-                  if (!loginState.email) {
-                    alert("로그인이 필요한 기능입니다.");
-                    navigate("/auth/login");
-                    return;
-                  }
-                  navigate(`/companies/reserve/${company.cmno}?mode=reserve`);
-                }}
-              >
-                예약하기
-              </button>
-              {/* 승진 코드 추가 끝 */}
-              {/* 재원 수정 - "결제하기" 버튼 제거함. 매니저 승인 없이 바로 결제로 들어가는 흐름이라
-                  실제 서비스 플로우(예약 → 매니저 승인 → 결제)와 맞지 않아 삭제.
-                  결제는 마이페이지 > 예약 현황에서 승인된 예약에 한해 진행하는 걸로 정리됨.
-                  대신 그 자리에 문의하기 버튼을 배치 (기존엔 아래 두번째 줄에 있었음) */}
-              {!canManageCompany && !isManagedByMe && (
-                <button
-                  className="flex-1 h-[46px] rounded-full border border-brand bg-brand text-sm font-medium text-white transition hover:opacity-90"
-                  type="button"
-                  onClick={handleInquiryClick}
-                >
-                  문의하기
-                </button>
-              )}
-              {/* 재원 수정 끝 */}
-            </div>
-
-            {(isManagedByMe || canManageCompany) && (
-              <div className="flex gap-2.5">
-                {isManagedByMe && (
-                  <button
-                    className="flex-1 h-[46px] rounded-full border border-brand bg-brand text-sm font-medium text-white transition hover:opacity-90"
-                    type="button"
-                    onClick={() => navigate("/manager/inquiries")}
-                  >
-                    업체페이지
-                  </button>
-                )}
-                {canManageCompany && (
-                  <>
-                    <button
-                      className="flex-1 h-[46px] rounded-full border border-brand text-brand text-sm font-medium transition hover:bg-brand hover:text-white"
-                      type="button"
-                      onClick={() =>
-                        navigate({
-                          pathname: `${companyPathPrefix}/modify/${company.cmno}`,
-                        })
-                      }
-                    >
-                      수정
-                    </button>
-                    <button
-                      className="flex-1 h-[46px] rounded-full border border-red-300 text-red-500 text-sm font-medium transition hover:bg-red-50"
-                      type="button"
-                      onClick={handleDelete}
-                    >
-                      삭제
-                    </button>
-                  </>
-                )}
+          <div className="border-t border-line pt-4 mb-5 space-y-2.5 text-sm text-ink-muted">
+            {company.address && (
+              <div className="flex gap-2 items-start">
+                <span className="shrink-0 text-xs text-ink-faint w-10">주소</span>
+                <span className="leading-relaxed">{company.address}</span>
+              </div>
+            )}
+            {company.phone && (
+              <div className="flex gap-2">
+                <span className="shrink-0 text-xs text-ink-faint w-10">전화</span>
+                <span>{company.phone}</span>
+              </div>
+            )}
+            {company.ceoName && (
+              <div className="flex gap-2">
+                <span className="shrink-0 text-xs text-ink-faint w-10">대표</span>
+                <span>{company.ceoName}</span>
               </div>
             )}
           </div>
+
+          <div className="flex gap-2.5">
+            <button
+              className="w-[46px] h-[46px] shrink-0 border border-line-soft rounded-full flex items-center justify-center disabled:cursor-not-allowed disabled:opacity-60"
+              type="button"
+              title={liked ? "찜 해제" : "찜하기"}
+              aria-label={
+                liked ? `${company.name} 찜 해제` : `${company.name} 찜하기`
+              }
+              aria-pressed={liked}
+              onClick={handleFavoriteClick}
+              disabled={favoriteLoading}
+            >
+              {favoriteLoading ? (
+                <span className="text-xs text-ink-faint">…</span>
+              ) : (
+                <svg
+                  viewBox="0 0 24 24"
+                  className="w-[18px] h-[18px]"
+                  fill={liked ? "#C87070" : "none"}
+                  stroke="#C87070"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M19.5 12.572 12 20l-7.5-7.428a5 5 0 1 1 7.5-6.566 5 5 0 1 1 7.5 6.566Z" />
+                </svg>
+              )}
+            </button>
+            <button
+              className="flex-1 h-[46px] rounded-full border border-line-soft text-sm font-medium transition hover:border-brand hover:text-brand"
+              type="button"
+              onClick={() => {
+                if (!loginState.email) {
+                  alert("로그인이 필요한 기능입니다.");
+                  navigate("/auth/login");
+                  return;
+                }
+                navigate(`/companies/reserve/${company.cmno}?mode=reserve`);
+              }}
+            >
+              예약하기
+            </button>
+            {!canManageCompany && !isManagedByMe && (
+              <button
+                className="flex-1 h-[46px] rounded-full bg-brand text-white text-sm font-medium transition hover:opacity-90"
+                type="button"
+                onClick={handleInquiryClick}
+              >
+                문의하기
+              </button>
+            )}
+          </div>
+
+          {(isManagedByMe || canManageCompany) && (
+            <div className="flex gap-2.5 mt-2.5">
+              {isManagedByMe && (
+                <button
+                  className="flex-1 h-[46px] rounded-full bg-brand text-white text-sm font-medium transition hover:opacity-90"
+                  type="button"
+                  onClick={() => navigate("/manager/inquiries")}
+                >
+                  업체페이지
+                </button>
+              )}
+              {canManageCompany && (
+                <>
+                  <button
+                    className="flex-1 h-[46px] rounded-full border border-line-soft text-sm font-medium transition hover:border-brand hover:text-brand"
+                    type="button"
+                    onClick={() =>
+                      navigate({
+                        pathname: `${companyPathPrefix}/modify/${company.cmno}`,
+                      })
+                    }
+                  >
+                    수정
+                  </button>
+                  <button
+                    className="flex-1 h-[46px] rounded-full border border-red-300 text-red-500 text-sm font-medium transition hover:bg-red-50"
+                    type="button"
+                    onClick={handleDelete}
+                  >
+                    삭제
+                  </button>
+                </>
+              )}
+            </div>
+          )}
 
           {canManageCompany && (
             <p className="mt-3 text-xs text-ink-faint">
               업체 번호 #{company.cmno}
             </p>
           )}
-
-          <KakaoMap
-            latitude={company.latitude}
-            longitude={company.longitude}
-            name={company.name}
-            address={company.address}
-          />
         </div>
       </div>
 
@@ -604,20 +597,21 @@ const CompanyReadComponent = () => {
 
       {/* ── 탭 네비게이션 ── */}
       <div
-        className="sticky z-10 bg-white border-b border-line mt-10"
+        className="sticky z-10 bg-white border-b border-line mt-14"
         style={{ top: `${headerHeight}px` }}
       >
-        <div className="flex gap-5 md:gap-7 text-sm overflow-x-auto">
+        <div className="max-w-[1320px] mx-auto px-6 flex gap-5 md:gap-7 text-sm overflow-x-auto">
           {[
             { key: "intro", label: "업체 소개" },
             ...(company.category
               ? [
                   {
                     key: "detail",
-                    label: categoryLabel[company.category] || "상세 정보",
+                    label: `${categoryLabel[company.category] || "상세"} 정보`,
                   },
                 ]
               : []),
+            { key: "location", label: "위치" },
           ].map((tab) => (
             <span
               key={tab.key}
@@ -634,42 +628,61 @@ const CompanyReadComponent = () => {
         </div>
       </div>
 
-      {/* ── 업체 소개 섹션 ── */}
-      <div
-        ref={(el) => (sectionRefs.current.intro = el)}
-        className="py-8 md:py-10 border-b border-line"
-      >
-        <p className="text-sm font-medium mb-4">업체 소개</p>
-        <p className="whitespace-pre-wrap text-sm leading-7 text-ink-muted">
-          {company.description || "등록된 소개가 없습니다."}
-        </p>
-      </div>
+      <div className="max-w-[1320px] mx-auto px-6">
+        {/* ── 업체 소개 ── */}
+        <div
+          ref={(el) => (sectionRefs.current.intro = el)}
+          className="py-8 md:py-10 border-b border-line"
+        >
+          <p className="text-sm font-medium mb-4">업체 소개</p>
+          <div className="bg-cream rounded-2xl p-6 text-sm text-ink-soft whitespace-pre-line">
+            {company.description || "등록된 소개가 없습니다."}
+          </div>
+        </div>
 
-      {/* ── 카테고리 상세 섹션 ── */}
-      <div
-        ref={(el) => (sectionRefs.current.detail = el)}
-        className="py-6 md:py-8"
-      >
-        <CategoryDetail
-          company={company}
-          canManageCompany={canManageCompany}
-          onRefresh={handleRefresh}
-          wish={wish}
-        />
+        {/* ── 카테고리 상세 ── */}
+        <div
+          ref={(el) => (sectionRefs.current.detail = el)}
+          className="py-8 md:py-10 border-b border-line"
+        >
+          <CategoryDetail
+            company={company}
+            canManageCompany={canManageCompany}
+            onRefresh={handleRefresh}
+            wish={wish}
+          />
+        </div>
+
+        {/* ── 위치 ── */}
+        <div
+          ref={(el) => (sectionRefs.current.location = el)}
+          className="py-8 md:py-10 mb-6"
+        >
+          <p className="text-sm font-medium mb-4">위치</p>
+          {company.address && (
+            <p className="mb-4 text-sm text-ink-muted">{company.address}</p>
+          )}
+          <KakaoMap
+            latitude={company.latitude}
+            longitude={company.longitude}
+            name={company.name}
+            address={company.address}
+          />
+        </div>
       </div>
 
       {/* ── 목록으로 ── */}
-      <div className="flex justify-end pt-4">
+      <div className="max-w-[1320px] mx-auto px-6 pb-16 flex justify-end">
         <button
           type="button"
           onClick={() => {
             if (window.history.length > 1) {
-              navigate(-1); // 이전 작업 페이지로
+              navigate(-1);
               return;
             }
-            navigate(`${companyPathPrefix}/list${listSearch}`); // 히스토리 없으면 목록
+            navigate(`${companyPathPrefix}/list${listSearch}`);
           }}
-          className="h-11 px-6 rounded-full border border-line bg-white text-sm transition hover:border-brand hover:text-brand"
+          className="h-11 px-6 rounded-full border border-line-soft text-sm"
         >
           목록으로
         </button>
