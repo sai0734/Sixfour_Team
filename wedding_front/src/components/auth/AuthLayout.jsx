@@ -32,7 +32,7 @@ const AuthLayout = ({ eyebrow, title, subtitle, children }) => {
                 {eyebrow}
               </span>
             )}
-            <h1 className="font-display text-3xl md:text-4xl font-bold leading-tight tracking-tight text-white drop-shadow-md">
+            <h1 className="font-body text-3xl md:text-4xl font-bold leading-tight tracking-tight text-white drop-shadow-md">
               {title}
             </h1>
           </div>

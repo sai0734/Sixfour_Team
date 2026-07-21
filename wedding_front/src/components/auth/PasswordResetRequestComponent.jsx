@@ -1,5 +1,6 @@
 import { useState } from "react";
 import AuthLayout from "./AuthLayout";
+import AlertModal from "./AlertModal";
 
 const inputClass =
   "w-full px-4 py-3 rounded-xl border border-rose-100 bg-blush-50/40 text-plum-900 placeholder:text-plum-500/50 focus:border-rose-400 focus:ring-4 focus:ring-rose-100 outline-none transition";
@@ -12,6 +13,7 @@ const PasswordResetRequestComponent = () => {
   const [email, setEmail] = useState("");
   const [touched, setTouched] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
 
   const handleChange = (e) => {
     setEmail(e.target.value);
@@ -21,12 +23,12 @@ const PasswordResetRequestComponent = () => {
     setTouched(true);
 
     if (!email) {
-      alert("이메일을 입력해 주세요.");
+      setAlertMessage("이메일을 입력해 주세요.");
       return;
     }
 
     if (!EMAIL_REGEX.test(email)) {
-      alert("올바른 이메일 형식이 아닙니다.");
+      setAlertMessage("올바른 이메일 형식이 아닙니다.");
       return;
     }
 
@@ -44,7 +46,7 @@ const PasswordResetRequestComponent = () => {
   if (submitted) {
     return (
       <AuthLayout
-        eyebrow="메일 전송 완료"
+        eyebrow="Mail transfer completed"
         title={
           <>
             메일함을
@@ -58,7 +60,7 @@ const PasswordResetRequestComponent = () => {
           <div className="w-16 h-16 rounded-full bg-blush-100 flex items-center justify-center mx-auto mb-6 text-3xl">
             ✉️
           </div>
-          <h2 className="font-display text-2xl text-plum-900 mb-2">
+          <h2 className="font-body text-2xl text-plum-900 mb-2">
             메일함을 확인해 주세요
           </h2>
           <p className="text-plum-500 text-sm mb-1">
@@ -82,7 +84,7 @@ const PasswordResetRequestComponent = () => {
 
   return (
     <AuthLayout
-      eyebrow="비밀번호 찾기"
+      eyebrow="Finding a password"
       title={
         <>
           비밀번호를
@@ -93,7 +95,7 @@ const PasswordResetRequestComponent = () => {
       subtitle="가입하신 이메일로 새 비밀번호를 설정할 수 있어요"
     >
       <div className="max-w-sm w-full mx-auto">
-        <h2 className="font-display text-2xl text-plum-900 mb-1">
+        <h2 className="font-body text-2xl text-plum-900 mb-1">
           비밀번호 재설정
         </h2>
         <p className="text-plum-500 text-sm mb-6">
@@ -122,6 +124,8 @@ const PasswordResetRequestComponent = () => {
           재설정 메일 받기
         </button>
       </div>
+
+      <AlertModal message={alertMessage} onClose={() => setAlertMessage("")} />
     </AuthLayout>
   );
 };

@@ -9,6 +9,7 @@ import {
 import { login } from "../../slices/loginSlice";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import AuthLayout from "./AuthLayout";
+import AlertModal from "./AlertModal";
 
 const initState = {
   nickname: "",
@@ -51,6 +52,15 @@ const SocialCompleteComponent = () => {
     phone: false,
     address: false,
   });
+  const [alertMessage, setAlertMessage] = useState("");
+  const [pendingHomeRedirect, setPendingHomeRedirect] = useState(false);
+
+  const closeAlert = () => {
+    setAlertMessage("");
+    if (pendingHomeRedirect) {
+      moveToPath("/");
+    }
+  };
 
   // pendingToken 없이 이 화면에 바로 들어온 경우(새로고침으로 state 유실 등) - 진행 불가
   if (!pendingToken) {
@@ -168,7 +178,7 @@ const SocialCompleteComponent = () => {
     markTouched("address");
 
     if (!window.daum || !window.daum.Postcode) {
-      alert(
+      setAlertMessage(
         "주소 검색 기능을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
       );
       return;
@@ -187,49 +197,49 @@ const SocialCompleteComponent = () => {
     setTouched({ nickname: true, name: true, phone: true, address: true });
 
     if (!completeParam.nickname) {
-      alert("닉네임은 필수입니다.");
+      setAlertMessage("닉네임은 필수입니다.");
       return;
     }
 
     if (nicknameStatus === "unavailable") {
-      alert("이미 사용 중인 닉네임입니다. 다른 닉네임을 사용해주세요.");
+      setAlertMessage("이미 사용 중인 닉네임입니다. 다른 닉네임을 사용해주세요.");
       return;
     }
 
     if (!completeParam.name) {
-      alert("이름은 필수입니다.");
+      setAlertMessage("이름은 필수입니다.");
       return;
     }
 
     if (!completeParam.phone) {
-      alert("휴대폰 번호는 필수입니다.");
+      setAlertMessage("휴대폰 번호는 필수입니다.");
       return;
     }
 
     if (!PHONE_REGEX.test(completeParam.phone)) {
-      alert("올바른 휴대폰 번호 형식이 아닙니다. (예: 010-1234-5678)");
+      setAlertMessage("올바른 휴대폰 번호 형식이 아닙니다. (예: 010-1234-5678)");
       return;
     }
 
     if (phoneStatus === "unavailable") {
-      alert("이미 사용 중인 휴대폰 번호입니다.");
+      setAlertMessage("이미 사용 중인 휴대폰 번호입니다.");
       return;
     }
 
     if (phoneStatus === "blocked") {
-      alert(
+      setAlertMessage(
         "정지 또는 휴면 처리된 회원과 동일한 전화번호입니다. 관리자에게 문의해주세요.",
       );
       return;
     }
 
     if (!completeParam.address) {
-      alert("주소는 필수입니다.");
+      setAlertMessage("주소는 필수입니다.");
       return;
     }
 
     if (!completeParam.termsAgree || !completeParam.privacyAgree) {
-      alert(
+      setAlertMessage(
         "이용약관과 개인정보처리방침에 동의해야 가입을 완료할 수 있습니다.",
       );
       return;
@@ -250,15 +260,15 @@ const SocialCompleteComponent = () => {
         // 이 응답에 처음으로 accessToken/refreshToken이 들어있음 - 여기서 비로소 로그인 처리
         dispatch(login(data));
 
-        alert("가입이 완료되었습니다.");
-        moveToPath("/");
+        setPendingHomeRedirect(true);
+        setAlertMessage("가입이 완료되었습니다.");
       })
       .catch((err) => {
         console.log(err);
 
         const msg = err.response?.data?.msg;
 
-        alert(msg || "처리 중 오류가 발생했습니다.");
+        setAlertMessage(msg || "처리 중 오류가 발생했습니다.");
       })
       .finally(() => setSubmitting(false));
   };
@@ -340,7 +350,7 @@ const SocialCompleteComponent = () => {
       }
     >
       <div className="max-w-sm w-full mx-auto">
-        <h2 className="font-serifkr text-2xl text-ink mb-1">추가 정보 입력</h2>
+        <h2 className="font-body text-2xl text-ink mb-1">추가 정보 입력</h2>
         <p className="text-ink-muted text-sm mb-6">
           나머지 정보를 입력해 가입을 완료해요
         </p>
@@ -491,6 +501,8 @@ const SocialCompleteComponent = () => {
           {submitting ? "처리 중..." : "가입 완료하기"}
         </button>
       </div>
+
+      <AlertModal message={alertMessage} onClose={closeAlert} />
     </AuthLayout>
   );
 };
