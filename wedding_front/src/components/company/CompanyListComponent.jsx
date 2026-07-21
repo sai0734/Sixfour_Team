@@ -238,9 +238,9 @@ const CompanyListComponent = () => {
       {/* ── 필터 (컨테이너 없이 오픈 스타일) ── */}
       <div className="mb-6 space-y-3">
         {/* 검색 */}
-        <div className="flex gap-2">
+        <div className="flex w-1/2 max-w-full gap-2 mx-auto">
           <input
-            className="h-[38px] flex-1 rounded-full border border-line px-4 text-[13px] text-ink outline-none transition focus:border-brand"
+            className="h-[38px] min-w-0 flex-1 rounded-full border border-line px-4 text-[13px] text-ink outline-none transition focus:border-brand"
             type="text"
             placeholder="업체명, 주소, 연락처로 검색"
             value={keywordInput}
