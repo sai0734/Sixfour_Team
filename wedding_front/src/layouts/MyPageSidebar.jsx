@@ -102,14 +102,14 @@ const MyPageSidebar = () => {
   const sidebarLabel = isManager ? "업체페이지" : "마이페이지";
 
   return (
-    <aside className="sticky top-[68px] z-20 w-full bg-[#FBF7F0]/95 py-3 backdrop-blur lg:static lg:z-auto lg:w-60 lg:shrink-0 lg:bg-transparent lg:py-8 lg:pr-6 lg:backdrop-blur-0">
+    <aside className="sticky top-[68px] z-20 w-full bg-cream/95 py-3 backdrop-blur lg:static lg:z-auto lg:w-60 lg:shrink-0 lg:bg-transparent lg:py-8 lg:pr-6 lg:backdrop-blur-0">
       {MENU_GROUPS.map((group) => (
         <div
           key={group.label}
           className="relative overflow-hidden rounded-2xl bg-white p-3 lg:p-4"
           style={{ boxShadow: "0 8px 24px -14px rgba(58,54,47,0.25)" }}
         >
-          <p className="hidden px-3 text-xs font-bold tracking-wide text-[#7C8B6F] lg:mb-3 lg:block">
+          <p className="hidden px-3 text-xs font-bold tracking-wide text-brand-deep lg:mb-3 lg:block">
             {sidebarLabel}
           </p>
 
@@ -126,8 +126,8 @@ const MyPageSidebar = () => {
                   to={item.path}
                   className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2.5 text-sm font-medium transition-colors lg:flex lg:items-center lg:gap-2 ${
                     isActive
-                      ? "bg-[#7C8B6F] text-white shadow-[0_4px_12px_-4px_rgba(92,107,79,0.55)]"
-                      : "bg-[#F7F2EA] text-[#4A3F38] hover:bg-[#E6EBDD] lg:bg-transparent"
+                      ? "bg-brand-deep text-white shadow-[0_4px_12px_-4px_rgba(192,96,128,0.55)]"
+                      : "bg-blush-50 text-ink hover:bg-blush-100 lg:bg-transparent"
                   }`}
                 >
                   <span className="flex items-center gap-1.5">

@@ -30,8 +30,11 @@ public class AiPlanDetailServiceImpl implements AiPlanDetailService {
         // 조합이 정확히 하나로 나왔을 때만 세션을 만든다 - 패키지가 여러 개 나오면 아직 확정한 게
         // 없어서 리파인 대화(6단계)를 붙일 대상이 없음
         if (result.getCandidates().size() == 1) {
+            String makeupPackageType = prefs.getMakeupType() != null ? prefs.getMakeupType().name() : null;
             var session = sessionSupport.createSession(
-                    requestDTO.getBudget(), region, requestDTO.getWeddingDate(), "DETAIL", result.getCandidates().get(0));
+                    requestDTO.getBudget(), region, requestDTO.getWeddingDate(),
+                    requestDTO.getGroomName(), requestDTO.getBrideName(), makeupPackageType,
+                    "DETAIL", result.getCandidates().get(0));
             result.setSessionId(session.getSessionId());
         }
 

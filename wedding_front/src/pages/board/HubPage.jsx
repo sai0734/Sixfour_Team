@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import BasicMenu from "../../components/menus/BasicMenu";
+import BoardLayout from "../../layouts/BoardLayout";
 import BoardTopTabs from "../../components/board/BoardTopTabs";
-import TapeLabel from "../../components/common/TapeLabel";
 import PostCard from "../../components/board/PostCard";
 import BoardFormModal, {
   BOARD_TYPE_LABELS,
@@ -190,31 +189,11 @@ const HubPage = () => {
   };
 
   return (
-    <>
-      <BasicMenu />
-
-      <div className="bg-cream min-h-screen">
-        <section
-          className="relative bg-cover bg-center px-5 pt-24 pb-8 text-center md:px-8 md:pt-28 md:pb-10 lg:px-[60px]"
-          // TODO: 커뮤니티 허브 전용 사진 준비되면 /community-hub-hero.jpg 같은 걸로 교체
-          // (지금은 준비관리에 넣은 사진을 그대로 임시로 재사용)
-          style={{ backgroundImage: "url('/prep-hero.jpg')" }}
-        >
-          <div className="absolute inset-0 bg-black/45" />
-
-          <div className="relative z-10">
-            <TapeLabel tone="white" className="mb-3">
-              WEDDING COMMUNITY
-            </TapeLabel>
-            <p className="mb-2 font-['Gowun_Batang'] text-2xl text-white md:text-3xl">
-              웨딩 커뮤니티
-            </p>
-            <p className="text-sm text-white/85">
-              예비 부부들의 생생한 후기와 정보를 나눠요
-            </p>
-          </div>
-        </section>
-
+    <BoardLayout
+      eyebrow="WEDDING COMMUNITY"
+      title="웨딩 커뮤니티"
+      subtitle="예비 부부들의 생생한 후기와 정보를 나눠요"
+    >
         <div className="mx-auto max-w-[1140px] px-5 pt-6 md:px-8 lg:px-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <BoardTopTabs active="ALL" />
@@ -314,7 +293,6 @@ const HubPage = () => {
             )}
           </div>
         </div>
-      </div>
 
       {modalOpen && (
         <BoardFormModal
@@ -346,7 +324,7 @@ const HubPage = () => {
           onClose={() => setDetailPost(null)}
         />
       )}
-    </>
+    </BoardLayout>
   );
 };
 

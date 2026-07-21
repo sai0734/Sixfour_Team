@@ -6,24 +6,42 @@ import {
   deleteOne,
 } from "../../api/weddingplanApi";
 import useCustomLogin from "../../hooks/useCustomLogin";
+import TapeLabel from "../common/TapeLabel";
 
 const initState = {
   groomName: "",
   brideName: "",
   weddingDate: "",
-  weddingLocation: "",
   totalBudget: 0,
   memo: "",
 };
 
-const fields = [
-  { name: "groomName", label: "신랑", type: "text" },
-  { name: "brideName", label: "신부", type: "text" },
+const REQUIRED_FIELDS = [
+  { name: "groomName", label: "신랑 이름", type: "text", placeholder: "예: 김철수" },
+  { name: "brideName", label: "신부 이름", type: "text", placeholder: "예: 이영희" },
   { name: "weddingDate", label: "예식일", type: "date" },
-  { name: "weddingLocation", label: "예식장", type: "text" },
-  { name: "totalBudget", label: "총 예산", type: "number" },
-  { name: "memo", label: "메모", type: "text" },
+  { name: "totalBudget", label: "총 예산 (원)", type: "number" },
 ];
+
+const DAY_LABEL = ["일", "월", "화", "수", "목", "금", "토"];
+
+// 결과 화면(ResultCards)의 D-day 배지와 같은 계산식 - 마이페이지에서도 같은 감각으로 보여줌
+const calcDday = (dateStr) => {
+  if (!dateStr) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(dateStr);
+  const diff = Math.ceil((target - today) / 86400000);
+  if (diff > 0) return `D-${diff}`;
+  if (diff === 0) return "D-DAY";
+  return `D+${Math.abs(diff)}`;
+};
+
+const formatInvitationDate = (dateStr) => {
+  if (!dateStr) return "예식일 미정";
+  const d = new Date(dateStr);
+  return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 ${DAY_LABEL[d.getDay()]}요일`;
+};
 
 const PlanComponent = () => {
   const { loginState } = useCustomLogin();
@@ -60,7 +78,23 @@ const PlanComponent = () => {
     setEditForm({ ...editForm });
   };
 
+  // 신랑/신부/예식일/총예산은 마이페이지·준비관리 전반에서 기준으로 쓰는 필수값이라 여기서 막아둠
+  const validateRequired = () => {
+    if (
+      !editForm.groomName?.trim() ||
+      !editForm.brideName?.trim() ||
+      !editForm.weddingDate ||
+      !Number(editForm.totalBudget)
+    ) {
+      alert("신랑, 신부, 예식일, 총예산은 필수로 입력해주세요.");
+      return false;
+    }
+    return true;
+  };
+
   const handleClickRegister = () => {
+    if (!validateRequired()) return;
+
     const payload = {
       ...editForm,
       memberEmail: loginState.email,
@@ -78,6 +112,8 @@ const PlanComponent = () => {
   };
 
   const handleClickSave = () => {
+    if (!validateRequired()) return;
+
     const payload = {
       ...editForm,
       weddingPlanId: plan.weddingPlanId,
@@ -122,39 +158,53 @@ const PlanComponent = () => {
 
   const showForm = !plan || editMode;
 
-  return (
-    <div className="bg-white rounded-2xl border border-line p-8 max-w-2xl mx-auto mb-20">
-      {!plan && (
-        <p className="text-center text-sm text-ink-muted mb-6">
-          아직 등록된 웨딩플랜이 없습니다. 아래 정보를 입력해주세요.
-        </p>
-      )}
+  // ── 등록/수정 폼 ──────────────────────────────────────────────
+  if (showForm) {
+    return (
+      <div className="mx-auto mb-20 max-w-lg">
+        <div className="rounded-[28px] border border-line bg-white p-8 shadow-[0_20px_50px_-24px_rgba(58,54,47,0.25)] sm:p-10">
+          <p className="mb-1 text-center font-['Gowun_Batang'] text-xl text-ink">
+            {plan ? "웨딩플랜 수정" : "웨딩플랜 등록"}
+          </p>
+          <p className="mb-8 text-center text-xs text-ink-faint">
+            {plan
+              ? "정보를 고치면 준비관리 곳곳에 바로 반영돼요"
+              : "이 정보가 마이페이지와 준비관리 전반의 기준이 돼요"}
+          </p>
 
-      {showForm ? (
-        <>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            {fields.map((f) => (
-              <label
-                key={f.name}
-                className={`flex flex-col gap-2 ${
-                  f.name === "memo" ? "col-span-2" : ""
-                }`}
-              >
+          <div className="flex flex-col gap-5">
+            {REQUIRED_FIELDS.map((f) => (
+              <label key={f.name} className="flex flex-col gap-2">
                 <span className="text-xs font-medium text-ink-soft">
-                  {f.label}
+                  {f.label} <span className="text-brand-deep">*</span>
                 </span>
                 <input
                   className="h-11 px-4 rounded-lg border border-line-soft text-sm focus:outline-none focus:border-brand"
                   name={f.name}
                   type={f.type}
+                  placeholder={f.placeholder}
+                  min={f.type === "number" ? 0 : undefined}
                   value={editForm[f.name] ?? ""}
                   onChange={handleChange}
                 />
               </label>
             ))}
+
+            <label className="flex flex-col gap-2">
+              <span className="text-xs font-medium text-ink-soft">
+                메모 <span className="text-ink-faint">(선택)</span>
+              </span>
+              <textarea
+                className="min-h-[72px] px-4 py-3 rounded-lg border border-line-soft text-sm focus:outline-none focus:border-brand"
+                name="memo"
+                placeholder="둘만의 짧은 다짐이나 메모를 남겨보세요"
+                value={editForm.memo ?? ""}
+                onChange={handleChange}
+              />
+            </label>
           </div>
 
-          <div className="flex justify-end gap-2 mt-6">
+          <div className="flex justify-end gap-2 mt-8">
             {editMode && (
               <button
                 type="button"
@@ -175,40 +225,80 @@ const PlanComponent = () => {
               {plan ? "저장" : "등록"}
             </button>
           </div>
-        </>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 gap-y-5 gap-x-8 sm:grid-cols-2">
-            {fields.map((f) => (
-              <div key={f.name}>
-                <p className="text-xs text-ink-muted mb-1">{f.label}</p>
-                <p className="text-sm text-ink font-medium">
-                  {f.name === "totalBudget"
-                    ? Number(plan[f.name]).toLocaleString() + "원"
-                    : plan[f.name] || "-"}
-                </p>
-              </div>
-            ))}
+        </div>
+      </div>
+    );
+  }
+
+  // ── 청첩장 스타일 카드 ─────────────────────────────────────────
+  const dday = calcDday(plan.weddingDate);
+
+  return (
+    <div className="mx-auto mb-20 max-w-lg">
+      <div className="flex justify-center">
+        <TapeLabel className="relative z-10 -mb-4">우리 결혼합니다</TapeLabel>
+      </div>
+
+      {/* 이중 테두리로 청첩장 카드 느낌을 냄 */}
+      <div className="rounded-[30px] border border-brand-dark/40 bg-white p-2 shadow-[0_24px_60px_-28px_rgba(58,54,47,0.35)]">
+        <div className="rounded-[24px] border border-brand-dark/25 bg-blush-lavender px-8 py-12 text-center sm:px-12">
+          <p className="mb-5 font-['Gowun_Batang'] text-[11px] tracking-[0.35em] text-brand-deep">
+            WEDDING INVITATION
+          </p>
+
+          <p className="font-['Gowun_Batang'] text-2xl leading-relaxed text-ink sm:text-[28px]">
+            {plan.groomName || "신랑"}
+            <span className="mx-2 font-serif text-2xl italic text-brand-deep">
+              &
+            </span>
+            {plan.brideName || "신부"}
+          </p>
+
+          <div className="mx-auto my-6 h-px w-14 bg-brand-dark/40" />
+
+          <div className="flex flex-col items-center gap-2">
+            {dday && (
+              <span className="rounded-full bg-brand-deep px-3 py-1 text-xs font-bold text-white">
+                {dday}
+              </span>
+            )}
+            <p className="font-['Gowun_Batang'] text-sm text-ink-soft sm:text-base">
+              {formatInvitationDate(plan.weddingDate)}
+            </p>
           </div>
 
-          <div className="flex justify-end gap-2 mt-8">
-            <button
-              type="button"
-              onClick={() => setEditMode(true)}
-              className="h-11 px-6 rounded-full bg-brand text-white text-sm font-medium hover:bg-brand-dark"
-            >
-              수정
-            </button>
-            <button
-              type="button"
-              onClick={handleClickDelete}
-              className="h-11 px-6 rounded-full border border-line-soft text-sm text-ink-soft hover:bg-cream"
-            >
-              삭제
-            </button>
-          </div>
-        </>
-      )}
+          {plan.memo && (
+            <p className="mt-6 font-['Gowun_Batang'] text-xs italic leading-relaxed text-ink-muted">
+              "{plan.memo}"
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* 실용 정보(총 예산)는 청첩장 밖, 별도 카드로 */}
+      <div className="mt-5 flex items-center justify-between rounded-2xl border border-line bg-white px-6 py-4">
+        <span className="text-xs text-ink-muted">총 예산</span>
+        <span className="text-base font-medium text-ink">
+          {Number(plan.totalBudget).toLocaleString()}원
+        </span>
+      </div>
+
+      <div className="flex justify-center gap-2 mt-6">
+        <button
+          type="button"
+          onClick={() => setEditMode(true)}
+          className="h-11 px-6 rounded-full bg-brand text-white text-sm font-medium hover:bg-brand-dark"
+        >
+          수정
+        </button>
+        <button
+          type="button"
+          onClick={handleClickDelete}
+          className="h-11 px-6 rounded-full border border-line-soft text-sm text-ink-soft hover:bg-cream"
+        >
+          삭제
+        </button>
+      </div>
     </div>
   );
 };

@@ -1,6 +1,14 @@
 import { useState } from "react";
 
-export const CATEGORY_OPTIONS = ["홀", "스드메", "예복", "예물", "기타"];
+export const CATEGORY_OPTIONS = [
+  "홀",
+  "스튜디오",
+  "드레스",
+  "메이크업",
+  "예복",
+  "예물",
+  "기타",
+];
 
 // 카테고리별로 화면이 나뉘어 있지 않고 하나의 목록이라, 순서도 전체 기준 하나로 관리
 const suggestNextOrder = (budgetList, excludeId) => {

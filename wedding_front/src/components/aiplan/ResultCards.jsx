@@ -296,7 +296,7 @@ const reservableSlots = (combo) =>
     name: combo[`${key}Name`],
   })).filter((slot) => slot.cmno);
 
-const ResultCards = ({ result, onSlotAction, onBumpBudget }) => {
+const ResultCards = ({ result, onSlotAction, onBumpBudget, onApplyToPlan }) => {
   const navigate = useNavigate();
 
   // 예약 체크박스 선택 상태 - 조합의 예약 가능 슬롯 구성이 바뀌면(다듬기로 카테고리가
@@ -396,6 +396,21 @@ const ResultCards = ({ result, onSlotAction, onBumpBudget }) => {
 
       {soleCombo && (
         <SidePanel combo={soleCombo} sessionId={sessionId} onSlotAction={onSlotAction} />
+      )}
+
+      {soleCombo && sessionId && onApplyToPlan && (
+        <div className="mb-6 flex flex-col items-center gap-2">
+          <button
+            type="button"
+            onClick={onApplyToPlan}
+            className="h-11 rounded-full border border-brand-dark px-6 text-sm font-medium text-brand-deep hover:bg-blush-50"
+          >
+            이 결과 마이페이지에 담기
+          </button>
+          <p className="text-xs text-ink-faint">
+            플랜 · 준비관리 · 체크리스트 · 예산관리에 한 번에 반영돼요
+          </p>
+        </div>
       )}
 
       {soleCombo && slots.length > 0 && (

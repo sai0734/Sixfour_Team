@@ -9,28 +9,33 @@ const PrepLayout = ({ eyebrow, title, subtitle, children }) => {
       <>
         <BasicMenu />
 
-        <div className="min-h-screen bg-[#FBF7F0]">
+        <div className="min-h-screen bg-cream">
+          {/* 답례품/AI 웨딩플랜 히어로와 같은 색감·폰트를 쓰되, 이 레이아웃은 BasicLayout의
+              mt-24 여백 없이 BasicMenu(고정 상단바) 바로 아래에서 시작하므로 음수 마진 대신
+              위쪽에 넉넉한 패딩을 직접 줘서 고정 상단바에 안 가리게 한다. */}
           {(eyebrow || title) && (
             <section
-              className="relative bg-cover bg-center px-5 pt-24 pb-8 text-center md:px-8 md:pt-28 md:pb-10 lg:px-[60px]"
+              className="relative bg-cover bg-center px-5 pb-12 pt-28 text-center md:px-8 md:pb-14 md:pt-36"
               style={{ backgroundImage: "url('/prep-hero.jpg')" }}
             >
               {/* 사진 위에 어두운 막을 씌워서 흰 글씨가 잘 읽히게 */}
               <div className="absolute inset-0 bg-black/45" />
 
-              <div className="relative z-10">
+              <div className="relative z-10 mx-auto max-w-[720px]">
                 {eyebrow && (
-                  <TapeLabel tone="white" className="mb-4">
+                  <TapeLabel tone="white" className="mb-5">
                     {eyebrow}
                   </TapeLabel>
                 )}
                 {title && (
-                  <p className="mb-2 font-['Gowun_Batang'] text-2xl text-white md:text-3xl">
+                  <h1 className="mb-2.5 font-['Gowun_Batang'] text-2xl leading-snug text-white md:mb-3.5 md:text-4xl">
                     {title}
-                  </p>
+                  </h1>
                 )}
                 {subtitle && (
-                  <p className="text-sm text-white/85">{subtitle}</p>
+                  <p className="text-sm leading-relaxed text-white/85 md:text-[15px]">
+                    {subtitle}
+                  </p>
                 )}
               </div>
             </section>

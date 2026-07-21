@@ -3,8 +3,10 @@ package com.wedding.aiplan.service;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -24,6 +26,7 @@ import com.wedding.company.domain.HallItem;
 import com.wedding.company.domain.MakeupPackageType;
 import com.wedding.company.repository.CompanyRepository;
 import com.wedding.company.repository.HallDetailRepository;
+import com.wedding.company.repository.MakeupPackageRepository;
 import com.wedding.global.util.OpenAiClient;
 import com.wedding.openAIClient.dto.OpenAiMessageDTO;
 import com.wedding.openAIClient.dto.OpenAiResponseDTO;
@@ -45,10 +48,15 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
     private final ObjectMapper objectMapper;
     private final CompanyRepository companyRepository;
     private final HallDetailRepository hallDetailRepository;
+    private final MakeupPackageRepository makeupPackageRepository;
     private final AiPlanCandidateBuilder candidateBuilder;
     private final AiPlanSessionSupport sessionSupport;
 
     private static final int POOL_SIZE = 6;
+
+    // 메이크업 패키지 타입(예: FULL)을 요청했을 때, 그걸 실제로 파는 업체를 찾기 위해 일단 넓게
+    // 훑어보는 개수. POOL_SIZE(6)만 미리 가격순으로 뽑으면 그 안에 지원 업체가 하나도 없을 수 있다.
+    private static final int WIDE_POOL_SIZE = 30;
 
     // 자유 요청사항에 이 단어들 중 하나와 업체명이 같은 구절(마침표/쉼표/줄바꿈 단위)에 같이 나오면
     // 그 업체는 "제외 요청"으로 보고 AI에게 보여주는 후보 목록에서 아예 뺀다. AI에게 "빼달라"고
@@ -79,8 +87,16 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
         String region = blankToNull(requestDTO.getRegion());
         Long budget = requestDTO.getBudget();
 
+        // 요청한 메이크업 패키지 타입(예: FULL)을 실제로 파는 업체 cmno 목록을 미리 구해서, 후보 풀
+        // 구성(buildPools)과 AI 응답 최종 검증(parseAndValidate) 둘 다에서 같은 기준으로 쓴다.
+        // "블랑쉬 웨딩뷰티"처럼 헤어+메이크업만 파는 곳이 FULL 요청에 매칭되던 문제가 이 부분이었음.
+        MakeupPackageType requestedMakeupType = parseMakeupPackageType(requestDTO.getMakeupStyle());
+        Set<Long> makeupTypeCmnos = requestedMakeupType != null
+                ? new HashSet<>(makeupPackageRepository.findCompanyCmnosByPackageTypeIn(List.of(requestedMakeupType)))
+                : Set.of();
+
         Map<CompanyCategory, List<Company>> pools =
-                buildPools(region, budget, requestDTO.getGuestCount(), requestDTO.getFreeText());
+                buildPools(region, budget, requestDTO.getGuestCount(), requestDTO.getFreeText(), makeupTypeCmnos);
 
         if (pools.values().stream().anyMatch(List::isEmpty)) {
             log.warn("AiPlan AI: at least one category has no candidates at all, skipping AI call");
@@ -99,7 +115,8 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
             return fallback(region, budget, requestDTO);
         }
 
-        AiPlanPackageCandidateDTO combo = parseAndValidate(raw, pools, requestDTO.getDressStyle(), requestDTO.getMakeupStyle());
+        AiPlanPackageCandidateDTO combo = parseAndValidate(
+                raw, pools, requestDTO.getDressStyle(), requestedMakeupType, makeupTypeCmnos);
 
         if (combo == null) {
             log.warn("AiPlan AI: response failed parsing/grounding validation, falling back. raw={}", raw);
@@ -114,19 +131,22 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
         // 안에서(조건은 다 내려놓고) 고른 대안을 규칙 기반 엔진으로 다시 찾아 먼저 보여준다 - AI를 한 번
         // 더 호출하는 비용을 안 쓰기 위해 AiPlanCandidateBuilder(규칙 기반)로 대체한다. 규칙 기반 쪽은
         // 자기 자신을 재귀 호출하는 구조라 "이미 완화된 상태" 가드가 필요했지만, 여긴 완전히 별개
-        // 호출(AiPlanCategoryPreferences.empty())이라 그 가드가 필요 없다.
+        // 호출이라 그 가드가 필요 없다. 메이크업 패키지 타입만은 (가격 영향이 작아서) 계속 유지한다 -
+        // 안 그러면 "FULL 요청했는데 전혀 상관없는 패키지가 나온다"는 문제가 생긴다.
         if (budget != null && budget > 0) {
             long gap = combo.getPackagePrice().longValue() - budget;
             if (gap > AiPlanCandidateBuilder.BUDGET_TOLERANCE) {
+                AiPlanCategoryPreferences makeupOnly = AiPlanCategoryPreferences.of(
+                        List.of(), List.of(), List.of(), requestedMakeupType);
                 AiPlanQuickResultDTO budgetFit = candidateBuilder.recommend(
-                        region, budget, null, AiPlanCategoryPreferences.empty());
+                        region, budget, null, makeupOnly);
                 if (!budgetFit.getCandidates().isEmpty()) {
                     budgetFit.setSuggestedBudget(budget + gap);
                     budgetFit.setMessage(String.format(
                             "우선 예산에 맞는 조합으로 보여드렸어요. 예산을 %,d원 더 늘리면 요청하신 조건에 "
                                     + "더 맞는 곳을 찾아드릴 수 있어요.",
                             gap));
-                    return attachSession(budgetFit, budget, region, requestDTO.getWeddingDate(), "AI_FALLBACK");
+                    return attachSession(budgetFit, budget, region, requestDTO, "AI_FALLBACK");
                 }
             }
         }
@@ -143,7 +163,7 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
                 .candidates(List.of(combo))
                 .regionRelaxed(false)
                 .message(message.toString())
-                .build(), budget, region, requestDTO.getWeddingDate(), "AI");
+                .build(), budget, region, requestDTO, "AI");
     }
 
     // 규칙 기반 경로(AiPlanCandidateBuilder)에 넣은 것과 같은 방식 - AI가 고른 조합도 합계가 예산보다
@@ -240,25 +260,29 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
     private AiPlanQuickResultDTO fallback(String region, Long budget, AiPlanDetailRequestDTO requestDTO) {
         AiPlanQuickResultDTO result = candidateBuilder.recommend(
                 region, budget, requestDTO.getGuestCount(), AiPlanCategoryPreferences.fromDetailRequest(requestDTO));
-        return attachSession(result, budget, region, requestDTO.getWeddingDate(), "AI_FALLBACK");
+        return attachSession(result, budget, region, requestDTO, "AI_FALLBACK");
     }
 
     // 조합이 정확히 하나로 나왔을 때만 세션을 만든다 (AiPlanDetailServiceImpl과 동일한 규칙).
     // weddingDate는 세션 생성 여부와 무관하게 결과에 항상 실어보낸다 - 폼에 입력한 값을 결과 화면에도 보여주기 위함.
     private AiPlanQuickResultDTO attachSession(AiPlanQuickResultDTO result, Long budget, String region,
-                                               java.time.LocalDate weddingDate, String mode) {
+                                               AiPlanDetailRequestDTO requestDTO, String mode) {
         if (result.getCandidates().size() == 1) {
-            var session = sessionSupport.createSession(budget, region, weddingDate, mode, result.getCandidates().get(0));
+            MakeupPackageType makeupType = parseMakeupPackageType(requestDTO.getMakeupStyle());
+            var session = sessionSupport.createSession(budget, region, requestDTO.getWeddingDate(),
+                    requestDTO.getGroomName(), requestDTO.getBrideName(),
+                    makeupType != null ? makeupType.name() : null,
+                    mode, result.getCandidates().get(0));
             result.setSessionId(session.getSessionId());
         }
-        result.setWeddingDate(weddingDate);
+        result.setWeddingDate(requestDTO.getWeddingDate());
         return result;
     }
 
     // ── 후보 풀 구성 (SQL 단계) ────────────────────────────────────────
 
     private Map<CompanyCategory, List<Company>> buildPools(String region, Long budget, Integer guestCount,
-                                                            String freeText) {
+                                                            String freeText, Set<Long> makeupTypeCmnos) {
 
         Map<CompanyCategory, List<Company>> pools = new EnumMap<>(CompanyCategory.class);
 
@@ -269,9 +293,30 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
         pools.put(CompanyCategory.STUDIO, filterExcluded(
                 fetchPool(CompanyCategory.STUDIO, region, allocate(budget, AiPlanCandidateBuilder.STUDIO_RATIO)), freeText));
         pools.put(CompanyCategory.MAKEUP, filterExcluded(
-                fetchPool(CompanyCategory.MAKEUP, region, allocate(budget, AiPlanCandidateBuilder.MAKEUP_RATIO)), freeText));
+                fetchMakeupPool(region, allocate(budget, AiPlanCandidateBuilder.MAKEUP_RATIO), makeupTypeCmnos), freeText));
 
         return pools;
+    }
+
+    // 요청한 메이크업 패키지 타입을 실제로 파는 업체만 AI에게 후보로 보여준다 - 없으면(그 지역/예산
+    // 안엔 지원 업체가 없는 경우) 지역 무관으로 한 번 더 찾아보고, 그래도 없으면 일반 후보 풀로
+    // 폴백한다(이 경우 parseAndValidate에서 makeupPackageType을 null로 비워 정직하게 처리함).
+    private List<Company> fetchMakeupPool(String region, Long allocatedBudget, Set<Long> makeupTypeCmnos) {
+
+        if (!makeupTypeCmnos.isEmpty()) {
+            List<Company> matched = fetchPool(CompanyCategory.MAKEUP, region, allocatedBudget, makeupTypeCmnos);
+            if (!matched.isEmpty()) {
+                return matched;
+            }
+            if (region != null) {
+                List<Company> matchedAnyRegion = fetchPool(CompanyCategory.MAKEUP, null, allocatedBudget, makeupTypeCmnos);
+                if (!matchedAnyRegion.isEmpty()) {
+                    return matchedAnyRegion;
+                }
+            }
+        }
+
+        return fetchPool(CompanyCategory.MAKEUP, region, allocatedBudget);
     }
 
     // "OO는 빼고 찾아줘" 같은 자유 요청사항에서 언급된 업체를 후보 풀에서 미리 제거한다.
@@ -345,6 +390,21 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
         return pool;
     }
 
+    // restrictToCmnos 안에 있는 업체만 남긴 후보 풀 (메이크업 패키지 타입 필터용). POOL_SIZE만
+    // 미리 뽑으면 그 안에 지원 업체가 하나도 없을 수 있어서, WIDE_POOL_SIZE로 넉넉히 뽑은 뒤 거른다.
+    private List<Company> fetchPool(CompanyCategory category, String region, Long allocatedBudget,
+                                     Set<Long> restrictToCmnos) {
+
+        BigDecimal maxPrice = allocatedBudget != null ? BigDecimal.valueOf(allocatedBudget) : null;
+        Sort sort = Sort.by("priceAvg").descending();
+
+        List<Company> wide = companyRepository
+                .searchList(category, region, null, maxPrice, PageRequest.of(0, WIDE_POOL_SIZE, sort))
+                .getContent();
+
+        return wide.stream().filter(c -> restrictToCmnos.contains(c.getCmno())).limit(POOL_SIZE).toList();
+    }
+
     private Long allocate(Long budget, double ratio) {
         return budget != null && budget > 0 ? Math.round(budget * ratio) : null;
     }
@@ -391,7 +451,8 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
     // ── AI 응답 파싱 + 그라운딩 재검증 ─────────────────────────────────
 
     private AiPlanPackageCandidateDTO parseAndValidate(String raw, Map<CompanyCategory, List<Company>> pools,
-                                                       String dressStyleRaw, String makeupStyleRaw) {
+                                                       String dressStyleRaw, MakeupPackageType requestedMakeupType,
+                                                       Set<Long> makeupTypeCmnos) {
 
         // 프론트가 칩 중복선택 결과를 콤마로 이어붙여 보내므로(예: "머메이드,벨라인") 여기서 쪼갠다.
         List<String> dressStyleKeywords = dressStyleRaw == null || dressStyleRaw.isBlank()
@@ -400,18 +461,6 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
                         .map(String::trim)
                         .filter(s -> !s.isEmpty())
                         .toList();
-
-        // AI가 고른 메이크업 업체가 이 패키지를 실제로 갖고 있는지는 여기서 그라운딩하지 않으므로
-        // (풀 자체가 패키지 타입으로 안 걸러짐), 프론트에서 옵션가를 다시 찾다가 없으면 평균가로
-        // 안전하게 폴백한다는 전제로 요청값을 그대로 담아 보낸다.
-        String makeupPackageType = null;
-        if (makeupStyleRaw != null && !makeupStyleRaw.isBlank()) {
-            try {
-                makeupPackageType = MakeupPackageType.fromString(makeupStyleRaw.trim().toUpperCase()).name();
-            } catch (IllegalArgumentException ignored) {
-                // 잘못된 값이면 그냥 무시 - null 유지
-            }
-        }
 
         try {
             JsonNode root = objectMapper.readTree(raw);
@@ -432,6 +481,15 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
             }
 
             String excludedNote = root.hasNonNull("excludedNote") ? root.get("excludedNote").asText() : null;
+
+            // 최종 그라운딩 - AI가 고른 메이크업 업체가 실제로 요청한 패키지 타입을 파는 업체
+            // 목록(makeupTypeCmnos)에 있을 때만 packageType을 채운다. 후보 풀 자체를 못 좁혀서
+            // 일반 풀로 폴백했던 경우까지 여기서 한 번 더 걸러내는 마지막 방어선 - 이게 없으면
+            // "블랑쉬 웨딩뷰티"처럼 그 패키지를 안 파는 업체가 그 패키지를 파는 것처럼 나간다.
+            String makeupPackageType = (!makeup.excluded() && requestedMakeupType != null
+                    && makeupTypeCmnos.contains(makeup.company().getCmno()))
+                    ? requestedMakeupType.name()
+                    : null;
 
             DressItem dressItem = dress.excluded() ? null
                     : candidateBuilder.resolveDressItem(dress.company(), dressStyleKeywords);
@@ -477,7 +535,7 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
                     .makeupReason(makeup.excluded() ? "요청하신 대로 이번엔 빼고 찾았어요" : makeup.reason())
                     .makeupImageUrl(makeup.excluded() ? null : AiPlanCandidateBuilder.firstImage(makeup.company()))
                     .makeupPrice(makeup.excluded() ? null : makeup.company().getPriceAvg())
-                    .makeupPackageType(makeup.excluded() ? null : makeupPackageType)
+                    .makeupPackageType(makeupPackageType)
                     .sourceType("AI_COMBO")
                     .build();
 
@@ -523,6 +581,17 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
 
     private String blankToNull(String s) {
         return (s == null || s.isBlank()) ? null : s.trim();
+    }
+
+    private MakeupPackageType parseMakeupPackageType(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            return MakeupPackageType.fromString(raw.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     private record CategoryResult(boolean excluded, Company company, String reason) {

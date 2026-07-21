@@ -38,6 +38,17 @@ public class AiPlanSession {
     // 비로그인 상태로 시작한 세션은 null. "예약 진행"/새로고침 복원 시점에 로그인하면 채워 넣음.
     private String memberEmail;
 
+    // 자세히/AI 모드 폼에서 같이 받아두는 값 - 스코어링엔 안 쓰이지만 "마이페이지에 담기"로
+    // WeddingPlan에 반영할 때 필요해서 세션에도 스냅샷으로 저장해둔다. 입력 안 하면 null.
+    private String groomName;
+
+    private String brideName;
+
+    // 처음 요청할 때 고른 메이크업 패키지 타입(MakeupPackageType.name(), 예: "FULL"). "다시 찾기"/
+    // 다듬기 대화로 메이크업을 재검색할 때도 이 취향을 계속 지키기 위해 세션에 저장해둔다 - 여기가
+    // 없으면 재검색할 때마다 취향을 몰라서 아무 업체나 고르게 된다.
+    private String makeupPackageType;
+
     // WeddingPlan과 별개로 세션 시점에 입력받은 스냅샷 값 (모드 선택 시 필수 입력)
     private Long budget;
 

@@ -1,4 +1,5 @@
 import axios from "axios";
+import jwtAxios from "../util/jwtUtil";
 import { API_SERVER_HOST } from "./reservationApi";
 
 const prefix = `${API_SERVER_HOST}/api/aiplan`;
@@ -10,15 +11,18 @@ export const getQuickRecommendations = async (params) => {
   return res.data;
 };
 
+// jwtAxios는 토큰이 없어도 그냥 통과시키므로(비로그인) 여기서도 안전하게 쓸 수 있다.
+// 로그인 상태면 토큰을 실어 보내서, 서버가 세션에 회원 이메일을 남길 수 있게 한다
+// (detail/ai 모드만 세션을 만듦 - quick 모드는 세션이 없어서 그대로 axios 유지).
 export const getDetailRecommendations = async (params) => {
-  const res = await axios.get(`${prefix}/detail`, { params });
+  const res = await jwtAxios.get(`${prefix}/detail`, { params });
 
   return res.data;
 };
 
 // 외부 AI 호출이라 비용이 드는 작업 - POST로 바디에 담아 보냄
 export const getAiRecommendations = async (payload) => {
-  const res = await axios.post(`${prefix}/ai`, payload);
+  const res = await jwtAxios.post(`${prefix}/ai`, payload);
 
   return res.data;
 };
@@ -55,6 +59,13 @@ export const getSessionResult = async (sessionId) => {
 // 로컬 회차 목록)와는 다른 것 - 이건 서버에 저장된 한 세션 안의 턴별 발화 기록.
 export const getRefineHistory = async (sessionId) => {
   const res = await axios.get(`${prefix}/session/${sessionId}/history`);
+
+  return res.data;
+};
+
+// "이 결과 마이페이지에 담기" - 웨딩플랜/예산관리/체크리스트에 반영. 로그인 필수라 jwtAxios로 호출.
+export const applySessionToPlan = async (sessionId) => {
+  const res = await jwtAxios.post(`${prefix}/session/${sessionId}/apply-to-plan`);
 
   return res.data;
 };

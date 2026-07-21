@@ -30,8 +30,6 @@ public class WeddingPlan {
 
     private LocalDate weddingDate;
 
-    private String weddingLocation;
-
     private Long totalBudget;
 
     private String memo;
@@ -46,10 +44,6 @@ public class WeddingPlan {
 
     public void changeWeddingDate(LocalDate weddingDate) {
         this.weddingDate = weddingDate;
-    }
-
-    public void changeWeddingLocation(String weddingLocation) {
-        this.weddingLocation = weddingLocation;
     }
 
     public void changeTotalBudget(Long totalBudget) {

@@ -139,42 +139,10 @@ public class JWTCheckFilter extends OncePerRequestFilter{
             return true;
         }
 
-        // 재원 추가 - AI 웨딩플랜 빠르게 모드는 비로그인 사용자도 결과를 볼 수 있어야 함
-        if(method.equals("GET") && path.equals("/api/aiplan/quick")) {
-            return true;
-        }
-
-        // 재원 추가 - AI 웨딩플랜 자세히 모드도 동일하게 비로그인 허용
-        if(method.equals("GET") && path.equals("/api/aiplan/detail")) {
-            return true;
-        }
-
-        // 재원 추가 - AI 웨딩플랜 AI 연동(5단계)도 비로그인 허용. POST라서 별도로 명시.
-        if(method.equals("POST") && path.equals("/api/aiplan/ai")) {
-            return true;
-        }
-
-        // AI 웨딩플랜 다듬기(리파인)/되돌리기도 비로그인 허용 - 결과를 다듬는 것까진 로그인 없이 가능해야 함
-        if(method.equals("POST") && path.equals("/api/aiplan/refine")) {
-            return true;
-        }
-
-        if(method.equals("POST") && path.matches("/api/aiplan/rollback/\\d+")) {
-            return true;
-        }
-
-        // AI 웨딩플랜 사이드패널 확정/해제 버튼도 비로그인 허용 - 리파인과 동일한 편집 흐름
-        if(method.equals("POST") && path.equals("/api/aiplan/slot")) {
-            return true;
-        }
-
-        // AI 웨딩플랜 새로고침 복원도 비로그인 허용 - 세션 조회만 하는 GET
-        if(method.equals("GET") && path.matches("/api/aiplan/session/\\d+")) {
-            return true;
-        }
-
-        // AI 웨딩플랜 다듬기 대화 기록 조회도 비로그인 허용 - 세션 조회만 하는 GET
-        if(method.equals("GET") && path.matches("/api/aiplan/session/\\d+/history")) {
+        // 재원 추가 - AI 웨딩플랜은 전부 비로그인 허용 목록이지만, 로그인 토큰이 있으면
+        // (막지는 않고) 파싱만 해서 세션에 회원 이메일을 남길 수 있게 한다.
+        if (isAiPlanPublicPath(path, method)) {
+            tryPopulateOptionalAuthentication(request);
             return true;
         }
 
@@ -184,6 +152,60 @@ public class JWTCheckFilter extends OncePerRequestFilter{
         }
 
         return false;
+    }
+
+    // aiplan 관련 공개(비로그인 허용) 경로 모음 - 흩어져 있던 조건을 한 곳으로 통합
+    private boolean isAiPlanPublicPath(String path, String method) {
+        if (method.equals("GET")) {
+            if (path.equals("/api/aiplan/quick")) return true;
+            if (path.equals("/api/aiplan/detail")) return true;
+            if (path.matches("/api/aiplan/session/\\d+")) return true;
+            if (path.matches("/api/aiplan/session/\\d+/history")) return true;
+        }
+        if (method.equals("POST")) {
+            if (path.equals("/api/aiplan/ai")) return true;
+            if (path.equals("/api/aiplan/refine")) return true;
+            if (path.matches("/api/aiplan/rollback/\\d+")) return true;
+            if (path.equals("/api/aiplan/slot")) return true;
+        }
+        return false;
+    }
+
+    // aiplan 경로는 비로그인 허용이라 여기선 절대 막지 않는다. 다만 로그인한 회원이 쓰는 경우
+    // AiPlanSession에 이메일을 남기고 싶어서, 토큰이 있으면 doFilterInternal의 파싱 로직과
+    // 동일하게 SecurityContext를 채워둔다. 토큰이 없거나 만료/위조돼도 조용히 넘어간다
+    // (401을 보내거나 여기서 return하지 않음 - shouldNotFilter 흐름을 끊으면 안 되므로).
+    private void tryPopulateOptionalAuthentication(HttpServletRequest request) {
+        String authHeaderStr = request.getHeader("Authorization");
+        if (authHeaderStr == null || !authHeaderStr.startsWith("Bearer ")) {
+            return;
+        }
+
+        try {
+            String accessToken = authHeaderStr.substring(7);
+
+            if (redisTokenService.isBlacklisted(accessToken)) {
+                return;
+            }
+
+            Map<String, Object> claims = JWTUtil.validateToken(accessToken);
+
+            String email = (String) claims.get("email");
+            String pw = (String) claims.get("pw");
+            String nickname = (String) claims.get("nickname");
+            Boolean social = (Boolean) claims.get("social");
+            List<String> roleNames = (List<String>) claims.get("roleNames");
+
+            MemberDTO memberDTO = new MemberDTO(email, pw, nickname, social.booleanValue(), roleNames);
+
+            UsernamePasswordAuthenticationToken authenticationToken
+                    = new UsernamePasswordAuthenticationToken(memberDTO, pw, memberDTO.getAuthorities());
+
+            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+
+        } catch (Exception e) {
+            log.debug("aiplan optional auth 파싱 실패(무시하고 통과): " + e.getMessage());
+        }
     }
 
     @Override

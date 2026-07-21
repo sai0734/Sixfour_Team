@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import BasicMenu from "../../components/menus/BasicMenu";
+import BoardLayout from "../../layouts/BoardLayout";
 import BoardTopTabs from "../../components/board/BoardTopTabs";
 import BoardFilterSidebar from "../../components/board/BoardFilterSidebar";
 import FaqItem from "../../components/faq/FaqItem";
-import TapeLabel from "../../components/common/TapeLabel";
 import { getList } from "../../api/faqApi";
 
 // 실제 카테고리 값이 아니라, "좋아요(도움됐어요) 많은 순 10개"를 보여주는 특수 탭.
@@ -63,30 +62,11 @@ const FaqPage = () => {
   };
 
   return (
-    <>
-      <BasicMenu />
-
-      <div className="min-h-screen bg-[#FBF7F0]">
-        <section
-          className="relative bg-cover bg-center px-5 pt-24 pb-8 text-center md:px-8 md:pt-28 md:pb-10 lg:px-[60px]"
-          // TODO: FAQ 전용 사진 준비되면 /faq-hero.jpg 같은 걸로 교체
-          style={{ backgroundImage: "url('/prep-hero.jpg')" }}
-        >
-          <div className="absolute inset-0 bg-black/45" />
-
-          <div className="relative z-10">
-            <TapeLabel tone="white" className="mb-3">
-              FREQUENTLY ASKED QUESTIONS
-            </TapeLabel>
-            <p className="mb-2 font-['Gowun_Batang'] text-2xl text-white md:text-3xl">
-              자주 묻는 질문
-            </p>
-            <p className="text-sm text-white/85">
-              궁금한 점을 먼저 확인해보세요
-            </p>
-          </div>
-        </section>
-
+    <BoardLayout
+      eyebrow="FREQUENTLY ASKED QUESTIONS"
+      title="자주 묻는 질문"
+      subtitle="궁금한 점을 먼저 확인해보세요"
+    >
         <div className="mx-auto max-w-[1140px] px-5 pt-6 md:px-8 lg:px-6">
           <BoardTopTabs active="FAQ" />
         </div>
@@ -134,8 +114,7 @@ const FaqPage = () => {
             </div>
           </main>
         </div>
-      </div>
-    </>
+    </BoardLayout>
   );
 };
 
