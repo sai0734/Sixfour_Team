@@ -10,7 +10,6 @@ import {
   uploadMyPhoto,
 } from "../../api/aiDressApi";
 import PageComponent from "../common/PageComponent";
-import TapeLabel from "../common/TapeLabel";
 
 const initPage = {
   dtoList: [],
@@ -186,133 +185,212 @@ const AiDressTryOnComponent = () => {
     }
   };
 
+  const selectedDress = dressPage.dtoList.find(
+    (d) => d.dressItemId === selectedDressId,
+  );
+
   return (
-    <div className="space-y-6">
-      <section className="rounded-2xl border border-line bg-white p-6">
-        <TapeLabel className="mb-4">내 사진</TapeLabel>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-          {myPhotoFileName ? (
-            <img
-              src={getCompanyImageUrl(myPhotoFileName)}
-              alt="내 사진"
-              className="h-48 w-36 rounded-xl border border-line object-cover"
-            />
+    <div className="space-y-5">
+      {/* 2열: 선택(왼쪽) | 결과(오른쪽) */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.85fr)] lg:items-start">
+        {/* 왼쪽 — 내 사진 + 드레스 */}
+        <section className="rounded-2xl border border-line bg-white p-5 min-w-0">
+          <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end">
+            <div className="shrink-0">
+              <p className="mb-2 text-sm font-medium text-ink">내 사진</p>
+              <div className="flex items-end gap-3">
+                {myPhotoFileName ? (
+                  <img
+                    src={getCompanyImageUrl(myPhotoFileName)}
+                    alt="내 사진"
+                    className="h-36 w-28 rounded-xl border border-line object-cover"
+                  />
+                ) : (
+                  <div className="flex h-36 w-28 items-center justify-center rounded-xl border border-dashed border-line text-[11px] text-ink-faint">
+                    사진 없음
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <label className="inline-flex cursor-pointer rounded-full border border-line px-4 py-2 text-sm hover:border-brand">
+                    업로드
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handlePhotoChange}
+                    />
+                  </label>
+                  <p className="text-[11px] leading-relaxed text-ink-faint">
+                    전신·정면 권장
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="min-w-0 flex-1 border-t border-line pt-4 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0">
+              <p className="mb-1 text-sm font-medium text-ink">선택 드레스</p>
+              {selectedDress ? (
+                <div className="flex items-center gap-3">
+                  {selectedDress.imageUrl && (
+                    <img
+                      src={getCompanyImageUrl(selectedDress.imageUrl)}
+                      alt=""
+                      className="h-14 w-11 rounded-lg object-cover"
+                    />
+                  )}
+                  <div className="min-w-0">
+                    <p className="truncate text-sm text-ink">
+                      {selectedDress.itemName}
+                    </p>
+                    <p className="truncate text-xs text-ink-faint">
+                      {selectedDress.companyName}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-ink-faint">
+                  아래에서 드레스를 골라 주세요
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <p className="text-sm font-medium text-ink">드레스 선택</p>
+            <p className="text-[11px] text-ink-faint">
+              {dressPage.totalCount
+                ? `총 ${dressPage.totalCount}개`
+                : ""}
+            </p>
+          </div>
+
+          {dressLoading && dressPage.dtoList.length === 0 ? (
+            <p className="text-sm text-ink-faint">불러오는 중...</p>
+          ) : dressPage.dtoList.length === 0 ? (
+            <p className="text-sm text-ink-faint">등록된 드레스가 없습니다.</p>
           ) : (
-            <div className="flex h-48 w-36 items-center justify-center rounded-xl border border-dashed border-line text-xs text-ink-faint">
-              사진 없음
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+              {dressPage.dtoList.map((dress) => {
+                const selected = selectedDressId === dress.dressItemId;
+                return (
+                  <button
+                    key={dress.dressItemId}
+                    type="button"
+                    onClick={() => setSelectedDressId(dress.dressItemId)}
+                    className={`rounded-xl border p-2 text-left transition-colors ${
+                      selected
+                        ? "border-brand bg-brand/5 ring-1 ring-brand/30"
+                        : "border-line hover:border-brand/50"
+                    }`}
+                  >
+                    {dress.imageUrl ? (
+                      <img
+                        src={getCompanyImageUrl(dress.imageUrl)}
+                        alt={dress.itemName}
+                        className="mb-1.5 aspect-[3/4] w-full rounded-lg object-cover"
+                      />
+                    ) : (
+                      <div className="mb-1.5 flex aspect-[3/4] items-center justify-center rounded-lg bg-cream text-[10px] text-ink-faint">
+                        이미지 없음
+                      </div>
+                    )}
+                    <p className="truncate text-xs font-medium text-ink">
+                      {dress.itemName}
+                    </p>
+                    <p className="truncate text-[10px] text-ink-faint">
+                      {dress.companyName}
+                    </p>
+                  </button>
+                );
+              })}
             </div>
           )}
-          <label className="inline-flex cursor-pointer rounded-full border border-line px-4 py-2 text-sm hover:border-brand">
-            사진 업로드
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handlePhotoChange}
+
+          <div className="mt-4">
+            <PageComponent
+              serverData={dressPage}
+              movePage={({ page: nextPage }) => setPage(nextPage)}
             />
-          </label>
-        </div>
-      </section>
-
-      <section className="rounded-2xl border border-line bg-white p-6">
-        <TapeLabel className="mb-4">드레스 선택</TapeLabel>
-        {dressLoading && dressPage.dtoList.length === 0 ? (
-          <p className="text-sm text-ink-faint">불러오는 중...</p>
-        ) : dressPage.dtoList.length === 0 ? (
-          <p className="text-sm text-ink-faint">등록된 드레스가 없습니다.</p>
-        ) : (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-            {dressPage.dtoList.map((dress) => {
-              const selected = selectedDressId === dress.dressItemId;
-              return (
-                <button
-                  key={dress.dressItemId}
-                  type="button"
-                  onClick={() => setSelectedDressId(dress.dressItemId)}
-                  className={`rounded-2xl border p-3 text-left transition-colors ${
-                    selected
-                      ? "border-brand bg-brand/5"
-                      : "border-line hover:border-brand/50"
-                  }`}
-                >
-                  {dress.imageUrl ? (
-                    <img
-                      src={getCompanyImageUrl(dress.imageUrl)}
-                      alt={dress.itemName}
-                      className="mb-2 h-40 w-full rounded-xl object-cover"
-                    />
-                  ) : (
-                    <div className="mb-2 flex h-40 items-center justify-center rounded-xl bg-cream text-xs text-ink-faint">
-                      이미지 없음
-                    </div>
-                  )}
-                  <p className="text-sm font-medium text-ink">{dress.itemName}</p>
-                  <p className="text-xs text-ink-faint">{dress.companyName}</p>
-                </button>
-              );
-            })}
           </div>
-        )}
+        </section>
 
-        <div className="mt-4">
-          <PageComponent
-            serverData={dressPage}
-            movePage={({ page: nextPage }) => setPage(nextPage)}
+        {/* 오른쪽 — 결과 + 합성 */}
+        <section className="rounded-2xl border border-line bg-white p-5 lg:sticky lg:top-24">
+          <p className="mb-3 text-sm font-medium text-ink">합성 결과</p>
+
+          <div className="mb-4 overflow-hidden rounded-xl border border-line bg-cream">
+            {resultImageUrl ? (
+              <img
+                src={resultImageUrl}
+                alt="합성 결과"
+                className="mx-auto max-h-[360px] w-full object-contain"
+              />
+            ) : (
+              <div className="flex h-[280px] flex-col items-center justify-center gap-1.5 px-4 text-center text-xs text-ink-faint">
+                <span>결과가 여기에 표시됩니다</span>
+                <span className="text-[10px] text-ink-faint/80">
+                  사진 업로드 → 드레스 선택 → 입어보기
+                </span>
+              </div>
+            )}
+          </div>
+
+          <label className="mb-1.5 block text-xs text-ink-muted">
+            배경 프롬프트 (선택)
+          </label>
+          <textarea
+            value={backgroundPrompt}
+            onChange={(e) => setBackgroundPrompt(e.target.value)}
+            rows={3}
+            maxLength={800}
+            placeholder="예: 석양이 지는 해변 웨딩홀"
+            className="mb-2 w-full resize-y rounded-xl border border-line px-3 py-2 text-sm outline-none focus:border-brand"
           />
+          <p className="mb-4 text-[11px] leading-relaxed text-ink-faint">
+            비우면 드레스 합성만, 입력하면 배경도 함께 바꿉니다.
+          </p>
+
+          <button
+            type="button"
+            onClick={handleTryOn}
+            disabled={loading}
+            className="w-full rounded-full bg-brand px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50"
+          >
+            {loading ? "처리 중... (1~2분)" : "입어보기"}
+          </button>
+
+          {message && (
+            <p className="mt-3 text-xs leading-relaxed text-ink-muted">
+              {message}
+            </p>
+          )}
+        </section>
+      </div>
+
+      {/* 합성 기록 — 가로 스크롤 */}
+      <section className="rounded-2xl border border-line bg-white p-5">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <p className="text-sm font-medium text-ink">합성 기록</p>
+          <p className="text-[11px] text-ink-faint">
+            {history.length > 0
+              ? `${history.length}건 · 좌우로 스크롤`
+              : "아직 기록이 없습니다"}
+          </p>
         </div>
-      </section>
 
-      <section className="rounded-2xl border border-line bg-white p-6">
-        <TapeLabel className="mb-4">AI 합성</TapeLabel>
-        <label className="mb-2 block text-sm text-ink-muted">
-          배경 프롬프트 (선택)
-        </label>
-        <textarea
-          value={backgroundPrompt}
-          onChange={(e) => setBackgroundPrompt(e.target.value)}
-          rows={3}
-          maxLength={800}
-          placeholder="예: 석양이 지는 해변 웨딩홀, 부드러운 노을빛 / 벚꽃이 흩날리는 정원"
-          className="mb-4 w-full resize-y rounded-xl border border-line px-3 py-2 text-sm outline-none focus:border-brand"
-        />
-        <p className="mb-4 text-xs text-ink-faint">
-          비우면 CatVTON 드레스 합성만 합니다. 입력하면 합성 후 OpenAI로 배경을
-          바꿉니다. (OPENAI_API_KEY 필요)
-        </p>
-        <button
-          type="button"
-          onClick={handleTryOn}
-          disabled={loading}
-          className="rounded-full bg-brand px-6 py-2.5 text-sm font-medium text-white disabled:opacity-50"
-        >
-          {loading ? "처리 중... (1~2분 소요될 수 있음)" : "입어보기"}
-        </button>
-        {message && <p className="mt-3 text-sm text-ink-muted">{message}</p>}
-        {resultImageUrl && (
-          <img
-            src={resultImageUrl}
-            alt="합성 결과"
-            className="mt-4 max-h-[480px] rounded-2xl border border-line object-contain"
-          />
-        )}
-      </section>
-
-      <section className="rounded-2xl border border-line bg-white p-6">
-        <TapeLabel className="mb-4">합성 기록</TapeLabel>
         {history.length === 0 ? (
           <p className="text-sm text-ink-faint">
-            아직 저장된 합성 사진이 없습니다. 입어보기를 실행하면 여기에
-            쌓입니다.
+            입어보기를 실행하면 결과가 여기에 쌓입니다.
           </p>
         ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
             {history.map((item) => {
               const busy = historyBusyId === item.historyId;
               const editing = editingId === item.historyId;
               return (
                 <div
                   key={item.historyId}
-                  className="rounded-2xl border border-line p-3"
+                  className="w-[200px] shrink-0 rounded-xl border border-line p-2.5"
                 >
                   <button
                     type="button"
@@ -322,33 +400,33 @@ const AiDressTryOnComponent = () => {
                     <img
                       src={item.resultImageUrl}
                       alt={item.dressName || "합성 결과"}
-                      className="mb-2 h-40 w-full rounded-xl object-cover"
+                      className="mb-2 h-36 w-full rounded-lg object-cover"
                     />
                   </button>
-                  <p className="truncate text-sm font-medium text-ink">
+                  <p className="truncate text-xs font-medium text-ink">
                     {item.dressName || "드레스"}
                   </p>
-                  <p className="mt-1 text-[11px] text-ink-faint">
+                  <p className="mt-0.5 text-[10px] text-ink-faint">
                     {formatDate(item.createdAt)}
                   </p>
 
                   {editing ? (
-                    <div className="mt-3 space-y-2">
+                    <div className="mt-2 space-y-2">
                       <textarea
                         value={editPrompt}
                         onChange={(e) => setEditPrompt(e.target.value)}
-                        rows={3}
+                        rows={2}
                         maxLength={800}
                         disabled={busy}
-                        placeholder="새 배경 프롬프트 (비우면 원본으로 복원)"
-                        className="w-full resize-y rounded-xl border border-line px-3 py-2 text-sm outline-none focus:border-brand"
+                        placeholder="새 배경 (비우면 원본)"
+                        className="w-full resize-y rounded-lg border border-line px-2 py-1.5 text-xs outline-none focus:border-brand"
                       />
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-1.5">
                         <button
                           type="button"
                           disabled={busy}
                           onClick={() => handleSaveEdit(item.historyId)}
-                          className="rounded-full bg-brand px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50"
+                          className="rounded-full bg-brand px-2.5 py-1 text-[11px] font-medium text-white disabled:opacity-50"
                         >
                           {busy ? "적용 중..." : "저장"}
                         </button>
@@ -356,7 +434,7 @@ const AiDressTryOnComponent = () => {
                           type="button"
                           disabled={busy}
                           onClick={handleCancelEdit}
-                          className="rounded-full border border-line px-3 py-1.5 text-xs disabled:opacity-50"
+                          className="rounded-full border border-line px-2.5 py-1 text-[11px] disabled:opacity-50"
                         >
                           취소
                         </button>
@@ -364,17 +442,17 @@ const AiDressTryOnComponent = () => {
                     </div>
                   ) : (
                     <>
-                      <p className="mt-1 line-clamp-2 text-xs text-ink-faint">
+                      <p className="mt-1 line-clamp-2 text-[10px] text-ink-faint">
                         {item.backgroundPrompt
                           ? item.backgroundPrompt
                           : "배경 프롬프트 없음"}
                       </p>
-                      <div className="mt-3 flex flex-wrap gap-2">
+                      <div className="mt-2 flex flex-wrap gap-1.5">
                         <button
                           type="button"
                           disabled={busy}
                           onClick={() => handleStartEdit(item)}
-                          className="rounded-full border border-line px-3 py-1.5 text-xs hover:border-brand disabled:opacity-50"
+                          className="rounded-full border border-line px-2.5 py-1 text-[11px] hover:border-brand disabled:opacity-50"
                         >
                           수정
                         </button>
@@ -382,7 +460,7 @@ const AiDressTryOnComponent = () => {
                           type="button"
                           disabled={busy}
                           onClick={() => handleDeleteHistory(item)}
-                          className="rounded-full border border-red-200 px-3 py-1.5 text-xs text-red-600 hover:border-red-400 disabled:opacity-50"
+                          className="rounded-full border border-red-200 px-2.5 py-1 text-[11px] text-red-600 hover:border-red-400 disabled:opacity-50"
                         >
                           {busy ? "삭제 중..." : "삭제"}
                         </button>
