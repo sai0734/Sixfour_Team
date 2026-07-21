@@ -151,6 +151,11 @@ public class JWTCheckFilter extends OncePerRequestFilter{
             return true;
         }
 
+        // 메인 화면 비로그인 폴라로이드(웨딩홀/스드메 매출 1위, 답례품 구매 1위) - 로그인 여부와 무관하게 항상 공개
+        if(method.equals("GET") && path.equals("/api/home/highlights")) {
+            return true;
+        }
+
         return false;
     }
 

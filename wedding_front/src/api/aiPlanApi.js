@@ -69,3 +69,10 @@ export const applySessionToPlan = async (sessionId) => {
 
   return res.data;
 };
+
+// 메인 화면 "AI 매칭 진행중" 위젯 - 로그인 회원의 가장 최근 세션 기준 홀/드레스/스튜디오 진행률
+export const getMyAiPlanProgress = async () => {
+  const res = await jwtAxios.get(`${prefix}/progress`);
+
+  return res.data;
+};

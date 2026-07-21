@@ -20,6 +20,7 @@ import com.wedding.aiplan.domain.AiPlanSessionHistory;
 import com.wedding.aiplan.domain.SlotState;
 import com.wedding.aiplan.domain.SlotStatus;
 import com.wedding.aiplan.dto.AiPlanPackageCandidateDTO;
+import com.wedding.aiplan.dto.AiPlanProgressDTO;
 import com.wedding.aiplan.repository.AiPlanSessionHistoryRepository;
 import com.wedding.aiplan.repository.AiPlanSessionRepository;
 import com.wedding.company.domain.Company;
@@ -108,6 +109,39 @@ public class AiPlanSessionSupport {
 
     public Optional<AiPlanSession> findSession(Long sessionId) {
         return sessionRepository.findById(sessionId);
+    }
+
+    // 메인 화면 위젯용 - 로그인 회원의 가장 최근 세션 기준으로 홀/드레스/스튜디오 슬롯 진행률을 계산.
+    // 세션이 없으면(아직 AI 웨딩플랜을 안 써봤으면) 전부 0%로 내려서 프론트가 "아직 시작 전" 상태를 그린다.
+    public AiPlanProgressDTO getMyProgress() {
+        String email = currentMemberEmailOrNull();
+        List<AiPlanSession> sessions = email == null
+                ? List.of()
+                : sessionRepository.findByMemberEmailOrderByUpdatedAtDesc(email);
+
+        if (sessions.isEmpty()) {
+            return AiPlanProgressDTO.builder().hasSession(false).build();
+        }
+
+        AiPlanSession latest = sessions.get(0);
+        return AiPlanProgressDTO.builder()
+                .hasSession(true)
+                .hallPercent(slotPercent(latest.getHallSlot()))
+                .dressPercent(slotPercent(latest.getDressSlot()))
+                .studioPercent(slotPercent(latest.getStudioSlot()))
+                .build();
+    }
+
+    // CONFIRMED(확정) = 100%, PENDING인데 후보가 골라져 있음 = 50%, 그 외(EXCLUDED/후보 없음) = 0%
+    private int slotPercent(SlotState slot) {
+        if (slot == null) {
+            return 0;
+        }
+        return switch (slot.getStatus()) {
+            case CONFIRMED -> 100;
+            case PENDING -> slot.getSelectedCmno() != null ? 50 : 0;
+            case EXCLUDED -> 0;
+        };
     }
 
     public List<AiPlanSessionHistory> historyOf(Long sessionId) {
