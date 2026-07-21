@@ -595,10 +595,15 @@ const CompanyReadComponent = () => {
         />
       )}
 
-      {/* ── 탭 네비게이션 ── */}
+      {/* ── 탭 네비게이션 (흰 배경·보더라인 화면 양끝 full-bleed) ── */}
       <div
         className="sticky z-10 bg-white border-b border-line mt-14"
-        style={{ top: `${headerHeight}px` }}
+        style={{
+          top: `${headerHeight}px`,
+          width: "100vw",
+          maxWidth: "100vw",
+          marginLeft: "calc(50% - 50vw)",
+        }}
       >
         <div className="max-w-[1320px] mx-auto px-6 flex gap-5 md:gap-7 text-sm overflow-x-auto">
           {[
