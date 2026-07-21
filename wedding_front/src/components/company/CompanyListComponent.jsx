@@ -198,9 +198,9 @@ const CompanyListComponent = () => {
           </button>
         </div>
       ) : (
-        /* ── 배너만 화면 좌우 끝 full-bleed / 아래 리스트는 AdminLayout 원래 폭 유지 ── */
+        /* ── 배너: 상단 고정 메뉴에 붙이고 좌우 full-bleed / 아래 리스트는 원래 폭 ── */
         <section
-          className="relative mb-6 bg-cover bg-center pb-10 pt-16 text-center md:pb-12"
+          className="relative mb-6 bg-cover bg-center pb-10 pt-24 text-center md:pb-12 sm:pt-28 -mt-20 sm:-mt-28"
           style={{
             backgroundImage: "url('/company-hero.png')",
             width: "100vw",
@@ -280,13 +280,6 @@ const CompanyListComponent = () => {
                 {opt.label}
               </button>
             ))}
-            <button
-              type="button"
-              onClick={() => navigate(`${companyPathPrefix}/packages`)}
-              className="rounded-full border border-line px-3.5 py-1.5 text-[13px] text-ink-muted transition hover:border-brand hover:text-brand-deep"
-            >
-              패키지
-            </button>
           </div>
           <div className="flex flex-wrap gap-1.5">
             {SORT_OPTIONS.map((opt) => (
