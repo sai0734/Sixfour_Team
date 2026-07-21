@@ -610,7 +610,7 @@ const ModifyComponent = () => {
       </div>
 
       <div className="flex items-center justify-between">
-        <span className="font-hand text-sm text-ink-faint -rotate-2">
+        <span className="font-['Gaegu'] text-sm text-ink-faint -rotate-2">
           언제든 다시 바꿀 수 있어요 :)
         </span>
         <button

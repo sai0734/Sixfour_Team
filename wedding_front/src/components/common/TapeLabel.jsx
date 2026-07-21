@@ -40,7 +40,7 @@ const TapeLabel = ({
       />
       {/* 메모지 본체 - rounded-sm으로 각지게, pill 아님 */}
       <span
-        className="block font-hand text-sm font-bold px-5 py-2.5 rounded-sm shadow-[0_8px_18px_-8px_rgba(58,54,47,0.4)]"
+        className="block font-['Gaegu'] text-sm font-bold px-5 py-2.5 rounded-sm shadow-[0_8px_18px_-8px_rgba(58,54,47,0.4)]"
         style={style}
       >
         {children}

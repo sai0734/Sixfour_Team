@@ -1,18 +1,17 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import TapeLabel from "../../components/common/TapeLabel";
+import ShopTapeLabel from "../../components/product/ShopTapeLabel";
 import AiPlanLoadingModal from "../../components/aiplan/AiPlanLoadingModal";
 import ResultCards from "../../components/aiplan/ResultCards";
 import SessionHistoryPanel from "../../components/aiplan/SessionHistoryPanel";
-import RefineHistoryPanel from "../../components/aiplan/RefineHistoryPanel";
 import {
-  getDetailRecommendations,
   getAiRecommendations,
   refineRecommendation,
-  rollbackRecommendation,
   updateSlotStatus,
   getSessionResult,
   applySessionToPlan,
+  getRefineHistory,
+  viewSessionTurn,
 } from "../../api/aiPlanApi";
 import {
   getSessionHistory,
@@ -140,6 +139,12 @@ const DetailPlanPage = () => {
   const [refineText, setRefineText] = useState("");
   const [refineLoading, setRefineLoading] = useState(false);
 
+  // 상단 조합 히스토리 배지 - "첫 추천 조합" + 다듬을 때마다 오른쪽으로 늘어나는 턴 목록.
+  // activeTurnNo는 지금 화면에 보이는 조합이 몇 번째 턴인지 - 실제 변경 액션 뒤엔 항상 최신
+  // 턴이 되고, 배지를 눌러 예전 턴을 "보기"만 했을 때는 그 턴 번호로 따로 고정된다.
+  const [turns, setTurns] = useState([]);
+  const [activeTurnNo, setActiveTurnNo] = useState(null);
+
   // 추천 회차 사이드바 - "1번째 추천/2번째 추천" 목록. 순전히 이 브라우저 안에서만 의미있는
   // 라벨이라 서버가 아니라 localStorage에 둔다 (aiPlanHistory.js 참고).
   const [history, setHistory] = useState(() => getSessionHistory());
@@ -158,7 +163,9 @@ const DetailPlanPage = () => {
   // URL은 "새로고침"(같은 주소 유지) 복원용, localStorage(LAST_SESSION_KEY)는 "다른 페이지 갔다가
   // 돌아오기" 복원용, 회차 목록은 새 sessionId일 때만 새 항목이 늘어난다(다듬기/확정은 같은
   // sessionId를 재사용하므로 목록이 늘지 않음).
-  const applyResult = (data, meta) => {
+  // viewedTurnNo는 "배지로 예전 턴을 보기만 했을 때"만 넘어옴 - 그 외(확정/다시찾기/다듬기/
+  // 되돌리기/새 추천)는 항상 방금 생긴 최신 턴이 화면에 보이는 턴이 된다.
+  const applyResult = (data, meta, viewedTurnNo) => {
     setResult(data);
     if (data?.sessionId) {
       localStorage.setItem(LAST_SESSION_KEY, String(data.sessionId));
@@ -171,7 +178,30 @@ const DetailPlanPage = () => {
         },
         { replace: true },
       );
+
+      getRefineHistory(data.sessionId)
+        .then((list) => {
+          setTurns(list);
+          if (viewedTurnNo != null) {
+            setActiveTurnNo(viewedTurnNo);
+          } else {
+            setActiveTurnNo(list.length > 0 ? list[list.length - 1].turnNo : 0);
+          }
+        })
+        .catch((err) => console.error(err));
     }
+  };
+
+  // 상단 히스토리 배지 클릭 - 그 턴의 조합을 그대로 불러온다 (새 턴을 만들지 않음)
+  const handleSelectTurn = (turnNo) => {
+    if (!result?.sessionId || turnNo === activeTurnNo) return Promise.resolve();
+
+    return viewSessionTurn(result.sessionId, turnNo)
+      .then((data) => applyResult(data, undefined, turnNo))
+      .catch((err) => {
+        console.error(err);
+        setError("이전 조합을 불러오는 중 문제가 발생했어요.");
+      });
   };
 
   // 복원 - URL에 sessionId가 있으면 그걸, 없으면 localStorage에 남은 마지막 세션을 불러옴
@@ -262,37 +292,9 @@ const DetailPlanPage = () => {
     freeText: form.freeText || null,
   });
 
-  // "예산 늘려서 다시 찾기" 버튼(handleBumpBudget)이 방금 어떤 모드로 찾았었는지 기억해뒀다가
-  // 같은 모드로 재요청하기 위한 용도 - state로 두면 리렌더가 걸려서 ref로 충분.
-  const lastModeRef = useRef("rule");
-
-  // submitRuleBased/submitAi는 "다시 시도" 버튼에서도 그대로 재호출할 수 있게 이벤트 객체 없이 독립시켰다.
+  // submitAi는 "다시 시도" 버튼에서도 그대로 재호출할 수 있게 이벤트 객체 없이 독립시켰다.
   // overrideBudgetManwon은 "예산 늘려서 다시 찾기" 전용 - form 상태 업데이트를 기다리지 않고 바로 그
   // 값으로 요청하기 위해 받는다.
-  const submitRuleBased = (overrideBudgetManwon) => {
-    const budgetManwon = overrideBudgetManwon ?? form.budgetManwon;
-    if (!budgetManwon || !form.region) {
-      setError("총 예산과 지역은 필수로 입력해주세요.");
-      return;
-    }
-
-    lastModeRef.current = "rule";
-    setError(null);
-    setRetryAction(null);
-    setLoading(true);
-
-    getDetailRecommendations(buildPayload(overrideBudgetManwon))
-      .then((data) => applyResult(data, { budgetManwon, region: form.region }))
-      .catch((err) => {
-        console.error(err);
-        setError(
-          "추천을 불러오는 중 문제가 발생했어요. 잠시 후 다시 시도해주세요.",
-        );
-        setRetryAction(() => submitRuleBased);
-      })
-      .finally(() => setLoading(false));
-  };
-
   const submitAi = (overrideBudgetManwon) => {
     const budgetManwon = overrideBudgetManwon ?? form.budgetManwon;
     if (!budgetManwon || !form.region) {
@@ -300,7 +302,6 @@ const DetailPlanPage = () => {
       return;
     }
 
-    lastModeRef.current = "ai";
     setError(null);
     setRetryAction(null);
     setLoading(true);
@@ -317,26 +318,17 @@ const DetailPlanPage = () => {
       .finally(() => setLoading(false));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    submitRuleBased();
-  };
-
   const handleSubmitAi = (e) => {
     e.preventDefault();
     submitAi();
   };
 
   // 결과 화면의 "예산 늘려서 다시 찾기" 버튼 - suggestedBudget(원)을 만원 단위로 바꿔 폼에도
-  // 반영해두고, 방금 썼던 모드(규칙 기반/AI) 그대로 그 예산으로 재요청한다.
+  // 반영해두고 그 예산으로 재요청한다.
   const handleBumpBudget = (suggestedBudgetWon) => {
     const manwon = String(Math.ceil(suggestedBudgetWon / 10000));
     setForm((prev) => ({ ...prev, budgetManwon: manwon }));
-    if (lastModeRef.current === "ai") {
-      submitAi(manwon);
-    } else {
-      submitRuleBased(manwon);
-    }
+    submitAi(manwon);
   };
 
   const handleReset = () => {
@@ -391,23 +383,6 @@ const DetailPlanPage = () => {
   // 다듬기 텍스트를 처음부터 다 안 써도 되게, 자주 쓸 법한 문구를 눌러서 채워넣을 수 있게 함
   const appendRefineSuggestion = (suggestion) => {
     setRefineText((prev) => (prev.trim() ? `${prev.trim()} ${suggestion}` : suggestion));
-  };
-
-  const handleRollback = () => {
-    if (!result?.sessionId) {
-      return;
-    }
-
-    setRetryAction(null);
-    setRefineLoading(true);
-
-    rollbackRecommendation(result.sessionId)
-      .then((data) => applyResult(data))
-      .catch((err) => {
-        console.error(err);
-        setError("되돌리기 중 문제가 발생했어요.");
-      })
-      .finally(() => setRefineLoading(false));
   };
 
   const handleSlotAction = (category, action) => {
@@ -494,7 +469,7 @@ const DetailPlanPage = () => {
   const labelClass = "mb-1 block text-sm font-medium text-ink-soft";
 
   return (
-    <>
+    <div className="-mx-5 -mb-10 min-h-[calc(100vh-6rem)] bg-cream px-5">
       {/* 답례품(GIFT SHOP) 페이지와 같은 구조의 상단 히어로 배너 - 배경 이미지는
           public/aiplan-hero.jpg 자리에 넣으면 바로 반영됨 (지금은 빈 자리만 잡아둠). */}
       <section
@@ -503,9 +478,9 @@ const DetailPlanPage = () => {
       >
         <div className="absolute inset-0 bg-black/45" />
         <div className="relative z-10 mx-auto max-w-[720px] px-5">
-          <TapeLabel tone="white" className="mb-5">
+          <ShopTapeLabel tone="white" className="mb-5">
             AI WEDDING PLAN
-          </TapeLabel>
+          </ShopTapeLabel>
           <h1 className="mb-2.5 font-['Gowun_Batang'] text-2xl leading-snug text-white md:mb-3.5 md:text-4xl">
             예산부터 취향까지, 한 번에 맞추는 웨딩플랜
           </h1>
@@ -562,14 +537,6 @@ const DetailPlanPage = () => {
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={goQuickMode}
-            className="mb-4 text-sm text-ink-muted hover:text-ink-soft"
-          >
-            ← 빠르게 모드로 돌아가기
-          </button>
-
           {!result && (
             <div className="mb-8 text-center">
               <p className="text-sm text-ink-muted">
@@ -580,7 +547,7 @@ const DetailPlanPage = () => {
 
           {!result ? (
             <form
-              onSubmit={handleSubmit}
+              onSubmit={handleSubmitAi}
               className="rounded-2xl border border-line bg-white p-6 shadow-sm md:p-8"
             >
               <p className="mb-3 text-xs font-medium text-ink-muted">공통 정보</p>
@@ -780,17 +747,16 @@ const DetailPlanPage = () => {
 
               <div className="mt-6 flex flex-col gap-3 md:flex-row">
                 <button
+                  type="button"
+                  onClick={goQuickMode}
+                  className="h-12 flex-1 rounded-full border border-line text-sm font-medium text-ink-soft hover:bg-surface"
+                >
+                  빠르게 추천받기
+                </button>
+                <button
                   type="submit"
                   disabled={loading}
                   className="h-12 flex-1 rounded-full bg-brand text-sm font-medium text-white hover:bg-brand-dark disabled:opacity-60"
-                >
-                  규칙 기반으로 추천받기
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSubmitAi}
-                  disabled={loading}
-                  className="h-12 flex-1 rounded-full border border-brand-dark text-sm font-medium text-brand-deep hover:bg-surface disabled:opacity-60"
                 >
                   AI에게 맡기기
                 </button>
@@ -803,6 +769,9 @@ const DetailPlanPage = () => {
                 onSlotAction={handleSlotAction}
                 onBumpBudget={handleBumpBudget}
                 onApplyToPlan={handleApplyToPlan}
+                turns={turns}
+                activeTurnNo={activeTurnNo}
+                onSelectTurn={handleSelectTurn}
               />
 
               {error && (
@@ -855,14 +824,6 @@ const DetailPlanPage = () => {
                     >
                       {refineLoading ? "반영하는 중..." : "보내기"}
                     </button>
-                    <button
-                      type="button"
-                      onClick={handleRollback}
-                      disabled={refineLoading}
-                      className="h-10 rounded-full border border-line px-5 text-sm font-medium text-ink-soft hover:bg-white disabled:opacity-60"
-                    >
-                      직전으로 되돌리기
-                    </button>
                   </div>
                 </form>
               )}
@@ -899,13 +860,12 @@ const DetailPlanPage = () => {
                   이 링크를 열면 같은 조합을 보고, 같이 다듬거나 확정할 수도 있어요.
                 </p>
               )}
-              {result.sessionId && <RefineHistoryPanel sessionId={result.sessionId} />}
             </div>
           )}
         </div>
       </div>
       </div>
-    </>
+    </div>
   );
 };
 

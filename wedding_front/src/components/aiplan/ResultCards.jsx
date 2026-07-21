@@ -51,79 +51,6 @@ const SOURCE_LABEL = {
   SESSION_COMBO: "다듬은 조합",
 };
 
-// 슬롯(홀/드레스/스튜디오/메이크업) 상태를 항상 보여주는 사이드 패널. 제외된 카테고리도
-// "제외됨"으로 표시하고 "다시 찾기"로 되돌릴 수 있게 함 (예전엔 이름 없는 행을 그냥 숨겨서
-// 뭐가 빠졌는지, 되돌릴 방법이 있는지도 안 보였음).
-// "확정" 버튼을 누르면 그 즉시 서버에 CONFIRMED로 반영되고, 그 다음부터는
-// 리파인(다듬기) 자유발화가 이 슬롯을 절대 건드리지 못한다 (백엔드 가드).
-const SidePanel = ({ combo, sessionId, onSlotAction }) => {
-  const [pending, setPending] = useState(null);
-
-  const rows = [
-    { key: "HALL", label: "홀", name: combo.hallName, status: combo.hallStatus },
-    { key: "DRESS", label: "드레스", name: combo.dressName, status: combo.dressStatus },
-    { key: "STUDIO", label: "스튜디오", name: combo.studioName, status: combo.studioStatus },
-    { key: "MAKEUP", label: "메이크업", name: combo.makeupName, status: combo.makeupStatus },
-  ].filter((row) => row.name || row.status === "EXCLUDED");
-
-  if (rows.length === 0) return null;
-
-  const handleClick = async (row) => {
-    if (!sessionId || !onSlotAction) return;
-    const nextAction =
-      row.status === "EXCLUDED" ? "RECONSIDER" : row.status === "CONFIRMED" ? "UNLOCK" : "CONFIRM";
-
-    setPending(row.key);
-    try {
-      await onSlotAction(row.key, nextAction);
-    } finally {
-      setPending(null);
-    }
-  };
-
-  return (
-    <div className="mb-6 rounded-2xl border border-line bg-surface p-5">
-      <p className="mb-3 text-xs font-medium text-ink-muted">현재 조합 현황</p>
-      <ul className="space-y-2">
-        {rows.map((row) => {
-          const isConfirmed = row.status === "CONFIRMED";
-          const isExcluded = row.status === "EXCLUDED";
-          const disabled = !sessionId || pending === row.key;
-
-          return (
-            <li
-              key={row.label}
-              className="flex items-center justify-between text-sm"
-            >
-              <span className={isExcluded ? "text-ink-faint" : "text-ink-soft"}>
-                {row.label} · {isExcluded ? "제외됨" : row.name}
-              </span>
-              <button
-                type="button"
-                onClick={() => handleClick(row)}
-                disabled={disabled}
-                className={`rounded-full px-2.5 py-0.5 text-xs font-medium transition disabled:opacity-60 ${
-                  isConfirmed
-                    ? "bg-brand text-white hover:bg-brand-dark"
-                    : "bg-blush-100 text-brand-deep hover:bg-blush-200"
-                }`}
-              >
-                {pending === row.key
-                  ? "처리중..."
-                  : isExcluded
-                    ? "다시 찾기"
-                    : isConfirmed
-                      ? "확정됨 · 해제"
-                      : "확정하기"}
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
-};
-
 // 이미지가 없거나 깨지면 브라우저 깨진 아이콘 대신 "이미지 없음" placeholder를 보여줌.
 // thumbnail=false로 원본 화질 요청 + aspect-square w-full이라 카드 폭에 맞춰 자동으로 커짐.
 // cmno가 있으면 사진도 이름과 동일하게 상세페이지(/companies/read/:cmno) 링크 - 예약은 사진/이름
@@ -216,6 +143,152 @@ const FavoriteButton = ({ cmno }) => {
   );
 };
 
+// soleCombo(다듬은 조합/AI 조합처럼 후보가 1개뿐인 결과) 전용 카드. 예전엔 "현재 조합 현황"
+// 텍스트 목록 박스와 사진 카드 그리드가 같은 4개 업체를 두 번 보여줘서 스크롤만 늘어났음 - 이제
+// 사진 카드 하나에 확정/다시찾기까지 다 붙여서 목록 박스를 없앴다.
+// - 왼쪽 위 X: 이미 다른 곳에서 예약을 마친 업체라서 이 조합에서 제외만 함(EXCLUDE) -
+//   대체 업체를 다시 찾아주는 게 아니라 그냥 빼는 것. 되돌리고 싶으면 아래 "제외됨" 자리의
+//   "다시 찾기"(RECONSIDER)로 새 추천을 받을 수 있음.
+// - 오른쪽 위 ♥: 기존 찜하기 그대로
+// - 사진 아래 배지: 확정하기 / 확정됨·해제
+// - EXCLUDED 상태(다듬기 대화로 "빼줘"를 한 경우)면 사진 대신 "제외됨 · 다시 찾기" 자리를 보여줌 -
+//   예전 사이드패널처럼 되돌릴 방법을 남겨둔다.
+const VendorCard = ({
+  category,
+  label,
+  cmno,
+  name,
+  optionName,
+  imageUrl,
+  reason,
+  price,
+  packageType,
+  status,
+  sessionId,
+  onSlotAction,
+}) => {
+  const [resolvedPrice, setResolvedPrice] = useState(null);
+  const [pending, setPending] = useState(null);
+
+  useEffect(() => {
+    if (!cmno || !packageType) {
+      setResolvedPrice(null);
+      return;
+    }
+    let cancelled = false;
+    getOne(cmno)
+      .then((company) => {
+        if (cancelled) return;
+        const options = buildCompanyOptions(company);
+        const optionKey = MAKEUP_TYPE_TO_OPTION_KEY[packageType];
+        const matched = options.find((opt) => opt.key === optionKey);
+        setResolvedPrice(matched ? matched.price : null);
+      })
+      .catch(() => {
+        if (!cancelled) setResolvedPrice(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [cmno, packageType]);
+
+  const canAct = Boolean(sessionId && onSlotAction);
+  const isConfirmed = status === "CONFIRMED";
+  const isExcluded = status === "EXCLUDED";
+
+  const runAction = async (nextAction) => {
+    if (!canAct || pending) return;
+    setPending(nextAction);
+    try {
+      await onSlotAction(category, nextAction);
+    } finally {
+      setPending(null);
+    }
+  };
+
+  if (isExcluded) {
+    return (
+      <div className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-line bg-surface p-3 text-center">
+        <span className="text-xs text-ink-faint">{label} · 제외됨</span>
+        {canAct && (
+          <button
+            type="button"
+            onClick={() => runAction("RECONSIDER")}
+            disabled={Boolean(pending)}
+            className="rounded-full bg-blush-100 px-3 py-1 text-xs font-medium text-brand-deep hover:bg-blush-200 disabled:opacity-60"
+          >
+            {pending ? "찾는 중..." : "다시 찾기"}
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  if (!name) return null;
+
+  const displayPrice = resolvedPrice != null ? resolvedPrice : price;
+
+  return (
+    <div>
+      <div className="relative">
+        <SlotThumb fileName={imageUrl} alt={name} cmno={cmno} />
+        {canAct && (
+          <button
+            type="button"
+            onClick={() => runAction("EXCLUDE")}
+            disabled={Boolean(pending)}
+            aria-label={`${label} 제외하기 (다른 곳에서 이미 예약함)`}
+            title="다른 곳에서 이미 예약해서 이 조합에서 제외"
+            className="absolute left-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/55 text-sm text-white shadow-sm transition hover:bg-black/70 disabled:opacity-60"
+          >
+            {pending === "EXCLUDE" ? "…" : "✕"}
+          </button>
+        )}
+        {cmno && <FavoriteButton cmno={cmno} />}
+      </div>
+
+      {cmno ? (
+        <a
+          href={`/companies/read/${cmno}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-2 block truncate text-sm text-ink-soft hover:text-brand-deep hover:underline"
+        >
+          {label} · {name}
+        </a>
+      ) : (
+        <p className="mt-2 truncate text-sm text-ink-soft">
+          {label} · {name}
+        </p>
+      )}
+      {optionName && <span className="block truncate text-xs text-ink-soft">{optionName}</span>}
+      {displayPrice != null && (
+        <span className="block text-xs font-medium text-ink-muted">{formatWon(displayPrice)}</span>
+      )}
+      {reason && <span className="block truncate text-xs text-ink-faint">{reason}</span>}
+
+      {canAct && (
+        <button
+          type="button"
+          onClick={() => runAction(isConfirmed ? "UNLOCK" : "CONFIRM")}
+          disabled={Boolean(pending)}
+          className={`mt-1.5 w-full rounded-full px-2.5 py-1 text-xs font-medium transition disabled:opacity-60 ${
+            isConfirmed
+              ? "bg-brand text-white hover:bg-brand-dark"
+              : "bg-blush-100 text-brand-deep hover:bg-blush-200"
+          }`}
+        >
+          {pending === "CONFIRM" || pending === "UNLOCK"
+            ? "처리중..."
+            : isConfirmed
+              ? "확정됨 · 해제"
+              : "확정하기"}
+        </button>
+      )}
+    </div>
+  );
+};
+
 // 이 슬롯이 리파인 대화에서 EXCLUDED로 빠졌으면 name이 null로 옴 - 그럴 땐 아예 렌더링 안 함.
 // cmno가 있으면 업체명은 상세페이지(/companies/read/:cmno)로 새 탭 링크.
 // price는 카테고리별 참고 가격(Company.priceAvg) - "홀은 얼마, 드레스는 얼마" 요청으로 추가.
@@ -282,10 +355,16 @@ const SlotCard = ({ label, cmno, name, optionName, imageUrl, reason, price, pack
 };
 
 const SLOT_DEFS = [
-  { key: "hall", label: "홀" },
-  { key: "dress", label: "드레스" },
-  { key: "studio", label: "스튜디오" },
-  { key: "makeup", label: "메이크업" },
+  { key: "hall", category: "HALL", label: "홀", optionKey: "hallRoomName" },
+  { key: "dress", category: "DRESS", label: "드레스", optionKey: "dressOptionName" },
+  { key: "studio", category: "STUDIO", label: "스튜디오", optionKey: null },
+  {
+    key: "makeup",
+    category: "MAKEUP",
+    label: "메이크업",
+    optionKey: null,
+    packageTypeKey: "makeupPackageType",
+  },
 ];
 
 // 조합에서 실제로 예약 가능한(=EXCLUDED 아닌) 슬롯만 {cmno, label, name} 형태로 뽑음
@@ -296,8 +375,27 @@ const reservableSlots = (combo) =>
     name: combo[`${key}Name`],
   })).filter((slot) => slot.cmno);
 
-const ResultCards = ({ result, onSlotAction, onBumpBudget, onApplyToPlan }) => {
+const ResultCards = ({
+  result,
+  onSlotAction,
+  onBumpBudget,
+  onApplyToPlan,
+  turns = [],
+  activeTurnNo = null,
+  onSelectTurn,
+}) => {
   const navigate = useNavigate();
+  const [pendingTurnNo, setPendingTurnNo] = useState(null);
+
+  const handleTurnClick = async (turnNo) => {
+    if (!onSelectTurn || pendingTurnNo != null || turnNo === activeTurnNo) return;
+    setPendingTurnNo(turnNo);
+    try {
+      await onSelectTurn(turnNo);
+    } finally {
+      setPendingTurnNo(null);
+    }
+  };
 
   // 예약 체크박스 선택 상태 - 조합의 예약 가능 슬롯 구성이 바뀌면(다듬기로 카테고리가
   // 빠지거나 새 결과로 바뀌면) "전부 선택"으로 리셋한다. fingerprint로 변화를 감지해서
@@ -357,12 +455,9 @@ const ResultCards = ({ result, onSlotAction, onBumpBudget, onApplyToPlan }) => {
     navigate(`/companies/reserve/${first}?${params.toString()}`);
   };
 
-  // 조합이 1개일 때(다듬은 조합/AI조합 등)는 위의 "현재 조합 현황" 박스와 폭을 맞추기 위해
-  // md:grid-cols-2를 안 씀 - 안 그러면 카드가 절반 폭에 갇히고 오른쪽에 빈 칸이 생김.
-  // 패키지가 여러 개 뜨는 빠르게 모드에서만 2열로 나열함.
-  const gridClass = soleCombo
-    ? "grid grid-cols-1 gap-5"
-    : "grid grid-cols-1 gap-5 md:grid-cols-2";
+  // soleCombo(후보 1개)는 위에서 VendorCard 그리드로 따로 그리고, 패키지가 여러 개 뜨는
+  // 빠르게 모드에서만 이 카드 그리드(2열)를 씀.
+  const gridClass = "grid grid-cols-1 gap-5 md:grid-cols-2";
 
   return (
     <div>
@@ -394,68 +489,139 @@ const ResultCards = ({ result, onSlotAction, onBumpBudget, onApplyToPlan }) => {
         </div>
       )}
 
+      {/* 조합 히스토리 배지 - "첫 추천 조합"에서 시작해서 다시찾기/확정/제외/다듬기로 손댈
+          때마다 오른쪽으로 배지가 하나씩 늘어난다. 배지를 누르면 그 시점 조합을 그대로 볼 수
+          있음. 배지 줄이 길어지면 이 줄 안에서만 가로 스크롤(하단 스크롤바)이 생기고, 오른쪽
+          금액은 항상 안 밀리게 고정폭으로 둔다. */}
       {soleCombo && (
-        <SidePanel combo={soleCombo} sessionId={sessionId} onSlotAction={onSlotAction} />
-      )}
-
-      {soleCombo && sessionId && onApplyToPlan && (
-        <div className="mb-6 flex flex-col items-center gap-2">
-          <button
-            type="button"
-            onClick={onApplyToPlan}
-            className="h-11 rounded-full border border-brand-dark px-6 text-sm font-medium text-brand-deep hover:bg-blush-50"
-          >
-            이 결과 마이페이지에 담기
-          </button>
-          <p className="text-xs text-ink-faint">
-            플랜 · 준비관리 · 체크리스트 · 예산관리에 한 번에 반영돼요
-          </p>
+        <div
+          id="ai-plan-combo-summary"
+          className="mb-4 flex items-center gap-3 rounded-2xl border border-line bg-white px-4 py-3 scroll-mt-24"
+        >
+          <div className="min-w-0 flex-1 overflow-x-auto pb-1">
+            <div className="flex items-center gap-2">
+              {turns.length > 0 ? (
+                turns.map((turn) => {
+                  const isFirst = turn.turnNo === 0;
+                  const label = isFirst ? "첫 추천 조합" : turn.message || `${turn.turnNo}번째 조정`;
+                  const active = turn.turnNo === activeTurnNo;
+                  return (
+                    <button
+                      key={turn.turnNo}
+                      type="button"
+                      onClick={() => handleTurnClick(turn.turnNo)}
+                      disabled={pendingTurnNo != null}
+                      title={label}
+                      className={`max-w-[180px] shrink-0 truncate whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium transition disabled:opacity-60 ${
+                        active
+                          ? "border-brand-dark bg-blush-100 text-brand-deep"
+                          : "border-line text-ink-soft hover:bg-blush-50"
+                      }`}
+                    >
+                      {pendingTurnNo === turn.turnNo ? "불러오는 중..." : label}
+                    </button>
+                  );
+                })
+              ) : (
+                <span className="shrink-0 whitespace-nowrap rounded-full bg-blush-100 px-3 py-1.5 text-xs font-medium text-brand-deep">
+                  {SOURCE_LABEL[soleCombo.sourceType] || soleCombo.sourceType}
+                </span>
+              )}
+            </div>
+          </div>
+          <span className="shrink-0 text-sm font-semibold text-ink">
+            {formatWon(soleCombo.packagePrice)}
+          </span>
         </div>
       )}
 
-      {soleCombo && slots.length > 0 && (
-        <div className="mb-6 rounded-2xl border border-brand-dark bg-blush-50 p-5">
-          <p className="mb-3 text-center text-sm text-ink-soft">
-            예약 진행할 업체를 골라주세요
-          </p>
-          <ul className="mb-4 space-y-1">
-            {slots.map((slot) => (
-              <li key={slot.cmno}>
-                <label className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-ink-soft hover:bg-white/60">
-                  <input
-                    type="checkbox"
-                    checked={selectedCmnos.has(slot.cmno)}
-                    onChange={() => toggleSlot(slot.cmno)}
-                    className="h-4 w-4 rounded border-line accent-brand-dark"
-                  />
-                  <span>
-                    {slot.label} · {slot.name}
-                  </span>
-                </label>
-              </li>
+      {/* 사진 카드 그리드(확정/다시찾기 포함)와 예약·마이페이지 담기 박스를 세로로 쌓지 않고
+          좌우로 나란히 배치 - 스크롤을 최대한 줄이기 위함. 데스크톱에서만 2열, 좁은 화면에선
+          자연스럽게 세로로 쌓인다. */}
+      {soleCombo && (
+        <div className="mb-6 grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
+          <div className="grid grid-cols-2 gap-4">
+            {SLOT_DEFS.map((def) => (
+              <VendorCard
+                key={def.category}
+                category={def.category}
+                label={def.label}
+                cmno={soleCombo[`${def.key}Cmno`]}
+                name={soleCombo[`${def.key}Name`]}
+                optionName={def.optionKey ? soleCombo[def.optionKey] : null}
+                imageUrl={soleCombo[`${def.key}ImageUrl`]}
+                reason={soleCombo[`${def.key}Reason`]}
+                price={soleCombo[`${def.key}Price`]}
+                packageType={def.packageTypeKey ? soleCombo[def.packageTypeKey] : undefined}
+                status={soleCombo[`${def.key}Status`]}
+                sessionId={sessionId}
+                onSlotAction={onSlotAction}
+              />
             ))}
-          </ul>
-          <div className="flex flex-col items-center gap-2">
-            <button
-              type="button"
-              onClick={handleReserveCombo}
-              disabled={selectedCmnos.size === 0}
-              className="h-11 rounded-full bg-brand px-6 text-sm font-medium text-white hover:bg-brand-dark disabled:opacity-50"
-            >
-              선택한 업체 예약 진행 ({selectedCmnos.size}곳)
-            </button>
-            <p className="text-xs text-ink-faint">
-              업체별로 순서대로 예약 페이지로 안내해드려요. 로그인이 필요해요.
-            </p>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            {sessionId && onApplyToPlan && (
+              <div className="flex flex-col items-center gap-2 rounded-2xl border border-brand-dark px-5 py-4 text-center">
+                <button
+                  type="button"
+                  onClick={onApplyToPlan}
+                  className="h-11 w-full rounded-full border border-brand-dark px-6 text-sm font-medium text-brand-deep hover:bg-blush-50"
+                >
+                  이 결과 마이페이지에 담기
+                </button>
+                <p className="text-xs text-ink-faint">
+                  플랜 · 준비관리 · 체크리스트 · 예산관리에 한 번에 반영돼요
+                </p>
+              </div>
+            )}
+
+            {slots.length > 0 && (
+              <div className="rounded-2xl border border-brand-dark bg-blush-50 p-5">
+                <p className="mb-3 text-center text-sm text-ink-soft">
+                  예약 진행할 업체를 골라주세요
+                </p>
+                <ul className="mb-4 space-y-1">
+                  {slots.map((slot) => (
+                    <li key={slot.cmno}>
+                      <label className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-ink-soft hover:bg-white/60">
+                        <input
+                          type="checkbox"
+                          checked={selectedCmnos.has(slot.cmno)}
+                          onChange={() => toggleSlot(slot.cmno)}
+                          className="h-4 w-4 rounded border-line accent-brand-dark"
+                        />
+                        <span>
+                          {slot.label} · {slot.name}
+                        </span>
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+                <div className="flex flex-col items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleReserveCombo}
+                    disabled={selectedCmnos.size === 0}
+                    className="h-11 w-full rounded-full bg-brand px-6 text-sm font-medium text-white hover:bg-brand-dark disabled:opacity-50"
+                  >
+                    선택한 업체 예약 진행 ({selectedCmnos.size}곳)
+                  </button>
+                  <p className="text-xs text-ink-faint">
+                    업체별로 순서대로 예약 페이지로 안내해드려요. 로그인이 필요해요.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {candidates.length === 0 ? (
+      {!soleCombo && candidates.length === 0 ? (
         <div className="rounded-2xl border border-line bg-white p-10 text-center text-ink-faint">
           추천할 수 있는 조합을 찾지 못했어요.
         </div>
-      ) : (
+      ) : !soleCombo ? (
         <div className={gridClass}>
           {candidates.map((c, idx) => (
             <div
@@ -520,7 +686,7 @@ const ResultCards = ({ result, onSlotAction, onBumpBudget, onApplyToPlan }) => {
             </div>
           ))}
         </div>
-      )}
+      ) : null}
 
       <p className="mt-6 text-center text-xs text-ink-faint">
         표시된 가격은 참고용이며, 실제 금액은 예약 시 옵션 선택에서 확정돼요.

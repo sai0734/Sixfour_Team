@@ -77,13 +77,13 @@ public class AiPlanController {
         return aiPlanRefineService.refine(requestDTO);
     }
 
-    // 6단계 - 바로 직전 턴으로 되돌리기
-    @PostMapping("/rollback/{sessionId}")
-    public AiPlanQuickResultDTO rollback(@PathVariable Long sessionId) {
+    // 상단 조합 히스토리 배지 - 예전 턴 하나를 클릭해서 그 시점 조합을 그대로 불러옴 (새 턴 안 만듦)
+    @PostMapping("/session/{sessionId}/turn/{turnNo}")
+    public AiPlanQuickResultDTO viewTurn(@PathVariable Long sessionId, @PathVariable int turnNo) {
 
-        log.info("AiPlan rollback request: sessionId={}", sessionId);
+        log.info("AiPlan view turn request: sessionId={}, turnNo={}", sessionId, turnNo);
 
-        return aiPlanRefineService.rollback(sessionId);
+        return aiPlanRefineService.viewTurn(sessionId, turnNo);
     }
 
     // 사이드패널 확정/해제 버튼 - AI 안 거치고 슬롯 상태 직접 반영

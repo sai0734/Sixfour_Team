@@ -19,7 +19,6 @@ const AdminDashboard = lazy(() => import("../pages/admin/AdminDashboardPage"));
 const AdminMemberManage = lazy(() => import("../pages/admin/MemberManagePage"));
 const ChecklistListPage = lazy(() => import("../pages/checklist/ListPage"));
 const PrepHubPage = lazy(() => import("../pages/prep/HubPage"));
-const PrepDdayPage = lazy(() => import("../pages/prep/DdayPage"));
 const PrepAiDressPage = lazy(() => import("../pages/prep/AiDressPage"));
 const BudgetListPage = lazy(() => import("../pages/budget/ListPage"));
 const MyPageHub = lazy(() => import("../pages/mypage/HubPage"));
@@ -317,14 +316,6 @@ const appRoutes = [
     element: (
       <Suspense fallback={Loading}>
         <PrepHubPage />
-      </Suspense>
-    ),
-  },
-  {
-    path: "/prep/dday",
-    element: (
-      <Suspense fallback={Loading}>
-        <PrepDdayPage />
       </Suspense>
     ),
   },

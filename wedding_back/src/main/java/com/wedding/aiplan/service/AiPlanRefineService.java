@@ -12,7 +12,10 @@ public interface AiPlanRefineService {
 
     AiPlanQuickResultDTO refine(AiPlanRefineRequestDTO requestDTO);
 
-    AiPlanQuickResultDTO rollback(Long sessionId);
+    // 상단 조합 히스토리 배지 - 임의의 예전 턴을 클릭해서 그 시점 조합을 그대로 불러온다.
+    // "본다"는 개념이라 새 턴을 기록에 추가하지 않는다(둘러보기만으로 배지가 계속 늘어나면
+    // 안 됨) - 그 상태에서 실제로 뭔가 더 바꾸면 그때 비로소 새 턴이 생긴다.
+    AiPlanQuickResultDTO viewTurn(Long sessionId, int turnNo);
 
     // 사이드패널 확정/해제/다시찾기 버튼 - AI를 거치지 않고 슬롯 상태를 직접 반영
     AiPlanQuickResultDTO applySlotAction(AiPlanSlotActionRequestDTO requestDTO);

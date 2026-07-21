@@ -1,7 +1,7 @@
 import BasicMenu from "../components/menus/BasicMenu";
 import MyPageSidebar from "./MyPageSidebar";
 import ProfileCompleteGuard from "../components/common/ProfileCompleteGuard";
-import TapeLabel from "../components/common/TapeLabel";
+import ShopTapeLabel from "../components/product/ShopTapeLabel";
 
 // PrepLayout과 동일한 껍데기지만 사이드바만 마이페이지 전용으로 분리.
 const MyPageLayout = ({ eyebrow, title, subtitle, children }) => {
@@ -23,9 +23,9 @@ const MyPageLayout = ({ eyebrow, title, subtitle, children }) => {
 
               <div className="relative z-10 mx-auto max-w-[720px]">
                 {eyebrow && (
-                  <TapeLabel tone="white" className="mb-5">
+                  <ShopTapeLabel tone="white" className="mb-5">
                     {eyebrow}
-                  </TapeLabel>
+                  </ShopTapeLabel>
                 )}
                 {title && (
                   <h1 className="mb-2.5 font-['Gowun_Batang'] text-2xl leading-snug text-white md:mb-3.5 md:text-4xl">

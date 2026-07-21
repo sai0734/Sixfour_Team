@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 public class AiPlanQuickResultDTO {
 
     // 조합이 정확히 1개로 나올 때만 채워짐(패키지 여러 개 나오는 빠르게 모드는 null) -
-    // 6단계 리파인 대화(POST /api/aiplan/refine, /api/aiplan/rollback/{sessionId})에서 이 값을 씀.
+    // 6단계 리파인 대화(POST /api/aiplan/refine)에서 이 값을 씀.
     private Long sessionId;
 
     // 세션이 있을 때만 채워짐 - 결과 화면에 "결혼 예정일" 표시용. 세션이 서버에 들고 있는 값이라

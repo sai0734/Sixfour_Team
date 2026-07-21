@@ -220,12 +220,14 @@ const ListComponent = () => {
                 {g.items.map((item) => (
                   <div
                     key={item.checklistId}
-                    className="flex items-center bg-white rounded-2xl border border-line px-5 py-4 relative"
+                    onClick={() => handleToggleDone(item)}
+                    className="flex items-center bg-white rounded-2xl border border-line px-5 py-4 relative cursor-pointer transition-colors hover:bg-cream/60"
                   >
                     <input
                       type="checkbox"
                       checked={item.done}
                       onChange={() => handleToggleDone(item)}
+                      onClick={(e) => e.stopPropagation()}
                       className="w-4 h-4 mr-4 accent-brand"
                     />
 
@@ -233,7 +235,10 @@ const ListComponent = () => {
                       {item.reservationId ? (
                         <button
                           type="button"
-                          onClick={() => navigate("/mypage?tab=reservation")}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate("/mypage?tab=reservation");
+                          }}
                           title="마이페이지 예약 현황에서 보기"
                           className={`text-left text-sm hover:underline ${
                             item.done ? "line-through text-ink-faint" : "text-ink"
@@ -272,20 +277,24 @@ const ListComponent = () => {
 
                     <button
                       type="button"
-                      onClick={() =>
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setOpenMenuId(
                           openMenuId === item.checklistId
                             ? null
                             : item.checklistId,
-                        )
-                      }
+                        );
+                      }}
                       className="w-7 h-7 flex items-center justify-center rounded-full text-ink-faint hover:bg-cream"
                     >
                       ⋯
                     </button>
 
                     {openMenuId === item.checklistId && (
-                      <div className="absolute right-4 top-12 bg-white border border-line rounded-xl shadow-lg py-1 w-28 z-10">
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute right-4 top-12 bg-white border border-line rounded-xl shadow-lg py-1 w-28 z-10"
+                      >
                         <button
                           type="button"
                           onClick={() => openEditModal(item)}
