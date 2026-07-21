@@ -5,6 +5,9 @@ import { listByBoard, fileUrl, isVideoFile } from "../../api/boardImageApi";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import { saveViewedBoard } from "../../util/boardViewHistory";
 
+// PostCard.jsx의 AI_SUMMARY_MIN_CONTENT_LENGTH와 동일한 기준 — 짧은 글은 요약을 노출하지 않음.
+const AI_SUMMARY_MIN_CONTENT_LENGTH = 150;
+
 const DetailModal = ({
   board,
   isOwner,
@@ -117,7 +120,8 @@ const DetailModal = ({
           </div>
         )}
 
-        {board.aiSummary && (
+        {board.aiSummary &&
+          (board.content?.length || 0) >= AI_SUMMARY_MIN_CONTENT_LENGTH && (
           <div className="bg-surface rounded-xl p-4 mb-6">
             <p className="text-xs font-medium text-ink-soft mb-1">
               AI 한줄요약
