@@ -22,7 +22,14 @@ import com.wedding.reservation.dto.ReservationDTO;
 import com.wedding.reservation.dto.ReservationPaymentConfirmRequestDTO;
 import com.wedding.reservation.repository.ReservationRepository;
 import com.wedding.global.util.TossPaymentClient;
+import com.wedding.budget.domain.Budget;
+import com.wedding.budget.repository.BudgetRepository;
+import com.wedding.checklist.domain.Checklist;
+import com.wedding.checklist.repository.ChecklistRepository;
+import com.wedding.company.domain.Company;
+import com.wedding.company.domain.CompanyCategory;
 import com.wedding.company.dto.CompanyDTO;
+import com.wedding.company.repository.CompanyRepository;
 import com.wedding.company.service.CompanyService;
 
 import lombok.RequiredArgsConstructor;
@@ -45,6 +52,12 @@ public class ReservationServiceImpl implements ReservationService {
   private final ReservationAccessService reservationAccessService;
   private final CompanyService companyService;
   // 승진 코드 추가 끝
+
+  // 재원 추가 - 매니저 확인(결제대기 전환) 시 준비관리(예산관리/체크리스트)에 자동 반영하기 위함
+  private final CompanyRepository companyRepository;
+  private final BudgetRepository budgetRepository;
+  private final ChecklistRepository checklistRepository;
+  // 재원 추가 끝
 
   // 재원 추가 - 결제 최소 기한: 예식일(weddingDate) 기준 며칠 전까지만 결제 가능한지
   // (업계 관행상 잔금 결제가 본식 1~2주 전에 몰리는 편이라 2주로 설정)
@@ -419,11 +432,95 @@ public class ReservationServiceImpl implements ReservationService {
 
     reservationRepository.save(reservation);
 
+    // 재원 추가 - 결제대기로 넘어온 시점에만 준비관리(예산관리/체크리스트)에 반영
+    if ("결제대기".equals(reservation.getStatus())) {
+      syncPrepArtifacts(reservation);
+    }
+    // 재원 추가 끝
+
     log.info("confirmByManager - reservationId: {}, status: {}",
             reservationId, reservation.getStatus());
 
     return modelMapper.map(reservation, ReservationDTO.class);
   }
   // 승진 코드 추가 끝
+
+  // 재원 추가 - 결제대기 전환 시 예산관리(카테고리별 계획예산)·체크리스트(2단계 업체 계약)에
+  // 자동 반영. AI 웨딩플랜 "담기" 버튼이 아니라 실제로 매니저가 예약을 확인한 시점에만 반영되는
+  // 구조라, 아직 확정 안 된 후보와 실제 계약이 준비관리 화면에서 안 섞인다.
+  private void syncPrepArtifacts(Reservation reservation) {
+
+    Company company = companyRepository.findById(reservation.getCmno()).orElse(null);
+    if (company == null) {
+      return;
+    }
+
+    String category = budgetCategoryOf(company.getCategory());
+    if (category != null) {
+      upsertBudgetCategory(reservation.getMemberEmail(), category, (long) reservation.getAmount());
+    }
+
+    if (!checklistRepository.existsByReservationId(reservation.getReservationId())) {
+      createContractChecklistItem(reservation, company.getName());
+    }
+  }
+
+  private String budgetCategoryOf(CompanyCategory category) {
+    if (category == null) {
+      return null;
+    }
+    return switch (category) {
+      case HALL -> "홀";
+      case STUDIO -> "스튜디오";
+      case DRESS -> "드레스";
+      case MAKEUP -> "메이크업";
+    };
+  }
+
+  // 같은 카테고리 항목이 이미 있으면 계획예산만 갱신, 없으면 새로 만든다
+  private void upsertBudgetCategory(String memberEmail, String category, Long amount) {
+
+    List<Budget> budgets = budgetRepository.findByMemberEmailOrderBySortOrderAsc(memberEmail);
+    Budget existing = budgets.stream()
+            .filter(b -> category.equals(b.getCategory()))
+            .findFirst()
+            .orElse(null);
+
+    if (existing != null) {
+      existing.changeBudgetAmount(amount);
+      budgetRepository.save(existing);
+      return;
+    }
+
+    int nextOrder = budgets.stream().mapToInt(Budget::getSortOrder).max().orElse(0) + 1;
+    budgetRepository.save(Budget.builder()
+            .memberEmail(memberEmail)
+            .category(category)
+            .budgetAmount(amount)
+            .actualAmount(0L)
+            .sortOrder(nextOrder)
+            .build());
+  }
+
+  private void createContractChecklistItem(Reservation reservation, String companyName) {
+
+    List<Checklist> checklists =
+            checklistRepository.findByMemberEmailOrderByStageAscSortOrderAsc(reservation.getMemberEmail());
+    int nextOrder = checklists.stream()
+            .filter(c -> c.getStage() == 2)
+            .mapToInt(Checklist::getSortOrder)
+            .max()
+            .orElse(0) + 1;
+
+    checklistRepository.save(Checklist.builder()
+            .memberEmail(reservation.getMemberEmail())
+            .title(companyName + " 결제")
+            .isDone(false)
+            .dueDate(calculatePaymentDeadline(reservation))
+            .stage(2)
+            .sortOrder(nextOrder)
+            .reservationId(reservation.getReservationId())
+            .build());
+  }
 
 }

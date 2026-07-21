@@ -22,10 +22,13 @@ import com.wedding.aiplan.dto.AiPlanSlotActionRequestDTO;
 import com.wedding.aiplan.dto.AiPlanTurnDTO;
 import com.wedding.company.domain.Company;
 import com.wedding.company.domain.CompanyCategory;
+import com.wedding.company.domain.MakeupPackageType;
 import com.wedding.company.repository.CompanyRepository;
 import com.wedding.global.util.OpenAiClient;
 import com.wedding.openAIClient.dto.OpenAiMessageDTO;
 import com.wedding.openAIClient.dto.OpenAiResponseDTO;
+import com.wedding.weddingplan.domain.WeddingPlan;
+import com.wedding.weddingplan.repository.WeddingPlanRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -51,6 +54,7 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
     private final CompanyRepository companyRepository;
     private final OpenAiClient openAiClient;
     private final ObjectMapper objectMapper;
+    private final WeddingPlanRepository weddingPlanRepository;
 
     private static final String SYSTEM_PROMPT =
             "당신은 웨딩플랜 리파인 어시스턴트입니다. 사용자가 현재 고른 홀/스튜디오/드레스/메이크업 "
@@ -201,7 +205,7 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
                 : null;
 
         AiPlanCandidateBuilder.PickResult picked = candidateBuilder.pickOne(
-                category, session.getRegion(), categoryBudget, AiPlanCategoryPreferences.empty());
+                category, session.getRegion(), categoryBudget, preferencesForReconsider(category, session));
 
         SlotState target = slotFor(session, category);
         target.changeStatus(SlotStatus.PENDING);
@@ -246,6 +250,72 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
                         .createdAt(h.getCreatedAt())
                         .build())
                 .toList();
+    }
+
+    // ── "이 결과 마이페이지에 담기" ──────────────────────────────────
+    //
+    // 추천 도중 자동으로 반영하면 아직 확정 안 한 조합까지 준비관리에 섞여버리므로, 결과 화면에서
+    // 사용자가 명시적으로 버튼을 눌렀을 때만 실행한다. 여기서는 웨딩플랜(예식일/총예산/신랑·신부
+    // 이름)만 반영한다 - 예산관리(카테고리별 계획예산)·체크리스트(업체 계약)는 아직 확정 안 된
+    // AI 추천이 아니라, 실제로 매니저가 예약을 확인해서 결제대기로 넘어온 시점에만 반영되도록
+    // ReservationServiceImpl.confirmByManager() 쪽으로 옮겼다. 찜/예약은 이미 별도로 연동돼
+    // 있어서 여기서 건드리지 않는다.
+    @Override
+    public Map<String, String> applyToPlan(Long sessionId) {
+
+        String email = sessionSupport.currentMemberEmailOrNull();
+        if (email == null) {
+            throw new IllegalStateException("로그인 후 이용해주세요.");
+        }
+
+        AiPlanSession session = sessionSupport.findSession(sessionId)
+                .orElseThrow(() -> new RuntimeException("세션을 찾을 수 없어요"));
+
+        // 비로그인으로 시작한 세션을 지금 로그인한 사람이 담으려는 경우 - 그 사람 것으로 소유권을 넘김
+        if (session.getMemberEmail() == null) {
+            session.changeMemberEmail(email);
+        } else if (!session.getMemberEmail().equals(email)) {
+            throw new IllegalStateException("본인이 만든 AI 웨딩플랜만 담을 수 있어요.");
+        }
+
+        applyWeddingPlan(email, session);
+
+        return Map.of(
+                "RESULT", "SUCCESS",
+                "message", "예식일·총예산을 마이페이지 플랜에 반영했어요. 예산관리·체크리스트는 "
+                        + "업체 예약을 확정(결제대기)하면 자동으로 채워져요.");
+    }
+
+    // 1:1이라 없으면 새로 만들고, 있으면 예식일/총예산만 덮어씀
+    // (신랑·신부 이름·메모는 AI 플랜이 모르는 값이라 안 건드림 - 이름은 그래도 세션에 있으면 반영)
+    private void applyWeddingPlan(String email, AiPlanSession session) {
+
+        WeddingPlan plan = weddingPlanRepository.findByMemberEmail(email).orElse(null);
+
+        if (plan == null) {
+            weddingPlanRepository.save(WeddingPlan.builder()
+                    .memberEmail(email)
+                    .groomName(session.getGroomName())
+                    .brideName(session.getBrideName())
+                    .weddingDate(session.getWeddingDate())
+                    .totalBudget(session.getBudget())
+                    .build());
+            return;
+        }
+
+        if (session.getGroomName() != null) {
+            plan.changeGroomName(session.getGroomName());
+        }
+        if (session.getBrideName() != null) {
+            plan.changeBrideName(session.getBrideName());
+        }
+        if (session.getWeddingDate() != null) {
+            plan.changeWeddingDate(session.getWeddingDate());
+        }
+        if (session.getBudget() != null) {
+            plan.changeTotalBudget(session.getBudget());
+        }
+        weddingPlanRepository.save(plan);
     }
 
     // ── 발화 → 카테고리별 액션 분류 (AI) ─────────────────────────────
@@ -380,7 +450,7 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
                     ? Math.round(remaining * (ratios.get(category) / ratioSum))
                     : null;
 
-            AiPlanCategoryPreferences prefs = preferencesFor(category, action.note());
+            AiPlanCategoryPreferences prefs = preferencesFor(category, action.note(), session);
             AiPlanCandidateBuilder.PickResult picked =
                     candidateBuilder.pickOne(category, session.getRegion(), categoryBudget, prefs);
 
@@ -391,18 +461,36 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
         }
     }
 
-    // 홀/메이크업은 이제 구조화 값(HallType/MakeupPackageType enum)으로 매칭하는데, 여기 note는
-    // AI가 다듬기 대화에서 만들어낸 자유 텍스트라 enum 토큰으로 안전하게 못 바꾼다 - 그래서 둘 다
-    // 예산/지역만으로 다시 찾는다("다른 느낌으로" 같은 뉘앙스는 아직 반영 못 함, 추후 개선 여지).
-    // 스튜디오/드레스는 태그 문자열 LIKE 매칭이라 note 하나를 그대로 키워드로 써도 된다(단일 항목 리스트).
-    private AiPlanCategoryPreferences preferencesFor(CompanyCategory category, String note) {
+    // 홀은 이제 구조화 값(HallType enum)으로 매칭하는데, 여기 note는 AI가 다듬기 대화에서 만들어낸
+    // 자유 텍스트라 enum 토큰으로 안전하게 못 바꾼다 - 그래서 예산/지역만으로 다시 찾는다("다른
+    // 느낌으로" 같은 뉘앙스는 아직 반영 못 함, 추후 개선 여지). 메이크업은 세션에 저장해둔 원래
+    // 취향(makeupPackageType)을 계속 지킨다 - 다듬기 자유 텍스트로 바뀌는 게 아니라 처음 요청한
+    // 패키지 타입을 유지하는 게 맞다. 스튜디오/드레스는 태그 문자열 LIKE 매칭이라 note 하나를
+    // 그대로 키워드로 써도 된다(단일 항목 리스트).
+    private AiPlanCategoryPreferences preferencesFor(CompanyCategory category, String note, AiPlanSession session) {
         List<String> noteList = note != null ? List.of(note) : List.of();
         return switch (category) {
             case STUDIO -> AiPlanCategoryPreferences.of(List.of(), noteList, List.of(), null);
             case DRESS -> AiPlanCategoryPreferences.of(List.of(), List.of(), noteList, null);
-            case MAKEUP -> AiPlanCategoryPreferences.empty();
+            case MAKEUP -> preferencesForReconsider(category, session);
             case HALL -> AiPlanCategoryPreferences.empty();
         };
+    }
+
+    // 사이드패널 "다시 찾기" 버튼(reconsiderOne)과 다듬기 대화의 메이크업 재검색이 공유하는 로직 -
+    // 세션에 저장해둔 원래 메이크업 취향을 그대로 다시 써서, 재검색해도 처음 요청한 패키지 타입을
+    // 계속 지킨다. MAKEUP이 아닌 카테고리는 (스튜디오/드레스 태그, 홀 타입 모두 세션에 저장해두지
+    // 않으므로) 기존과 동일하게 예산/지역만으로 다시 찾는다.
+    private AiPlanCategoryPreferences preferencesForReconsider(CompanyCategory category, AiPlanSession session) {
+        if (category != CompanyCategory.MAKEUP || session.getMakeupPackageType() == null) {
+            return AiPlanCategoryPreferences.empty();
+        }
+        try {
+            MakeupPackageType type = MakeupPackageType.valueOf(session.getMakeupPackageType());
+            return AiPlanCategoryPreferences.of(List.of(), List.of(), List.of(), type);
+        } catch (IllegalArgumentException e) {
+            return AiPlanCategoryPreferences.empty();
+        }
     }
 
     private SlotState slotFor(AiPlanSession session, CompanyCategory category) {

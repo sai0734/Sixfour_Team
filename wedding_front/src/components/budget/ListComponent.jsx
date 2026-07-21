@@ -11,7 +11,9 @@ import BudgetFormModal from "./BudgetFormModal";
 
 const CATEGORY_COLOR = {
   홀: "#993556",
-  스드메: "#185FA5",
+  스튜디오: "#185FA5",
+  드레스: "#C06080",
+  메이크업: "#9E88B8",
   예복: "#854F0B",
   예물: "#534AB7",
   기타: "#5F5E5A",
@@ -19,9 +21,16 @@ const CATEGORY_COLOR = {
 
 const CATEGORY_ICON = {
   홀: <path d="M4 21V9l8-6 8 6v12M9 21v-6h6v6" />,
-  스드메: (
+  스튜디오: (
+    <>
+      <path d="M4 8h3l1.5-2h7L17 8h3v11H4Z" />
+      <circle cx="12" cy="13.5" r="3.2" />
+    </>
+  ),
+  드레스: (
     <path d="M12 22c4 0 6-3 6-6.5 0-2-1-3.5-2-5 0 2-1 3-2 3 .5-3-1-6-4-7 1 2 .5 4-.5 5.5C8.5 13 8 14 8 15.5 8 19 9 22 12 22Z" />
   ),
+  메이크업: <path d="M9 2h6v6.5l-1.5 1.5v10a1.5 1.5 0 0 1-3 0V10L9 8.5Z" />,
   예복: <path d="M6 4h12l-2 4 2 14H8L10 8Z" />,
   예물: <circle cx="12" cy="12" r="7" />,
   기타: <path d="M4 8h16v13H4zM8 8V5h8v3" />,
@@ -147,6 +156,11 @@ const ListComponent = () => {
           + 항목 추가
         </button>
       </div>
+
+      <p className="mb-6 rounded-xl bg-blush-50 px-4 py-3 text-xs text-brand-deep">
+        홀 · 스튜디오 · 드레스 · 메이크업 계획예산은 마이페이지 · 예약 현황에서 업체 예약이
+        "결제대기" 상태가 되면 자동으로 채워져요.
+      </p>
 
       <div className="grid grid-cols-1 gap-4 mb-8 sm:grid-cols-3">
         <div className="bg-white rounded-2xl border border-line p-5">

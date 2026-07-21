@@ -1,6 +1,7 @@
 package com.wedding.aiplan.service;
 
 import java.util.List;
+import java.util.Map;
 
 import com.wedding.aiplan.dto.AiPlanQuickResultDTO;
 import com.wedding.aiplan.dto.AiPlanRefineRequestDTO;
@@ -21,4 +22,7 @@ public interface AiPlanRefineService {
 
     // 다듬기 대화 기록 - 사이드바 "다듬은 기록 보기" 펼치기용
     List<AiPlanTurnDTO> getRefineHistory(Long sessionId);
+
+    // "이 결과 마이페이지에 담기" - 확정 조합을 웨딩플랜/예산관리/체크리스트에 반영 (로그인 필수)
+    Map<String, String> applyToPlan(Long sessionId);
 }

@@ -12,6 +12,7 @@ import {
   rollbackRecommendation,
   updateSlotStatus,
   getSessionResult,
+  applySessionToPlan,
 } from "../../api/aiPlanApi";
 import {
   getSessionHistory,
@@ -421,6 +422,32 @@ const DetailPlanPage = () => {
       });
   };
 
+  // "이 결과 마이페이지에 담기" - 추천 도중 자동 반영이 아니라 사용자가 명시적으로 눌렀을 때만
+  // 웨딩플랜/예산관리/체크리스트에 반영한다. 기존에 저장해둔 예식일·총예산·예식장이 있으면
+  // 덮어써지므로, 실행 전에 한 번 더 확인받는다.
+  const handleApplyToPlan = () => {
+    if (!result?.sessionId) return;
+
+    if (
+      !window.confirm(
+        "이 결과를 마이페이지 플랜 · 준비관리 · 체크리스트 · 예산관리에 반영할까요?\n" +
+          "기존에 저장된 예식일 · 총예산 · 예식장 정보가 있다면 덮어씌워져요.",
+      )
+    ) {
+      return;
+    }
+
+    applySessionToPlan(result.sessionId)
+      .then((data) => {
+        alert(data?.message || "마이페이지에 반영했어요.");
+      })
+      .catch((err) => {
+        console.error(err);
+        const msg = err?.response?.data?.msg;
+        alert(msg || "반영 중 문제가 발생했어요. 로그인 상태를 확인해주세요.");
+      });
+  };
+
   // 사이드바에서 예전 회차를 클릭하면 그 세션을 다시 불러옴
   const handleSelectHistory = (sessionId) => {
     if (result?.sessionId && String(result.sessionId) === sessionId) {
@@ -771,7 +798,12 @@ const DetailPlanPage = () => {
             </form>
           ) : (
             <div>
-              <ResultCards result={result} onSlotAction={handleSlotAction} onBumpBudget={handleBumpBudget} />
+              <ResultCards
+                result={result}
+                onSlotAction={handleSlotAction}
+                onBumpBudget={handleBumpBudget}
+                onApplyToPlan={handleApplyToPlan}
+              />
 
               {error && (
                 <div className="mt-4 flex flex-wrap items-center justify-center gap-2 rounded-xl border border-[#F0C4C4] bg-[#FDEEEE] px-4 py-2.5 text-sm text-[#B23B3B]">

@@ -85,9 +85,15 @@ const HubPage = () => {
       )
     : null;
 
-  // 재원 추가 - "더 챙겨볼 것들"용 결제 예정 요약
+  // 재원 추가 - "더 챙겨볼 것들"용 결제 예정 요약. 매니저가 확인해서 결제대기로 넘어온
+  // 예약만 대상 - 아직 업체 확인 전(대기)인 예약까지 여기 뜨면 사용자가 확정 안 된 걸 확정된
+  // 걸로 착각할 수 있어서 status까지 같이 본다.
   const pendingPayments = reservations.filter(
-    (r) => r.amount > 0 && r.payStatus !== "PAID" && r.paymentDeadline,
+    (r) =>
+      r.amount > 0 &&
+      r.status === "결제대기" &&
+      r.payStatus !== "PAID" &&
+      r.paymentDeadline,
   );
   const overduePayments = pendingPayments.filter(
     (r) => new Date(r.paymentDeadline) < new Date(new Date().toDateString()),

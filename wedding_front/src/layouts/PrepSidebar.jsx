@@ -72,7 +72,7 @@ const PrepSidebar = () => {
   return (
     <>
       {/* 모바일/태블릿: 본문을 빠르게 볼 수 있도록 한 줄 가로 스크롤 탭 */}
-      <div className="sticky top-[64px] z-30 -mx-5 mb-1 border-y border-[#E8E1D7] bg-[#FBF7F0]/95 px-5 py-3 shadow-[0_8px_18px_-16px_rgba(58,54,47,0.45)] backdrop-blur-md md:-mx-8 md:px-8 lg:hidden">
+      <div className="sticky top-[64px] z-30 -mx-5 mb-1 border-y border-line bg-cream/95 px-5 py-3 shadow-[0_8px_18px_-16px_rgba(58,54,47,0.45)] backdrop-blur-md md:-mx-8 md:px-8 lg:hidden">
         <div className="relative">
           <nav
             ref={mobileNavRef}
@@ -87,7 +87,7 @@ const PrepSidebar = () => {
                   <span
                     key={item.name}
                     title="준비 중인 기능입니다"
-                    className="shrink-0 snap-start cursor-not-allowed select-none rounded-full border border-[#E4DDD3] bg-[#F1ECE4] px-4 py-2 text-xs font-medium text-[#B5ACA0]"
+                    className="shrink-0 snap-start cursor-not-allowed select-none rounded-full border border-line bg-surface px-4 py-2 text-xs font-medium text-ink-faint"
                   >
                     {item.shortName}
                   </span>
@@ -102,8 +102,8 @@ const PrepSidebar = () => {
                   aria-current={isActive ? "page" : undefined}
                   className={`shrink-0 snap-start rounded-full border px-4 py-2 text-xs font-semibold transition-all ${
                     isActive
-                      ? "border-[#7C8B6F] bg-[#7C8B6F] text-white shadow-[0_5px_14px_-6px_rgba(92,107,79,0.75)]"
-                      : "border-[#DDD5C9] bg-white text-[#625B50] hover:border-[#AEB8A4] hover:bg-[#F4F6F0]"
+                      ? "border-brand-deep bg-brand-deep text-white shadow-[0_5px_14px_-6px_rgba(192,96,128,0.75)]"
+                      : "border-line bg-white text-ink-soft hover:border-brand hover:bg-blush-50"
                   }`}
                 >
                   {item.shortName}
@@ -125,10 +125,7 @@ const PrepSidebar = () => {
             className="rounded-2xl bg-white p-4"
             style={{ boxShadow: "0 8px 24px -14px rgba(58,54,47,0.25)" }}
           >
-            <p
-              className="mb-3 px-3 text-xs font-bold tracking-wide"
-              style={{ color: "#C06080" }}
-            >
+            <p className="mb-3 px-3 text-xs font-bold tracking-wide text-brand-deep">
               {group.label}
             </p>
 
@@ -141,8 +138,7 @@ const PrepSidebar = () => {
                     <span
                       key={item.name}
                       title="준비 중인 기능입니다"
-                      className="flex cursor-not-allowed select-none items-center gap-2 rounded-full px-4 py-2.5 text-sm"
-                      style={{ color: "#C4BBAF" }}
+                      className="flex cursor-not-allowed select-none items-center gap-2 rounded-full px-4 py-2.5 text-sm text-ink-faint"
                     >
                       {item.name}
                     </span>
@@ -154,24 +150,11 @@ const PrepSidebar = () => {
                     key={item.name}
                     to={item.path}
                     aria-current={isActive ? "page" : undefined}
-                    className="flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium transition-colors"
-                    style={
+                    className={`flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium transition-colors ${
                       isActive
-                        ? {
-                            background: "#C06080",
-                            color: "#FFFFFF",
-                            boxShadow: "0 4px 12px -4px rgba(192,96,128,0.6)",
-                          }
-                        : { color: "#4A3F38" }
-                    }
-                    onMouseEnter={(e) => {
-                      if (!isActive)
-                        e.currentTarget.style.background = "#FFE2E2";
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isActive)
-                        e.currentTarget.style.background = "transparent";
-                    }}
+                        ? "bg-brand-deep text-white shadow-[0_4px_12px_-4px_rgba(192,96,128,0.6)]"
+                        : "text-ink hover:bg-blush-100"
+                    }`}
                   >
                     {item.name}
                   </Link>

@@ -80,6 +80,15 @@ public class AiPlanCandidateBuilder {
 
     public AiPlanQuickResultDTO recommend(String region, Long budget, Integer guestCount,
                                           AiPlanCategoryPreferences prefs) {
+        return recommend(region, budget, guestCount, prefs, 0);
+    }
+
+    // relaxationStage: 예산 초과로 조건을 내려놓고 재귀 호출한 횟수(0=원래 요청, 1=메이크업만 남김,
+    // 2=완전히 다 내려놓음). 메이크업 취향을 우선 지키려고 재귀를 한 단계 늘리면서, prefs.isEmpty()
+    // 만으로 "더 내려놓을 게 없는 상태"를 판단할 수 없게 됐다(메이크업만 남은 prefs는 절대 empty가
+    // 아니라서 무한 재귀에 빠짐) - 그래서 이 카운터로 직접 재귀 깊이를 2단계로 못박아 둔다.
+    private AiPlanQuickResultDTO recommend(String region, Long budget, Integer guestCount,
+                                           AiPlanCategoryPreferences prefs, int relaxationStage) {
 
         if (prefs.isEmpty()) {
             List<CompanyPackage> fittingPackages = findFittingPackages(region, budget, guestCount);
@@ -119,11 +128,21 @@ public class AiPlanCandidateBuilder {
         // 뜻이라(무한 재귀 방지 겸) 그냥 지나간다 - 아래 appendBudgetGapMessage가 안내한다.
         // 프론트 "예산 늘려서 다시 찾기" 버튼이 그 금액으로 예산을 채워 원래 조건 그대로 재요청하면,
         // 이번에 계산한 이 조합이 그대로 나온다.
-        boolean alreadyFullyRelaxed = guestCount == null && prefs.isEmpty();
+        boolean alreadyFullyRelaxed = relaxationStage >= 2 || (guestCount == null && prefs.isEmpty());
         if (!alreadyFullyRelaxed && budget != null && budget > 0) {
             long gap = combo.dto.getPackagePrice().longValue() - budget;
             if (gap > BUDGET_TOLERANCE) {
-                AiPlanQuickResultDTO budgetFit = recommend(region, budget, null, AiPlanCategoryPreferences.empty());
+                // 홀타입/스튜디오/드레스 취향은 가격 영향이 커서 예산 초과 시 다 내려놓지만, 메이크업
+                // 패키지 타입은 업체마다 가격 차이가 몇 십만원 수준이라 웬만하면 계속 지킬 수 있다.
+                // 다 내려놓고 재검색하면(기존 방식) "FULL 요청했는데 전혀 상관없는 패키지가 나온다"는
+                // 문제가 생기므로, 1단계(relaxationStage 0→1)에서는 메이크업 취향만은 유지한다.
+                // 이마저도 예산을 못 맞추면 2단계(1→2)에서 완전히 다 내려놓고 재검색한다 -
+                // relaxationStage가 2에 도달하면 위 alreadyFullyRelaxed가 더 이상 재귀를 안 하므로
+                // 무한 재귀는 안 생긴다.
+                AiPlanCategoryPreferences relaxed = relaxationStage == 0
+                        ? AiPlanCategoryPreferences.of(List.of(), List.of(), List.of(), prefs.getMakeupType())
+                        : AiPlanCategoryPreferences.empty();
+                AiPlanQuickResultDTO budgetFit = recommend(region, budget, null, relaxed, relaxationStage + 1);
                 if (!budgetFit.getCandidates().isEmpty()) {
                     budgetFit.setSuggestedBudget(budget + gap);
                     budgetFit.setMessage(String.format(

@@ -25,7 +25,9 @@ import com.wedding.aiplan.repository.AiPlanSessionRepository;
 import com.wedding.company.domain.Company;
 import com.wedding.company.domain.DressItem;
 import com.wedding.company.domain.HallItem;
+import com.wedding.company.domain.MakeupPackageType;
 import com.wedding.company.repository.CompanyRepository;
+import com.wedding.company.repository.MakeupPackageRepository;
 import com.wedding.member.dto.MemberDTO;
 
 import lombok.RequiredArgsConstructor;
@@ -48,10 +50,12 @@ public class AiPlanSessionSupport {
     private final AiPlanSessionRepository sessionRepository;
     private final AiPlanSessionHistoryRepository historyRepository;
     private final CompanyRepository companyRepository;
+    private final MakeupPackageRepository makeupPackageRepository;
     private final AiPlanCandidateBuilder candidateBuilder;
     private final ObjectMapper objectMapper;
 
-    public AiPlanSession createSession(Long budget, String region, LocalDate weddingDate, String mode,
+    public AiPlanSession createSession(Long budget, String region, LocalDate weddingDate,
+                                       String groomName, String brideName, String makeupPackageType, String mode,
                                        AiPlanPackageCandidateDTO combo) {
 
         AiPlanSession session = AiPlanSession.builder()
@@ -59,6 +63,9 @@ public class AiPlanSessionSupport {
                 .budget(budget)
                 .region(region)
                 .weddingDate(weddingDate)
+                .groomName(groomName)
+                .brideName(brideName)
+                .makeupPackageType(makeupPackageType)
                 .mode(mode)
                 .hallSlot(slotOf(combo.getHallCmno()))
                 .studioSlot(slotOf(combo.getStudioCmno()))
@@ -74,7 +81,8 @@ public class AiPlanSessionSupport {
 
     // JWTCheckFilter가 aiplan 공개 경로에서도 토큰이 있으면 SecurityContext를 채워두므로,
     // 로그인 상태로 세션을 만들면 여기서 이메일을 꺼내 세션에 남긴다. 비로그인이면 null 그대로.
-    private String currentMemberEmailOrNull() {
+    // "이 결과 마이페이지에 담기"(AiPlanRefineServiceImpl.applyToPlan)에서 소유권 확인할 때도 재사용한다.
+    public String currentMemberEmailOrNull() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !(auth.getPrincipal() instanceof MemberDTO memberDTO)) {
             return null;
@@ -219,8 +227,26 @@ public class AiPlanSessionSupport {
                 .makeupPrice(makeup.company != null ? makeup.company.getPriceAvg() : null)
                 .makeupReason(makeup.reasonLabel())
                 .makeupStatus(makeup.status.name())
+                .makeupPackageType(groundedMakeupPackageType(session, makeup.company))
                 .sourceType(sourceType)
                 .build();
+    }
+
+    // 세션에 저장해둔 원래 메이크업 취향(makeupPackageType)이 있어도, 지금 이 슬롯에 들어있는
+    // 업체가 실제로 그 패키지를 파는지 매번 다시 확인한다 - "다시 찾기"/다듬기로 업체가 바뀌었는데
+    // 취향 매칭에 실패해 아무 업체나 들어간 경우까지 그 패키지를 판다고 잘못 표시하면 안 된다.
+    private String groundedMakeupPackageType(AiPlanSession session, Company makeupCompany) {
+        if (session.getMakeupPackageType() == null || makeupCompany == null) {
+            return null;
+        }
+        MakeupPackageType type;
+        try {
+            type = MakeupPackageType.valueOf(session.getMakeupPackageType());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+        List<Long> supportingCmnos = makeupPackageRepository.findCompanyCmnosByPackageTypeIn(List.of(type));
+        return supportingCmnos.contains(makeupCompany.getCmno()) ? type.name() : null;
     }
 
     private SlotView resolve(SlotState slot) {

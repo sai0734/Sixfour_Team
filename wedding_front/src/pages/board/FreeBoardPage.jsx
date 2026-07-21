@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import BasicMenu from "../../components/menus/BasicMenu";
+import BoardLayout from "../../layouts/BoardLayout";
 import BoardTopTabs from "../../components/board/BoardTopTabs";
-import TapeLabel from "../../components/common/TapeLabel";
 import BoardFilterSidebar from "../../components/board/BoardFilterSidebar";
 import SearchSortBar from "../../components/board/SearchSortBar";
 import PostCard from "../../components/board/PostCard";
@@ -170,30 +169,11 @@ const FreeBoardPage = () => {
   };
 
   return (
-    <>
-      <BasicMenu />
-
-      <div className="min-h-screen bg-[#FBF7F0]">
-        <section
-          className="relative bg-cover bg-center px-5 pt-24 pb-8 text-center md:px-8 md:pt-28 md:pb-10 lg:px-[60px]"
-          // TODO: 자유게시판 전용 사진 준비되면 /free-board-hero.jpg 같은 걸로 교체
-          style={{ backgroundImage: "url('/prep-hero.jpg')" }}
-        >
-          <div className="absolute inset-0 bg-black/45" />
-
-          <div className="relative z-10">
-            <TapeLabel tone="white" className="mb-3">
-              FREE BOARD
-            </TapeLabel>
-            <p className="mb-2 font-['Gowun_Batang'] text-2xl text-white md:text-3xl">
-              자유게시판
-            </p>
-            <p className="text-sm text-white/85">
-              예비 부부들의 자유로운 이야기
-            </p>
-          </div>
-        </section>
-
+    <BoardLayout
+      eyebrow="FREE BOARD"
+      title="자유게시판"
+      subtitle="예비 부부들의 자유로운 이야기"
+    >
         <div className="mx-auto max-w-[1140px] px-5 pt-6 md:px-8 lg:px-6">
           <BoardTopTabs active="FREE" />
         </div>
@@ -260,7 +240,6 @@ const FreeBoardPage = () => {
             />
           </main>
         </div>
-      </div>
 
       {modalOpen && (
         <BoardFormModal
@@ -296,7 +275,7 @@ const FreeBoardPage = () => {
           onClose={() => setDetailPost(null)}
         />
       )}
-    </>
+    </BoardLayout>
   );
 };
 

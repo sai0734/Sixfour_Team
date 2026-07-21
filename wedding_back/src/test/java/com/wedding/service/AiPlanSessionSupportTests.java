@@ -39,7 +39,7 @@ public class AiPlanSessionSupportTests {
             AiPlanPackageCandidateDTO combo = AiPlanPackageCandidateDTO.builder().build();
 
             AiPlanSession session = aiPlanSessionSupport.createSession(
-                    30_000_000L, "강남", null, "DETAIL", combo);
+                    30_000_000L, "강남", null, null, null, null, "DETAIL", combo);
 
             log.info(session);
 
@@ -58,7 +58,7 @@ public class AiPlanSessionSupportTests {
         AiPlanPackageCandidateDTO combo = AiPlanPackageCandidateDTO.builder().build();
 
         AiPlanSession session = aiPlanSessionSupport.createSession(
-                30_000_000L, "강남", null, "DETAIL", combo);
+                30_000_000L, "강남", null, null, null, null, "DETAIL", combo);
 
         log.info(session);
 

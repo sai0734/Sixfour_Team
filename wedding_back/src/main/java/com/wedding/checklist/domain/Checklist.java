@@ -33,6 +33,10 @@ public class Checklist {
     // 준비 단계 (1: 기본 계획, 2: 업체 계약, 3: 청첩장·답례품 등, 이름은 프론트에서 고정 매핑)
     private int stage;
 
+    // 예약이 결제대기로 넘어오면서 자동 생성된 항목이면 그 예약을 가리킴 (수동으로 추가한
+    // 항목은 null) - ReservationServiceImpl.confirmByManager()에서 중복 생성 방지용으로 씀
+    private Long reservationId;
+
     public void changeTitle(String title) {
         this.title = title;
     }

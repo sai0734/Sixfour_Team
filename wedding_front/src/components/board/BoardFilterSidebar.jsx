@@ -11,8 +11,8 @@ const BoardFilterSidebar = ({ groups }) => {
           onClick={() => group.onSelect(null)}
           className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2.5 text-sm font-medium transition-colors ${
             group.activeValue === null
-              ? "bg-[#7C8B6F] text-white shadow-[0_4px_12px_-4px_rgba(92,107,79,0.55)]"
-              : "bg-[#F7F2EA] text-[#4A3F38] hover:bg-[#E6EBDD] lg:bg-transparent"
+              ? "bg-brand-deep text-white shadow-[0_4px_12px_-4px_rgba(192,96,128,0.55)]"
+              : "bg-blush-50 text-ink hover:bg-blush-100 lg:bg-transparent"
           }`}
         >
           {group.resetLabel || "전체"}
@@ -26,8 +26,8 @@ const BoardFilterSidebar = ({ groups }) => {
           onClick={() => group.onSelect(opt.value)}
           className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2.5 text-sm font-medium transition-colors ${
             group.activeValue === opt.value
-              ? "bg-[#7C8B6F] text-white shadow-[0_4px_12px_-4px_rgba(92,107,79,0.55)]"
-              : "bg-[#F7F2EA] text-[#4A3F38] hover:bg-[#E6EBDD] lg:bg-transparent"
+              ? "bg-brand-deep text-white shadow-[0_4px_12px_-4px_rgba(192,96,128,0.55)]"
+              : "bg-blush-50 text-ink hover:bg-blush-100 lg:bg-transparent"
           }`}
         >
           {opt.label}
@@ -44,7 +44,7 @@ const BoardFilterSidebar = ({ groups }) => {
           className="relative overflow-hidden rounded-2xl bg-white p-3 lg:p-4"
           style={{ boxShadow: "0 8px 24px -14px rgba(58,54,47,0.25)" }}
         >
-          <p className="mb-2 px-1 text-xs font-bold tracking-wide text-[#7C8B6F] lg:mb-3 lg:px-3">
+          <p className="mb-2 px-1 text-xs font-bold tracking-wide text-brand-deep lg:mb-3 lg:px-3">
             {group.title}
           </p>
 

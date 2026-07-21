@@ -25,8 +25,6 @@ public class WeddingPlanDTO {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate weddingDate;
 
-    private String weddingLocation;
-
     private Long totalBudget;
 
     private String memo;

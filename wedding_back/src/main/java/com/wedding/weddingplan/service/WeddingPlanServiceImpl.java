@@ -74,7 +74,6 @@ public class WeddingPlanServiceImpl implements WeddingPlanService {
         weddingPlan.changeGroomName(weddingPlanDTO.getGroomName());
         weddingPlan.changeBrideName(weddingPlanDTO.getBrideName());
         weddingPlan.changeWeddingDate(weddingPlanDTO.getWeddingDate());
-        weddingPlan.changeWeddingLocation(weddingPlanDTO.getWeddingLocation());
         weddingPlan.changeTotalBudget(weddingPlanDTO.getTotalBudget());
         weddingPlan.changeMemo(weddingPlanDTO.getMemo());
 

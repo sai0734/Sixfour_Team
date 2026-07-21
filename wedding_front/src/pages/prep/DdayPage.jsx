@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import PrepLayout from "../../layouts/PrepLayout";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import { getByMember as getWeddingPlan } from "../../api/weddingplanApi";
@@ -9,16 +10,11 @@ import {
   putOne,
   deleteOne,
 } from "../../api/ddayEventApi";
-// 재원 추가 - 준비관리 D-day에 예약 결제 마감일도 같이 모아 보여주기 위해 가져옴
-import { getListByMember as getReservations } from "../../api/reservationApi";
-import { getOne as getCompanyOne } from "../../api/companyApi";
-// 재원 추가 끝
 import DdayEventFormModal from "../../components/ddayevent/DdayEventFormModal";
 
 const TYPE_STYLE = {
   예식일: "bg-brand text-white",
   체크리스트: "bg-blue-50 text-blue-700",
-  결제: "bg-orange-50 text-orange-700", // 재원 추가
   커스텀: "bg-purple-50 text-purple-700",
 };
 
@@ -33,6 +29,7 @@ const calcDday = (dateStr) => {
 
 const DdayPage = () => {
   const { loginState } = useCustomLogin();
+  const navigate = useNavigate();
 
   const [items, setItems] = useState([]);
   const [loaded, setLoaded] = useState(false);
@@ -48,8 +45,7 @@ const DdayPage = () => {
       getWeddingPlan(loginState.email).catch(() => null),
       getChecklist(loginState.email).catch(() => []),
       getDdayEvents(loginState.email).catch(() => []),
-      getReservations(loginState.email).catch(() => []), // 재원 추가
-    ]).then(async ([plan, checklist, ddayEvents, reservations]) => {
+    ]).then(([plan, checklist, ddayEvents]) => {
       const combined = [];
 
       if (plan?.weddingDate) {
@@ -61,6 +57,7 @@ const DdayPage = () => {
         });
       }
 
+      // 업체 결제 마감일도 체크리스트 항목(예약이 결제대기로 넘어오면 자동 생성됨)으로 여기 섞여 나옴
       checklist
         .filter((c) => c.dueDate && !c.done)
         .forEach((c) => {
@@ -69,32 +66,9 @@ const DdayPage = () => {
             type: "체크리스트",
             title: c.title,
             editable: false,
+            reservationId: c.reservationId,
           });
         });
-
-      // 재원 추가 - 아직 결제 안 한 예약(금액 있음)의 결제 마감일을 D-day에 표시
-      const pendingPayments = reservations.filter(
-        (r) => r.amount > 0 && r.payStatus !== "PAID" && r.paymentDeadline,
-      );
-      const uniqueCmnos = [...new Set(pendingPayments.map((r) => r.cmno))];
-      const companyResults = await Promise.allSettled(
-        uniqueCmnos.map((cmno) => getCompanyOne(cmno)),
-      );
-      const companyMap = {};
-      companyResults.forEach((res, i) => {
-        if (res.status === "fulfilled") companyMap[uniqueCmnos[i]] = res.value;
-      });
-
-      pendingPayments.forEach((r) => {
-        const companyName = companyMap[r.cmno]?.name || `업체 #${r.cmno}`;
-        combined.push({
-          date: r.paymentDeadline,
-          type: "결제",
-          title: `${companyName} 결제 마감`,
-          editable: false,
-        });
-      });
-      // 재원 추가 끝
 
       ddayEvents.forEach((d) => {
         combined.push({
@@ -187,7 +161,18 @@ const DdayPage = () => {
           >
             {item.type}
           </span>
-          <span className="text-sm text-ink truncate">{item.title}</span>
+          {item.reservationId ? (
+            <button
+              type="button"
+              onClick={() => navigate("/mypage?tab=reservation")}
+              title="마이페이지 예약 현황에서 보기"
+              className="truncate text-sm text-ink hover:underline"
+            >
+              {item.title}
+            </button>
+          ) : (
+            <span className="text-sm text-ink truncate">{item.title}</span>
+          )}
         </div>
         {item.memo && <p className="text-xs text-ink-faint">{item.memo}</p>}
       </div>
@@ -240,6 +225,11 @@ const DdayPage = () => {
               + 일정 추가
             </button>
           </div>
+
+          <p className="mb-6 rounded-xl bg-blush-50 px-4 py-3 text-xs text-brand-deep">
+            마이페이지 · 예약 현황에서 업체 예약이 "결제대기" 상태가 되면, 그 업체 결제 마감일이
+            자동으로 여기에 추가돼요.
+          </p>
 
           <p className="text-sm font-medium text-ink mb-3">다가오는 일정</p>
           {upcoming.length === 0 ? (

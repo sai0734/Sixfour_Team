@@ -1,6 +1,7 @@
 package com.wedding.aiplan.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -106,6 +107,15 @@ public class AiPlanController {
         log.info("AiPlan refine history request: sessionId={}", sessionId);
 
         return aiPlanRefineService.getRefineHistory(sessionId);
+    }
+
+    // "이 결과 마이페이지에 담기" - 이 경로는 비로그인 허용 목록에 없어서 로그인이 필수다
+    @PostMapping("/session/{sessionId}/apply-to-plan")
+    public Map<String, String> applyToPlan(@PathVariable Long sessionId) {
+
+        log.info("AiPlan apply to plan request: sessionId={}", sessionId);
+
+        return aiPlanRefineService.applyToPlan(sessionId);
     }
 
 }
