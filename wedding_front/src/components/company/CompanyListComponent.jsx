@@ -1,12 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { deleteOne, getCompanyImageUrl, getList } from "../../api/companyApi";
 import FetchingModal from "../common/FetchingModal";
 import PageComponent from "../common/PageComponent";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import useCustomMove from "../../hooks/useCustomMove";
-import TapeLabel from "../common/TapeLabel";
 import ShopTapeLabel from "../product/ShopTapeLabel";
 
 const initState = {
@@ -41,18 +40,12 @@ const adminRoles = ["ADMIN", "ROLE_ADMIN"];
 const CompanyListComponent = () => {
   const [serverData, setServerData] = useState(initState);
   const [fetching, setFetching] = useState(false);
-  const [filters, setFilters] = useState({
-    keyword: "",
-    category: "",
-    sort: "latest",
-  });
   const [reloadKey, setReloadKey] = useState(0);
   const { exceptionHandle } = useCustomLogin();
   const { page, size, refresh } = useCustomMove();
-  // 필터 변경 감지용 ref (첫 렌더 제외)
-  const isFirstRender = useRef(true);
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const loginState = useSelector((state) => state.loginSlice);
   const canManageCompany = loginState.roleNames?.some((roleName) =>
     adminRoles.includes(roleName),
@@ -62,37 +55,59 @@ const CompanyListComponent = () => {
     ? "/admin/companies"
     : "/companies";
 
+  // ★ 필터는 URL 쿼리가 기준 (상세→뒤로가기 시에도 유지)
+  const filters = {
+    keyword: searchParams.get("keyword") || "",
+    category: searchParams.get("category") || "",
+    sort: searchParams.get("sort") || "latest",
+  };
+  const [keywordInput, setKeywordInput] = useState(filters.keyword);
+
+  useEffect(() => {
+    setKeywordInput(filters.keyword);
+  }, [filters.keyword]);
+
+  const buildListSearch = ({
+    page: pageNum = page,
+    size: sizeNum = size,
+    keyword = filters.keyword,
+    category = filters.category,
+    sort = filters.sort,
+  } = {}) => {
+    const params = new URLSearchParams();
+    params.set("page", String(pageNum));
+    params.set("size", String(sizeNum));
+    if (keyword) params.set("keyword", keyword);
+    if (category) params.set("category", category);
+    if (sort) params.set("sort", sort);
+    return params.toString();
+  };
+
+  const applyListFilters = (patch = {}) => {
+    navigate({
+      pathname: `${companyPathPrefix}/list`,
+      search: buildListSearch({ page: 1, ...patch }),
+    });
+  };
+
   const moveToCompanyRead = (cmno) => {
     navigate({
       pathname: `${companyPathPrefix}/read/${cmno}`,
-      search: `page=${page}&size=${size}`,
+      // ★ page/size + 필터를 상세 URL에도 전달
+      search: buildListSearch(),
     });
   };
 
   const moveToCompanyList = (pageParam) => {
-    const pageNum = pageParam?.page || page;
-    const sizeNum = pageParam?.size || size;
-
     navigate({
       pathname: `${companyPathPrefix}/list`,
-      search: `page=${pageNum}&size=${sizeNum}`,
+      // ★ 페이지 이동 시에도 필터 유지
+      search: buildListSearch({
+        page: pageParam?.page || page,
+        size: pageParam?.size || size,
+      }),
     });
   };
-
-  // 키워드/카테고리가 바뀌면 page=1로 리셋 (첫 렌더는 제외)
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-    // page가 이미 1이면 navigate 불필요 (중복 호출 방지)
-    if (page !== 1) {
-      navigate(
-        { pathname: `${companyPathPrefix}/list`, search: `page=1&size=${size}` },
-        { replace: true },
-      );
-    }
-  }, [filters.keyword, filters.category]);
 
   useEffect(() => {
     setFetching(true);
@@ -183,16 +198,31 @@ const CompanyListComponent = () => {
           </button>
         </div>
       ) : (
-        /* ── 헤더: 유저 뷰 (배너 스타일) ── */
-        <div className="mb-6 rounded-2xl bg-gradient-to-b from-brand-light to-white px-4 py-6 text-center">
-          <TapeLabel className="mb-3">WEDDING COMPANY</TapeLabel>
-          <h1 className="mt-4 font-['Gowun_Batang'] text-xl sm:text-2xl text-ink">
-            업체 리스트
-          </h1>
-          <p className="mt-1.5 text-xs sm:text-sm text-ink-muted">
-            원하는 조건의 웨딩 업체를 찾아보세요
-          </p>
-        </div>
+        /* ── 배너만 화면 좌우 끝 full-bleed / 아래 리스트는 AdminLayout 원래 폭 유지 ── */
+        <section
+          className="relative mb-6 bg-cover bg-center pb-10 pt-16 text-center md:pb-12"
+          style={{
+            backgroundImage: "url('/company-hero.png')",
+            width: "100vw",
+            maxWidth: "100vw",
+            marginLeft: "calc(50% - 50vw)",
+          }}
+        >
+          <div className="absolute inset-0 bg-black/45" />
+
+          <div className="relative z-10 mx-auto max-w-[720px] px-5">
+            <ShopTapeLabel tone="white" className="mb-5">
+              01 — WEDDING COMPANY
+            </ShopTapeLabel>
+            <h1 className="mb-2.5 font-['Gowun_Batang'] text-2xl leading-snug text-white md:mb-3.5 md:text-4xl">
+              우리 결혼식에 어울리는 업체
+            </h1>
+            <p className="whitespace-pre-line text-sm leading-relaxed text-white/85 md:text-[15px]">
+              웨딩홀부터 드레스, 메이크업, 스튜디오까지{"\n"}
+              원하는 조건으로 찾아보세요
+            </p>
+          </div>
+        </section>
       )}
 
       {/* ── 통계 카드 (관리자) 대시보드 페이지랑 겹치는거 같아서 우선 빼는걸로 수정함 ──
@@ -213,17 +243,20 @@ const CompanyListComponent = () => {
             className="h-[38px] flex-1 rounded-full border border-line px-4 text-[13px] text-ink outline-none transition focus:border-brand"
             type="text"
             placeholder="업체명, 주소, 연락처로 검색"
-            value={filters.keyword}
-            onChange={(e) => setFilters((prev) => ({ ...prev, keyword: e.target.value }))}
+            value={keywordInput}
+            onChange={(e) => setKeywordInput(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter")
-                setFilters((prev) => ({ ...prev, keyword: e.target.value }));
+              // ★ Enter 시 URL에 keyword 반영
+              if (e.key === "Enter") {
+                applyListFilters({ keyword: e.target.value.trim() });
+              }
             }}
           />
           <button
             type="button"
             className="h-[38px] shrink-0 rounded-full bg-brand px-[18px] text-[13px] text-white transition hover:bg-brand-dark"
-            onClick={() => setFilters((prev) => ({ ...prev }))}
+            // ★ 검색 시 URL에 keyword 반영
+            onClick={() => applyListFilters({ keyword: keywordInput.trim() })}
           >
             검색
           </button>
@@ -236,7 +269,8 @@ const CompanyListComponent = () => {
               <button
                 key={opt.value}
                 type="button"
-                onClick={() => setFilters((prev) => ({ ...prev, category: opt.value }))}
+                // ★ 카테고리 필터를 URL에 저장
+                onClick={() => applyListFilters({ category: opt.value })}
                 className={`rounded-full border px-3.5 py-1.5 text-[13px] transition ${
                   filters.category === opt.value
                     ? "border-brand bg-brand text-white"
@@ -259,7 +293,8 @@ const CompanyListComponent = () => {
               <button
                 key={opt.value}
                 type="button"
-                onClick={() => setFilters((prev) => ({ ...prev, sort: opt.value }))}
+                // ★ 정렬을 URL에 저장
+                onClick={() => applyListFilters({ sort: opt.value })}
                 className={`rounded-full border px-3.5 py-1.5 text-[13px] transition ${
                   filters.sort === opt.value
                     ? "border-brand bg-brand text-white"

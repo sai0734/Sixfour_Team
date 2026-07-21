@@ -13,7 +13,7 @@ const AdminLayout = ({ children }) => {
     <ProfileCompleteGuard>
       <>
         <BasicMenu />
-        <div className="bg-cream min-h-screen">
+        <div className="bg-cream min-h-screen overflow-x-hidden">
           <div className="max-w-[1600px] mx-auto px-3 sm:px-6 pt-16 sm:pt-20 flex flex-col md:flex-row">
             {isAdmin && <AdminSidebar />}
             <main className="flex-1 py-4 sm:py-8 min-w-0">{children}</main>
