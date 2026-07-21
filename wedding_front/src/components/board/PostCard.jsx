@@ -8,15 +8,23 @@ const formatDate = (value) => {
   return String(value).slice(0, 16).replace("T", " ");
 };
 
+// 본문이 이 길이 미만이면 AI 한줄요약 자체를 노출하지 않음(짧은 글은 요약 의미가 없음).
+const AI_SUMMARY_MIN_CONTENT_LENGTH = 150;
+
 const PostCard = ({ post, onClick, showTypeBadge = false }) => {
+  const isSummaryEligible =
+    (post.content?.length || 0) >= AI_SUMMARY_MIN_CONTENT_LENGTH;
+
   const [aiSummary, setAiSummary] = useState(post.aiSummary || "");
-  const [summaryLoading, setSummaryLoading] = useState(!post.aiSummary);
+  const [summaryLoading, setSummaryLoading] = useState(
+    isSummaryEligible && !post.aiSummary
+  );
   const [summaryError, setSummaryError] = useState(false);
 
   // 카드가 화면에 뜨는 시점에 자동으로 요약을 불러옴 (버튼 클릭 불필요).
   // 이미 목록 응답에 aiSummary가 캐시돼서 왔으면 API 호출 자체를 안 함.
   useEffect(() => {
-    if (post.aiSummary || !post.boardId) return;
+    if (!isSummaryEligible || post.aiSummary || !post.boardId) return;
 
     let cancelled = false;
     setSummaryLoading(true);
@@ -37,7 +45,7 @@ const PostCard = ({ post, onClick, showTypeBadge = false }) => {
     return () => {
       cancelled = true;
     };
-  }, [post.boardId, post.aiSummary]);
+  }, [post.boardId, post.aiSummary, isSummaryEligible]);
 
   return (
     <div
@@ -64,20 +72,22 @@ const PostCard = ({ post, onClick, showTypeBadge = false }) => {
 
       <p className="text-sm font-medium text-ink mb-1.5">{post.title}</p>
 
-      <p className="mb-2 text-xs text-ink-muted line-clamp-1">
-        {summaryLoading && (
-          <span className="text-ink-faint">AI 한줄요약 생성 중...</span>
-        )}
-        {!summaryLoading && aiSummary && (
-          <>
-            <span className="text-brand-deep font-medium">AI 한줄요약:</span>{" "}
-            {aiSummary}
-          </>
-        )}
-        {!summaryLoading && !aiSummary && summaryError && (
-          <span className="text-ink-faint">AI 한줄요약을 불러오지 못했어요.</span>
-        )}
-      </p>
+      {isSummaryEligible && (
+        <p className="mb-2 text-xs text-ink-muted line-clamp-1">
+          {summaryLoading && (
+            <span className="text-ink-faint">AI 한줄요약 생성 중...</span>
+          )}
+          {!summaryLoading && aiSummary && (
+            <>
+              <span className="text-brand-deep font-medium">AI 한줄요약:</span>{" "}
+              {aiSummary}
+            </>
+          )}
+          {!summaryLoading && !aiSummary && summaryError && (
+            <span className="text-ink-faint">AI 한줄요약을 불러오지 못했어요.</span>
+          )}
+        </p>
+      )}
 
       <div className="flex items-center justify-between text-xs text-ink-faint">
         <div className="flex items-center gap-2">

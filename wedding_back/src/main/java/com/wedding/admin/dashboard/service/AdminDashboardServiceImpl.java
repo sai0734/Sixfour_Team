@@ -232,11 +232,11 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
     private MemberStats buildMemberStats(LocalDateTime todayStart) {
         return MemberStats.builder()
                 .total(memberRepository.count())
-                .active(memberRepository.countByStatus("ACTIVE"))
+                .active(memberRepository.countActiveRegularMembers())
                 .dormant(memberRepository.countByStatus("DORMANT"))
                 .blacklist(memberRepository.countByStatus("BLACKLIST"))
                 .withdrawn(memberRepository.countByStatus("WITHDRAWN"))
-                .newToday(memberRepository.countByRegDateAfter(todayStart))
+                .newToday(memberRepository.countByRegDateAfterAndStatusNot(todayStart, "WITHDRAWN"))
                 .unverifiedEmail(memberRepository.countByEmailVerifiedFalse())
                 .build();
     }

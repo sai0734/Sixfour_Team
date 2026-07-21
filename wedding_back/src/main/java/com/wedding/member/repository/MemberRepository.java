@@ -17,12 +17,15 @@ public interface MemberRepository extends JpaRepository<Member, String> {
 
   boolean existsByNickname(String nickname);
 
+  // 관리자 회원관리 "회원 목록" 탭 - 일반 사용자만 노출 (업체 담당자/관리자로 권한이 바뀌면 이 목록에서 빠짐)
   @EntityGraph(attributePaths = {"memberRoleList"})
   @Query("select m from Member m " +
           "where (:keyword is null or :keyword = '' " +
           "       or m.nickname like concat('%', :keyword, '%') " +
           "       or m.email like concat('%', :keyword, '%')) " +
-          "and (:status is null or :status = '' or m.status = :status)")
+          "and (:status is null or :status = '' or m.status = :status) " +
+          "and com.wedding.member.domain.MemberRole.ADMIN not member of m.memberRoleList " +
+          "and com.wedding.member.domain.MemberRole.MANAGER not member of m.memberRoleList")
   Page<Member> searchMembers(@Param("keyword") String keyword,
                              @Param("status") String status,
                              Pageable pageable);
@@ -44,7 +47,15 @@ public interface MemberRepository extends JpaRepository<Member, String> {
   // 관리자 대시보드용 집계
   long countByStatus(String status);
 
-  long countByRegDateAfter(LocalDateTime dateTime);
+  // 관리자 대시보드 "전체 회원" - 관리자/업체담당자를 뺀 일반 사용자 중 정상(ACTIVE) 회원 수
+  @Query("select count(m) from Member m " +
+          "where m.status = 'ACTIVE' " +
+          "and com.wedding.member.domain.MemberRole.ADMIN not member of m.memberRoleList " +
+          "and com.wedding.member.domain.MemberRole.MANAGER not member of m.memberRoleList")
+  long countActiveRegularMembers();
+
+  // 관리자 대시보드 "오늘 신규" - 가입 후 바로 탈퇴한 회원은 신규 가입자 수에서 빠짐
+  long countByRegDateAfterAndStatusNot(LocalDateTime dateTime, String status);
 
   long countByEmailVerifiedFalse();
 }
