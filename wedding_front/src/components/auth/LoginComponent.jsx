@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import AuthLayout from "./AuthLayout";
+import AlertModal from "./AlertModal";
 import KakaoLoginComponent from "./KakaoLoginComponent";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import { getMyManagedCompany } from "../../api/companyApi";
@@ -22,6 +23,8 @@ const LoginComponent = () => {
     email: false,
     pw: false,
   });
+
+  const [alertMessage, setAlertMessage] = useState("");
 
   const location = useLocation();
   const { doLogin, moveToPath, getLoginRedirectPath, clearLoginRedirectPath } =
@@ -48,23 +51,24 @@ const LoginComponent = () => {
     });
 
     if (!loginParam.email || !EMAIL_REGEX.test(loginParam.email)) {
-      alert("올바른 이메일을 입력해 주세요.");
+      setAlertMessage("올바른 이메일을 입력해 주세요.");
       return;
     }
 
     if (!loginParam.pw) {
-      alert("비밀번호를 입력해 주세요.");
+      setAlertMessage("비밀번호를 입력해 주세요.");
       return;
     }
 
     doLogin(loginParam).then((data) => {
       if (data.error) {
-        alert("이메일 또는 비밀번호가 일치하지 않습니다.");
+        setAlertMessage("이메일 또는 비밀번호가 일치하지 않습니다.");
         return;
       }
 
       // 로그인 페이지로 오기 전 보고 있던(혹은 가려던) 경로가 있으면 역할과 무관하게 그곳으로 우선 복귀
-      const redirectPath = location.state?.from || getLoginRedirectPath() || null;
+      const redirectPath =
+        location.state?.from || getLoginRedirectPath() || null;
       const isValidRedirect =
         typeof redirectPath === "string" && redirectPath.startsWith("/");
 
@@ -133,7 +137,7 @@ const LoginComponent = () => {
       subtitle="로그인하고 나만의 맞춤 웨딩 플랜과 일정을 확인해보세요."
     >
       <div className="max-w-sm w-full mx-auto">
-        <h2 className="font-display text-2xl text-plum-900 mb-1">로그인</h2>
+        <h2 className="font-body text-2xl text-plum-900 mb-1">로그인</h2>
         <p className="text-plum-500 text-sm mb-6">
           웨딩올인원 서비스에 오신 것을 환영합니다.
         </p>
@@ -216,6 +220,8 @@ const LoginComponent = () => {
           </Link>
         </p>
       </div>
+
+      <AlertModal message={alertMessage} onClose={() => setAlertMessage("")} />
     </AuthLayout>
   );
 };

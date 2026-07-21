@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { passwordResetConfirmPost } from "../../api/authApi";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import AuthLayout from "./AuthLayout";
+import AlertModal from "./AlertModal";
 
 const inputClass =
   "w-full px-4 py-3 rounded-xl border border-rose-100 bg-blush-50/40 text-plum-900 placeholder:text-plum-500/50 focus:border-rose-400 focus:ring-4 focus:ring-rose-100 outline-none transition";
@@ -19,6 +20,8 @@ const PasswordResetConfirmComponent = () => {
   const [newPw, setNewPw] = useState("");
   const [newPwCheck, setNewPwCheck] = useState("");
   const [touched, setTouched] = useState({ newPw: false, newPwCheck: false });
+  const [alertMessage, setAlertMessage] = useState("");
+  const [pendingLoginRedirect, setPendingLoginRedirect] = useState(false);
 
   const { moveToLogin } = useCustomLogin();
 
@@ -30,24 +33,24 @@ const PasswordResetConfirmComponent = () => {
     setTouched({ newPw: true, newPwCheck: true });
 
     if (!token) {
-      alert("잘못된 접근입니다. 메일에 있는 링크를 통해 다시 시도해 주세요.");
+      setAlertMessage("잘못된 접근입니다. 메일에 있는 링크를 통해 다시 시도해 주세요.");
       return;
     }
 
     if (!newPw) {
-      alert("새 비밀번호를 입력해 주세요.");
+      setAlertMessage("새 비밀번호를 입력해 주세요.");
       return;
     }
 
     if (!PW_REGEX.test(newPw)) {
-      alert(
+      setAlertMessage(
         "비밀번호는 영문, 숫자, 특수문자를 모두 포함해 8자 이상이어야 합니다.",
       );
       return;
     }
 
     if (newPw !== newPwCheck) {
-      alert("비밀번호가 일치하지 않습니다.");
+      setAlertMessage("비밀번호가 일치하지 않습니다.");
       return;
     }
 
@@ -56,10 +59,10 @@ const PasswordResetConfirmComponent = () => {
         console.log(data);
 
         if (data.result === "success") {
-          alert("비밀번호가 재설정되었습니다. 다시 로그인해 주세요.");
-          moveToLogin();
+          setPendingLoginRedirect(true);
+          setAlertMessage("비밀번호가 재설정되었습니다. 다시 로그인해 주세요.");
         } else {
-          alert(
+          setAlertMessage(
             "재설정에 실패했습니다. (" +
               data.reason +
               ") 링크가 만료되었을 수 있습니다.",
@@ -68,8 +71,15 @@ const PasswordResetConfirmComponent = () => {
       })
       .catch((err) => {
         console.log(err);
-        alert("처리 중 오류가 발생했습니다.");
+        setAlertMessage("처리 중 오류가 발생했습니다.");
       });
+  };
+
+  const closeAlert = () => {
+    setAlertMessage("");
+    if (pendingLoginRedirect) {
+      moveToLogin();
+    }
   };
 
   const renderNewPwMsg = () => {
@@ -105,7 +115,7 @@ const PasswordResetConfirmComponent = () => {
 
   return (
     <AuthLayout
-      eyebrow="새 비밀번호 설정"
+      eyebrow="Set a new password"
       title={
         <>
           새로운
@@ -116,7 +126,7 @@ const PasswordResetConfirmComponent = () => {
       subtitle="안전한 새 비밀번호로 계정을 지켜주세요"
     >
       <div className="max-w-sm w-full mx-auto">
-        <h2 className="font-display text-2xl text-plum-900 mb-1">
+        <h2 className="font-body text-2xl text-plum-900 mb-1">
           비밀번호 재설정
         </h2>
         <p className="text-plum-500 text-sm mb-8">새 비밀번호를 입력해주세요</p>
@@ -152,6 +162,8 @@ const PasswordResetConfirmComponent = () => {
           비밀번호 변경하기
         </button>
       </div>
+
+      <AlertModal message={alertMessage} onClose={closeAlert} />
     </AuthLayout>
   );
 };
