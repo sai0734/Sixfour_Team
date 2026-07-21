@@ -3,6 +3,7 @@ package com.wedding.aiplan.controller;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.wedding.aiplan.dto.AiPlanDetailRequestDTO;
+import com.wedding.aiplan.dto.AiPlanProgressDTO;
 import com.wedding.aiplan.dto.AiPlanQuickRequestDTO;
 import com.wedding.aiplan.dto.AiPlanQuickResultDTO;
 import com.wedding.aiplan.dto.AiPlanRefineRequestDTO;
@@ -20,6 +22,7 @@ import com.wedding.aiplan.service.AiPlanAiService;
 import com.wedding.aiplan.service.AiPlanDetailService;
 import com.wedding.aiplan.service.AiPlanQuickService;
 import com.wedding.aiplan.service.AiPlanRefineService;
+import com.wedding.aiplan.service.AiPlanSessionSupport;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -36,6 +39,7 @@ public class AiPlanController {
     private final AiPlanDetailService aiPlanDetailService;
     private final AiPlanAiService aiPlanAiService;
     private final AiPlanRefineService aiPlanRefineService;
+    private final AiPlanSessionSupport aiPlanSessionSupport;
 
     // 예: GET /api/aiplan/quick?budget=30000000&region=강남&weddingDate=2027-05-01
     @GetMapping("/quick")
@@ -116,6 +120,14 @@ public class AiPlanController {
         log.info("AiPlan apply to plan request: sessionId={}", sessionId);
 
         return aiPlanRefineService.applyToPlan(sessionId);
+    }
+
+    // 메인 화면 "AI 매칭 진행중" 위젯용 - 로그인 회원의 가장 최근 세션 기준 홀/드레스/스튜디오 진행률
+    @PreAuthorize("hasAnyRole('USER')")
+    @GetMapping("/progress")
+    public AiPlanProgressDTO progress() {
+
+        return aiPlanSessionSupport.getMyProgress();
     }
 
 }

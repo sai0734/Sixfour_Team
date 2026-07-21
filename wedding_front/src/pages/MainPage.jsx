@@ -2,6 +2,11 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import BasicMenu from "../components/menus/BasicMenu";
+import { getListByMember } from "../api/checklistApi";
+import { getMyAiPlanProgress } from "../api/aiPlanApi";
+import { getMainHighlights } from "../api/homeApi";
+import { getCompanyImageUrl } from "../api/companyApi";
+import { API_SERVER_HOST } from "../api/reservationApi";
 
 const slides = [
   {
@@ -45,6 +50,28 @@ const calcDday = (dateStr) => {
   return `D+${Math.abs(diff)}`;
 };
 
+// 체크리스트에서 "가장 임박한 할 일" 한 줄을 뽑아낸다.
+// 마감일이 있는 미완료 항목 중 가장 빠른 것 우선, 없으면 마감일 없는 미완료 항목 중 첫 번째.
+const pickNearestTaskLabel = (checklist) => {
+  if (!checklist || checklist.length === 0) {
+    return "아직 등록된 할 일이 없어요. 준비관리에서 체크리스트를 만들어보세요!";
+  }
+
+  const undone = checklist.filter((item) => !item.done);
+  if (undone.length === 0) {
+    return "이번 단계 할 일을 모두 완료했어요! 🎉";
+  }
+
+  const withDueDate = undone
+    .filter((item) => item.dueDate)
+    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+
+  const nearest = withDueDate[0] || undone[0];
+  return nearest.dueDate
+    ? `이번 할 일: ${nearest.title} (${nearest.dueDate}까지)`
+    : `이번 할 일: ${nearest.title}`;
+};
+
 const MainPage = () => {
   const loginState = useSelector((state) => state.loginSlice);
   const isLoggedIn = !!loginState.email;
@@ -60,12 +87,71 @@ const MainPage = () => {
     loginState.nickname || loginState.email?.split("@")[0] || "회원";
   const dday = calcDday(loginState.weddingDate) ?? "D-???";
 
+  const [nearestTaskLabel, setNearestTaskLabel] = useState("할 일 불러오는 중...");
+  const [aiProgress, setAiProgress] = useState({
+    hasSession: false,
+    hallPercent: 0,
+    dressPercent: 0,
+    studioPercent: 0,
+  });
+  const [highlights, setHighlights] = useState({
+    hallCompany: null,
+    stylingCompany: null,
+    topProduct: null,
+  });
+
   useEffect(() => {
     const timer = setInterval(() => {
       setActiveSlide((prev) => (prev + 1) % slides.length);
     }, 5000);
     return () => clearInterval(timer);
   }, []);
+
+  // 로그인 상태에서만 쓰이는 위젯(D-day 카드의 "임박한 할 일", AI 매칭 진행률)이라
+  // 비로그인이면 아예 호출하지 않는다.
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    let cancelled = false;
+
+    getListByMember(loginState.email)
+      .then((data) => {
+        if (!cancelled) setNearestTaskLabel(pickNearestTaskLabel(data));
+      })
+      .catch(() => {
+        if (!cancelled) setNearestTaskLabel("할 일을 불러오지 못했어요.");
+      });
+
+    getMyAiPlanProgress()
+      .then((data) => {
+        if (!cancelled) setAiProgress(data);
+      })
+      .catch(() => {
+        // 조회 실패 시 기본값(0%)을 유지 - 위젯 자체는 계속 보여준다.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isLoggedIn, loginState.email]);
+
+  // 비로그인 폴라로이드(웨딩홀/스드메 매출 1위, 답례품 구매 1위)는 로그인 여부와 무관하게 공개 데이터라
+  // 로그인 상태에서도 미리 받아둘 필요는 없어서 비로그인일 때만 호출한다.
+  useEffect(() => {
+    if (isLoggedIn) return;
+
+    let cancelled = false;
+
+    getMainHighlights()
+      .then((data) => {
+        if (!cancelled) setHighlights(data);
+      })
+      .catch((err) => console.error(err));
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isLoggedIn]);
 
   const goSlide = (idx) => setActiveSlide(idx);
 
@@ -109,31 +195,63 @@ const MainPage = () => {
             <div className="polaroid-stack">
               <div className="polaroid p1">
                 <div className="photo">
-                  {/* 실사 교체: <img src="경로" alt="웨딩홀" /> */}
-                  <div className="photo-placeholder">
-                    <span>💍</span>
-                    <span className="ph-label">Wedding Hall</span>
-                  </div>
+                  {highlights.hallCompany?.imageUrl ? (
+                    <img
+                      src={getCompanyImageUrl(highlights.hallCompany.imageUrl)}
+                      alt={highlights.hallCompany.name}
+                    />
+                  ) : (
+                    <div className="photo-placeholder">
+                      <span>💍</span>
+                      <span className="ph-label">Wedding Hall</span>
+                    </div>
+                  )}
                 </div>
-                <div className="cap">웨딩홀 탐색 중 💍</div>
+                <div className="cap">
+                  {highlights.hallCompany
+                    ? `웨딩홀 매출 1위 · ${highlights.hallCompany.name}`
+                    : "웨딩홀 탐색 중 💍"}
+                </div>
               </div>
               <div className="polaroid p2">
                 <div className="photo">
-                  <div className="photo-placeholder">
-                    <span>👗</span>
-                    <span className="ph-label">Dress &amp; Studio</span>
-                  </div>
+                  {highlights.stylingCompany?.imageUrl ? (
+                    <img
+                      src={getCompanyImageUrl(highlights.stylingCompany.imageUrl)}
+                      alt={highlights.stylingCompany.name}
+                    />
+                  ) : (
+                    <div className="photo-placeholder">
+                      <span>👗</span>
+                      <span className="ph-label">Dress &amp; Studio</span>
+                    </div>
+                  )}
                 </div>
-                <div className="cap">스드메 고르는 중 👗</div>
+                <div className="cap">
+                  {highlights.stylingCompany
+                    ? `스드메 매출 1위 · ${highlights.stylingCompany.name}`
+                    : "스드메 고르는 중 👗"}
+                </div>
               </div>
               <div className="polaroid p3">
                 <div className="photo">
-                  <div className="photo-placeholder">
-                    <span>🎁</span>
-                    <span className="ph-label">Gift Shop</span>
-                  </div>
+                  {highlights.topProduct?.imageUrl ? (
+                    <img
+                      src={`${API_SERVER_HOST}/api/product/view/${highlights.topProduct.imageUrl}`}
+                      alt={highlights.topProduct.name}
+                    />
+                  ) : (
+                    <div className="photo-placeholder">
+                      <span>🎁</span>
+                      <span className="ph-label">Gift Shop</span>
+                    </div>
+                  )}
                 </div>
-                <div className="cap">답례품 구경 중 🎁</div>
+                <div className="cap">
+                  {highlights.topProduct
+                    ? `답례품 구매 1위 · ${highlights.topProduct.name}`
+                    : "답례품 구경 중 🎁"}
+                </div>
               </div>
             </div>
           ) : (
@@ -144,9 +262,7 @@ const MainPage = () => {
                 <div className="dday-num">{dday}</div>
                 <div className="dday-note">{nickname} 님, 안녕하세요 🤍</div>
                 <hr className="dday-divider" />
-                <div className="dday-task">
-                  이번 주 할 일: 웨딩홀 상담 예약하고 예산표 정리하기!
-                </div>
+                <div className="dday-task">{nearestTaskLabel}</div>
               </div>
               {/* 취향 폴라로이드 — 중간 (z-index 2) */}
               <div className="w-card wc-taste">
@@ -161,26 +277,41 @@ const MainPage = () => {
                   <div className="ai-dot" />
                   AI 매칭 진행중
                 </div>
-                <div className="ai-bars">
-                  <div className="ai-bar-row">
-                    <span className="ai-bar-label">웨딩홀</span>
-                    <div className="ai-bar-track">
-                      <div className="ai-bar-fill bar-pink" />
+                {aiProgress.hasSession ? (
+                  <div className="ai-bars">
+                    <div className="ai-bar-row">
+                      <span className="ai-bar-label">웨딩홀</span>
+                      <div className="ai-bar-track">
+                        <div
+                          className="ai-bar-fill bar-pink"
+                          style={{ width: `${aiProgress.hallPercent}%` }}
+                        />
+                      </div>
+                    </div>
+                    <div className="ai-bar-row">
+                      <span className="ai-bar-label">드레스</span>
+                      <div className="ai-bar-track">
+                        <div
+                          className="ai-bar-fill bar-coral"
+                          style={{ width: `${aiProgress.dressPercent}%` }}
+                        />
+                      </div>
+                    </div>
+                    <div className="ai-bar-row">
+                      <span className="ai-bar-label">스튜디오</span>
+                      <div className="ai-bar-track">
+                        <div
+                          className="ai-bar-fill bar-sage"
+                          style={{ width: `${aiProgress.studioPercent}%` }}
+                        />
+                      </div>
                     </div>
                   </div>
-                  <div className="ai-bar-row">
-                    <span className="ai-bar-label">드레스</span>
-                    <div className="ai-bar-track">
-                      <div className="ai-bar-fill bar-coral" />
-                    </div>
-                  </div>
-                  <div className="ai-bar-row">
-                    <span className="ai-bar-label">스튜디오</span>
-                    <div className="ai-bar-track">
-                      <div className="ai-bar-fill bar-sage" />
-                    </div>
-                  </div>
-                </div>
+                ) : (
+                  <p className="ai-empty">
+                    아직 AI 웨딩플랜을 시작하지 않았어요.
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -766,9 +897,10 @@ const MainPage = () => {
         .ai-bar-label { font-size: 14px; color: #A8A090; width: 60px; flex-shrink: 0; }
         .ai-bar-track { flex: 1; height: 10px; background: #F7EDED; border-radius: 100px; overflow: hidden; }
         .ai-bar-fill { height: 100%; border-radius: 100px; transition: width 1.2s ease; }
-        .bar-pink  { background: linear-gradient(to right,#FFE2E2,#F5CBCB); width: 72%; }
-        .bar-coral { background: linear-gradient(to right,#F5CBCB,#EDB8B8); width: 55%; }
-        .bar-sage  { background: linear-gradient(to right,#DDD3E8,#C5B3D3); width: 40%; }
+        .bar-pink  { background: linear-gradient(to right,#FFE2E2,#F5CBCB); }
+        .bar-coral { background: linear-gradient(to right,#F5CBCB,#EDB8B8); }
+        .bar-sage  { background: linear-gradient(to right,#DDD3E8,#C5B3D3); }
+        .ai-empty { font-size: 13px; color: #A8A090; line-height: 1.6; }
 
         /* ===== FEATURES ===== */
         .features { padding: 80px 60px 100px; max-width: 1180px; margin: 0 auto; }

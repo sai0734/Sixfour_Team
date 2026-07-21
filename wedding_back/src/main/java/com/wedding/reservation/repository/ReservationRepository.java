@@ -42,6 +42,16 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             "where r.payStatus = 'PAID' and c.category = :category group by c.cmno, c.name order by total desc")
     List<Object[]> sumAmountByCompanyInCategoryDesc(@Param("category") CompanyCategory category, Pageable pageable);
 
+    // 메인 화면 비로그인 폴라로이드 "웨딩홀 매출 1위 업체" - 카테고리 1개 기준 전체 기간 매출 1위 (cmno 포함, 이미지 조회용)
+    @Query("select c.cmno, c.name, sum(r.amount) as total from Reservation r join Company c on r.cmno = c.cmno " +
+            "where r.payStatus = 'PAID' and c.category = :category group by c.cmno, c.name order by total desc")
+    List<Object[]> findTopCompanyByCategory(@Param("category") CompanyCategory category, Pageable pageable);
+
+    // 메인 화면 비로그인 폴라로이드 "스드메(드레스·스튜디오·메이크업) 매출 1위 업체" - 카테고리 여러 개를 합쳐서 1위
+    @Query("select c.cmno, c.name, sum(r.amount) as total from Reservation r join Company c on r.cmno = c.cmno " +
+            "where r.payStatus = 'PAID' and c.category in :categories group by c.cmno, c.name order by total desc")
+    List<Object[]> findTopCompanyByCategories(@Param("categories") List<CompanyCategory> categories, Pageable pageable);
+
     @Query("select c.name, sum(r.amount) as total from Reservation r join Company c on r.cmno = c.cmno " +
             "where r.payStatus = 'PAID' and c.category = :category group by c.cmno, c.name order by total asc")
     List<Object[]> sumAmountByCompanyInCategoryAsc(@Param("category") CompanyCategory category, Pageable pageable);
