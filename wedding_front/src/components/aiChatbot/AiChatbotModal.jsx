@@ -9,8 +9,10 @@ const SpeechRecognitionClass =
     ? window.SpeechRecognition || window.webkitSpeechRecognition
     : null;
 
-// AI 답변에 딸려온 카드(업체/드레스아이템/답례품 등) - 누르면 해당 상세페이지로 이동
-const ReferenceCards = ({ references }) => {
+// AI 답변에 딸려온 카드(업체/드레스아이템/답례품 등) - 누르면 해당 상세페이지로 이동.
+// 챗봇창은 GlobalInquiryChatHost에서 항상 최상단에 떠 있는 구조라, 안 닫으면 이동한 페이지의
+// 모달(예: 드레스 크게보기)이 챗봇창에 가려 안 보이므로 이동과 동시에 챗봇창도 닫는다.
+const ReferenceCards = ({ references, onClose }) => {
   if (!references || references.length === 0) return null;
 
   return (
@@ -19,6 +21,7 @@ const ReferenceCards = ({ references }) => {
         <Link
           key={`${ref.type}-${ref.id}`}
           to={ref.link}
+          onClick={onClose}
           className="flex w-28 shrink-0 flex-col overflow-hidden rounded-xl border border-line bg-white shadow-sm transition hover:shadow-md"
         >
           <div className="h-20 w-full bg-surface">
@@ -242,7 +245,10 @@ const AiChatbotModal = ({
                   </div>
                 )}
                 {message.role === "assistant" && (
-                  <ReferenceCards references={message.references} />
+                  <ReferenceCards
+                    references={message.references}
+                    onClose={onClose}
+                  />
                 )}
               </div>
             ))

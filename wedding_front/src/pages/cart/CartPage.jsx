@@ -6,6 +6,7 @@ import { API_SERVER_HOST } from "../../api/reservationApi";
 import FetchingModal from "../../components/common/FetchingModal";
 import { calculateShippingFee } from "../../util/shippingPolicy";
 import BasicLayout from "../../layouts/BasicLayout";
+import ShopTapeLabel from "../../components/product/ShopTapeLabel";
 
 const host = API_SERVER_HOST;
 
@@ -131,14 +132,14 @@ const CartPage = () => {
 
   return (
     <BasicLayout showCart={false}>
-      <div className="bg-white min-h-screen">
+      <div className="-mx-5 -mb-10 -mt-12 min-h-[calc(100vh-6rem)] bg-cream px-5 pt-16">
         {fetching ? <FetchingModal /> : <></>}
 
-        <div className="max-w-[900px] mx-auto px-6 pt-10">
-          <p className="text-xs tracking-[0.15em] text-brand-accent mb-2">
-            CART
+        <div className="max-w-[900px] mx-auto px-6 pb-20">
+          <ShopTapeLabel className="mb-4">CART</ShopTapeLabel>
+          <p className="font-['Gowun_Batang'] text-2xl mb-8 text-ink">
+            장바구니
           </p>
-          <p className="font-serif text-2xl mb-2">장바구니</p>
 
           {!loginState.email && safeCartItems.length > 0 && (
             <p className="text-xs text-ink-faint mb-6">
@@ -148,12 +149,12 @@ const CartPage = () => {
           )}
 
           {safeCartItems.length === 0 ? (
-            <div className="py-20 text-center text-ink-faint text-sm">
+            <div className="bg-white rounded-2xl py-20 text-center text-ink-faint text-sm shadow-[0_8px_24px_-12px_rgba(58,54,47,0.15)]">
               장바구니가 비어있습니다.
             </div>
           ) : (
-            <div className="grid grid-cols-[1fr_300px] gap-10 pb-20">
-              <div>
+            <div className="grid grid-cols-[1fr_300px] gap-10">
+              <div className="bg-white rounded-2xl p-5 shadow-[0_8px_24px_-12px_rgba(58,54,47,0.15)] h-fit">
                 <div className="flex justify-between items-center pb-3 border-b border-line">
                   <label className="flex items-center gap-2 text-sm cursor-pointer">
                     <input
@@ -231,15 +232,15 @@ const CartPage = () => {
                 ))}
               </div>
 
-              <div className="bg-brand-light rounded-2xl p-6 h-fit">
+              <div className="bg-white rounded-2xl p-6 h-fit shadow-[0_8px_24px_-12px_rgba(58,54,47,0.15)]">
                 <p className="text-sm font-medium text-brand-deep mb-4">
                   결제 예정 금액
                 </p>
-                <div className="flex justify-between text-xs text-brand-accent mb-2">
+                <div className="flex justify-between text-sm text-ink-soft mb-2">
                   <span>상품금액</span>
                   <span>{productSubtotal.toLocaleString()}원</span>
                 </div>
-                <div className="flex justify-between text-xs text-brand-accent mb-2">
+                <div className="flex justify-between text-sm text-ink-soft mb-2">
                   <span>배송비</span>
                   <span>
                     {shippingFee === 0
@@ -247,15 +248,23 @@ const CartPage = () => {
                       : `${shippingFee.toLocaleString()}원`}
                   </span>
                 </div>
-                <div className="border-t border-brand/20 mt-3 pt-3 flex justify-between text-lg font-medium text-brand-deep">
-                  <span>총액</span>
-                  <span>{grandTotal.toLocaleString()}원</span>
+                <div className="border-t border-line mt-3 pt-3 flex justify-between items-baseline">
+                  <span className="text-sm text-ink-soft">총액</span>
+                  <span className="text-xl font-medium text-brand-deep">
+                    {grandTotal.toLocaleString()}원
+                  </span>
                 </div>
                 <button
                   onClick={handleClickCheckout}
-                  className="w-full h-11 mt-4 rounded-full bg-brand text-white text-sm font-medium"
+                  className="group relative w-full h-11 mt-4 overflow-hidden rounded-full bg-brand text-sm font-medium text-white transition-all duration-200 ease-out hover:-translate-y-0.5 hover:bg-brand-deep hover:shadow-[0_10px_28px_-10px_rgba(198,112,112,0.55)] active:translate-y-0 active:scale-[0.98]"
                 >
-                  결제하기 ({selectedCinos.length})
+                  <span className="relative z-10">
+                    결제하기 ({selectedCinos.length})
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-500 ease-out group-hover:translate-x-full"
+                  />
                 </button>
               </div>
             </div>

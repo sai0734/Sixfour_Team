@@ -12,6 +12,7 @@ import {
 import FetchingModal from "../common/FetchingModal";
 import { API_SERVER_HOST } from "../../api/reservationApi";
 import useCustomMove from "../../hooks/useCustomMove";
+import ShopTapeLabel from "./ShopTapeLabel";
 
 const host = API_SERVER_HOST;
 
@@ -163,9 +164,7 @@ const ModifyComponent = ({ pno }) => {
       {fetching ? <FetchingModal /> : <></>}
 
       <div className="max-w-[900px] mx-auto px-6 pb-16">
-        <span className="inline-block -rotate-2 bg-blush-100 px-3 py-1 mb-4 font-['Gaegu'] text-[13px] text-brand-deep">
-          관리자
-        </span>
+        <ShopTapeLabel className="mb-4">관리자</ShopTapeLabel>
         <p className="font-['Gowun_Batang'] text-2xl mb-8">
           상품 수정 <span className="text-ink-faint text-base">#{pno}</span>
         </p>

@@ -33,7 +33,9 @@ final class ChatToolDefinitions {
         Map<String, Object> properties = Map.of(
                 "category", Map.of(
                         "type", "string",
-                        "description", "답례품 카테고리",
+                        "description", "답례품 카테고리. 반드시 enum에 있는 표기 그대로 지정하세요 — " +
+                                "사용자가 흔한 표기 오차나 줄임말을 쓸 수 있습니다 (예: '타올'/'수건'은 " +
+                                "'타월'로, '방향제'/'향'은 '디퓨저/향수'로 매핑).",
                         "enum", List.of(
                                 "곡물/식품", "과자/한과", "디퓨저/향수", "비누/핸드워시",
                                 "생활/건강", "식기/머그", "차/커피", "타월")),

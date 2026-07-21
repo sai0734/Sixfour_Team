@@ -5,6 +5,7 @@ import { API_SERVER_HOST } from "./reservationApi";
 const host = `${API_SERVER_HOST}/api/companies`;
 const imageHost = `${host}/images`;
 
+// 수정시작 - getOne과 동일한 이유로 더미 우선 조회를 없애고 항상 실제 DB를 조회한다
 export const getList = async (pageParam = {}) => {
   const {
     page = 1,
@@ -16,20 +17,6 @@ export const getList = async (pageParam = {}) => {
     maxPrice,
   } = pageParam;
 
-  try {
-    return await getDummyList({
-      page,
-      size,
-      category,
-      keyword,
-      sort,
-      minPrice,
-      maxPrice,
-    });
-  } catch (err) {
-    console.warn("Company dummy list API failed. Try DB company list.", err);
-  }
-
   const res = await axios.get(`${host}/list`, {
     params: { page, size, category, keyword, sort, minPrice, maxPrice },
   });
@@ -39,17 +26,15 @@ export const getList = async (pageParam = {}) => {
     dtoList: (res.data?.dtoList || []).map(normalizeCompany),
   };
 };
+// 수정끝
 
+// 수정시작 - 더미 데이터를 먼저 찾고 있으면 그걸 보여주던 구조라, 챗봇 등에서 실제 DB 기준으로
+// 만든 링크(cmno/dressItemId)가 더미 쪽의 별개 데이터와 안 맞는 문제가 있었음. 항상 실제 DB를 조회한다
 export const getOne = async (cmno) => {
-  try {
-    return await getDummyOne(cmno);
-  } catch (err) {
-    console.warn("Company dummy read API failed. Try DB company read.", err);
-  }
-
   const res = await axios.get(`${host}/${cmno}`);
   return normalizeCompany(res.data);
 };
+// 수정끝
 
 export const postAdd = async (company) => {
   const res = await jwtAxios.post(`${host}/`, company);
