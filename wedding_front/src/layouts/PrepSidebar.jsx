@@ -26,12 +26,6 @@ const MENU_GROUPS = [
         enabled: true,
       },
       {
-        name: "D-day 관리",
-        shortName: "D-day",
-        path: "/prep/dday",
-        enabled: true,
-      },
-      {
         name: "AI 드레스",
         shortName: "AI 드레스",
         path: "/prep/ai-dress",

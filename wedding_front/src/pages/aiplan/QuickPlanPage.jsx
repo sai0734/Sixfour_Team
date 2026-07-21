@@ -115,7 +115,7 @@ const QuickPlanPage = () => {
   };
 
   return (
-    <>
+    <div className="-mx-5 -mb-10 min-h-[calc(100vh-6rem)] bg-cream px-5">
       {/* DetailPlanPage.jsx와 동일한 히어로 배너 - 배경 이미지는 public/aiplan-hero.jpg
           자리에 넣으면 바로 반영됨 (지금은 빈 자리만 잡아둠). */}
       <section
@@ -284,7 +284,7 @@ const QuickPlanPage = () => {
         </div>
       )}
       </div>
-    </>
+    </div>
   );
 };
 

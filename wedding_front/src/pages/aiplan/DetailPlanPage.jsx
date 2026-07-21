@@ -469,7 +469,7 @@ const DetailPlanPage = () => {
   const labelClass = "mb-1 block text-sm font-medium text-ink-soft";
 
   return (
-    <>
+    <div className="-mx-5 -mb-10 min-h-[calc(100vh-6rem)] bg-cream px-5">
       {/* 답례품(GIFT SHOP) 페이지와 같은 구조의 상단 히어로 배너 - 배경 이미지는
           public/aiplan-hero.jpg 자리에 넣으면 바로 반영됨 (지금은 빈 자리만 잡아둠). */}
       <section
@@ -865,7 +865,7 @@ const DetailPlanPage = () => {
         </div>
       </div>
       </div>
-    </>
+    </div>
   );
 };
 
