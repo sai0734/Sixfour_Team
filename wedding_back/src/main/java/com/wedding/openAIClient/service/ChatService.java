@@ -533,6 +533,8 @@ public class ChatService {
                                 item.getStyleTags() != null ? item.getStyleTags() : "정보없음",
                                 item.getSizeRange() != null ? item.getSizeRange() : "정보없음")));
 
+                        // 드레스 아이템은 별도 상세페이지(dress-items/read)가 실제로는 안 쓰이는
+                        // 페이지라서, 홀/메이크업과 동일하게 업체 페이지로 이동시킨다
                         items.forEach(item ->
                                 refs.add(ChatReferenceDTO.builder()
                                         .type("DRESS_ITEM")
@@ -542,7 +544,7 @@ public class ChatService {
                                         .priceLabel(item.getPrice() != null
                                                 ? String.format("%,d원", item.getPrice().longValue())
                                                 : "가격 정보없음")
-                                        .link("/dress-items/read/" + item.getDressItemId())
+                                        .link("/companies/read/" + cmno)
                                         .build()));
                         }
                     }
@@ -836,6 +838,7 @@ public class ChatService {
                                 item.getCompany().getName()))
                         .collect(Collectors.joining("\n"));
 
+                // 드레스 아이템도 홀 옵션과 동일하게 별도 상세페이지가 없으므로 업체 페이지로 이동
                 refs = items.stream()
                         .map(item -> ChatReferenceDTO.builder()
                                 .type("DRESS_ITEM")
@@ -845,7 +848,7 @@ public class ChatService {
                                 .priceLabel(item.getPrice() != null
                                         ? String.format("%,d원", item.getPrice().longValue())
                                         : "가격 정보없음")
-                                .link("/dress-items/read/" + item.getDressItemId())
+                                .link("/companies/read/" + item.getCompany().getCmno())
                                 .build())
                         .collect(Collectors.toList());
             } else {
@@ -946,6 +949,7 @@ public class ChatService {
             refs = List.of();
         } else {
             answer = "사진에서 \"" + styleKeyword + "\" 느낌을 읽었어요. 비슷한 분위기의 드레스를 찾아봤습니다.";
+            // 드레스 아이템 상세페이지가 실제로는 안 쓰이므로 업체 페이지로 이동시킨다
             refs = items.stream()
                     .limit(MAX_REFERENCES)
                     .map(item -> ChatReferenceDTO.builder()
@@ -956,7 +960,7 @@ public class ChatService {
                             .priceLabel(item.getPrice() != null
                                     ? String.format("%,d원", item.getPrice().longValue())
                                     : "가격 정보없음")
-                            .link("/dress-items/read/" + item.getDressItemId())
+                            .link("/companies/read/" + item.getCompany().getCmno())
                             .build())
                     .collect(Collectors.toList());
         }

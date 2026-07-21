@@ -85,12 +85,13 @@ const adminRoles = ["ADMIN", "ROLE_ADMIN"];
 const CompanyReadComponent = () => {
   const { cmno } = useParams();
   const [queryParams] = useSearchParams();
+  // ★ page/size + 필터(keyword/category/sort) 복원용
   const listSearch = (() => {
-    const page = queryParams.get("page");
-    const size = queryParams.get("size");
     const params = new URLSearchParams();
-    if (page) params.set("page", page);
-    if (size) params.set("size", size);
+    ["page", "size", "keyword", "category", "sort"].forEach((key) => {
+      const value = queryParams.get(key);
+      if (value) params.set(key, value);
+    });
     return params.toString() ? `?${params.toString()}` : "";
   })();
   const [company, setCompany] = useState(initState);
@@ -660,7 +661,14 @@ const CompanyReadComponent = () => {
       {/* ── 목록으로 ── */}
       <div className="flex justify-end pt-4">
         <button
-          onClick={() => navigate(`${companyPathPrefix}/list${listSearch}`)}
+          type="button"
+          onClick={() => {
+            if (window.history.length > 1) {
+              navigate(-1); // 이전 작업 페이지로
+              return;
+            }
+            navigate(`${companyPathPrefix}/list${listSearch}`); // 히스토리 없으면 목록
+          }}
           className="h-11 px-6 rounded-full border border-line bg-white text-sm transition hover:border-brand hover:text-brand"
         >
           목록으로
