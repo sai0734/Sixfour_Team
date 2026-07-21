@@ -34,13 +34,6 @@ export const refineRecommendation = async (payload) => {
   return res.data;
 };
 
-// 6단계 - 바로 직전 턴으로 되돌리기
-export const rollbackRecommendation = async (sessionId) => {
-  const res = await axios.post(`${prefix}/rollback/${sessionId}`);
-
-  return res.data;
-};
-
 // 사이드패널 확정/해제 버튼 - AI 안 거치고 바로 슬롯 상태 반영
 export const updateSlotStatus = async (payload) => {
   const res = await axios.post(`${prefix}/slot`, payload);
@@ -59,6 +52,13 @@ export const getSessionResult = async (sessionId) => {
 // 로컬 회차 목록)와는 다른 것 - 이건 서버에 저장된 한 세션 안의 턴별 발화 기록.
 export const getRefineHistory = async (sessionId) => {
   const res = await axios.get(`${prefix}/session/${sessionId}/history`);
+
+  return res.data;
+};
+
+// 상단 조합 히스토리 배지 - 예전 턴 하나를 클릭해서 그 시점 조합을 그대로 불러옴 (새 턴을 만들지 않음)
+export const viewSessionTurn = async (sessionId, turnNo) => {
+  const res = await axios.post(`${prefix}/session/${sessionId}/turn/${turnNo}`);
 
   return res.data;
 };

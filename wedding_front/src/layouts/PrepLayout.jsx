@@ -1,7 +1,7 @@
 import BasicMenu from "../components/menus/BasicMenu";
 import PrepSidebar from "./PrepSidebar";
 import ProfileCompleteGuard from "../components/common/ProfileCompleteGuard";
-import TapeLabel from "../components/common/TapeLabel";
+import ShopTapeLabel from "../components/product/ShopTapeLabel";
 
 const PrepLayout = ({ eyebrow, title, subtitle, children }) => {
   return (
@@ -23,9 +23,9 @@ const PrepLayout = ({ eyebrow, title, subtitle, children }) => {
 
               <div className="relative z-10 mx-auto max-w-[720px]">
                 {eyebrow && (
-                  <TapeLabel tone="white" className="mb-5">
+                  <ShopTapeLabel tone="white" className="mb-5">
                     {eyebrow}
-                  </TapeLabel>
+                  </ShopTapeLabel>
                 )}
                 {title && (
                   <h1 className="mb-2.5 font-['Gowun_Batang'] text-2xl leading-snug text-white md:mb-3.5 md:text-4xl">

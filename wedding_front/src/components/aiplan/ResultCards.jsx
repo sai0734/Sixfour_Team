@@ -375,8 +375,27 @@ const reservableSlots = (combo) =>
     name: combo[`${key}Name`],
   })).filter((slot) => slot.cmno);
 
-const ResultCards = ({ result, onSlotAction, onBumpBudget, onApplyToPlan }) => {
+const ResultCards = ({
+  result,
+  onSlotAction,
+  onBumpBudget,
+  onApplyToPlan,
+  turns = [],
+  activeTurnNo = null,
+  onSelectTurn,
+}) => {
   const navigate = useNavigate();
+  const [pendingTurnNo, setPendingTurnNo] = useState(null);
+
+  const handleTurnClick = async (turnNo) => {
+    if (!onSelectTurn || pendingTurnNo != null || turnNo === activeTurnNo) return;
+    setPendingTurnNo(turnNo);
+    try {
+      await onSelectTurn(turnNo);
+    } finally {
+      setPendingTurnNo(null);
+    }
+  };
 
   // 예약 체크박스 선택 상태 - 조합의 예약 가능 슬롯 구성이 바뀌면(다듬기로 카테고리가
   // 빠지거나 새 결과로 바뀌면) "전부 선택"으로 리셋한다. fingerprint로 변화를 감지해서
@@ -470,15 +489,49 @@ const ResultCards = ({ result, onSlotAction, onBumpBudget, onApplyToPlan }) => {
         </div>
       )}
 
+      {/* 조합 히스토리 배지 - "첫 추천 조합"에서 시작해서 다시찾기/확정/제외/다듬기로 손댈
+          때마다 오른쪽으로 배지가 하나씩 늘어난다. 배지를 누르면 그 시점 조합을 그대로 볼 수
+          있음. 배지 줄이 길어지면 이 줄 안에서만 가로 스크롤(하단 스크롤바)이 생기고, 오른쪽
+          금액은 항상 안 밀리게 고정폭으로 둔다. */}
       {soleCombo && (
         <div
           id="ai-plan-combo-summary"
-          className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-line bg-white px-5 py-3 scroll-mt-24"
+          className="mb-4 flex items-center gap-3 rounded-2xl border border-line bg-white px-4 py-3 scroll-mt-24"
         >
-          <span className="rounded-full bg-blush-100 px-3 py-1 text-xs font-medium text-brand-deep">
-            {SOURCE_LABEL[soleCombo.sourceType] || soleCombo.sourceType}
+          <div className="min-w-0 flex-1 overflow-x-auto pb-1">
+            <div className="flex items-center gap-2">
+              {turns.length > 0 ? (
+                turns.map((turn) => {
+                  const isFirst = turn.turnNo === 0;
+                  const label = isFirst ? "첫 추천 조합" : turn.message || `${turn.turnNo}번째 조정`;
+                  const active = turn.turnNo === activeTurnNo;
+                  return (
+                    <button
+                      key={turn.turnNo}
+                      type="button"
+                      onClick={() => handleTurnClick(turn.turnNo)}
+                      disabled={pendingTurnNo != null}
+                      title={label}
+                      className={`max-w-[180px] shrink-0 truncate whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium transition disabled:opacity-60 ${
+                        active
+                          ? "border-brand-dark bg-blush-100 text-brand-deep"
+                          : "border-line text-ink-soft hover:bg-blush-50"
+                      }`}
+                    >
+                      {pendingTurnNo === turn.turnNo ? "불러오는 중..." : label}
+                    </button>
+                  );
+                })
+              ) : (
+                <span className="shrink-0 whitespace-nowrap rounded-full bg-blush-100 px-3 py-1.5 text-xs font-medium text-brand-deep">
+                  {SOURCE_LABEL[soleCombo.sourceType] || soleCombo.sourceType}
+                </span>
+              )}
+            </div>
+          </div>
+          <span className="shrink-0 text-sm font-semibold text-ink">
+            {formatWon(soleCombo.packagePrice)}
           </span>
-          <span className="text-sm font-semibold text-ink">{formatWon(soleCombo.packagePrice)}</span>
         </div>
       )}
 

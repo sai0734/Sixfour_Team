@@ -1,5 +1,5 @@
 import BasicMenu from "../components/menus/BasicMenu";
-import TapeLabel from "../components/common/TapeLabel";
+import ShopTapeLabel from "../components/product/ShopTapeLabel";
 
 // 커뮤니티 4개 페이지(허브/자유게시판/후기게시판/FAQ)에 똑같이 복붙돼 있던 히어로를 한 곳으로 모음.
 // MyPageLayout/PrepLayout과 동일한 이유로, BasicLayout의 mt-24 여백이 없는 채로 BasicMenu(고정
@@ -19,9 +19,9 @@ const BoardLayout = ({ eyebrow, title, subtitle, children }) => {
 
             <div className="relative z-10 mx-auto max-w-[720px]">
               {eyebrow && (
-                <TapeLabel tone="white" className="mb-5">
+                <ShopTapeLabel tone="white" className="mb-5">
                   {eyebrow}
-                </TapeLabel>
+                </ShopTapeLabel>
               )}
               {title && (
                 <h1 className="mb-2.5 font-['Gowun_Batang'] text-2xl leading-snug text-white md:mb-3.5 md:text-4xl">

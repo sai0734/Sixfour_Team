@@ -165,8 +165,8 @@ public class JWTCheckFilter extends OncePerRequestFilter{
         if (method.equals("POST")) {
             if (path.equals("/api/aiplan/ai")) return true;
             if (path.equals("/api/aiplan/refine")) return true;
-            if (path.matches("/api/aiplan/rollback/\\d+")) return true;
             if (path.equals("/api/aiplan/slot")) return true;
+            if (path.matches("/api/aiplan/session/\\d+/turn/\\d+")) return true;
         }
         return false;
     }

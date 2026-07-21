@@ -101,38 +101,6 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
                 .build();
     }
 
-    @Override
-    public AiPlanQuickResultDTO rollback(Long sessionId) {
-
-        AiPlanSession session = sessionSupport.findSession(sessionId)
-                .orElseThrow(() -> new RuntimeException("세션을 찾을 수 없어요"));
-
-        List<AiPlanSessionHistory> history = sessionSupport.historyOf(sessionId);
-
-        if (history.size() < 2) {
-            AiPlanPackageCandidateDTO combo = sessionSupport.toCombo(session, "SESSION_COMBO", null);
-            return AiPlanQuickResultDTO.builder()
-                    .sessionId(sessionId)
-                    .weddingDate(session.getWeddingDate())
-                    .candidates(List.of(combo))
-                    .message("더 되돌릴 이전 상태가 없어요.")
-                    .build();
-        }
-
-        AiPlanSessionHistory previous = history.get(history.size() - 2);
-        sessionSupport.applySnapshot(session, previous);
-        sessionSupport.saveHistory(session, history.size(), "(되돌리기)");
-
-        AiPlanPackageCandidateDTO combo = sessionSupport.toCombo(session, "SESSION_COMBO", null);
-
-        return AiPlanQuickResultDTO.builder()
-                .sessionId(sessionId)
-                .weddingDate(session.getWeddingDate())
-                .candidates(List.of(combo))
-                .message("이전 상태로 되돌렸어요.")
-                .build();
-    }
-
     // 사이드패널 확정/해제/다시찾기 버튼 - AI 안 거치고 즉시 반영.
     // CONFIRM이면 그 즉시 다듬기 보호 대상이 되고, RECONSIDER는 제외됐던 카테고리를 실제로 다시 검색한다.
     @Override
@@ -232,6 +200,33 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
             case STUDIO -> AiPlanCandidateBuilder.STUDIO_RATIO;
             case MAKEUP -> AiPlanCandidateBuilder.MAKEUP_RATIO;
         };
+    }
+
+    // 상단 조합 히스토리 배지 클릭 - 그 턴의 스냅샷을 세션에 그대로 적용해서 보여준다.
+    // rollback()과 달리 새 히스토리 턴을 추가하지 않는다 - 그냥 예전 시점을 "보는" 것뿐이라
+    // 배지를 눌러볼 때마다 배지 목록 자체가 늘어나면 안 되기 때문. 이 상태에서 확정/다시찾기/
+    // 다듬기 등 실제 변경을 하면 그건 기존 로직대로 새 턴이 되어 배지 목록 맨 뒤에 붙는다.
+    @Override
+    public AiPlanQuickResultDTO viewTurn(Long sessionId, int turnNo) {
+
+        AiPlanSession session = sessionSupport.findSession(sessionId)
+                .orElseThrow(() -> new RuntimeException("세션을 찾을 수 없어요"));
+
+        AiPlanSessionHistory target = sessionSupport.historyOf(sessionId).stream()
+                .filter(h -> h.getTurnNo() == turnNo)
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("해당 기록을 찾을 수 없어요"));
+
+        sessionSupport.applySnapshot(session, target);
+
+        AiPlanPackageCandidateDTO combo = sessionSupport.toCombo(session, "SESSION_COMBO", null);
+
+        return AiPlanQuickResultDTO.builder()
+                .sessionId(sessionId)
+                .weddingDate(session.getWeddingDate())
+                .candidates(List.of(combo))
+                .message(turnNo == 0 ? "첫 추천 조합이에요." : "그때 조합을 불러왔어요.")
+                .build();
     }
 
     // 새로고침 복원 - 세션이 이미 갖고 있는 상태를 그대로 다시 조립해서 돌려줌 (AI 호출 없음)
