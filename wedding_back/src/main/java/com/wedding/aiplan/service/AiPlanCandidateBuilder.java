@@ -85,6 +85,63 @@ public class AiPlanCandidateBuilder {
     static final List<CompanyCategory> UPGRADE_ORDER =
             List.of(CompanyCategory.HALL, CompanyCategory.DRESS, CompanyCategory.STUDIO, CompanyCategory.MAKEUP);
 
+    // "예산 늘려서 다시 찾기" 제안 - 실제 부족분을 그대로 보여주면(수백~수천만원인 경우도 있음)
+    // 사용자 입장에서 비현실적으로 느껴진다는 피드백으로, 최대 BUDGET_TOLERANCE(500만원)까지만
+    // "이만큼 늘려보세요"로 제안한다. 그래서 "이 조합이 된다"고 단정하지 않고 "다시 찾아볼까요"
+    // 정도로 톤을 낮춘다 - 실제 부족분이 더 크면 이 증액만으로는 원하는 조합이 안 나올 수 있어서.
+    // AiPlanAiServiceImpl/AiPlanRefineServiceImpl도 이 하나만 재사용해서 문구/로직이 안 갈라지게 한다.
+    static BudgetSuggestion budgetSuggestion(BigDecimal totalPrice, Long budget) {
+        if (budget == null || budget <= 0 || totalPrice == null) {
+            return null;
+        }
+        long gap = totalPrice.longValue() - budget;
+        if (gap <= BUDGET_TOLERANCE) {
+            return null;
+        }
+        long increment = Math.min(gap, BUDGET_TOLERANCE);
+        String message = String.format(
+                "취향에 맞는 조합을 찾으려면 예산이 조금 더 필요해요. %,d원 정도 늘려서 다시 찾아볼까요?",
+                increment);
+        return new BudgetSuggestion(message, budget + increment);
+    }
+
+    record BudgetSuggestion(String message, long suggestedBudget) {
+    }
+
+    // 슬롯 하나(카테고리+업체)에 대해 "왜 이 업체를 골랐는지"를 매번 새로 계산한다. AI가 그때그때
+    // 만들어주는 설명 텍스트는 세션에 저장이 안 되는 값이라 최초 응답에만 붙어있다가 확정/제외/
+    // 다듬기/새로고침 등 뭘 하든 사라져버렸다 - 대신 이 로직을 예산/지역 매칭 여부로 매번
+    // 다시 계산해서, INDIVIDUAL_COMBO/AI_COMBO/SESSION_COMBO 어디서 봐도 항상 붙어있게 한다.
+    String pickReason(CompanyCategory category, Company company, Long budget, String region) {
+        if (company == null) {
+            return null;
+        }
+        List<String> parts = new java.util.ArrayList<>();
+        if (budget != null && budget > 0 && company.getPriceAvg() != null) {
+            long allocated = Math.round(budget * ratioFor(category));
+            if (company.getPriceAvg().longValue() <= allocated) {
+                parts.add("예산 내");
+            }
+        }
+        if (region != null && !region.isBlank() && company.getAddress() != null
+                && company.getAddress().contains(region)) {
+            parts.add(region + " 지역");
+        }
+        if (parts.isEmpty()) {
+            return "조건에 맞게 골랐어요";
+        }
+        return String.join(" · ", parts) + "에서 골랐어요";
+    }
+
+    private double ratioFor(CompanyCategory category) {
+        return switch (category) {
+            case HALL -> HALL_RATIO;
+            case DRESS -> DRESS_RATIO;
+            case STUDIO -> STUDIO_RATIO;
+            case MAKEUP -> MAKEUP_RATIO;
+        };
+    }
+
     public AiPlanQuickResultDTO recommend(String region, Long budget, Integer guestCount,
                                           AiPlanCategoryPreferences prefs) {
         return recommend(region, budget, guestCount, prefs, 0);
@@ -136,66 +193,48 @@ public class AiPlanCandidateBuilder {
         // 프론트 "예산 늘려서 다시 찾기" 버튼이 그 금액으로 예산을 채워 원래 조건 그대로 재요청하면,
         // 이번에 계산한 이 조합이 그대로 나온다.
         boolean alreadyFullyRelaxed = relaxationStage >= 2 || (guestCount == null && prefs.isEmpty());
-        if (!alreadyFullyRelaxed && budget != null && budget > 0) {
-            long gap = combo.dto.getPackagePrice().longValue() - budget;
-            if (gap > BUDGET_TOLERANCE) {
-                // 홀타입/스튜디오/드레스 취향은 가격 영향이 커서 예산 초과 시 다 내려놓지만, 메이크업
-                // 패키지 타입은 업체마다 가격 차이가 몇 십만원 수준이라 웬만하면 계속 지킬 수 있다.
-                // 다 내려놓고 재검색하면(기존 방식) "FULL 요청했는데 전혀 상관없는 패키지가 나온다"는
-                // 문제가 생기므로, 1단계(relaxationStage 0→1)에서는 메이크업 취향만은 유지한다.
-                // 이마저도 예산을 못 맞추면 2단계(1→2)에서 완전히 다 내려놓고 재검색한다 -
-                // relaxationStage가 2에 도달하면 위 alreadyFullyRelaxed가 더 이상 재귀를 안 하므로
-                // 무한 재귀는 안 생긴다.
-                AiPlanCategoryPreferences relaxed = relaxationStage == 0
-                        ? AiPlanCategoryPreferences.of(List.of(), List.of(), List.of(), prefs.getMakeupType())
-                        : AiPlanCategoryPreferences.empty();
-                AiPlanQuickResultDTO budgetFit = recommend(region, budget, null, relaxed, relaxationStage + 1);
-                if (!budgetFit.getCandidates().isEmpty()) {
-                    budgetFit.setSuggestedBudget(budget + gap);
-                    budgetFit.setMessage(String.format(
-                            "우선 예산에 맞는 조합으로 보여드렸어요. 예산을 %,d원 더 늘리면 요청하신 조건에 "
-                                    + "더 맞는 곳을 찾아드릴 수 있어요.",
-                            gap));
-                    return budgetFit;
+        BudgetSuggestion suggestion = budgetSuggestion(combo.dto.getPackagePrice(), budget);
+        if (!alreadyFullyRelaxed && suggestion != null) {
+            // 홀타입/스튜디오/드레스 취향은 가격 영향이 커서 예산 초과 시 다 내려놓지만, 메이크업
+            // 패키지 타입은 업체마다 가격 차이가 몇 십만원 수준이라 웬만하면 계속 지킬 수 있다.
+            // 다 내려놓고 재검색하면(기존 방식) "FULL 요청했는데 전혀 상관없는 패키지가 나온다"는
+            // 문제가 생기므로, 1단계(relaxationStage 0→1)에서는 메이크업 취향만은 유지한다.
+            // 이마저도 예산을 못 맞추면 2단계(1→2)에서 완전히 다 내려놓고 재검색한다 -
+            // relaxationStage가 2에 도달하면 위 alreadyFullyRelaxed가 더 이상 재귀를 안 하므로
+            // 무한 재귀는 안 생긴다.
+            AiPlanCategoryPreferences relaxed = relaxationStage == 0
+                    ? AiPlanCategoryPreferences.of(List.of(), List.of(), List.of(), prefs.getMakeupType())
+                    : AiPlanCategoryPreferences.empty();
+            AiPlanQuickResultDTO budgetFit = recommend(region, budget, null, relaxed, relaxationStage + 1);
+            if (!budgetFit.getCandidates().isEmpty()) {
+                // 안내가 진짜로 도움이 되는지 직접 검증한다 - 실제로 그 예산으로 다시 찾아봐도
+                // 카탈로그 한계 때문에 똑같은(더 안 비싼) 조합이 나오면 안내 자체를 안 보여준다.
+                // 그래야 사용자가 안내를 보고 예산을 늘려 다시 요청했을 때 반드시 더 나은(더 비싼)
+                // 조합을 받는다는 게 보장된다.
+                AiPlanQuickResultDTO bumpedFit =
+                        recommend(region, suggestion.suggestedBudget(), null, relaxed, relaxationStage + 1);
+                BigDecimal currentPrice = budgetFit.getCandidates().get(0).getPackagePrice();
+                BigDecimal bumpedPrice = !bumpedFit.getCandidates().isEmpty()
+                        ? bumpedFit.getCandidates().get(0).getPackagePrice() : null;
+                boolean wouldActuallyImprove = bumpedPrice != null && currentPrice != null
+                        && bumpedPrice.longValue() > currentPrice.longValue();
+                if (wouldActuallyImprove) {
+                    budgetFit.setSuggestedBudget(suggestion.suggestedBudget());
+                    budgetFit.setMessage(suggestion.message());
                 }
+                return budgetFit;
             }
         }
 
-        StringBuilder message = new StringBuilder();
-        if (prefs.isEmpty()) {
-            message.append("조건에 맞는 패키지가 없어서 업체를 개별로 조합해 추천했어요.");
-        } else {
-            message.append("입력해주신 취향에 맞춰 업체를 개별로 조합해 추천했어요.");
-        }
-        if (combo.usedRegionFallback) {
-            message.append(" 일부는 지역 조건 밖에서 골랐어요.");
-        }
-        if (combo.usedStyleFallback) {
-            message.append(" 일부는 취향과 딱 맞는 곳이 없어서 예산/지역 기준으로 대신 골랐어요.");
-        }
-        appendBudgetGapMessage(message, combo.dto.getPackagePrice(), budget);
-
+        // 예산 안내가 있으면 그 문구 하나만 보여준다("패키지가 없어서~", "일부는 지역 조건
+        // 밖에서~" 같은 다른 설명은 안 겹치게) - 결과 화면 배너를 "예산 늘리기" 용도로만 쓰기로
+        // 정리했기 때문 (그 외 부가 설명은 화면에 아예 안 보여줌).
         return AiPlanQuickResultDTO.builder()
                 .candidates(List.of(combo.dto))
                 .regionRelaxed(combo.usedRegionFallback)
-                .message(message.toString())
+                .message(suggestion != null ? suggestion.message() : null)
+                .suggestedBudget(suggestion != null ? suggestion.suggestedBudget() : null)
                 .build();
-    }
-
-    // 하객수처럼 양보 못 하는 조건이나 예산 자체가 너무 적을 때, 합계가 예산을 톨러런스(500만원)
-    // 넘게 초과할 수 있다 - fillTowardBudget은 "부족한 예산을 더 쓰는" 방향의 업그레이드만 하고
-    // 이미 초과한 걸 깎진 않으므로, 여기서 초과분을 계산해서 "이만큼 더 잡으면 이 조합으로 예약
-    // 가능해요"라고 알려준다. AiPlanAiServiceImpl(AI 모드)도 같은 문구를 재사용 (package-private).
-    void appendBudgetGapMessage(StringBuilder message, BigDecimal totalPrice, Long budget) {
-        if (budget == null || budget <= 0 || totalPrice == null) {
-            return;
-        }
-        long gap = totalPrice.longValue() - budget;
-        if (gap > BUDGET_TOLERANCE) {
-            message.append(String.format(
-                    " 입력하신 조건에 맞는 조합을 찾다 보니 예산보다 %,d원 더 필요해요. 예산을 이만큼 늘리면 이 조합으로 예약할 수 있어요.",
-                    gap));
-        }
     }
 
     // ── 패키지 경로 (빠르게 모드, 취향 없을 때만) ──────────────────────────
@@ -346,11 +385,12 @@ public class AiPlanCandidateBuilder {
         DressItem dressItem = resolveDressItem(dress.company, prefs.getDressKeywords());
         HallItem hallItem = resolveHallItem(hall.company);
 
-        // 요청한 패키지 타입과 정확히 일치하는 업체를 찾았을 때만(취향 폴백이 아닐 때만) 채운다 -
-        // 폴백으로 고른 업체는 그 패키지를 실제로 안 가지고 있을 수 있어서.
+        // 요청한 패키지 타입과 정확히 일치하는 업체를 찾았을 때만(취향 폴백이 아닐 때만) 그 타입을
+        // 쓴다. 취향이 아예 없었거나(랜덤 추천) 폴백된 경우엔 그 업체가 실제로 파는 것 중 가장
+        // 풍성한 패키지를 대신 보여준다 - 아무 패키지도 안 보여주는 것보다 훨씬 유용하다.
         MakeupPackageType groundedMakeupType = (prefs.getMakeupType() != null && !makeup.usedStyleFallback)
                 ? prefs.getMakeupType()
-                : null;
+                : bestMakeupType(makeup.company);
         String makeupPackageType = groundedMakeupType != null ? groundedMakeupType.name() : null;
 
         // 홀/드레스는 구체적인 옵션(아이템) 가격이 있으면 그 값을, 없으면 업체 평균가로 - 합계도
@@ -375,21 +415,25 @@ public class AiPlanCandidateBuilder {
                 .hallRoomName(hallItem != null ? hallItem.getItemName() : null)
                 .hallImageUrl(hallItem != null ? hallItem.getImageUrl() : firstImage(hall.company))
                 .hallPrice(hallItem != null ? hallItem.getPrice() : hall.company.getPriceAvg())
+                .hallReason(pickReason(CompanyCategory.HALL, hall.company, budget, region))
                 .dressCmno(dress.company.getCmno())
                 .dressName(dress.company.getName())
                 .dressItemId(dressItem != null ? dressItem.getDressItemId() : null)
                 .dressOptionName(dressItem != null ? dressItem.getItemName() : null)
                 .dressImageUrl(dressItem != null ? dressItem.getImageUrl() : null)
                 .dressPrice(dressItem != null ? dressItem.getPrice() : dress.company.getPriceAvg())
+                .dressReason(pickReason(CompanyCategory.DRESS, dress.company, budget, region))
                 .studioCmno(studio.company.getCmno())
                 .studioName(studio.company.getName())
                 .studioImageUrl(firstImage(studio.company))
                 .studioPrice(studio.company.getPriceAvg())
+                .studioReason(pickReason(CompanyCategory.STUDIO, studio.company, budget, region))
                 .makeupCmno(makeup.company.getCmno())
                 .makeupName(makeup.company.getName())
                 .makeupImageUrl(firstImage(makeup.company))
                 .makeupPrice(makeupAmount)
                 .makeupPackageType(makeupPackageType)
+                .makeupReason(pickReason(CompanyCategory.MAKEUP, makeup.company, budget, region))
                 .reason(buildComboReason(totalPrice, budget))
                 .sourceType("INDIVIDUAL_COMBO")
                 .build();
@@ -764,28 +808,54 @@ public class AiPlanCandidateBuilder {
                 .orElse(null);
     }
 
-    // 메이크업 패키지 타입(MakeupPackageType)을 보유한 업체 중, 예산/지역 조건에 맞는 곳 하나.
-    // MakeupPackageRepository로 먼저 타입이 맞는 업체 cmno들을 구하고, 그 안에서 예산/지역 순으로
-    // 고른다 (HALL/STUDIO/DRESS처럼 조건 하나로 바로 쿼리하지 않는 이유는, "패키지 타입 보유 여부"가
-    // Company가 아니라 그 하위 MakeupPackage 엔티티에 있는 값이라 조인 쿼리보다 이 편이 간단해서).
+    // 메이크업 패키지 타입(MakeupPackageType)을 실제로 팔 수 있는 업체 중, 예산/지역 조건에 맞는
+    // 곳 하나. "판매 가능 여부"는 makeupSupports()로 판단한다(MakeupDetail 취급 서비스 기준).
     private Company findStyledMakeup(String region, BigDecimal maxPrice, MakeupPackageType type, Long excludeCmno) {
         if (type == null) {
             return null;
         }
-        List<Long> matchedCmnos = makeupPackageRepository.findCompanyCmnosByPackageTypeIn(List.of(type));
-        if (matchedCmnos.isEmpty()) {
-            return null;
-        }
-        Set<Long> matchedSet = new HashSet<>(matchedCmnos);
         List<Company> pool = companyRepository
                 .searchList(CompanyCategory.MAKEUP, region, null, maxPrice,
                         PageRequest.of(0, MAKEUP_POOL_SIZE, Sort.by("priceAvg").descending()))
                 .getContent();
         return pool.stream()
-                .filter(c -> matchedSet.contains(c.getCmno()))
                 .filter(c -> excludeCmno == null || !c.getCmno().equals(excludeCmno))
+                .filter(c -> makeupSupports(c, type))
                 .findFirst()
                 .orElse(null);
+    }
+
+    // 이 업체가 그 패키지 타입을 실제로 파는지 - MakeupDetail.supports() 그대로 위임.
+    // AiPlanAiServiceImpl/AiPlanSessionSupport의 그라운딩 재검증에서도 재사용한다.
+    boolean makeupSupports(Company company, MakeupPackageType type) {
+        if (company == null || type == null) {
+            return false;
+        }
+        MakeupDetail detail = makeupDetailRepository.findByCompany_Cmno(company.getCmno()).orElse(null);
+        return detail != null && detail.supports(type);
+    }
+
+    // 취향이 없거나(랜덤 추천) 원하는 패키지를 이 업체가 못 파는 경우, "아무것도 안 보여주는 것"
+    // 대신 이 업체가 실제로 팔 수 있는 것 중 가장 풍성한 패키지를 대신 보여준다.
+    MakeupPackageType bestMakeupType(Company company) {
+        if (company == null) {
+            return null;
+        }
+        MakeupDetail detail = makeupDetailRepository.findByCompany_Cmno(company.getCmno()).orElse(null);
+        return detail != null ? detail.bestSupportedType() : null;
+    }
+
+    // AiPlanAiServiceImpl이 AI 후보 풀을 그 패키지 타입 판매 업체로 좁힐 때 쓰는 cmno 집합.
+    // 예전엔 MakeupPackage(할인 패키지) row가 있는 업체만 잡혀서 단품/무할인 조합이 거의 안
+    // 잡혔다 - MakeupDetail 취급 서비스 기준으로 바꿔서 실제 판매 여부와 일치시킨다.
+    Set<Long> makeupCmnosSupporting(MakeupPackageType type) {
+        if (type == null) {
+            return Set.of();
+        }
+        return makeupDetailRepository.findAll().stream()
+                .filter(detail -> detail.supports(type))
+                .map(MakeupDetail::getCmno)
+                .collect(java.util.stream.Collectors.toSet());
     }
 
     private Pick pickBestCompanyPlain(CompanyCategory category, String region, Long allocatedBudget,

@@ -3,7 +3,6 @@ package com.wedding.aiplan.service;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.EnumMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,7 +25,6 @@ import com.wedding.company.domain.HallItem;
 import com.wedding.company.domain.MakeupPackageType;
 import com.wedding.company.repository.CompanyRepository;
 import com.wedding.company.repository.HallDetailRepository;
-import com.wedding.company.repository.MakeupPackageRepository;
 import com.wedding.global.util.OpenAiClient;
 import com.wedding.openAIClient.dto.OpenAiMessageDTO;
 import com.wedding.openAIClient.dto.OpenAiResponseDTO;
@@ -48,7 +46,6 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
     private final ObjectMapper objectMapper;
     private final CompanyRepository companyRepository;
     private final HallDetailRepository hallDetailRepository;
-    private final MakeupPackageRepository makeupPackageRepository;
     private final AiPlanCandidateBuilder candidateBuilder;
     private final AiPlanSessionSupport sessionSupport;
 
@@ -81,6 +78,84 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
                     + "\"makeup\":{\"exclude\":false,\"cmno\":0,\"reason\":\"...\"},"
                     + "\"excludedNote\":\"...\"}";
 
+    // 규칙 기반 엔진이 골랐거나(예산 초과로 대체된 경우), 예산 여유로 업체가 바뀐 카테고리는
+    // AI가 그 업체를 직접 고른 게 아니라서 이유가 없다 - "이미 정해진 4곳"을 그대로 보여주고
+    // 왜 사용자 조건에 잘 맞는지 설명만 새로 받는다(선택은 안 바꾸고 설명만 채우는 보조 호출).
+    private static final String EXPLAIN_SYSTEM_PROMPT =
+            "당신은 웨딩 준비 컨설턴트입니다. 아래는 신랑신부를 위해 이미 확정된 홀/스튜디오/드레스/메이크업 "
+                    + "업체입니다(변경 불가, 그대로 두세요). 사용자가 입력한 예산/하객수/분위기/스타일/자유 요청과 "
+                    + "각 업체의 정보(설명, 가격)를 보고, 왜 이 업체가 사용자 조건에 잘 맞는지 카테고리별로 한국어 "
+                    + "한 문장씩 구체적으로 설명하세요(업체 이름이나 특징을 직접 언급하며 설득력 있게, "
+                    + "\"예산 내\"/\"지역에서 골랐어요\" 같은 뻔한 말은 피하세요). 후보로 안 들어온(null인) "
+                    + "카테고리는 응답에서 생략하세요.\n"
+                    + "반드시 아래 JSON 형식으로만 응답하세요. 다른 설명, 마크다운, 코드블록 없이 순수 JSON만 "
+                    + "출력합니다: {\"hall\":\"...\",\"studio\":\"...\",\"dress\":\"...\",\"makeup\":\"...\"}";
+
+    // 이미 확정된 4곳(cmno)을 그대로 두고 이유만 AI한테 새로 받아서 combo에 채운다. 실패해도
+    // 조용히 무시한다 - 이미 채워져 있는 계산된 이유(pickReason)가 폴백으로 남아있다.
+    private void explainWithAi(AiPlanPackageCandidateDTO combo, AiPlanDetailRequestDTO requestDTO) {
+        try {
+            OpenAiResponseDTO response = openAiClient.getJsonChatCompletion(List.of(
+                    OpenAiMessageDTO.of("system", EXPLAIN_SYSTEM_PROMPT),
+                    OpenAiMessageDTO.of("user", buildExplainPrompt(combo, requestDTO))));
+
+            String raw = response.getChoices().get(0).getMessage().getContent();
+            JsonNode root = objectMapper.readTree(raw);
+
+            if (combo.getHallCmno() != null && root.hasNonNull("hall")) {
+                combo.setHallReason(root.get("hall").asText());
+            }
+            if (combo.getStudioCmno() != null && root.hasNonNull("studio")) {
+                combo.setStudioReason(root.get("studio").asText());
+            }
+            if (combo.getDressCmno() != null && root.hasNonNull("dress")) {
+                combo.setDressReason(root.get("dress").asText());
+            }
+            if (combo.getMakeupCmno() != null && root.hasNonNull("makeup")) {
+                combo.setMakeupReason(root.get("makeup").asText());
+            }
+        } catch (Exception e) {
+            log.warn("AiPlan explain-reason 호출 실패 - 계산된 이유로 대체", e);
+        }
+    }
+
+    private String buildExplainPrompt(AiPlanPackageCandidateDTO combo, AiPlanDetailRequestDTO requestDTO) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[확정된 업체]\n");
+        appendExplainCompanyLine(sb, "홀", combo.getHallCmno(), combo.getHallName());
+        appendExplainCompanyLine(sb, "스튜디오", combo.getStudioCmno(), combo.getStudioName());
+        appendExplainCompanyLine(sb, "드레스", combo.getDressCmno(), combo.getDressName());
+        appendExplainCompanyLine(sb, "메이크업", combo.getMakeupCmno(), combo.getMakeupName());
+
+        sb.append("\n[사용자 조건]\n");
+        appendIfPresent(sb, "예산", requestDTO.getBudget() != null ? String.format("%,d원", requestDTO.getBudget()) : null);
+        appendIfPresent(sb, "지역", requestDTO.getRegion());
+        appendIfPresent(sb, "하객수", requestDTO.getGuestCount() != null ? requestDTO.getGuestCount() + "명" : null);
+        appendIfPresent(sb, "홀 분위기", requestDTO.getHallType());
+        appendIfPresent(sb, "스튜디오 분위기", requestDTO.getStudioMood());
+        appendIfPresent(sb, "드레스 스타일", requestDTO.getDressStyle());
+        appendIfPresent(sb, "메이크업 패키지", requestDTO.getMakeupStyle());
+        appendIfPresent(sb, "자유 요청", requestDTO.getFreeText());
+        return sb.toString();
+    }
+
+    private void appendExplainCompanyLine(StringBuilder sb, String label, Long cmno, String name) {
+        if (cmno == null) {
+            return;
+        }
+        Company company = companyRepository.findById(cmno).orElse(null);
+        sb.append("- ").append(label).append(": ").append(name != null ? name : "");
+        if (company != null) {
+            if (company.getPriceAvg() != null) {
+                sb.append(" | ").append(String.format("%,d원", company.getPriceAvg().longValue()));
+            }
+            if (company.getDescription() != null && !company.getDescription().isBlank()) {
+                sb.append(" | ").append(company.getDescription());
+            }
+        }
+        sb.append('\n');
+    }
+
     @Override
     public AiPlanQuickResultDTO getAiRecommendations(AiPlanDetailRequestDTO requestDTO) {
 
@@ -91,9 +166,7 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
         // 구성(buildPools)과 AI 응답 최종 검증(parseAndValidate) 둘 다에서 같은 기준으로 쓴다.
         // "블랑쉬 웨딩뷰티"처럼 헤어+메이크업만 파는 곳이 FULL 요청에 매칭되던 문제가 이 부분이었음.
         MakeupPackageType requestedMakeupType = parseMakeupPackageType(requestDTO.getMakeupStyle());
-        Set<Long> makeupTypeCmnos = requestedMakeupType != null
-                ? new HashSet<>(makeupPackageRepository.findCompanyCmnosByPackageTypeIn(List.of(requestedMakeupType)))
-                : Set.of();
+        Set<Long> makeupTypeCmnos = candidateBuilder.makeupCmnosSupporting(requestedMakeupType);
 
         Map<CompanyCategory, List<Company>> pools =
                 buildPools(region, budget, requestDTO.getGuestCount(), requestDTO.getFreeText(), makeupTypeCmnos);
@@ -116,15 +189,17 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
         }
 
         AiPlanPackageCandidateDTO combo = parseAndValidate(
-                raw, pools, requestDTO.getDressStyle(), requestedMakeupType, makeupTypeCmnos);
+                raw, pools, requestDTO.getDressStyle(), requestedMakeupType, makeupTypeCmnos, budget, region);
 
         if (combo == null) {
             log.warn("AiPlan AI: response failed parsing/grounding validation, falling back. raw={}", raw);
             return fallback(region, budget, requestDTO);
         }
 
-        if (budget != null && budget > 0) {
-            fillComboTowardBudget(combo, region, budget);
+        if (budget != null && budget > 0 && fillComboTowardBudget(combo, region, budget)) {
+            // 예산 여유로 한 카테고리 이상 업체가 바뀌면, 바뀐 자리는 AI가 원래 준 설명이 더 이상
+            // 안 맞는다 - 최종 확정된 4곳을 그대로 다시 AI한테 보여주고 이유만 새로 받는다.
+            explainWithAi(combo, requestDTO);
         }
 
         // 하객수/취향 조건 때문에 AI가 고른 조합이 예산을 톨러런스 넘게 초과했으면, 그 조합 대신 예산
@@ -133,46 +208,54 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
         // 자기 자신을 재귀 호출하는 구조라 "이미 완화된 상태" 가드가 필요했지만, 여긴 완전히 별개
         // 호출이라 그 가드가 필요 없다. 메이크업 패키지 타입만은 (가격 영향이 작아서) 계속 유지한다 -
         // 안 그러면 "FULL 요청했는데 전혀 상관없는 패키지가 나온다"는 문제가 생긴다.
-        if (budget != null && budget > 0) {
-            long gap = combo.getPackagePrice().longValue() - budget;
-            if (gap > AiPlanCandidateBuilder.BUDGET_TOLERANCE) {
-                AiPlanCategoryPreferences makeupOnly = AiPlanCategoryPreferences.of(
-                        List.of(), List.of(), List.of(), requestedMakeupType);
-                AiPlanQuickResultDTO budgetFit = candidateBuilder.recommend(
-                        region, budget, null, makeupOnly);
-                if (!budgetFit.getCandidates().isEmpty()) {
-                    budgetFit.setSuggestedBudget(budget + gap);
-                    budgetFit.setMessage(String.format(
-                            "우선 예산에 맞는 조합으로 보여드렸어요. 예산을 %,d원 더 늘리면 요청하신 조건에 "
-                                    + "더 맞는 곳을 찾아드릴 수 있어요.",
-                            gap));
-                    return attachSession(budgetFit, budget, region, requestDTO, "AI_FALLBACK");
+        AiPlanCandidateBuilder.BudgetSuggestion suggestion =
+                AiPlanCandidateBuilder.budgetSuggestion(combo.getPackagePrice(), budget);
+        if (suggestion != null) {
+            AiPlanCategoryPreferences makeupOnly = AiPlanCategoryPreferences.of(
+                    List.of(), List.of(), List.of(), requestedMakeupType);
+            AiPlanQuickResultDTO budgetFit = candidateBuilder.recommend(
+                    region, budget, null, makeupOnly);
+            if (!budgetFit.getCandidates().isEmpty()) {
+                // 안내가 진짜로 도움이 되는지 직접 검증한다 - "이만큼 늘리면 더 맞는 곳을 찾아준다"고
+                // 말해놓고, 실제로 그 예산으로 다시 찾아봐도 카탈로그 한계 때문에 똑같은(더 안 비싼)
+                // 조합이 나오면 안내 자체를 보여주지 않는다. 그래야 사용자가 안내를 보고 예산을
+                // 늘려 다시 눌렀을 때 반드시 더 나은(더 비싼) 조합을 받게 된다는 게 보장된다.
+                AiPlanQuickResultDTO bumpedFit = candidateBuilder.recommend(
+                        region, suggestion.suggestedBudget(), null, makeupOnly);
+                BigDecimal currentPrice = budgetFit.getCandidates().get(0).getPackagePrice();
+                BigDecimal bumpedPrice = !bumpedFit.getCandidates().isEmpty()
+                        ? bumpedFit.getCandidates().get(0).getPackagePrice() : null;
+                boolean wouldActuallyImprove = bumpedPrice != null && currentPrice != null
+                        && bumpedPrice.longValue() > currentPrice.longValue();
+                if (wouldActuallyImprove) {
+                    budgetFit.setSuggestedBudget(suggestion.suggestedBudget());
+                    budgetFit.setMessage(suggestion.message());
                 }
+                // 이 조합은 AI가 고른 게 아니라 예산 초과로 규칙 기반 엔진이 대신 찾은 대안이라
+                // 이유 설명이 없다 - 확정된 4곳을 그대로 AI한테 보여주고 설명만 받아온다.
+                explainWithAi(budgetFit.getCandidates().get(0), requestDTO);
+                return attachSession(budgetFit, budget, region, requestDTO, "AI_FALLBACK");
             }
         }
 
-        boolean anyExcluded = combo.getHallName() == null || combo.getStudioName() == null
-                || combo.getDressName() == null || combo.getMakeupName() == null;
-        StringBuilder message = new StringBuilder("AI가 취향과 자유 입력을 반영해서 골라줬어요.");
-        if (anyExcluded) {
-            message.append(" 요청하신 카테고리는 빼고 나머지만 담았어요.");
-        }
-        candidateBuilder.appendBudgetGapMessage(message, combo.getPackagePrice(), budget);
-
+        // 예산 안내가 있으면 그 문구 하나만 보여준다 - "AI가 골라줬다" 같은 부가 설명은 결과
+        // 화면 배너에 안 보여주기로 정리했다(예산 늘리기 안내 전용으로만 씀).
         return attachSession(AiPlanQuickResultDTO.builder()
                 .candidates(List.of(combo))
                 .regionRelaxed(false)
-                .message(message.toString())
+                .message(suggestion != null ? suggestion.message() : null)
+                .suggestedBudget(suggestion != null ? suggestion.suggestedBudget() : null)
                 .build(), budget, region, requestDTO, "AI");
     }
 
     // 규칙 기반 경로(AiPlanCandidateBuilder)에 넣은 것과 같은 방식 - AI가 고른 조합도 합계가 예산보다
     // 500만원 넘게 모자라면, 카테고리 순서대로 남은 여유 예산 안에서 더 비싼 대안이 있으면 갈아탄다.
     // 사용자가 통째로 빼달라고 한 카테고리(cmno null)는 건드리지 않는다.
-    private void fillComboTowardBudget(AiPlanPackageCandidateDTO combo, String region, Long budget) {
+    private boolean fillComboTowardBudget(AiPlanPackageCandidateDTO combo, String region, Long budget) {
 
         long total = combo.getPackagePrice() != null ? combo.getPackagePrice().longValue() : 0L;
         long leftover = budget - total;
+        boolean anyUpgraded = false;
 
         for (CompanyCategory category : AiPlanCandidateBuilder.UPGRADE_ORDER) {
             if (leftover <= AiPlanCandidateBuilder.BUDGET_TOLERANCE) {
@@ -199,12 +282,14 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
             }
 
             long gained = upgraded.getPriceAvg().longValue() - current.getPriceAvg().longValue();
-            applyUpgrade(combo, category, upgraded);
+            applyUpgrade(combo, category, upgraded, budget, region);
             leftover -= gained;
             total += gained;
+            anyUpgraded = true;
         }
 
         combo.setPackagePrice(BigDecimal.valueOf(total));
+        return anyUpgraded;
     }
 
     private Long cmnoOf(AiPlanPackageCandidateDTO combo, CompanyCategory category) {
@@ -216,8 +301,13 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
         };
     }
 
-    private void applyUpgrade(AiPlanPackageCandidateDTO combo, CompanyCategory category, Company upgraded) {
-        String reason = "예산에 맞춰 조금 더 여유 있는 곳으로 조정했어요";
+    private void applyUpgrade(AiPlanPackageCandidateDTO combo, CompanyCategory category, Company upgraded,
+                              Long budget, String region) {
+        // AI가 원래 고른 업체를 통째로 다른 곳(upgraded)으로 바꿔치기하는 거라, AI가 그 업체에 대해
+        // 준 원래 설명은 더 이상 안 맞는다 - 새 업체 기준으로 다시 설명을 만든다(예산/지역 매칭 등,
+        // pickReason 재사용). AI를 한 번 더 불러서 새로 설명받는 것보단 덜 자세하지만, 최소한
+        // "예산에 맞춰 조정했어요" 같은 의미 없는 문구보단 낫다.
+        String reason = candidateBuilder.pickReason(category, upgraded, budget, region);
         switch (category) {
             case HALL -> {
                 HallItem hallItem = candidateBuilder.resolveHallItem(upgraded);
@@ -246,12 +336,20 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
                 combo.setDressReason(reason);
             }
             case MAKEUP -> {
+                // 예산 업그레이드로 갈아탄 업체라 원래 요청한 패키지 타입을 갖고 있는지 보장 안 됨 -
+                // 그 타입을 파는지 다시 확인하고, 못 파는 업체면 그 업체가 실제로 파는 것 중 가장
+                // 풍성한 패키지로 대신 채운다(가격도 그 패키지 실제가로 다시 계산).
+                MakeupPackageType requested = combo.getMakeupPackageType() != null
+                        ? MakeupPackageType.valueOf(combo.getMakeupPackageType())
+                        : null;
+                MakeupPackageType groundedType = (requested != null && candidateBuilder.makeupSupports(upgraded, requested))
+                        ? requested
+                        : candidateBuilder.bestMakeupType(upgraded);
                 combo.setMakeupCmno(upgraded.getCmno());
                 combo.setMakeupName(upgraded.getName());
                 combo.setMakeupImageUrl(AiPlanCandidateBuilder.firstImage(upgraded));
-                combo.setMakeupPrice(upgraded.getPriceAvg());
-                // 예산 업그레이드로 갈아탄 업체라 원래 요청한 패키지 타입을 갖고 있는지 보장 안 됨 - 초기화.
-                combo.setMakeupPackageType(null);
+                combo.setMakeupPrice(candidateBuilder.resolveMakeupPrice(upgraded, groundedType));
+                combo.setMakeupPackageType(groundedType != null ? groundedType.name() : null);
                 combo.setMakeupReason(reason);
             }
         }
@@ -260,6 +358,12 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
     private AiPlanQuickResultDTO fallback(String region, Long budget, AiPlanDetailRequestDTO requestDTO) {
         AiPlanQuickResultDTO result = candidateBuilder.recommend(
                 region, budget, requestDTO.getGuestCount(), AiPlanCategoryPreferences.fromDetailRequest(requestDTO));
+        // 이 경로는 AI 호출 자체를 아예 안 거치거나 실패해서 규칙 기반으로 대신 찾은 조합이라
+        // 이유 설명이 없다 - 확정된 4곳을 그대로 AI한테 보여주고 설명만 받아온다(실패해도 조용히
+        // 무시하고 기존 계산된 이유로 넘어감).
+        if (!result.getCandidates().isEmpty()) {
+            explainWithAi(result.getCandidates().get(0), requestDTO);
+        }
         return attachSession(result, budget, region, requestDTO, "AI_FALLBACK");
     }
 
@@ -448,11 +552,23 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
         }
     }
 
+    // AI가 그 카테고리를 왜 골랐는지 직접 설명해준 한국어 문장(디테일함, 예: "내추럴한 무드라
+    // 요청하신 감성과 잘 맞아요")을 우선 쓴다. AI가 이유를 안 채워준 예외적인 경우에만 예산/지역
+    // 매칭 여부로 계산한 문구로 대체한다. AiPlanSessionSupport.createSession이 이 값을 세션에
+    // 그대로 저장해서, 이후 확정/새로고침/조합 히스토리 배지로 다시 봐도 이 설명이 유지된다.
+    private String reasonOrFallback(String aiReason, CompanyCategory category, Company company,
+                                    Long budget, String region) {
+        if (aiReason != null && !aiReason.isBlank()) {
+            return aiReason;
+        }
+        return candidateBuilder.pickReason(category, company, budget, region);
+    }
+
     // ── AI 응답 파싱 + 그라운딩 재검증 ─────────────────────────────────
 
     private AiPlanPackageCandidateDTO parseAndValidate(String raw, Map<CompanyCategory, List<Company>> pools,
                                                        String dressStyleRaw, MakeupPackageType requestedMakeupType,
-                                                       Set<Long> makeupTypeCmnos) {
+                                                       Set<Long> makeupTypeCmnos, Long budget, String region) {
 
         // 프론트가 칩 중복선택 결과를 콤마로 이어붙여 보내므로(예: "머메이드,벨라인") 여기서 쪼갠다.
         List<String> dressStyleKeywords = dressStyleRaw == null || dressStyleRaw.isBlank()
@@ -489,7 +605,7 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
             MakeupPackageType groundedMakeupType = (!makeup.excluded() && requestedMakeupType != null
                     && makeupTypeCmnos.contains(makeup.company().getCmno()))
                     ? requestedMakeupType
-                    : null;
+                    : (makeup.excluded() ? null : candidateBuilder.bestMakeupType(makeup.company()));
             String makeupPackageType = groundedMakeupType != null ? groundedMakeupType.name() : null;
 
             DressItem dressItem = dress.excluded() ? null
@@ -517,14 +633,16 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
                     .hallCmno(hall.excluded() ? null : hall.company().getCmno())
                     .hallName(hall.excluded() ? null : hall.company().getName())
                     .hallRoomName(hallItem != null ? hallItem.getItemName() : null)
-                    .hallReason(hall.excluded() ? "요청하신 대로 이번엔 빼고 찾았어요" : hall.reason())
+                    .hallReason(hall.excluded() ? "요청하신 대로 이번엔 빼고 찾았어요"
+                            : reasonOrFallback(hall.reason(), CompanyCategory.HALL, hall.company(), budget, region))
                     .hallImageUrl(hall.excluded() ? null
                             : (hallItem != null ? hallItem.getImageUrl() : AiPlanCandidateBuilder.firstImage(hall.company())))
                     .hallPrice(hall.excluded() ? null
                             : (hallItem != null ? hallItem.getPrice() : hall.company().getPriceAvg()))
                     .dressCmno(dress.excluded() ? null : dress.company().getCmno())
                     .dressName(dress.excluded() ? null : dress.company().getName())
-                    .dressReason(dress.excluded() ? "요청하신 대로 이번엔 빼고 찾았어요" : dress.reason())
+                    .dressReason(dress.excluded() ? "요청하신 대로 이번엔 빼고 찾았어요"
+                            : reasonOrFallback(dress.reason(), CompanyCategory.DRESS, dress.company(), budget, region))
                     .dressItemId(dressItem != null ? dressItem.getDressItemId() : null)
                     .dressOptionName(dressItem != null ? dressItem.getItemName() : null)
                     .dressImageUrl(dressItem != null ? dressItem.getImageUrl() : null)
@@ -532,12 +650,14 @@ public class AiPlanAiServiceImpl implements AiPlanAiService {
                             : (dressItem != null ? dressItem.getPrice() : dress.company().getPriceAvg()))
                     .studioCmno(studio.excluded() ? null : studio.company().getCmno())
                     .studioName(studio.excluded() ? null : studio.company().getName())
-                    .studioReason(studio.excluded() ? "요청하신 대로 이번엔 빼고 찾았어요" : studio.reason())
+                    .studioReason(studio.excluded() ? "요청하신 대로 이번엔 빼고 찾았어요"
+                            : reasonOrFallback(studio.reason(), CompanyCategory.STUDIO, studio.company(), budget, region))
                     .studioImageUrl(studio.excluded() ? null : AiPlanCandidateBuilder.firstImage(studio.company()))
                     .studioPrice(studio.excluded() ? null : studio.company().getPriceAvg())
                     .makeupCmno(makeup.excluded() ? null : makeup.company().getCmno())
                     .makeupName(makeup.excluded() ? null : makeup.company().getName())
-                    .makeupReason(makeup.excluded() ? "요청하신 대로 이번엔 빼고 찾았어요" : makeup.reason())
+                    .makeupReason(makeup.excluded() ? "요청하신 대로 이번엔 빼고 찾았어요"
+                            : reasonOrFallback(makeup.reason(), CompanyCategory.MAKEUP, makeup.company(), budget, region))
                     .makeupImageUrl(makeup.excluded() ? null : AiPlanCandidateBuilder.firstImage(makeup.company()))
                     .makeupPrice(makeupAmount)
                     .makeupPackageType(makeupPackageType)

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCompanyImageUrl, getOne } from "../../api/companyApi";
-import { buildCompanyOptions } from "../../util/companyOptionBuilder";
+import { buildCompanyOptions, packageTypeLabel } from "../../util/companyOptionBuilder";
 import {
   checkCompanyWish,
   addCompanyWish,
@@ -264,15 +264,20 @@ const VendorCard = ({
           {label} · {name}
         </p>
       )}
-      {optionName && <span className="block truncate text-xs text-ink-soft">{optionName}</span>}
+      {/* 웨딩홀/드레스만 optionName(연회장 이름/드레스 옵션명)이 있어서 그 줄만큼 아래 내용이
+          내려간다 - 스튜디오/메이크업처럼 optionName이 없는 카드도 같은 높이의 빈 줄을 넣어서
+          같은 행에 있는 카드끼리 가격·추천 이유·확정 버튼 위치가 나란히 맞도록 한다. */}
+      <span className={`block truncate text-xs text-ink-soft ${optionName ? "" : "invisible"}`}>
+        {optionName || " "}
+      </span>
       {displayPrice != null && (
         <span className="block text-xs font-medium text-ink-muted">{formatWon(displayPrice)}</span>
       )}
-      {/* reason은 이제 확정된 슬롯일 때만 내려옴(백엔드에서 PENDING엔 안 붙이도록 고침) -
-          그래서 일반 캡션이 아니라 "확정됨" 느낌의 작은 배지로 보여준다. */}
+      {/* "왜 이 업체를 골랐는지" - 예산/지역 기준으로 매번 새로 계산돼서 내려오는 값이라
+          (백엔드 AiPlanCandidateBuilder.pickReason) 확정 여부와 상관없이 항상 붙어있다. */}
       {reason && (
-        <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-[11px] font-medium text-green-700">
-          ✓ {reason}
+        <span className="mt-1 inline-block rounded-full bg-green-50 px-2 py-0.5 text-[11px] font-medium text-green-700">
+          {reason}
         </span>
       )}
 
@@ -290,8 +295,8 @@ const VendorCard = ({
           {pending === "CONFIRM" || pending === "UNLOCK"
             ? "처리중..."
             : isConfirmed
-              ? "확정됨 · 해제"
-              : "확정하기"}
+              ? "업체 확정됨 · 해제하기"
+              : "이 업체로 확정하기"}
         </button>
       )}
     </div>
@@ -365,7 +370,7 @@ const SlotCard = ({ label, cmno, name, optionName, imageUrl, reason, price, pack
 
 // 카드 그리드에 보이는 순서 그대로(2x2) - 홀/스튜디오/드레스/메이크업
 const SLOT_DEFS = [
-  { key: "hall", category: "HALL", label: "홀", optionKey: "hallRoomName" },
+  { key: "hall", category: "HALL", label: "웨딩홀", optionKey: "hallRoomName" },
   { key: "studio", category: "STUDIO", label: "스튜디오", optionKey: null },
   {
     key: "dress",
@@ -381,6 +386,16 @@ const SLOT_DEFS = [
     packageTypeKey: "makeupPackageType",
   },
 ];
+
+// 웨딩홀/드레스는 실제 옵션(연회장/드레스 아이템)명이 있지만, 스튜디오는 업체 단위로만 팔아서
+// 옵션 자체가 없다 - 그래도 빈칸으로 두면 옆 카드보다 위로 붕 떠 보이니 고정 문구를 채운다.
+// 메이크업은 백엔드가 확정한 makeupPackageType(취향이 없었으면 그 업체가 실제로 파는 것 중
+// 가장 풍성한 조합으로 대체됨 - AiPlanCandidateBuilder.bestMakeupType)을 한글 라벨로 보여준다.
+const resolveOptionName = (def, combo) => {
+  if (def.key === "studio") return "스튜디오 촬영/이용";
+  if (def.key === "makeup") return packageTypeLabel[combo.makeupPackageType] || null;
+  return def.optionKey ? combo[def.optionKey] : null;
+};
 
 // 조합에서 실제로 예약 가능한(=EXCLUDED 아닌) 슬롯만 {cmno, label, name} 형태로 뽑음
 const reservableSlots = (combo) =>
@@ -489,10 +504,14 @@ const ResultCards = ({
         </div>
       )}
 
+      {/* 결과 화면 상단 배너 - 확정/제외/다듬기 등 액션별 확인 메시지("말씀하신 대로
+          반영했어요" 등)는 매번 뜨는 게 오히려 소음이라는 피드백으로 백엔드에서 이제 그런
+          경우엔 message를 아예 null로 내려준다. 그래서 이 배너는 예산 늘리기 안내나
+          "확정된 카테고리라 못 바꿨어요" 같은 진짜 알려줄 가치가 있는 경우에만 뜬다. */}
       {message && (
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-surface px-5 py-3 text-sm text-ink-soft">
           <span>{message}</span>
-          {suggestedBudget != null && onBumpBudget && (
+          {onBumpBudget && (
             <button
               type="button"
               onClick={() => onBumpBudget(suggestedBudget)}
@@ -575,7 +594,7 @@ const ResultCards = ({
                   label={def.label}
                   cmno={soleCombo[`${def.key}Cmno`]}
                   name={soleCombo[`${def.key}Name`]}
-                  optionName={def.optionKey ? soleCombo[def.optionKey] : null}
+                  optionName={resolveOptionName(def, soleCombo)}
                   imageUrl={soleCombo[`${def.key}ImageUrl`]}
                   reason={soleCombo[`${def.key}Reason`]}
                   price={soleCombo[`${def.key}Price`]}

@@ -24,11 +24,11 @@ import com.wedding.aiplan.dto.AiPlanProgressDTO;
 import com.wedding.aiplan.repository.AiPlanSessionHistoryRepository;
 import com.wedding.aiplan.repository.AiPlanSessionRepository;
 import com.wedding.company.domain.Company;
+import com.wedding.company.domain.CompanyCategory;
 import com.wedding.company.domain.DressItem;
 import com.wedding.company.domain.HallItem;
 import com.wedding.company.domain.MakeupPackageType;
 import com.wedding.company.repository.CompanyRepository;
-import com.wedding.company.repository.MakeupPackageRepository;
 import com.wedding.member.dto.MemberDTO;
 
 import lombok.RequiredArgsConstructor;
@@ -51,7 +51,6 @@ public class AiPlanSessionSupport {
     private final AiPlanSessionRepository sessionRepository;
     private final AiPlanSessionHistoryRepository historyRepository;
     private final CompanyRepository companyRepository;
-    private final MakeupPackageRepository makeupPackageRepository;
     private final AiPlanCandidateBuilder candidateBuilder;
     private final ObjectMapper objectMapper;
 
@@ -68,10 +67,13 @@ public class AiPlanSessionSupport {
                 .brideName(brideName)
                 .makeupPackageType(makeupPackageType)
                 .mode(mode)
-                .hallSlot(slotOf(combo.getHallCmno()))
-                .studioSlot(slotOf(combo.getStudioCmno()))
-                .dressSlot(slotOf(combo.getDressCmno()))
-                .makeupSlot(slotOf(combo.getMakeupCmno()))
+                // 처음 추천 시점에 이미 계산해둔 "왜 이 업체를 골랐는지" 설명(AI가 준 이유거나
+                // 규칙 기반 조합 사유)을 슬롯에 같이 저장한다 - 안 그러면 세션엔 cmno만 남고
+                // 그 이유는 이 응답 한 번 보여주고 사라져버린다.
+                .hallSlot(slotOf(combo.getHallCmno(), combo.getHallReason()))
+                .studioSlot(slotOf(combo.getStudioCmno(), combo.getStudioReason()))
+                .dressSlot(slotOf(combo.getDressCmno(), combo.getDressReason()))
+                .makeupSlot(slotOf(combo.getMakeupCmno(), combo.getMakeupReason()))
                 .build();
 
         session = sessionRepository.save(session);
@@ -100,10 +102,11 @@ public class AiPlanSessionSupport {
 
     // cmno가 없으면(예: AI 모드에서 카테고리를 통째로 제외한 조합) 처음부터 EXCLUDED로 시작한다 -
     // 안 그러면 리파인 프롬프트/사이드패널 상태가 "아직 안 고른 PENDING"으로 잘못 표시된다.
-    private SlotState slotOf(Long cmno) {
+    private SlotState slotOf(Long cmno, String pickReason) {
         return SlotState.builder()
                 .status(cmno != null ? SlotStatus.PENDING : SlotStatus.EXCLUDED)
                 .selectedCmno(cmno)
+                .pickReason(cmno != null ? pickReason : null)
                 .build();
     }
 
@@ -199,6 +202,7 @@ public class AiPlanSessionSupport {
         m.put("status", slot.getStatus().name());
         m.put("selectedCmno", slot.getSelectedCmno());
         m.put("note", slot.getNote());
+        m.put("pickReason", slot.getPickReason());
         return m;
     }
 
@@ -222,6 +226,7 @@ public class AiPlanSessionSupport {
                 .status(SlotStatus.valueOf(node.get("status").asText()))
                 .selectedCmno(node.hasNonNull("selectedCmno") ? node.get("selectedCmno").asLong() : null)
                 .note(node.hasNonNull("note") ? node.get("note").asText() : null)
+                .pickReason(node.hasNonNull("pickReason") ? node.get("pickReason").asText() : null)
                 .build();
     }
 
@@ -270,13 +275,13 @@ public class AiPlanSessionSupport {
                 .hallImageUrl(hallItem != null ? hallItem.getImageUrl()
                         : (hall.company != null ? AiPlanCandidateBuilder.firstImage(hall.company) : null))
                 .hallPrice(hallAmount)
-                .hallReason(hall.reasonLabel())
+                .hallReason(hall.reasonOrFallback(CompanyCategory.HALL, candidateBuilder, session.getBudget(), session.getRegion()))
                 .hallStatus(hall.status.name())
                 .studioCmno(studio.cmno())
                 .studioName(studio.name())
                 .studioImageUrl(studio.company != null ? AiPlanCandidateBuilder.firstImage(studio.company) : null)
                 .studioPrice(studioAmount)
-                .studioReason(studio.reasonLabel())
+                .studioReason(studio.reasonOrFallback(CompanyCategory.STUDIO, candidateBuilder, session.getBudget(), session.getRegion()))
                 .studioStatus(studio.status.name())
                 .dressCmno(dress.cmno())
                 .dressName(dress.name())
@@ -284,13 +289,13 @@ public class AiPlanSessionSupport {
                 .dressOptionName(dressItem != null ? dressItem.getItemName() : null)
                 .dressImageUrl(dressItem != null ? dressItem.getImageUrl() : null)
                 .dressPrice(dressAmount)
-                .dressReason(dress.reasonLabel())
+                .dressReason(dress.reasonOrFallback(CompanyCategory.DRESS, candidateBuilder, session.getBudget(), session.getRegion()))
                 .dressStatus(dress.status.name())
                 .makeupCmno(makeup.cmno())
                 .makeupName(makeup.name())
                 .makeupImageUrl(makeup.company != null ? AiPlanCandidateBuilder.firstImage(makeup.company) : null)
                 .makeupPrice(makeupAmount)
-                .makeupReason(makeup.reasonLabel())
+                .makeupReason(makeup.reasonOrFallback(CompanyCategory.MAKEUP, candidateBuilder, session.getBudget(), session.getRegion()))
                 .makeupStatus(makeup.status.name())
                 .makeupPackageType(groundedMakeupType != null ? groundedMakeupType.name() : null)
                 .sourceType(sourceType)
@@ -300,29 +305,35 @@ public class AiPlanSessionSupport {
     // 세션에 저장해둔 원래 메이크업 취향(makeupPackageType)이 있어도, 지금 이 슬롯에 들어있는
     // 업체가 실제로 그 패키지를 파는지 매번 다시 확인한다 - "다시 찾기"/다듬기로 업체가 바뀌었는데
     // 취향 매칭에 실패해 아무 업체나 들어간 경우까지 그 패키지를 판다고 잘못 표시하면 안 된다.
+    // 취향이 아예 없었거나(랜덤 추천) 못 파는 업체로 바뀐 경우엔, 그 업체가 실제로 파는 것 중
+    // 가장 풍성한 패키지를 대신 보여준다.
     private MakeupPackageType groundedMakeupType(AiPlanSession session, Company makeupCompany) {
-        if (session.getMakeupPackageType() == null || makeupCompany == null) {
+        if (makeupCompany == null) {
             return null;
         }
-        MakeupPackageType type;
-        try {
-            type = MakeupPackageType.valueOf(session.getMakeupPackageType());
-        } catch (IllegalArgumentException e) {
-            return null;
+        MakeupPackageType preferred = null;
+        if (session.getMakeupPackageType() != null) {
+            try {
+                preferred = MakeupPackageType.valueOf(session.getMakeupPackageType());
+            } catch (IllegalArgumentException e) {
+                preferred = null;
+            }
         }
-        List<Long> supportingCmnos = makeupPackageRepository.findCompanyCmnosByPackageTypeIn(List.of(type));
-        return supportingCmnos.contains(makeupCompany.getCmno()) ? type : null;
+        if (preferred != null && candidateBuilder.makeupSupports(makeupCompany, preferred)) {
+            return preferred;
+        }
+        return candidateBuilder.bestMakeupType(makeupCompany);
     }
 
     private SlotView resolve(SlotState slot) {
         if (slot == null || slot.getStatus() == SlotStatus.EXCLUDED || slot.getSelectedCmno() == null) {
-            return new SlotView(null, slot != null ? slot.getStatus() : SlotStatus.EXCLUDED);
+            return new SlotView(null, slot != null ? slot.getStatus() : SlotStatus.EXCLUDED, null);
         }
         Company company = companyRepository.findById(slot.getSelectedCmno()).orElse(null);
-        return new SlotView(company, slot.getStatus());
+        return new SlotView(company, slot.getStatus(), slot.getPickReason());
     }
 
-    private record SlotView(Company company, SlotStatus status) {
+    private record SlotView(Company company, SlotStatus status, String pickReason) {
         Long cmno() {
             return company != null ? company.getCmno() : null;
         }
@@ -331,20 +342,17 @@ public class AiPlanSessionSupport {
             return company != null ? company.getName() : null;
         }
 
-        // PENDING엔 일부러 문구를 안 붙인다 - "요청하신 대로 다시 골랐어요"를 PENDING 전체에
-        // 붙였더니, 첫 추천 직후/새로고침 복원/조합 히스토리 배지로 예전 턴을 봤을 때도 마치
-        // 방금 다시 찾은 것처럼 보이는 버그가 있었다. "방금 이 카테고리를 다시 찾았다"는 건
-        // 특정 순간에만 참인 정보라 슬롯 상태만으로는 표현할 수 없고, 이미 각 액션이 돌려주는
-        // 상단 메시지(예: "다시 찾아봤어요.")가 그 순간에만 정확히 나타났다 사라지므로 그걸로
-        // 충분하다 - 여기서 중복으로 안 만든다.
-        String reasonLabel() {
-            if (company == null) {
+        // 슬롯에 저장해둔 "왜 이 업체를 골랐는지"가 있으면 그대로 쓰고(AI가 준 설명 등, 더 구체적),
+        // 없으면(옛날 세션이거나 다시찾기에서 못 채운 경우) 예산/지역 매칭으로 계산한 걸로 대체한다.
+        String reasonOrFallback(CompanyCategory category, AiPlanCandidateBuilder candidateBuilder,
+                                 Long budget, String region) {
+            if (status == SlotStatus.EXCLUDED || company == null) {
                 return null;
             }
-            return switch (status) {
-                case CONFIRMED -> "확정하신 곳이에요";
-                case EXCLUDED, PENDING -> null;
-            };
+            if (pickReason != null && !pickReason.isBlank()) {
+                return pickReason;
+            }
+            return candidateBuilder.pickReason(category, company, budget, region);
         }
     }
 }

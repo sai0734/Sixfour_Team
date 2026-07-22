@@ -63,9 +63,15 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
                     + "중 하나로 분류하세요. RECONSIDER면 어떤 스타일/조건을 원하는지 note에 한 문장으로 "
                     + "적고, 그 외엔 note를 빈 문자열로 두세요. 이미 확정(CONFIRMED)되어 있다고 표시된 "
                     + "카테고리는 사용자가 뭐라고 말하든 반드시 UNCHANGED로 두세요(확정 해제는 버튼으로만 가능). "
+                    + "다만 사용자 발화가 그 확정된 카테고리도 같이 바꾸고 싶어하는 것처럼 보이면(예: \"나머지 "
+                    + "새로운 걸로 다시 추천해줘\", \"전부 다시 찾아줘\" 등) 그 카테고리의 blocked를 true로 "
+                    + "표시하세요 - action은 그래도 UNCHANGED로 두고 blocked만 true로 바꾸는 겁니다. "
+                    + "그 외에는 blocked를 항상 false로 두세요.\n"
                     + "반드시 아래 JSON 형식으로만 응답하고 다른 설명은 절대 붙이지 마세요:\n"
-                    + "{\"hall\":{\"action\":\"...\",\"note\":\"...\"},\"studio\":{\"action\":\"...\",\"note\":\"...\"},"
-                    + "\"dress\":{\"action\":\"...\",\"note\":\"...\"},\"makeup\":{\"action\":\"...\",\"note\":\"...\"}}";
+                    + "{\"hall\":{\"action\":\"...\",\"note\":\"...\",\"blocked\":false},"
+                    + "\"studio\":{\"action\":\"...\",\"note\":\"...\",\"blocked\":false},"
+                    + "\"dress\":{\"action\":\"...\",\"note\":\"...\",\"blocked\":false},"
+                    + "\"makeup\":{\"action\":\"...\",\"note\":\"...\",\"blocked\":false}}";
 
     @Override
     public AiPlanQuickResultDTO refine(AiPlanRefineRequestDTO requestDTO) {
@@ -93,12 +99,47 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
 
         AiPlanPackageCandidateDTO combo = sessionSupport.toCombo(session, "SESSION_COMBO", null);
 
+        // 결과 화면 배너는 원래 예산 늘리기 안내 전용으로만 쓰기로 정리했는데, "확정해둔 카테고리를
+        // 깜빡하고 같이 바꿔달라고 했다가 조용히 무시당하는" 것도 사용자가 꼭 알아야 하는 정보라
+        // 예외로 같이 띄운다. 예산 안내가 있으면 그게 우선이고, 없을 때만 확정 잠금 안내를 보여준다.
+        AiPlanCandidateBuilder.BudgetSuggestion suggestion =
+                AiPlanCandidateBuilder.budgetSuggestion(combo.getPackagePrice(), session.getBudget());
+
+        List<String> blockedLabels = actions.entrySet().stream()
+                .filter(e -> e.getValue().blocked())
+                .map(e -> labelFor(e.getKey()))
+                .toList();
+
+        String message;
+        Long suggestedBudget;
+        if (suggestion != null) {
+            message = suggestion.message();
+            suggestedBudget = suggestion.suggestedBudget();
+        } else if (!blockedLabels.isEmpty()) {
+            message = String.join(" · ", blockedLabels)
+                    + "는 이미 확정되어 있어서 수정하지 못했어요. 먼저 확정을 해제해주세요.";
+            suggestedBudget = null;
+        } else {
+            message = "말씀하신 대로 반영했어요.";
+            suggestedBudget = null;
+        }
+
         return AiPlanQuickResultDTO.builder()
                 .sessionId(session.getSessionId())
                 .weddingDate(session.getWeddingDate())
                 .candidates(List.of(combo))
-                .message("말씀하신 대로 반영했어요.")
+                .message(message)
+                .suggestedBudget(suggestedBudget)
                 .build();
+    }
+
+    private String labelFor(CompanyCategory category) {
+        return switch (category) {
+            case HALL -> "웨딩홀";
+            case STUDIO -> "스튜디오";
+            case DRESS -> "드레스";
+            case MAKEUP -> "메이크업";
+        };
     }
 
     // 사이드패널 확정/해제/다시찾기 버튼 - AI 안 거치고 즉시 반영.
@@ -113,19 +154,14 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
         SlotState slot = slotFor(session, category);
         String action = requestDTO.getAction();
 
-        String message;
         switch (action) {
-            case "CONFIRM" -> {
-                slot.changeStatus(SlotStatus.CONFIRMED);
-                message = "확정했어요. 이제부터 이 카테고리는 수정하기에서 안 건드려요.";
-            }
+            case "CONFIRM" -> slot.changeStatus(SlotStatus.CONFIRMED);
             case "RECONSIDER" -> {
-                if (slot.getStatus() == SlotStatus.CONFIRMED) {
-                    message = "확정된 카테고리는 다시 찾을 수 없어요. 먼저 해제해주세요.";
-                } else {
+                if (slot.getStatus() != SlotStatus.CONFIRMED) {
                     reconsiderOne(session, category);
-                    message = "다시 찾아봤어요.";
                 }
+                // 확정된 카테고리는 다시 찾기가 안 먹는다 - 프론트에서 버튼 자체가 비활성으로
+                // 보이니 여기서는 조용히 무시한다(배너로 알릴 만큼 놀라운 상황이 아님).
             }
             case "EXCLUDE" -> {
                 // 확정 상태여도 X는 바로 제외되게 한다 - 확정된 카테고리는 원래 이 액션을
@@ -134,12 +170,8 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
                 // 예약해서 이 조합에서 뺀다"는 뜻이라 확정 여부와 상관없이 항상 되는 게 맞다.
                 slot.changeStatus(SlotStatus.EXCLUDED);
                 slot.changeSelectedCmno(null);
-                message = "제외했어요. 다른 곳에서 예약하신 걸로 볼게요.";
             }
-            default -> {
-                slot.changeStatus(SlotStatus.PENDING);
-                message = "확정을 해제했어요.";
-            }
+            default -> slot.changeStatus(SlotStatus.PENDING);
         }
 
         // 사이드패널 버튼은 상단 조합 히스토리 배지에 새 항목으로 안 남는다 - 사용자가 자유발화로
@@ -150,11 +182,19 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
 
         AiPlanPackageCandidateDTO combo = sessionSupport.toCombo(session, "SESSION_COMBO", null);
 
+        // 결과 화면 배너는 예산 늘리기 안내 전용으로만 쓰기로 정리했다 - "확정했어요" 같은
+        // 액션별 안내는 버튼 자체의 상태 변화(색/문구)로 이미 보이니 배너로 또 안 띄운다.
+        // 다만 이 조정 이후에도 합계가 예산을 넘으면 그건 계속 보여줄 가치가 있는 정보라
+        // 그때만 배너를 띄운다.
+        AiPlanCandidateBuilder.BudgetSuggestion suggestion =
+                AiPlanCandidateBuilder.budgetSuggestion(combo.getPackagePrice(), session.getBudget());
+
         return AiPlanQuickResultDTO.builder()
                 .sessionId(session.getSessionId())
                 .weddingDate(session.getWeddingDate())
                 .candidates(List.of(combo))
-                .message(message)
+                .message(suggestion != null ? suggestion.message() : null)
+                .suggestedBudget(suggestion != null ? suggestion.suggestedBudget() : null)
                 .build();
     }
 
@@ -185,6 +225,9 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
         target.changeStatus(SlotStatus.PENDING);
         target.changeSelectedCmno(picked != null && picked.company() != null ? picked.company().getCmno() : null);
         target.changeNote(null);
+        target.changePickReason(picked != null && picked.company() != null
+                ? candidateBuilder.pickReason(category, picked.company(), categoryBudget, session.getRegion())
+                : null);
     }
 
     private double ratioFor(CompanyCategory category) {
@@ -214,19 +257,18 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
         sessionSupport.applySnapshot(session, target);
 
         AiPlanPackageCandidateDTO combo = sessionSupport.toCombo(session, "SESSION_COMBO", null);
-        BudgetGapInfo gapInfo = budgetGapInfo(combo.getPackagePrice(), session.getBudget());
 
-        String message = turnNo == 0 ? "첫 추천 조합이에요." : "그때 조합을 불러왔어요.";
-        if (gapInfo != null) {
-            message = message + " " + gapInfo.message();
-        }
+        // 결과 화면 배너는 예산 늘리기 안내 전용으로만 쓰기로 정리했다 - "첫 추천 조합이에요"
+        // 같은 부가 설명은 더 이상 안 보여준다.
+        AiPlanCandidateBuilder.BudgetSuggestion suggestion =
+                AiPlanCandidateBuilder.budgetSuggestion(combo.getPackagePrice(), session.getBudget());
 
         return AiPlanQuickResultDTO.builder()
                 .sessionId(sessionId)
                 .weddingDate(session.getWeddingDate())
                 .candidates(List.of(combo))
-                .message(message)
-                .suggestedBudget(gapInfo != null ? gapInfo.suggestedBudget() : null)
+                .message(suggestion != null ? suggestion.message() : null)
+                .suggestedBudget(suggestion != null ? suggestion.suggestedBudget() : null)
                 .build();
     }
 
@@ -241,34 +283,16 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
                 .orElseThrow(() -> new RuntimeException("세션을 찾을 수 없어요"));
 
         AiPlanPackageCandidateDTO combo = sessionSupport.toCombo(session, "SESSION_COMBO", null);
-        BudgetGapInfo gapInfo = budgetGapInfo(combo.getPackagePrice(), session.getBudget());
+        AiPlanCandidateBuilder.BudgetSuggestion suggestion =
+                AiPlanCandidateBuilder.budgetSuggestion(combo.getPackagePrice(), session.getBudget());
 
         return AiPlanQuickResultDTO.builder()
                 .sessionId(sessionId)
                 .weddingDate(session.getWeddingDate())
                 .candidates(List.of(combo))
-                .message(gapInfo != null ? gapInfo.message() : null)
-                .suggestedBudget(gapInfo != null ? gapInfo.suggestedBudget() : null)
+                .message(suggestion != null ? suggestion.message() : null)
+                .suggestedBudget(suggestion != null ? suggestion.suggestedBudget() : null)
                 .build();
-    }
-
-    private record BudgetGapInfo(String message, Long suggestedBudget) {
-    }
-
-    // AiPlanCandidateBuilder.appendBudgetGapMessage와 같은 조건/문구를 쓰되, 세션 복원·턴 보기처럼
-    // "이미 만들어진 조합"을 다시 보여줄 때 재사용할 수 있도록 메시지+제안 예산을 함께 돌려준다.
-    private BudgetGapInfo budgetGapInfo(java.math.BigDecimal totalPrice, Long budget) {
-        if (budget == null || budget <= 0 || totalPrice == null) {
-            return null;
-        }
-        long gap = totalPrice.longValue() - budget;
-        if (gap <= AiPlanCandidateBuilder.BUDGET_TOLERANCE) {
-            return null;
-        }
-        String message = String.format(
-                "입력하신 조건에 맞는 조합을 찾다 보니 예산보다 %,d원 더 필요해요. 예산을 이만큼 늘리면 이 조합으로 예약할 수 있어요.",
-                gap);
-        return new BudgetGapInfo(message, budget + gap);
     }
 
     // 다듬기 대화 기록 - 턴별 사용자 발화만 뽑아서 돌려줌 (슬롯 스냅샷 JSON은 안 내려줌)
@@ -311,6 +335,9 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
         }
 
         applyWeddingPlan(email, session);
+        // 로그인 여부와 무관하게 "담기"를 눌렀다는 사실 자체를 표시 - DB 정리 배치가 이 값만
+        // 보고 삭제 대상에서 뺀다(로그인 상태로 세션을 만들었다고 자동으로 담아진 걸로 치지 않음).
+        session.changeAppliedToPlan(true);
 
         return Map.of(
                 "RESULT", "SUCCESS",
@@ -396,7 +423,8 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
             default -> null; // UNCHANGED - 상태를 안 바꿈
         };
         String note = node.hasNonNull("note") ? node.get("note").asText() : null;
-        return new Action(intent, (note == null || note.isBlank()) ? null : note);
+        boolean blocked = node.hasNonNull("blocked") && node.get("blocked").asBoolean();
+        return new Action(intent, (note == null || note.isBlank()) ? null : note, blocked);
     }
 
     private String buildPrompt(AiPlanSession session, String message) {
@@ -492,7 +520,64 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
             target.changeStatus(SlotStatus.PENDING);
             target.changeSelectedCmno(picked != null && picked.company() != null ? picked.company().getCmno() : null);
             target.changeNote(action.note());
+            // 플랜 수정하기(다듬기 채팅)로 새 업체를 받으면 왜 그 업체를 골랐는지 AI한테 다시
+            // 설명을 받는다 - 예산/지역 매칭 정도로만 계산한 문구보다 훨씬 구체적이다. 실패하면
+            // (네트워크 등) 조용히 계산된 이유로 대체한다.
+            String reason = null;
+            if (picked != null && picked.company() != null) {
+                reason = explainReasonWithAi(category, picked.company(), action.note(), session);
+                if (reason == null) {
+                    reason = candidateBuilder.pickReason(category, picked.company(), categoryBudget, session.getRegion());
+                }
+            }
+            target.changePickReason(reason);
         }
+    }
+
+    // 다듬기 채팅으로 새로 고른 업체 하나에 대해 "왜 잘 맞는지" AI 설명을 받는다. 사용자가 남긴
+    // 요청(note, 예: "더 화려한 걸로")까지 같이 넘겨서 그 요청에 맞춘 설명이 나오게 한다.
+    // 실패하면 null을 돌려주고, 호출부에서 계산된 이유로 대체한다.
+    private String explainReasonWithAi(CompanyCategory category, Company company, String note, AiPlanSession session) {
+        try {
+            StringBuilder prompt = new StringBuilder();
+            prompt.append("[업체]\n").append(categoryLabel(category)).append(": ").append(company.getName());
+            if (company.getPriceAvg() != null) {
+                prompt.append(" | ").append(String.format("%,d원", company.getPriceAvg().longValue()));
+            }
+            if (company.getDescription() != null && !company.getDescription().isBlank()) {
+                prompt.append(" | ").append(company.getDescription());
+            }
+            prompt.append("\n[사용자 요청]\n").append(note != null ? note : "(특별한 요청 없음)");
+            if (session.getRegion() != null) {
+                prompt.append("\n[지역] ").append(session.getRegion());
+            }
+
+            OpenAiResponseDTO response = openAiClient.getJsonChatCompletion(List.of(
+                    OpenAiMessageDTO.of("system", EXPLAIN_PICK_SYSTEM_PROMPT),
+                    OpenAiMessageDTO.of("user", prompt.toString())));
+
+            String raw = response.getChoices().get(0).getMessage().getContent();
+            JsonNode root = objectMapper.readTree(raw);
+            return root.hasNonNull("reason") ? root.get("reason").asText() : null;
+        } catch (Exception e) {
+            log.warn("AiPlan 다듬기 이유 설명 호출 실패 - 계산된 이유로 대체", e);
+            return null;
+        }
+    }
+
+    private static final String EXPLAIN_PICK_SYSTEM_PROMPT =
+            "당신은 웨딩 준비 컨설턴트입니다. 아래 업체 정보와 사용자 요청을 보고, 이 업체가 왜 "
+                    + "사용자 요청에 잘 맞는지 한국어 한 문장으로 구체적으로 설명하세요(업체 이름이나 "
+                    + "특징을 직접 언급하며 설득력 있게, \"예산 내\"/\"지역에서 골랐어요\" 같은 뻔한 말은 "
+                    + "피하세요). 반드시 아래 JSON 형식으로만 응답하세요: {\"reason\":\"...\"}";
+
+    private String categoryLabel(CompanyCategory category) {
+        return switch (category) {
+            case HALL -> "웨딩홀";
+            case STUDIO -> "스튜디오";
+            case DRESS -> "드레스";
+            case MAKEUP -> "메이크업";
+        };
     }
 
     // 홀은 이제 구조화 값(HallType enum)으로 매칭하는데, 여기 note는 AI가 다듬기 대화에서 만들어낸
@@ -545,6 +630,6 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    private record Action(SlotStatus status, String note) {
+    private record Action(SlotStatus status, String note, boolean blocked) {
     }
 }

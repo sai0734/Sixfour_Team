@@ -23,8 +23,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // 페이지 갔다가 돌아오면(=새로고침/세션 복원, GET /api/aiplan/session/{id}) 사라져 있었음.
 // 원인은 그 안내가 세션에 저장되는 값이 아니라 최초 추천 응답에만 실려있던 일회성 필드였기
 // 때문 - 세션 복원 시에도 지금 조합 합계가 여전히 예산을 넘으면 매번 다시 계산해서 붙이도록
-// 고쳤다(AiPlanRefineServiceImpl.getSession/budgetGapInfo). 롤백 기본값이라 테스트 끝나면
-// DB에 안 남는다.
+// 고쳤다(AiPlanCandidateBuilder.budgetSuggestion, AiPlanRefineServiceImpl.getSession에서 재사용).
+// 추가로 제안 증액분은 최대 500만원까지만 보여주도록 상한도 걸었다. 롤백 기본값이라 테스트
+// 끝나면 DB에 안 남는다.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Log4j2
@@ -69,5 +70,12 @@ public class AiPlanBudgetGapPersistenceTests {
         assertTrue(sessionBody.get("message").toString().contains("예산"),
                 "복원된 메시지도 예산 안내 내용이어야 함");
         assertNotNull(sessionBody.get("suggestedBudget"), "세션 복원 후에도 제안 예산이 다시 계산돼야 함");
+
+        // 실제 부족분은 훨씬 클 텐데(예산 100만원으로 조합을 맞출 순 없음), 제안 증액분은
+        // 최대 500만원까지만이어야 한다 - "1200만원 더 넣어야 한다" 같은 비현실적인 숫자를
+        // 그대로 보여주지 않기 위한 상한선.
+        long increment = ((Number) sessionBody.get("suggestedBudget")).longValue() - 1_000_000L;
+        assertTrue(increment <= 5_000_000L,
+                "제안 증액분은 500만원을 넘으면 안 됨 (실제 증액=" + increment + ")");
     }
 }
