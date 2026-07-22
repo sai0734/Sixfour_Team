@@ -1,6 +1,6 @@
 package com.wedding.aidress.controller;
 
-import com.wedding.aidress.dto.AiDressTryOnRequestDTO;
+import com.wedding.aidress.dto.AiDressBackgroundRequestDTO;
 import com.wedding.aidress.dto.AiDressTryOnResponseDTO;
 import com.wedding.aidress.dto.DressTryOnItemDTO;
 import com.wedding.aidress.dto.TryOnHistoryDTO;
@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,37 +38,31 @@ public class AiDressTryOnController {
     return aiDressTryOnService.getDressList(pageRequestDTO);
   }
 
+  /** 내 사진 + 드레스 합성. 사람 사진은 upload에 저장하지 않음 */
   @PreAuthorize("hasAnyRole('USER')")
-  @PostMapping(value = "/my-photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  public Map<String, String> uploadMyPhoto(
-      Principal principal,
-      @RequestPart("file") MultipartFile file) {
-    String fileName = aiDressTryOnService.saveMyPhoto(principal.getName(), file);
-    return Map.of("photoFileName", fileName);
-  }
-
-  @PreAuthorize("hasAnyRole('USER')")
-  @GetMapping("/my-photo")
-  public Map<String, String> getMyPhoto(Principal principal) {
-    return Map.of("photoFileName", aiDressTryOnService.getMyPhoto(principal.getName()));
-  }
-
-  @PreAuthorize("hasAnyRole('USER')")
-  @PostMapping("/try-on")
+  @PostMapping(value = "/try-on", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public AiDressTryOnResponseDTO tryOn(
       Principal principal,
-      @RequestBody AiDressTryOnRequestDTO requestDTO) {
-    return aiDressTryOnService.tryOn(principal.getName(), requestDTO);
+      @RequestParam("dressItemId") Long dressItemId,
+      @RequestPart("file") MultipartFile file) {
+    return aiDressTryOnService.tryOn(principal.getName(), dressItemId, file);
   }
 
-  /** 이전 합성 결과 기록 (최신순) */
+  /** 이미 합성된 이미지에 배경만 적용 (기록은 프론트에서 드레스 합성 직후 바로 표시) */
+  @PreAuthorize("hasAnyRole('USER')")
+  @PostMapping("/apply-background")
+  public AiDressTryOnResponseDTO applyBackground(
+      @RequestBody AiDressBackgroundRequestDTO requestDTO) {
+    return aiDressTryOnService.applyBackground(requestDTO);
+  }
+
+  /** 이전 합성 결과 기록 (최신순) — 레거시 DB용. 신규 합성은 프론트 세션만 사용 */
   @PreAuthorize("hasAnyRole('USER')")
   @GetMapping("/history")
   public List<TryOnHistoryDTO> history(Principal principal) {
     return aiDressTryOnService.getHistory(principal.getName());
   }
 
-  /** 배경 프롬프트 수정(재합성). 프롬프트 비우면 CatVTON 원본으로 되돌림 */
   @PreAuthorize("hasAnyRole('USER')")
   @PutMapping("/history/{historyId}")
   public TryOnHistoryDTO updateHistory(

@@ -7,9 +7,10 @@ import lombok.Data;
 @Builder
 public class AiDressTryOnResponseDTO {
 
-  private Long historyId;
+  /** data:image/png;base64,... (서버 파일 없음) */
   private String resultImageUrl;
-  private String tryOnImageUrl;
+
+  private String resultImageBase64;
   private Long dressItemId;
   private String dressName;
   private String backgroundPrompt;

@@ -2,16 +2,11 @@ package com.wedding.aidress.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Base64;
-import java.util.UUID;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -22,7 +17,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 /**
- * CatVTON 합성 결과에 사용자 프롬프트 기반 배경을 입힌다 (OpenAI Images Edit).
+ * 배경만 교체 (OpenAI). 결과는 upload에 저장하지 않고 base64만 반환.
  */
 @Component
 @Log4j2
@@ -43,12 +38,6 @@ public class OpenAiBackgroundClient {
   @Value("${openai.image.size:1024x1536}")
   private String imageSize;
 
-  @Value("${com.wedding.upload.path}")
-  private String uploadPath;
-
-  @Value("${com.wedding.server.host}")
-  private String serverHost;
-
   public OpenAiBackgroundClient(
       @Qualifier("openAiImageRestTemplate") RestTemplate openAiImageRestTemplate,
       ObjectMapper objectMapper) {
@@ -60,42 +49,60 @@ public class OpenAiBackgroundClient {
     return StringUtils.hasText(apiKey);
   }
 
-  public String applyBackground(String tryOnImageUrl, String backgroundPrompt) {
+  /**
+   * @param tryOnImageBase64 CatVTON 결과 PNG base64
+   * @return 배경 적용 PNG base64 (디스크 저장 없음)
+   */
+  public String applyBackgroundFromBase64(String tryOnImageBase64, String backgroundPrompt) {
     if (!StringUtils.hasText(backgroundPrompt)) {
-      return tryOnImageUrl;
+      return tryOnImageBase64;
     }
     if (!isConfigured()) {
       throw new IllegalStateException(
           "배경 프롬프트를 쓰려면 OPENAI_API_KEY(또는 openai.api-key)가 필요합니다.");
     }
+    if (!StringUtils.hasText(tryOnImageBase64)) {
+      throw new IllegalArgumentException("배경 합성용 이미지가 없습니다.");
+    }
 
-    File source = resolveLocalImageFile(tryOnImageUrl);
+    byte[] imageBytes = Base64.getDecoder().decode(stripDataUrlPrefix(tryOnImageBase64));
+    ByteArrayResource imageResource =
+        new ByteArrayResource(imageBytes) {
+          @Override
+          public String getFilename() {
+            return "tryon.png";
+          }
+        };
+
     String prompt =
-        "Keep the person and their clothing/wedding dress exactly as they appear in the photo. "
-            + "Do not change face, body, pose, or garment details. "
-            + "Replace only the background with this scene: "
+        "Keep the person and their wedding dress EXACTLY as they appear — "
+            + "same dress design, lace, color, silhouette and fabric. "
+            + "Do not redesign the dress. Replace ONLY the background with: "
             + backgroundPrompt.trim()
-            + ". Photorealistic wedding photography, natural lighting.";
+            + ". Photorealistic wedding photography.";
 
     MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
     body.add("model", imageModel);
     body.add("prompt", prompt);
-    body.add("image", new FileSystemResource(source));
+    body.add("image", imageResource);
     body.add("size", imageSize);
     body.add("quality", "high");
-
+    // gpt-image-* 는 b64_json 기본 반환. response_format은 dall-e 전용이라내면 400 남.
     try {
       ResponseEntity<String> response =
           openAiImageRestTemplate.postForEntity(editUrl, new HttpEntity<>(body), String.class);
-
       if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
         throw new IllegalStateException("OpenAI 배경 합성 실패: " + response.getStatusCode());
       }
-      return parseAndSave(response.getBody());
+      return parseResultBase64(response.getBody());
     } catch (HttpClientErrorException e) {
-      log.error("OpenAI background error: status={}, body={}", e.getStatusCode(), e.getResponseBodyAsString());
+      log.error(
+          "OpenAI background error: status={}, body={}",
+          e.getStatusCode(),
+          e.getResponseBodyAsString());
       throw new IllegalStateException(
-          "OpenAI 배경 합성 실패(" + e.getStatusCode().value() + "): " + e.getResponseBodyAsString(), e);
+          "OpenAI 배경 합성 실패(" + e.getStatusCode().value() + "): " + e.getResponseBodyAsString(),
+          e);
     } catch (IllegalStateException e) {
       throw e;
     } catch (Exception e) {
@@ -103,47 +110,38 @@ public class OpenAiBackgroundClient {
     }
   }
 
-  private String parseAndSave(String responseBody) throws Exception {
+  private String parseResultBase64(String responseBody) throws Exception {
     JsonNode root = objectMapper.readTree(responseBody);
     JsonNode data0 = root.path("data").path(0);
     if (data0.isMissingNode()) {
       throw new IllegalStateException("OpenAI 응답에 data[0]이 없습니다: " + responseBody);
     }
-
     JsonNode b64 = data0.path("b64_json");
     if (!b64.isMissingNode() && StringUtils.hasText(b64.asText())) {
-      return saveBase64Image(b64.asText());
+      return b64.asText().trim();
     }
 
     JsonNode url = data0.path("url");
     if (!url.isMissingNode() && StringUtils.hasText(url.asText())) {
-      return url.asText();
+      return downloadUrlAsBase64(url.asText());
     }
     throw new IllegalStateException("OpenAI 응답에 b64_json/url이 없습니다: " + responseBody);
   }
 
-  private String saveBase64Image(String base64) throws Exception {
-    Path uploadDir = Paths.get(uploadPath);
-    if (!Files.exists(uploadDir)) {
-      Files.createDirectories(uploadDir);
+  private String downloadUrlAsBase64(String imageUrl) throws Exception {
+    ResponseEntity<byte[]> response =
+        openAiImageRestTemplate.getForEntity(imageUrl, byte[].class);
+    if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+      throw new IllegalStateException("OpenAI 결과 이미지 다운로드 실패: " + response.getStatusCode());
     }
-    String fileName = "aidress_bg_" + UUID.randomUUID() + ".png";
-    Files.write(uploadDir.resolve(fileName), Base64.getDecoder().decode(base64));
-    return serverHost + "/api/companies/images/view/" + fileName;
+    return Base64.getEncoder().encodeToString(response.getBody());
   }
 
-  private File resolveLocalImageFile(String imageUrl) {
-    String fileName = imageUrl;
-    int viewIdx = imageUrl.indexOf("/view/");
-    if (viewIdx >= 0) {
-      fileName = imageUrl.substring(viewIdx + "/view/".length());
-    } else if (imageUrl.contains("/")) {
-      fileName = imageUrl.substring(imageUrl.lastIndexOf('/') + 1);
+  private static String stripDataUrlPrefix(String value) {
+    int comma = value.indexOf(',');
+    if (value.startsWith("data:") && comma >= 0) {
+      return value.substring(comma + 1);
     }
-    File file = Paths.get(uploadPath, fileName).toFile();
-    if (!file.exists() || !file.canRead()) {
-      throw new IllegalArgumentException("배경 합성용 이미지를 찾을 수 없습니다: " + fileName);
-    }
-    return file;
+    return value;
   }
 }
