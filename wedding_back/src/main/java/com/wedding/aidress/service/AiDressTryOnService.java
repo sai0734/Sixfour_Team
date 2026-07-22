@@ -1,6 +1,6 @@
 package com.wedding.aidress.service;
 
-import com.wedding.aidress.dto.AiDressTryOnRequestDTO;
+import com.wedding.aidress.dto.AiDressBackgroundRequestDTO;
 import com.wedding.aidress.dto.AiDressTryOnResponseDTO;
 import com.wedding.aidress.dto.DressTryOnItemDTO;
 import com.wedding.aidress.dto.TryOnHistoryDTO;
@@ -14,11 +14,11 @@ public interface AiDressTryOnService {
 
   PageResponseDTO<DressTryOnItemDTO> getDressList(PageRequestDTO pageRequestDTO);
 
-  String saveMyPhoto(String memberEmail, MultipartFile file);
+  /** 내 사진은 메모리로만 전달 (upload/DB 저장 없음) */
+  AiDressTryOnResponseDTO tryOn(String memberEmail, Long dressItemId, MultipartFile personPhoto);
 
-  String getMyPhoto(String memberEmail);
-
-  AiDressTryOnResponseDTO tryOn(String memberEmail, AiDressTryOnRequestDTO requestDTO);
+  /** 합성 결과에 배경만 적용 (upload 저장 없음) */
+  AiDressTryOnResponseDTO applyBackground(AiDressBackgroundRequestDTO requestDTO);
 
   List<TryOnHistoryDTO> getHistory(String memberEmail);
 
