@@ -17,6 +17,7 @@ const LoginComponent = () => {
   const [loginParam, setLoginParam] = useState({
     email: "",
     pw: "",
+    rememberMe: false,
   });
 
   const [touched, setTouched] = useState({
@@ -31,9 +32,10 @@ const LoginComponent = () => {
     useCustomLogin();
 
   const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
     setLoginParam({
       ...loginParam,
-      [e.target.name]: e.target.value,
+      [name]: type === "checkbox" ? checked : value,
     });
   };
 
@@ -178,6 +180,9 @@ const LoginComponent = () => {
           <label className="flex items-center gap-2 cursor-pointer text-plum-700 select-none">
             <input
               type="checkbox"
+              name="rememberMe"
+              checked={loginParam.rememberMe}
+              onChange={handleChange}
               className="w-4 h-4 rounded border-rose-200 text-rose-500 focus:ring-rose-400"
             />
             <span>로그인 유지</span>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import AuthLayout from "./AuthLayout";
 import AlertModal from "./AlertModal";
+import { passwordResetRequestPost } from "../../api/authApi";
 
 const inputClass =
   "w-full px-4 py-3 rounded-xl border border-rose-100 bg-blush-50/40 text-plum-900 placeholder:text-plum-500/50 focus:border-rose-400 focus:ring-4 focus:ring-rose-100 outline-none transition";
@@ -13,6 +14,7 @@ const PasswordResetRequestComponent = () => {
   const [email, setEmail] = useState("");
   const [touched, setTouched] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
 
   const handleChange = (e) => {
@@ -32,7 +34,17 @@ const PasswordResetRequestComponent = () => {
       return;
     }
 
-    setSubmitted(true);
+    setSending(true);
+
+    passwordResetRequestPost(email)
+      .then(() => {
+        setSubmitted(true);
+      })
+      .catch((err) => {
+        console.log(err);
+        setAlertMessage("메일 발송 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+      })
+      .finally(() => setSending(false));
   };
 
   const renderEmailMsg = () => {
@@ -118,10 +130,11 @@ const PasswordResetRequestComponent = () => {
 
         <button
           type="button"
-          className="w-full py-4 rounded-xl bg-gradient-to-r from-rose-100 to-pink-100 text-rose-700 font-semibold shadow-md shadow-rose-100 hover:shadow-rose-200 hover:-translate-y-0.5 transition-all"
+          disabled={sending}
+          className="w-full py-4 rounded-xl bg-gradient-to-r from-rose-100 to-pink-100 text-rose-700 font-semibold shadow-md shadow-rose-100 hover:shadow-rose-200 hover:-translate-y-0.5 transition-all disabled:opacity-50"
           onClick={handleSubmit}
         >
-          재설정 메일 받기
+          {sending ? "발송 중..." : "재설정 메일 받기"}
         </button>
       </div>
 
