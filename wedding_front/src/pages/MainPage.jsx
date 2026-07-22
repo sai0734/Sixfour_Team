@@ -2,40 +2,58 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import BasicMenu from "../components/menus/BasicMenu";
-import { getListByMember } from "../api/checklistApi";
-import { getMyAiPlanProgress } from "../api/aiPlanApi";
 import { getMainHighlights } from "../api/homeApi";
-import { getCompanyImageUrl } from "../api/companyApi";
-import { API_SERVER_HOST } from "../api/reservationApi";
+import { getOne as getCompanyOne, getCompanyImageUrl } from "../api/companyApi";
+import {
+  API_SERVER_HOST,
+  getListByMember as getMyReservations,
+} from "../api/reservationApi";
+import { getByMember } from "../api/weddingplanApi";
+
+// 업체 방문 리스트 - 카테고리명 텍스트 대신 아이콘으로 표시
+const CATEGORY_ICON = {
+  STUDIO: "📸",
+  HALL: "🏛️",
+  DRESS: "👗🧥",
+  MAKEUP: "💄",
+};
 
 const slides = [
   {
-    eyebrow: "WEDDING ALL IN ONE",
-    title: "두 사람의 시작을\n가장 가까이에서",
-    desc: "예식장을 고르는 순간부터 답례품을 고민하는 순간까지\n결혼이라는 가장 어려운 일을, 함께 준비합니다",
-    cta: "우리 웨딩로그 시작하기 →",
-    linkTo: "#",
-  },
-  {
     eyebrow: "01 — AI WEDDING PLAN",
     title: "예산과 날짜만 알면\nAI가 웨딩플랜을 짜드려요",
-    desc: "예산, 날짜, 하객 수, 원하는 스타일을 입력하면\n일정과 예산 배분까지 자동으로 설계해드립니다",
+    desc: "예산, 날짜, 하객수 원하는 스타일 알려주시면\n일정과 예산 배분까지 자동으로 설계해드립니다",
     cta: "AI 웨딩플랜 만들어보기 →",
     linkTo: "/aiplan",
   },
   {
-    eyebrow: "02 — PREPARATION",
+    eyebrow: "02 — HALL · STUDIO · DRESS · MAKEUP",
+    title:
+      "웨딩홀부터 스튜디오,\n  드레스, 메이크업까지\n한눈에 비교하고 예약하세요",
+    desc: "지역, 예산, 스타일로 필터링해서\n마음에 드는 업체를 바로 찾고 예약할 수 있어요",
+    cta: "업체 둘러보기 →",
+    linkTo: "/companies/list",
+  },
+  {
+    eyebrow: "03 — PREPARATION",
     title: "D-day까지 해야 할 일을\n하나씩 정리해드려요",
     desc: "예식까지 남은 시간을 기준으로\n체크리스트와 예산, 납부 일정을 자동으로 관리합니다",
     cta: "준비관리 둘러보기 →",
     linkTo: "/prep/hub",
   },
   {
-    eyebrow: "03 — GIFT SHOP",
+    eyebrow: "04 — GIFT SHOP",
     title: "하객들에게 전하는\n마음, 답례품 쇼핑몰",
     desc: "캔들, 디퓨저, 수건 세트까지\n취향대로 고르고 바로 주문할 수 있어요",
     cta: "답례품 구경하기 →",
     linkTo: "/product/",
+  },
+  {
+    eyebrow: "05 — COMMUNITY",
+    title: "같은 고민, 같은 설렘\n먼저 겪은 사람들과 나눠요",
+    desc: "예식 후기부터 업체 정보, 소소한 고민까지\n자유롭게 묻고 답하며 함께 준비해요",
+    cta: "커뮤니티 구경하기 →",
+    linkTo: "/board/list",
   },
 ];
 
@@ -50,26 +68,22 @@ const calcDday = (dateStr) => {
   return `D+${Math.abs(diff)}`;
 };
 
-// 체크리스트에서 "가장 임박한 할 일" 한 줄을 뽑아낸다.
-// 마감일이 있는 미완료 항목 중 가장 빠른 것 우선, 없으면 마감일 없는 미완료 항목 중 첫 번째.
-const pickNearestTaskLabel = (checklist) => {
-  if (!checklist || checklist.length === 0) {
-    return "아직 등록된 할 일이 없어요. 준비관리에서 체크리스트를 만들어보세요!";
-  }
+// "26.07.30" 형태로 짧게 표기 (예약 방문일 리스트용)
+const formatShortDate = (dateStr) => {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  const yy = String(d.getFullYear()).slice(-2);
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yy}.${mm}.${dd}`;
+};
 
-  const undone = checklist.filter((item) => !item.done);
-  if (undone.length === 0) {
-    return "이번 단계 할 일을 모두 완료했어요! 🎉";
-  }
-
-  const withDueDate = undone
-    .filter((item) => item.dueDate)
-    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
-
-  const nearest = withDueDate[0] || undone[0];
-  return nearest.dueDate
-    ? `이번 할 일: ${nearest.title} (${nearest.dueDate}까지)`
-    : `이번 할 일: ${nearest.title}`;
+// "2026년 8월 15일" 형태로 표기 (D-day 카드의 예식일용)
+// new Date(dateStr)로 파싱하면 타임존에 따라 하루 밀릴 수 있어서 문자열을 직접 분해한다.
+const formatWeddingDate = (dateStr) => {
+  if (!dateStr) return "";
+  const [y, m, d] = dateStr.split("-");
+  return `${y}년 ${Number(m)}월 ${Number(d)}일`;
 };
 
 const MainPage = () => {
@@ -85,20 +99,24 @@ const MainPage = () => {
 
   const nickname =
     loginState.nickname || loginState.email?.split("@")[0] || "회원";
-  const dday = calcDday(loginState.weddingDate) ?? "D-???";
 
-  const [nearestTaskLabel, setNearestTaskLabel] = useState("할 일 불러오는 중...");
-  const [aiProgress, setAiProgress] = useState({
-    hasSession: false,
-    hallPercent: 0,
-    dressPercent: 0,
-    studioPercent: 0,
-  });
+  const [weddingPlan, setWeddingPlan] = useState(null);
+  const dday = calcDday(weddingPlan?.weddingDate) ?? "D-???";
+
   const [highlights, setHighlights] = useState({
     hallCompany: null,
     stylingCompany: null,
     topProduct: null,
   });
+  const [upcomingVisits, setUpcomingVisits] = useState([]);
+  const [budgetSpent, setBudgetSpent] = useState(0);
+
+  const totalBudget = weddingPlan?.totalBudget || 0;
+  const budgetRemaining = totalBudget - budgetSpent;
+  const budgetPercent =
+    totalBudget > 0
+      ? Math.min(100, Math.round((budgetSpent / totalBudget) * 100))
+      : 0;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -107,27 +125,68 @@ const MainPage = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // 로그인 상태에서만 쓰이는 위젯(D-day 카드의 "임박한 할 일", AI 매칭 진행률)이라
+  // 로그인 상태에서만 쓰이는 위젯(D-day 카드, 방문 카드, 예산 카드)이라
   // 비로그인이면 아예 호출하지 않는다.
   useEffect(() => {
     if (!isLoggedIn) return;
 
     let cancelled = false;
 
-    getListByMember(loginState.email)
+    // D-day 카드 - 마이페이지 "플랜" 탭과 같은 소스(예식 플랜)에서 예식일/신랑신부 이름을 가져온다.
+    getByMember(loginState.email)
       .then((data) => {
-        if (!cancelled) setNearestTaskLabel(pickNearestTaskLabel(data));
+        if (!cancelled) setWeddingPlan(data || null);
       })
       .catch(() => {
-        if (!cancelled) setNearestTaskLabel("할 일을 불러오지 못했어요.");
+        // 아직 등록한 플랜이 없으면 "이름 등록하기" 안내 유지
       });
 
-    getMyAiPlanProgress()
-      .then((data) => {
-        if (!cancelled) setAiProgress(data);
+    // 취향 카드 - 취소 안 된 예약 중 방문일이 남은 것 최대 3개를 D-day 임박순으로 보여준다.
+    // 예산 카드 - 같은 예약 목록에서 결제완료(PAID) 건의 금액을 합산해 사용 금액으로 쓴다.
+    getMyReservations(loginState.email)
+      .then(async (data) => {
+        if (cancelled) return;
+
+        const spent = (data || [])
+          .filter((r) => r.payStatus === "PAID")
+          .reduce((sum, r) => sum + (r.amount || 0), 0);
+        setBudgetSpent(spent);
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const upcoming = (data || [])
+          .filter((r) => r.status !== "취소" && r.weddingDate)
+          .filter((r) => new Date(r.weddingDate) >= today)
+          .sort((a, b) => new Date(a.weddingDate) - new Date(b.weddingDate))
+          .slice(0, 3);
+
+        const uniqueCmnos = [
+          ...new Set(upcoming.map((r) => r.cmno).filter(Boolean)),
+        ];
+        const results = await Promise.allSettled(
+          uniqueCmnos.map((cmno) => getCompanyOne(cmno)),
+        );
+        const companyByCmno = {};
+        results.forEach((res, i) => {
+          if (res.status === "fulfilled") {
+            companyByCmno[uniqueCmnos[i]] = res.value;
+          }
+        });
+
+        if (!cancelled) {
+          setUpcomingVisits(
+            upcoming.map((r) => ({
+              reservationId: r.reservationId,
+              name: companyByCmno[r.cmno]?.name || `업체 #${r.cmno}`,
+              category: companyByCmno[r.cmno]?.category,
+              dateLabel: `${formatShortDate(r.weddingDate)}(${calcDday(r.weddingDate)})`,
+            })),
+          );
+        }
       })
       .catch(() => {
-        // 조회 실패 시 기본값(0%)을 유지 - 위젯 자체는 계속 보여준다.
+        // 조회 실패 시 빈 리스트 유지
       });
 
     return () => {
@@ -168,15 +227,9 @@ const MainPage = () => {
               <div className="hero-eyebrow">{current.eyebrow}</div>
               <h1 style={{ whiteSpace: "pre-line" }}>{current.title}</h1>
               <p style={{ whiteSpace: "pre-line" }}>{current.desc}</p>
-              {current.linkTo === "#" ? (
-                <a href="#" className="hero-cta-link">
-                  {current.cta}
-                </a>
-              ) : (
-                <Link to={current.linkTo} className="hero-cta-link">
-                  {current.cta}
-                </Link>
-              )}
+              <Link to={current.linkTo} className="hero-cta-link">
+                {current.cta}
+              </Link>
             </div>
             <div className="hero-dots">
               {slides.map((_, i) => (
@@ -209,7 +262,7 @@ const MainPage = () => {
                 </div>
                 <div className="cap">
                   {highlights.hallCompany
-                    ? `웨딩홀 매출 1위 · ${highlights.hallCompany.name}`
+                    ? `웨딩홀 인기 1위 · ${highlights.hallCompany.name}`
                     : "웨딩홀 탐색 중 💍"}
                 </div>
               </div>
@@ -217,7 +270,9 @@ const MainPage = () => {
                 <div className="photo">
                   {highlights.stylingCompany?.imageUrl ? (
                     <img
-                      src={getCompanyImageUrl(highlights.stylingCompany.imageUrl)}
+                      src={getCompanyImageUrl(
+                        highlights.stylingCompany.imageUrl,
+                      )}
                       alt={highlights.stylingCompany.name}
                     />
                   ) : (
@@ -229,7 +284,7 @@ const MainPage = () => {
                 </div>
                 <div className="cap">
                   {highlights.stylingCompany
-                    ? `스드메 매출 1위 · ${highlights.stylingCompany.name}`
+                    ? `스드메 인기 1위 · ${highlights.stylingCompany.name}`
                     : "스드메 고르는 중 👗"}
                 </div>
               </div>
@@ -256,63 +311,97 @@ const MainPage = () => {
             </div>
           ) : (
             <div className="member-widget">
-              {/* D-day 노트 — 가장 뒤 (z-index 1) */}
-              <div className="w-card wc-dday">
+              {/* D-day 노트 — 가장 뒤 (z-index 1) - 클릭 시 마이페이지 플랜 탭으로 */}
+              <Link to="/mypage?tab=plan" className="w-card wc-dday">
                 <div className="dday-pin" />
                 <div className="dday-num">{dday}</div>
-                <div className="dday-note">{nickname} 님, 안녕하세요 🤍</div>
+                <div className="dday-note">{nickname} 님, 안녕하세요. </div>
                 <hr className="dday-divider" />
-                <div className="dday-task">{nearestTaskLabel}</div>
-              </div>
-              {/* 취향 폴라로이드 — 중간 (z-index 2) */}
-              <div className="w-card wc-taste">
-                <div className="taste-photo">
-                  {/* 실사 교체: <img src={photoUrl} alt="우리 취향" /> */}
-                </div>
-                <div className="cap">우리 취향 저장 중 📌</div>
-              </div>
-              {/* AI 매칭 — 가장 앞 (z-index 3) */}
-              <div className="w-card wc-ai">
+                {weddingPlan?.groomName && weddingPlan?.brideName ? (
+                  <>
+                    <div className="dday-couple">
+                      {weddingPlan.brideName}
+                      <span className="dday-heart">💍</span>
+                      {weddingPlan.groomName}
+                    </div>
+                    {weddingPlan?.weddingDate && (
+                      <div className="dday-date">
+                        <span className="dday-date-deco">✦</span>
+                        {formatWeddingDate(weddingPlan.weddingDate)}
+                        <span className="dday-date-deco">✦</span>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <span className="dday-couple-link">내 플랜 등록하기 →</span>
+                )}
+              </Link>
+              {/* 예약 방문 D-day 리스트 — 중간 (z-index 2) - 클릭 시 마이페이지 결제 내역 탭으로 */}
+              <Link to="/mypage?tab=payment" className="w-card wc-taste">
+                <div className="cap visit-title">업체 방문 일정 📅</div>
+                {upcomingVisits.length > 0 ? (
+                  <ul className="visit-list">
+                    {upcomingVisits.map((v) => (
+                      <li key={v.reservationId} className="visit-row">
+                        <span className="visit-name">
+                          {v.name}
+                          {CATEGORY_ICON[v.category] && (
+                            <span className="visit-category-icon">
+                              {CATEGORY_ICON[v.category]}
+                            </span>
+                          )}
+                        </span>
+                        <span className="visit-dday">{v.dateLabel}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="visit-empty">예정된 업체 방문이 없어요</p>
+                )}
+              </Link>
+              {/* 예산 사용 현황 — 가장 앞 (z-index 3) - 클릭 시 예산관리 페이지로 */}
+              <Link to="/budget/list" className="w-card wc-ai">
                 <div className="ai-label">
                   <div className="ai-dot" />
-                  AI 매칭 진행중
+                  예산 사용 현황
                 </div>
-                {aiProgress.hasSession ? (
-                  <div className="ai-bars">
-                    <div className="ai-bar-row">
-                      <span className="ai-bar-label">웨딩홀</span>
-                      <div className="ai-bar-track">
-                        <div
-                          className="ai-bar-fill bar-pink"
-                          style={{ width: `${aiProgress.hallPercent}%` }}
-                        />
-                      </div>
+                {totalBudget > 0 ? (
+                  <div className="budget-summary">
+                    <div className="budget-bar-track">
+                      <div
+                        className="budget-bar-fill"
+                        style={{ width: `${budgetPercent}%` }}
+                      />
                     </div>
-                    <div className="ai-bar-row">
-                      <span className="ai-bar-label">드레스</span>
-                      <div className="ai-bar-track">
-                        <div
-                          className="ai-bar-fill bar-coral"
-                          style={{ width: `${aiProgress.dressPercent}%` }}
-                        />
-                      </div>
+                    <div className="budget-bar-caption">
+                      <span className="budget-percent">{budgetPercent}% 사용</span>
+                      <span className="budget-total">
+                        총예산 {totalBudget.toLocaleString()}원
+                      </span>
                     </div>
-                    <div className="ai-bar-row">
-                      <span className="ai-bar-label">스튜디오</span>
-                      <div className="ai-bar-track">
-                        <div
-                          className="ai-bar-fill bar-sage"
-                          style={{ width: `${aiProgress.studioPercent}%` }}
-                        />
-                      </div>
+                    <div className="budget-row">
+                      <span className="budget-row-label">사용 금액</span>
+                      <span className="budget-row-value">
+                        {budgetSpent.toLocaleString()}원
+                      </span>
+                    </div>
+                    <div className="budget-row">
+                      <span className="budget-row-label">
+                        {budgetRemaining < 0 ? "예산 초과" : "남은 예산"}
+                      </span>
+                      <span
+                        className={`budget-row-value${budgetRemaining < 0 ? " over" : ""}`}
+                      >
+                        {Math.abs(budgetRemaining).toLocaleString()}원
+                      </span>
                     </div>
                   </div>
                 ) : (
                   <p className="ai-empty">
-                    아직 AI 웨딩플랜을 시작하지 않았어요.
+                    아직 예산을 설정하지 않았어요.
                   </p>
                 )}
-              </div>
+              </Link>
             </div>
           )}
         </section>
@@ -325,14 +414,18 @@ const MainPage = () => {
           <h2>준비, 이렇게 함께해요</h2>
         </div>
         <div className="feat-row">
-          <div className="feat-card">
+          <Link
+            to="/aiplan"
+            className="feat-card"
+            aria-label="AI 웨딩플랜 페이지로 이동"
+          >
             <div className="feat-icon">✨</div>
             <h3>AI 웨딩플랜</h3>
             <p>
               예산과 날짜만 알면 AI가 일정과 예산 배분까지 자동으로
               설계해드려요. 웨딩홀부터 스드메까지 딱 맞는 업체까지 추천해줍니다
             </p>
-          </div>
+          </Link>
           <Link
             to="/prep/hub"
             className="feat-card"
@@ -699,11 +792,12 @@ const MainPage = () => {
           border: none;
           cursor: pointer;
           transition: width 0.3s ease, background 0.3s ease;
-          background: rgba(255,255,255,0.45);
+          background: rgba(192,96,128,0.28);
           width: 7px;
           padding: 0;
         }
-        .hero-dot.active { width: 24px; background: rgba(255,255,255,0.92); }
+        .hero-dot:hover { background: rgba(192,96,128,0.5); }
+        .hero-dot.active { width: 24px; background: #C06080; box-shadow: 0 2px 6px rgba(192,96,128,0.4); }
 
         /* ===== 폴라로이드 스택 (1.3x) ===== */
         .polaroid-stack {
@@ -812,11 +906,15 @@ const MainPage = () => {
 
         .w-card {
           position: absolute;
+          display: block;
           border-radius: 16px;
           background: #FFFDF9;
           box-shadow: 0 6px 20px -4px rgba(150,120,180,0.22), 0 2px 6px rgba(150,120,180,0.1);
           transition: transform 0.3s ease, box-shadow 0.3s ease;
           z-index: 1;
+          color: inherit;
+          text-decoration: none;
+          cursor: pointer;
         }
         .w-card:hover { transform: translateY(-8px); box-shadow: 0 18px 44px -6px rgba(150,120,180,0.3); z-index: 10 !important; }
 
@@ -827,7 +925,6 @@ const MainPage = () => {
           padding: 38px 31px 31px;
           transform: rotate(-5deg);
           z-index: 1;
-          border-radius: 4px;
           background: #FFFEF8;
           box-shadow: 0 6px 20px -4px rgba(80,45,10,0.28), 2px 2px 0 rgba(0,0,0,0.06);
         }
@@ -847,29 +944,41 @@ const MainPage = () => {
         .dday-num { font-family: 'Gowun Batang', serif; font-size: 48px; color: #3A362F; font-weight: 700; line-height: 1; margin-bottom: 14px; }
         .dday-note { font-family: 'Gaegu', cursive; font-size: 18px; color: #6A6458; line-height: 1.7; }
         .dday-divider { border: none; border-top: 1px dashed #E0D8CC; margin: 19px 0; }
-        .dday-task { font-size: 14px; color: #A8A090; line-height: 1.6; }
+        .dday-couple { font-family: 'Gowun Batang', serif; font-size: 17px; color: #5A5448; text-align: center; letter-spacing: 0.02em; }
+        .dday-couple .dday-heart { color: #C87070; margin: 0 8px; font-family: initial; }
+        .dday-date { margin-top: 8px; font-family: 'Gowun Batang', serif; font-size: 12.5px; color: #B08A72; text-align: center; letter-spacing: 0.1em; }
+        .dday-date-deco { color: #E8A8A8; font-size: 9px; margin: 0 7px; vertical-align: middle; }
+        .dday-couple-link { display: inline-block; font-size: 14px; color: #C06080; text-decoration: none; border-bottom: 1px dashed #E8A8A8; transition: color 0.2s, border-color 0.2s; }
+        .dday-couple-link:hover { color: #A34860; border-color: #C06080; }
 
         /* 취향 폴라로이드 — z-index 2 (중간) */
         .wc-taste {
-          top: 20px; right: 0;
+          top: 160px; right: 0;
           width: 312px;
+          min-height: 246px;
           padding: 17px 17px 62px;
           transform: rotate(4deg);
           z-index: 2;
-          border-radius: 2px;
           background: #FFFDF9;
           box-shadow: 0 6px 20px -4px rgba(80,45,10,0.28), 2px 2px 0 rgba(0,0,0,0.06);
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
         }
         .wc-taste:hover { transform: rotate(1deg) translateY(-10px); }
         .wc-taste::before { content: ''; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 55px; height: 19px; background: rgba(197,179,211,0.8); border-radius: 2px; box-shadow: 0 1px 3px rgba(80,45,10,0.15); }
-        .taste-photo { height: 246px; border-radius: 1px; background: linear-gradient(145deg,#E8D4C0 0%,#C8B4A0 35%,#B09888 60%,#D4C4B0 100%); position: relative; overflow: hidden; }
-        .taste-photo img { width: 100%; height: 100%; object-fit: cover; filter: saturate(0.8) brightness(0.95); }
-        .taste-photo::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom,rgba(255,240,220,0.15),rgba(180,160,140,0.1)); mix-blend-mode: multiply; }
-        .wc-taste .cap { font-family: 'Gaegu', cursive; font-size: 17px; text-align: center; margin-top: 16px; color: #5A5448; }
+        .wc-taste .visit-title { font-family: 'Gaegu', cursive; font-size: 17px; text-align: center; color: #5A5448; margin-bottom: 18px; }
+        .visit-list { display: flex; flex-direction: column; gap: 12px; }
+        .visit-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding-bottom: 12px; border-bottom: 1px dashed #E0D8CC; }
+        .visit-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .visit-name { flex: 1; min-width: 0; font-size: 14px; color: #4A4638; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .visit-category-icon { margin-left: 5px; font-size: 13px; }
+        .visit-dday { flex-shrink: 0; font-family: 'Gowun Batang', serif; font-size: 13px; font-weight: 700; color: #C06080; white-space: nowrap; }
+        .visit-empty { font-size: 13px; color: #A8A090; text-align: center; line-height: 1.6; }
 
         /* AI 매칭 카드 — z-index 3 (가장 앞) */
         .wc-ai {
-          top: 380px; left: 20px;
+          top: 340px; left: 20px;
           width: 432px;
           padding: 34px 29px 26px;
           transform: rotate(-1.5deg);
@@ -892,15 +1001,17 @@ const MainPage = () => {
         .ai-label { display: flex; align-items: center; gap: 8px; font-size: 15px; color: #7A7364; margin-bottom: 22px; font-weight: 500; }
         .ai-dot { width: 9px; height: 9px; border-radius: 50%; background: #F5CBCB; animation: pulse 1.8s ease-in-out infinite; flex-shrink: 0; }
         @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
-        .ai-bars { display: flex; flex-direction: column; gap: 14px; }
-        .ai-bar-row { display: flex; align-items: center; gap: 14px; }
-        .ai-bar-label { font-size: 14px; color: #A8A090; width: 60px; flex-shrink: 0; }
-        .ai-bar-track { flex: 1; height: 10px; background: #F7EDED; border-radius: 100px; overflow: hidden; }
-        .ai-bar-fill { height: 100%; border-radius: 100px; transition: width 1.2s ease; }
-        .bar-pink  { background: linear-gradient(to right,#FFE2E2,#F5CBCB); }
-        .bar-coral { background: linear-gradient(to right,#F5CBCB,#EDB8B8); }
-        .bar-sage  { background: linear-gradient(to right,#DDD3E8,#C5B3D3); }
         .ai-empty { font-size: 13px; color: #A8A090; line-height: 1.6; }
+        .budget-summary { display: flex; flex-direction: column; gap: 10px; }
+        .budget-bar-track { height: 12px; background: #F7EDED; border-radius: 100px; overflow: hidden; }
+        .budget-bar-fill { height: 100%; border-radius: 100px; background: linear-gradient(to right,#F5CBCB,#C06080); transition: width 1.2s ease; }
+        .budget-bar-caption { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+        .budget-percent { font-family: 'Gowun Batang', serif; font-size: 13px; font-weight: 700; color: #C06080; }
+        .budget-total { font-size: 12px; color: #A8A090; }
+        .budget-row { display: flex; align-items: center; justify-content: space-between; padding-top: 6px; border-top: 1px dashed #E0D8CC; }
+        .budget-row-label { font-size: 13px; color: #A8A090; }
+        .budget-row-value { font-size: 14px; font-weight: 600; color: #4A4638; }
+        .budget-row-value.over { color: #C0405F; }
 
         /* ===== FEATURES ===== */
         .features { padding: 80px 60px 100px; max-width: 1180px; margin: 0 auto; }
@@ -1028,9 +1139,8 @@ const MainPage = () => {
           .wc-dday  { width: 218px; top: 0; left: 0; }
           .wc-dday .dday-num  { font-size: 36px; }
           .wc-dday .dday-note { font-size: 13px; }
-          .wc-taste { width: 208px; top: 20px; right: 0; }
-          .wc-taste .taste-photo { height: 162px; }
-          .wc-ai    { width: 340px; left: 10px; top: 318px; }
+          .wc-taste { width: 208px; top: 130px; right: 0; min-height: 162px; }
+          .wc-ai    { width: 340px; left: 10px; top: 278px; }
 
           /* 기타 섹션 */
           .feat-row { grid-template-columns: 1fr; }
@@ -1056,9 +1166,8 @@ const MainPage = () => {
           .member-widget { width: 340px; height: 480px; }
           .member-widget::before { inset: -14px -20px; border-radius: 14px; }
           .wc-dday  { width: 188px; }
-          .wc-taste { width: 178px; }
-          .wc-taste .taste-photo { height: 138px; }
-          .wc-ai    { width: 290px; top: 300px; left: 8px; }
+          .wc-taste { width: 178px; min-height: 138px; }
+          .wc-ai    { width: 290px; top: 260px; left: 8px; }
         }
       `}</style>
     </>
