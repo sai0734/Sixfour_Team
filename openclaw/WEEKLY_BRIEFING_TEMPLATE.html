@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>AI 매니저 주간 브리핑</title>
+<style>
+  body { font-family: "Malgun Gothic", sans-serif; color: #3a362f; max-width: 800px; margin: 0 auto; padding: 40px; }
+  h1 { font-size: 22px; color: #C06080; margin-bottom: 4px; }
+  .rule { height: 3px; background: #C06080; margin-bottom: 22px; }
+  h2 { font-size: 15px; color: #C06080; margin-top: 28px; border-left: 4px solid #C06080; padding-left: 10px; }
+  .meta { color: #888; font-size: 13px; margin-bottom: 20px; }
+  p { font-size: 14px; line-height: 1.6; }
+  ul { font-size: 14px; line-height: 1.6; }
+
+  /* KPI 박스 4개 */
+  .kpi-row { display: flex; gap: 10px; margin: 8px 0 20px; }
+  .kpi-box { flex: 1; background: #f7f3ee; border-radius: 8px; padding: 10px 8px; text-align: center; }
+  .kpi-value { font-size: 15px; font-weight: bold; }
+  .kpi-label { font-size: 11px; color: #888; margin-top: 4px; }
+
+  /* 막대그래프 (주문 상태) */
+  .chart-row { display: flex; gap: 30px; margin: 10px 0 24px; }
+  .chart-col { flex: 1; }
+  .chart-title { font-size: 13px; font-weight: bold; margin-bottom: 10px; }
+  .bar-chart { display: flex; gap: 14px; height: 120px; align-items: flex-end; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; }
+  .bar-value { font-weight: bold; font-size: 12px; margin-bottom: 4px; }
+  .bar { width: 70%; border-radius: 4px 4px 0 0; min-height: 4px; }
+  .bar-labels { display: flex; gap: 14px; margin-top: 6px; }
+  .bar-labels > div { flex: 1; text-align: center; font-size: 11px; color: #888; }
+
+  /* 원형그래프 (업체 카테고리 분포) */
+  .pie { width: 110px; height: 110px; border-radius: 50%; margin: 0 auto; }
+  .legend { font-size: 11px; margin-top: 10px; }
+  .legend-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+  .legend-swatch { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+
+  .stat-row { display: flex; gap: 12px; margin: 10px 0; }
+  .stat-box { flex: 1; background: #f7f3ee; border-radius: 8px; padding: 10px 14px; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<h1>AI 매니저 주간 브리핑</h1>
+<div class="rule"></div>
+<div class="meta">주차: {{WEEK_OF}} · 생성일: {{GENERATED_AT}}</div>
+
+<!-- KPI 박스 4개 -->
+<div class="kpi-row">
+  <div class="kpi-box"><div class="kpi-value" style="color:#C06080">{{REVENUE_VALUE}}</div><div class="kpi-label">누적 매출</div></div>
+  <div class="kpi-box"><div class="kpi-value" style="color:#C5B3D3">{{MEMBER_VALUE}}</div><div class="kpi-label">전체 회원</div></div>
+  <div class="kpi-box"><div class="kpi-value" style="color:#7FB069">{{PRODUCT_VALUE}}</div><div class="kpi-label">판매 상품</div></div>
+  <div class="kpi-box"><div class="kpi-value" style="color:#D9A65B">{{COMPANY_VALUE}}</div><div class="kpi-label">등록 업체</div></div>
+</div>
+
+<!-- 막대그래프 + 원형그래프 나란히 -->
+<div class="chart-row">
+  <div class="chart-col">
+    <div class="chart-title">주문 상태 현황</div>
+    <div class="bar-chart">
+      <div class="bar-col">
+        <div class="bar-value">{{PAID_COUNT}}</div>
+        <div class="bar" style="height:{{PAID_PCT}}%; background:#C06080;"></div>
+      </div>
+      <div class="bar-col">
+        <div class="bar-value">{{SHIPPING_COUNT}}</div>
+        <div class="bar" style="height:{{SHIPPING_PCT}}%; background:#C5B3D3;"></div>
+      </div>
+      <div class="bar-col">
+        <div class="bar-value">{{DELIVERED_COUNT}}</div>
+        <div class="bar" style="height:{{DELIVERED_PCT}}%; background:#7FB069;"></div>
+      </div>
+    </div>
+    <div class="bar-labels"><div>결제완료</div><div>배송중</div><div>배송완료</div></div>
+  </div>
+
+  <div class="chart-col">
+    <div class="chart-title">업체 카테고리 분포</div>
+    <div class="pie" style="background: conic-gradient({{PIE_GRADIENT}});"></div>
+    <div class="legend">
+      <div class="legend-row"><span class="legend-swatch" style="background:#C06080"></span>웨딩홀 {{HALL_COUNT}}곳</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:#C5B3D3"></span>드레스 {{DRESS_COUNT}}곳</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:#7FB069"></span>스튜디오 {{STUDIO_COUNT}}곳</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:#D9A65B"></span>메이크업 {{MAKEUP_COUNT}}곳</div>
+    </div>
+  </div>
+</div>
+
+<h2>1. 이번 주 한눈에 요약</h2>
+<p>{{SECTION_SUMMARY}}</p>
+
+<h2>2. 회원 동향</h2>
+<p>{{SECTION_MEMBER}}</p>
+
+<h2>3. 업체 현황</h2>
+<p>{{SECTION_COMPANY}}</p>
+
+<h2>4. 상품 라인업 인사이트</h2>
+<p>{{SECTION_PRODUCT}}</p>
+
+<h2>5. 매출 추이</h2>
+<p>{{SECTION_REVENUE}}</p>
+
+<h2>6. 고객 반응 (리뷰/QnA)</h2>
+<p>{{SECTION_FEEDBACK}}</p>
+
+<h2>7. 요즘 추세 참고</h2>
+<p>{{SECTION_TREND}}</p>
+
+<h2>8. 이번 주 일간 체크 회고</h2>
+<div class="stat-row">
+  <div class="stat-box">재고 부족<br><b>{{LOW_STOCK_COUNT}}건</b></div>
+  <div class="stat-box">확인 필요 게시글<br><b>{{FLAGGED_POST_COUNT}}건</b></div>
+  <div class="stat-box">사이트 이슈<br><b>{{SITE_ISSUE_COUNT}}건</b></div>
+</div>
+<p>{{SECTION_DAILY_RECAP}}</p>
+
+<h2>9. 종합 총평 + 다음 주 체크리스트</h2>
+<p>{{SECTION_CONCLUSION}}</p>
+<ul>
+{{ACTION_ITEMS}}
+</ul>
+
+</body>
+</html>

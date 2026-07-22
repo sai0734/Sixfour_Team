@@ -13,6 +13,7 @@ const MENU_GROUPS = [
       { name: "상품 관리", path: "/admin/products", enabled: true },
       { name: "주문 관리", path: "/admin/orders", enabled: true },
       { name: "Q&A 관리", path: "/admin/qna", enabled: true },
+      { name: "AI 주간 브리핑", path: "/admin/ai-briefing", enabled: true },
     ],
   },
 ];
