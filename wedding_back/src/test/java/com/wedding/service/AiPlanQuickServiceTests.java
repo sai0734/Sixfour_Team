@@ -65,9 +65,9 @@ public class AiPlanQuickServiceTests {
 
         assertFalse(result.getCandidates().isEmpty(), "패키지가 없어도 개별 조합으로는 나와야 함");
         assertEquals("INDIVIDUAL_COMBO", result.getCandidates().get(0).getSourceType());
+        // "일부는 지역 조건 밖에서 골랐어요" 같은 설명 문구는 결과 화면 배너에서 없앴다(예산
+        // 늘리기 안내 전용으로 정리) - 지역이 풀렸는지는 이 regionRelaxed 플래그로 확인한다.
         assertTrue(result.isRegionRelaxed(), "인천엔 업체 자체가 없어서 지역 조건이 풀렸어야 함");
-        assertFalse(result.getMessage() == null || result.getMessage().isBlank(),
-                "개별 조합으로 대체됐으면 안내 메시지가 있어야 함");
 
         AiPlanPackageCandidateDTO combo = result.getCandidates().get(0);
         log.info(" - 조합: " + combo.getHallName() + " / " + combo.getDressName()

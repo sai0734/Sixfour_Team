@@ -15,17 +15,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.log4j.Log4j2;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-// 버그 리포트: "요청하신 대로 다시 골랐어요"가 각 업체 카드 아래에 항상 붙어있었음 - 방금
-// 다시찾기를 했을 때만 떠야 하는데, 첫 추천 직후/새로고침 복원/조합 히스토리 배지로 예전 턴을
-// 봤을 때도 떠 있었음. 원인은 SlotView.reasonLabel()이 "방금 다시 찾았는지"가 아니라 그냥
-// PENDING 상태 전체에 이 문구를 붙였기 때문 - PENDING이면 무조건 null이어야 하고, CONFIRMED일
-// 때만 문구가 있어야 한다. 롤백 기본값이라 테스트 끝나면 DB에 안 남는다.
+// 피드백 2단계: 각 업체 카드 아래 초록색 "왜 이 업체를 골랐는지" 설명이 처음 추천/다듬기
+// 직후에만 반짝 떴다가 사라지는 게 문제였음(세션에 저장 안 되는 값이라 새로고침/확정 등
+// 아무 액션이나 하면 없어짐) - AiPlanCandidateBuilder.pickReason()으로 예산/지역 매칭 여부를
+// 매번 다시 계산해서 붙이도록 바꿔서, 최초 추천이든 세션 복원이든 항상 같은 방식으로 뜨는지
+// 확인한다. 이제 "방금 확정/다시찾기 했다"가 아니라 "왜 이 업체가 조건에 맞는지"를 보여주는
+// 용도라 CONFIRMED/PENDING 둘 다 값이 있어야 하고, EXCLUDED만 없어야 한다.
+// 롤백 기본값이라 테스트 끝나면 DB에 안 남는다.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Log4j2
@@ -39,7 +41,7 @@ public class AiPlanReasonLabelTests {
 
     @Test
     @Transactional
-    public void testPendingSlotsHaveNoReasonLabel() throws Exception {
+    public void testPendingSlotsHaveReasonLabel() throws Exception {
 
         String response = mockMvc.perform(get("/api/aiplan/detail")
                         .param("budget", "300000000")
@@ -54,15 +56,15 @@ public class AiPlanReasonLabelTests {
                 combo.get("hallReason"), combo.get("studioReason"),
                 combo.get("dressReason"), combo.get("makeupReason"));
 
-        assertNull(combo.get("hallReason"), "첫 추천(PENDING)엔 방금 다시 찾았다는 문구가 붙으면 안 됨");
-        assertNull(combo.get("studioReason"));
-        assertNull(combo.get("dressReason"));
-        assertNull(combo.get("makeupReason"));
+        assertNotNull(combo.get("hallReason"), "왜 이 업체를 골랐는지는 처음 추천부터 있어야 함");
+        assertNotNull(combo.get("studioReason"));
+        assertNotNull(combo.get("dressReason"));
+        assertNotNull(combo.get("makeupReason"));
     }
 
     @Test
     @Transactional
-    public void testConfirmedSlotStillShowsConfirmedReason() throws Exception {
+    public void testReasonLabelSurvivesSessionRestoreAndConfirm() throws Exception {
 
         String detailResponse = mockMvc.perform(get("/api/aiplan/detail")
                         .param("budget", "300000000")
@@ -73,6 +75,16 @@ public class AiPlanReasonLabelTests {
         Map<?, ?> detailBody = objectMapper.readValue(detailResponse, Map.class);
         Long sessionId = ((Number) detailBody.get("sessionId")).longValue();
 
+        // 새로고침 복원(getSession)에서도 사라지지 않아야 함 - 이게 이번에 고친 핵심.
+        String sessionResponse = mockMvc.perform(get("/api/aiplan/session/" + sessionId))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        Map<?, ?> sessionBody = objectMapper.readValue(sessionResponse, Map.class);
+        Map<?, ?> restoredCombo = (Map<?, ?>) ((List<?>) sessionBody.get("candidates")).get(0);
+        assertNotNull(restoredCombo.get("hallReason"), "새로고침 복원 후에도 이유 설명이 남아있어야 함");
+
+        // 확정한 뒤에도 여전히 있어야 함 (더 이상 "확정하신 곳이에요"라는 고정 문구가 아니라
+        // 같은 예산/지역 기반 이유가 계속 붙음)
         Map<String, Object> confirmRequest = Map.of(
                 "sessionId", sessionId, "category", "HALL", "action", "CONFIRM");
         String slotResponse = mockMvc.perform(post("/api/aiplan/slot")
@@ -80,10 +92,20 @@ public class AiPlanReasonLabelTests {
                         .content(objectMapper.writeValueAsString(confirmRequest)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-
         Map<?, ?> slotBody = objectMapper.readValue(slotResponse, Map.class);
-        Map<?, ?> combo = (Map<?, ?>) ((List<?>) slotBody.get("candidates")).get(0);
+        Map<?, ?> confirmedCombo = (Map<?, ?>) ((List<?>) slotBody.get("candidates")).get(0);
+        assertNotNull(confirmedCombo.get("hallReason"), "확정 후에도 이유 설명이 남아있어야 함");
 
-        assertEquals("확정하신 곳이에요", combo.get("hallReason"), "확정된 슬롯은 여전히 확정 문구가 있어야 함");
+        // 제외된 카테고리는 업체 자체가 없으니 이유도 없어야 함
+        Map<String, Object> excludeRequest = Map.of(
+                "sessionId", sessionId, "category", "STUDIO", "action", "EXCLUDE");
+        String excludeResponse = mockMvc.perform(post("/api/aiplan/slot")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(excludeRequest)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        Map<?, ?> excludeBody = objectMapper.readValue(excludeResponse, Map.class);
+        Map<?, ?> excludedCombo = (Map<?, ?>) ((List<?>) excludeBody.get("candidates")).get(0);
+        assertNull(excludedCombo.get("studioReason"), "제외된 카테고리는 이유도 없어야 함");
     }
 }

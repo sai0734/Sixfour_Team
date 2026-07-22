@@ -66,7 +66,8 @@ public class AiPlanSession {
     @AttributeOverrides({
             @AttributeOverride(name = "status", column = @Column(name = "hall_status")),
             @AttributeOverride(name = "selectedCmno", column = @Column(name = "hall_selected_cmno")),
-            @AttributeOverride(name = "note", column = @Column(name = "hall_note"))
+            @AttributeOverride(name = "note", column = @Column(name = "hall_note")),
+            @AttributeOverride(name = "pickReason", column = @Column(name = "hall_pick_reason"))
     })
     @Builder.Default
     private SlotState hallSlot = SlotState.empty();
@@ -75,7 +76,8 @@ public class AiPlanSession {
     @AttributeOverrides({
             @AttributeOverride(name = "status", column = @Column(name = "studio_status")),
             @AttributeOverride(name = "selectedCmno", column = @Column(name = "studio_selected_cmno")),
-            @AttributeOverride(name = "note", column = @Column(name = "studio_note"))
+            @AttributeOverride(name = "note", column = @Column(name = "studio_note")),
+            @AttributeOverride(name = "pickReason", column = @Column(name = "studio_pick_reason"))
     })
     @Builder.Default
     private SlotState studioSlot = SlotState.empty();
@@ -84,7 +86,8 @@ public class AiPlanSession {
     @AttributeOverrides({
             @AttributeOverride(name = "status", column = @Column(name = "dress_status")),
             @AttributeOverride(name = "selectedCmno", column = @Column(name = "dress_selected_cmno")),
-            @AttributeOverride(name = "note", column = @Column(name = "dress_note"))
+            @AttributeOverride(name = "note", column = @Column(name = "dress_note")),
+            @AttributeOverride(name = "pickReason", column = @Column(name = "dress_pick_reason"))
     })
     @Builder.Default
     private SlotState dressSlot = SlotState.empty();
@@ -93,7 +96,8 @@ public class AiPlanSession {
     @AttributeOverrides({
             @AttributeOverride(name = "status", column = @Column(name = "makeup_status")),
             @AttributeOverride(name = "selectedCmno", column = @Column(name = "makeup_selected_cmno")),
-            @AttributeOverride(name = "note", column = @Column(name = "makeup_note"))
+            @AttributeOverride(name = "note", column = @Column(name = "makeup_note")),
+            @AttributeOverride(name = "pickReason", column = @Column(name = "makeup_pick_reason"))
     })
     @Builder.Default
     private SlotState makeupSlot = SlotState.empty();
@@ -101,8 +105,18 @@ public class AiPlanSession {
     @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
 
+    // 로그인 여부와 무관하게 "마이페이지에 담기"를 눌렀는지만 나타낸다. 세션 생성 시점에
+    // 이미 로그인 상태였다면 memberEmail은 바로 채워지지만 담기는 별개 행동이라, DB 정리
+    // 배치(AiPlanSessionCleanupScheduler)가 "담았는지"를 판단할 땐 이 값만 본다.
+    @Builder.Default
+    private boolean appliedToPlan = false;
+
     public void changeMemberEmail(String memberEmail) {
         this.memberEmail = memberEmail;
+    }
+
+    public void changeAppliedToPlan(boolean appliedToPlan) {
+        this.appliedToPlan = appliedToPlan;
     }
 
     public void changeBudget(Long budget) {

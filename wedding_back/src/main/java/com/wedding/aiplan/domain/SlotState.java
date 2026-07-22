@@ -32,6 +32,13 @@ public class SlotState {
     @Column(length = 500)
     private String note;
 
+    // "왜 이 업체를 골랐는지" - AI가 그 순간 만들어준 설명(또는 규칙 기반 다시찾기의 설명)을
+    // 여기 저장해둔다. 세션에 안 남기고 매번 새로 계산하면(예산/지역 매칭 정도) 정보가 너무
+    // 빈약해져서, 처음 고를 때 만든 설명을 그대로 들고 다니다가 확정/새로고침/조합 히스토리
+    // 배지 등 어떤 경로로 다시 봐도 똑같이 보여준다. 업체가 바뀌면(다시찾기) 그때 새로 채워짐.
+    @Column(length = 500)
+    private String pickReason;
+
     public void changeStatus(SlotStatus status) {
         this.status = status;
     }
@@ -42,6 +49,10 @@ public class SlotState {
 
     public void changeNote(String note) {
         this.note = note;
+    }
+
+    public void changePickReason(String pickReason) {
+        this.pickReason = pickReason;
     }
 
     public static SlotState empty() {
