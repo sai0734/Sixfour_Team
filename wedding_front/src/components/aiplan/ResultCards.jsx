@@ -229,9 +229,12 @@ const VendorCard = ({
   const displayPrice = resolvedPrice != null ? resolvedPrice : price;
 
   return (
-    <div>
+    <div className="flex h-full flex-col">
       <div className="relative">
         <SlotThumb fileName={imageUrl} alt={name} cmno={cmno} />
+        <span className="absolute bottom-1.5 left-1.5 flex h-6 items-center justify-center whitespace-nowrap rounded-full bg-black/55 px-2.5 text-xs font-semibold text-white">
+          {label}
+        </span>
         {canAct && (
           <button
             type="button"
@@ -265,14 +268,20 @@ const VendorCard = ({
       {displayPrice != null && (
         <span className="block text-xs font-medium text-ink-muted">{formatWon(displayPrice)}</span>
       )}
-      {reason && <span className="block truncate text-xs text-ink-faint">{reason}</span>}
+      {/* reason은 이제 확정된 슬롯일 때만 내려옴(백엔드에서 PENDING엔 안 붙이도록 고침) -
+          그래서 일반 캡션이 아니라 "확정됨" 느낌의 작은 배지로 보여준다. */}
+      {reason && (
+        <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-[11px] font-medium text-green-700">
+          ✓ {reason}
+        </span>
+      )}
 
       {canAct && (
         <button
           type="button"
           onClick={() => runAction(isConfirmed ? "UNLOCK" : "CONFIRM")}
           disabled={Boolean(pending)}
-          className={`mt-1.5 w-full rounded-full px-2.5 py-1 text-xs font-medium transition disabled:opacity-60 ${
+          className={`mt-auto w-full rounded-full px-2.5 py-1 text-xs font-medium transition disabled:opacity-60 ${
             isConfirmed
               ? "bg-brand text-white hover:bg-brand-dark"
               : "bg-blush-100 text-brand-deep hover:bg-blush-200"
@@ -354,10 +363,16 @@ const SlotCard = ({ label, cmno, name, optionName, imageUrl, reason, price, pack
   );
 };
 
+// 카드 그리드에 보이는 순서 그대로(2x2) - 홀/스튜디오/드레스/메이크업
 const SLOT_DEFS = [
   { key: "hall", category: "HALL", label: "홀", optionKey: "hallRoomName" },
-  { key: "dress", category: "DRESS", label: "드레스", optionKey: "dressOptionName" },
   { key: "studio", category: "STUDIO", label: "스튜디오", optionKey: null },
+  {
+    key: "dress",
+    category: "DRESS",
+    label: "드레스",
+    optionKey: "dressOptionName",
+  },
   {
     key: "makeup",
     category: "MAKEUP",
@@ -489,6 +504,13 @@ const ResultCards = ({
         </div>
       )}
 
+      {/* 결과 화면의 "지금 이게 뭔지" 앵커 - 위에서부터 쭉 훑었을 때 여기서부터가 진짜 결과라는 걸
+          바로 알 수 있게 큰 제목을 둔다. 아래 히스토리 배지/카드/액션 박스가 전부 이 조합
+          하나에 대한 것이라는 문맥을 먼저 잡아준다. */}
+      {soleCombo && (
+        <h2 className="mb-3 font-['Gowun_Batang'] text-xl text-ink">✨ 완성된 조합</h2>
+      )}
+
       {/* 조합 히스토리 배지 - "첫 추천 조합"에서 시작해서 다시찾기/확정/제외/다듬기로 손댈
           때마다 오른쪽으로 배지가 하나씩 늘어난다. 배지를 누르면 그 시점 조합을 그대로 볼 수
           있음. 배지 줄이 길어지면 이 줄 안에서만 가로 스크롤(하단 스크롤바)이 생기고, 오른쪽
@@ -529,8 +551,9 @@ const ResultCards = ({
               )}
             </div>
           </div>
-          <span className="shrink-0 text-sm font-semibold text-ink">
-            {formatWon(soleCombo.packagePrice)}
+          <span className="shrink-0 text-sm text-ink">
+            <span className="text-ink-faint">합계 </span>
+            <span className="font-semibold">{formatWon(soleCombo.packagePrice)}</span>
           </span>
         </div>
       )}
@@ -540,46 +563,39 @@ const ResultCards = ({
           자연스럽게 세로로 쌓인다. */}
       {soleCombo && (
         <div className="mb-6 grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
-          <div className="grid grid-cols-2 gap-4">
-            {SLOT_DEFS.map((def) => (
-              <VendorCard
-                key={def.category}
-                category={def.category}
-                label={def.label}
-                cmno={soleCombo[`${def.key}Cmno`]}
-                name={soleCombo[`${def.key}Name`]}
-                optionName={def.optionKey ? soleCombo[def.optionKey] : null}
-                imageUrl={soleCombo[`${def.key}ImageUrl`]}
-                reason={soleCombo[`${def.key}Reason`]}
-                price={soleCombo[`${def.key}Price`]}
-                packageType={def.packageTypeKey ? soleCombo[def.packageTypeKey] : undefined}
-                status={soleCombo[`${def.key}Status`]}
-                sessionId={sessionId}
-                onSlotAction={onSlotAction}
-              />
-            ))}
+          <div>
+            <p className="mb-2 text-xs font-medium text-ink-muted">
+              고른 업체 4곳 · 사진 왼쪽 위 ✕는 제외, 아래 버튼은 확정
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              {SLOT_DEFS.map((def) => (
+                <VendorCard
+                  key={def.category}
+                  category={def.category}
+                  label={def.label}
+                  cmno={soleCombo[`${def.key}Cmno`]}
+                  name={soleCombo[`${def.key}Name`]}
+                  optionName={def.optionKey ? soleCombo[def.optionKey] : null}
+                  imageUrl={soleCombo[`${def.key}ImageUrl`]}
+                  reason={soleCombo[`${def.key}Reason`]}
+                  price={soleCombo[`${def.key}Price`]}
+                  packageType={def.packageTypeKey ? soleCombo[def.packageTypeKey] : undefined}
+                  status={soleCombo[`${def.key}Status`]}
+                  sessionId={sessionId}
+                  onSlotAction={onSlotAction}
+                />
+              ))}
+            </div>
           </div>
 
           <div className="flex flex-col gap-4">
-            {sessionId && onApplyToPlan && (
-              <div className="flex flex-col items-center gap-2 rounded-2xl border border-brand-dark px-5 py-4 text-center">
-                <button
-                  type="button"
-                  onClick={onApplyToPlan}
-                  className="h-11 w-full rounded-full border border-brand-dark px-6 text-sm font-medium text-brand-deep hover:bg-blush-50"
-                >
-                  이 결과 마이페이지에 담기
-                </button>
-                <p className="text-xs text-ink-faint">
-                  플랜 · 준비관리 · 체크리스트 · 예산관리에 한 번에 반영돼요
-                </p>
-              </div>
-            )}
-
             {slots.length > 0 && (
               <div className="rounded-2xl border border-brand-dark bg-blush-50 p-5">
-                <p className="mb-3 text-center text-sm text-ink-soft">
-                  예약 진행할 업체를 골라주세요
+                <p className="mb-1 text-center text-sm font-medium text-brand-deep">
+                  이대로 예약할까요?
+                </p>
+                <p className="mb-3 text-center text-xs text-ink-soft">
+                  위 조합 중 예약을 진행할 업체를 골라주세요
                 </p>
                 <ul className="mb-4 space-y-1">
                   {slots.map((slot) => (
@@ -611,6 +627,22 @@ const ResultCards = ({
                     업체별로 순서대로 예약 페이지로 안내해드려요. 로그인이 필요해요.
                   </p>
                 </div>
+              </div>
+            )}
+
+            {sessionId && onApplyToPlan && (
+              <div className="flex flex-col items-center gap-2 rounded-2xl border border-line bg-white px-5 py-4 text-center">
+                <p className="text-xs text-ink-soft">아직 예약은 미루고 계획만 저장해둘까요?</p>
+                <button
+                  type="button"
+                  onClick={onApplyToPlan}
+                  className="h-11 w-full rounded-full border border-line px-6 text-sm font-medium text-ink-soft hover:bg-surface"
+                >
+                  마이페이지에 저장하기
+                </button>
+                <p className="text-xs text-ink-faint">
+                  예식일 · 총예산이 마이페이지 플랜에 반영돼요
+                </p>
               </div>
             )}
           </div>
@@ -687,10 +719,6 @@ const ResultCards = ({
           ))}
         </div>
       ) : null}
-
-      <p className="mt-6 text-center text-xs text-ink-faint">
-        표시된 가격은 참고용이며, 실제 금액은 예약 시 옵션 선택에서 확정돼요.
-      </p>
     </div>
   );
 };

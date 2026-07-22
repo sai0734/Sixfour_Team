@@ -167,6 +167,33 @@ public class AiPlanSessionSupport {
         }
     }
 
+    // 사이드패널 버튼(확정/해제/다시찾기/제외)은 사용자가 자유발화로 말한 "턴"이 아니라 조용한
+    // 상태 조정이라 새 히스토리 배지를 만들지 않는다. 그렇다고 아예 기록을 안 남기면, 나중에
+    // 상단 배지로 예전 턴을 봤다가 "현재"로 돌아올 때 방금 한 조정(확정/제외 등)이 사라져버리는
+    // 문제가 생겨서 - 마지막 턴의 스냅샷을 지금 상태로 덮어써서 그 문제를 막는다.
+    public void refreshLatestHistorySnapshot(AiPlanSession session) {
+        List<AiPlanSessionHistory> history = historyOf(session.getSessionId());
+
+        if (history.isEmpty()) {
+            saveHistory(session, 0, null);
+            return;
+        }
+
+        AiPlanSessionHistory latest = history.get(history.size() - 1);
+        try {
+            Map<String, Object> snapshot = new LinkedHashMap<>();
+            snapshot.put("hall", slotMap(session.getHallSlot()));
+            snapshot.put("studio", slotMap(session.getStudioSlot()));
+            snapshot.put("dress", slotMap(session.getDressSlot()));
+            snapshot.put("makeup", slotMap(session.getMakeupSlot()));
+
+            latest.changeSlotSnapshotJson(objectMapper.writeValueAsString(snapshot));
+            historyRepository.save(latest);
+        } catch (Exception e) {
+            log.error("AiPlan session history 갱신 실패 (sessionId={})", session.getSessionId(), e);
+        }
+    }
+
     private Map<String, Object> slotMap(SlotState slot) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("status", slot.getStatus().name());
@@ -304,14 +331,19 @@ public class AiPlanSessionSupport {
             return company != null ? company.getName() : null;
         }
 
+        // PENDING엔 일부러 문구를 안 붙인다 - "요청하신 대로 다시 골랐어요"를 PENDING 전체에
+        // 붙였더니, 첫 추천 직후/새로고침 복원/조합 히스토리 배지로 예전 턴을 봤을 때도 마치
+        // 방금 다시 찾은 것처럼 보이는 버그가 있었다. "방금 이 카테고리를 다시 찾았다"는 건
+        // 특정 순간에만 참인 정보라 슬롯 상태만으로는 표현할 수 없고, 이미 각 액션이 돌려주는
+        // 상단 메시지(예: "다시 찾아봤어요.")가 그 순간에만 정확히 나타났다 사라지므로 그걸로
+        // 충분하다 - 여기서 중복으로 안 만든다.
         String reasonLabel() {
             if (company == null) {
                 return null;
             }
             return switch (status) {
                 case CONFIRMED -> "확정하신 곳이에요";
-                case EXCLUDED -> null;
-                case PENDING -> "요청하신 대로 다시 골랐어요";
+                case EXCLUDED, PENDING -> null;
             };
         }
     }

@@ -405,17 +405,13 @@ const DetailPlanPage = () => {
 
     if (
       !window.confirm(
-        "이 결과를 마이페이지 플랜 · 준비관리 · 체크리스트 · 예산관리에 반영할까요?\n" +
-          "기존에 저장된 예식일 · 총예산 · 예식장 정보가 있다면 덮어씌워져요.",
+        "기존에 저장된 예식일 · 총예산 · 예식장 정보가 있다면 덮어씌워져요.",
       )
     ) {
       return;
     }
 
     applySessionToPlan(result.sessionId)
-      .then((data) => {
-        alert(data?.message || "마이페이지에 반영했어요.");
-      })
       .catch((err) => {
         console.error(err);
         const msg = err?.response?.data?.msg;
@@ -789,77 +785,76 @@ const DetailPlanPage = () => {
                 </div>
               )}
 
-              {result.sessionId && refineOpen && (
-                <form
-                  onSubmit={handleRefineSubmit}
-                  className="mt-6 rounded-2xl border border-line bg-surface p-5"
-                >
-                  <label className="mb-2 block text-xs font-medium text-ink-muted">
-                    이 조합을 어떻게 다듬을까요?
-                  </label>
-                  <div className="mb-2 flex flex-wrap gap-1.5">
-                    {REFINE_SUGGESTIONS.map((suggestion) => (
-                      <button
-                        key={suggestion}
-                        type="button"
-                        onClick={() => appendRefineSuggestion(suggestion)}
-                        className="rounded-full border border-line bg-white px-3 py-1 text-xs text-ink-soft hover:bg-blush-100"
-                      >
-                        {suggestion}
-                      </button>
-                    ))}
-                  </div>
-                  <textarea
-                    value={refineText}
-                    onChange={(e) => setRefineText(e.target.value)}
-                    rows={3}
-                    placeholder="예: 스튜디오는 예산 초과라서 빼고 나머지로 추천해줘. 홀이랑 메이크업은 마음에 들어서 확정, 드레스만 다른 스타일로 다시 찾아줘"
-                    className="w-full rounded-xl border border-line bg-white px-4 py-2.5 text-sm text-ink outline-none focus:border-brand-dark"
-                  />
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <button
-                      type="submit"
-                      disabled={refineLoading || !refineText.trim()}
-                      className="h-10 rounded-full bg-brand px-5 text-sm font-medium text-white hover:bg-brand-dark disabled:opacity-60"
-                    >
-                      {refineLoading ? "반영하는 중..." : "보내기"}
-                    </button>
-                  </div>
-                </form>
-              )}
-
-              <div className="mt-8 flex flex-col items-center gap-3 md:flex-row md:justify-center">
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  className="h-11 rounded-full border border-line px-6 text-sm font-medium text-ink-soft hover:bg-surface"
-                >
-                  다른 조건으로 다시 찾기
-                </button>
-                {result.sessionId && (
+              {/* 조합이 마음에 안 들면 여기서 바로 - 버튼을 누르는 자리 바로 아래에서 폼이
+                  펼쳐지게 해서, 예전처럼 페이지 맨 아래 버튼을 누르면 훨씬 위쪽에 폼이
+                  나타나는 어색함을 없앴다. */}
+              {result.sessionId && (
+                <div className="mt-6 rounded-2xl border border-line bg-white p-5">
                   <button
                     type="button"
                     onClick={() => setRefineOpen((prev) => !prev)}
-                    className="h-11 rounded-full border border-brand-dark px-6 text-sm font-medium text-brand-deep hover:bg-surface"
+                    className="flex w-full items-center justify-between text-left"
                   >
-                    {refineOpen ? "다듬기 닫기" : "이 결과 다듬기"}
+                    <span>
+                      <span className="block text-sm font-semibold text-ink">
+                        마음에 안 드는 부분이 있나요?
+                      </span>
+                      <span className="block text-xs text-ink-faint">
+                        자유롭게 말씀해주시면 그 부분만 다시 찾아드려요
+                      </span>
+                    </span>
+                    <span className="shrink-0 rounded-full bg-brand px-5 py-2 text-sm font-medium text-white">
+                      {refineOpen ? "닫기" : "플랜 수정하기"}
+                    </span>
                   </button>
-                )}
+
+                  {refineOpen && (
+                    <form onSubmit={handleRefineSubmit} className="mt-4 border-t border-line pt-4">
+                      <div className="mb-2 flex flex-wrap gap-1.5">
+                        {REFINE_SUGGESTIONS.map((suggestion) => (
+                          <button
+                            key={suggestion}
+                            type="button"
+                            onClick={() => appendRefineSuggestion(suggestion)}
+                            className="rounded-full border border-line bg-white px-3 py-1 text-xs text-ink-soft hover:bg-blush-100"
+                          >
+                            {suggestion}
+                          </button>
+                        ))}
+                      </div>
+                      <textarea
+                        value={refineText}
+                        onChange={(e) => setRefineText(e.target.value)}
+                        rows={3}
+                        placeholder="예: 스튜디오는 예산 초과라서 빼고 나머지로 추천해줘. 홀이랑 메이크업은 마음에 들어서 확정, 드레스만 다른 스타일로 다시 찾아줘"
+                        className="w-full rounded-xl border border-line bg-surface px-4 py-2.5 text-sm text-ink outline-none focus:border-brand-dark"
+                      />
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <button
+                          type="submit"
+                          disabled={refineLoading || !refineText.trim()}
+                          className="h-10 rounded-full bg-brand px-5 text-sm font-medium text-white hover:bg-brand-dark disabled:opacity-60"
+                        >
+                          {refineLoading ? "반영하는 중..." : "보내기"}
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              )}
+
+              {/* 새로 시작하거나 공유하는 건 부가 기능이라, 위 핵심 액션들보다 눈에 덜 띄게
+                  아래쪽에 작은 텍스트 링크 느낌으로 둔다. */}
+              <div className="mt-6 flex flex-col items-center gap-3 text-sm text-ink-muted md:flex-row md:justify-center md:gap-6">
+                <button type="button" onClick={handleReset} className="hover:text-ink-soft hover:underline">
+                  다른 조건으로 새로 찾기
+                </button>
                 {result.sessionId && (
-                  <button
-                    type="button"
-                    onClick={handleCopyLink}
-                    className="h-11 rounded-full border border-line px-6 text-sm font-medium text-ink-soft hover:bg-surface"
-                  >
-                    {linkCopied ? "복사됐어요!" : "링크 복사하기"}
+                  <button type="button" onClick={handleCopyLink} className="hover:text-ink-soft hover:underline">
+                    {linkCopied ? "복사됐어요!" : "링크로 공유하기"}
                   </button>
                 )}
               </div>
-              {result.sessionId && (
-                <p className="mt-3 text-center text-xs text-ink-faint">
-                  이 링크를 열면 같은 조합을 보고, 같이 다듬거나 확정할 수도 있어요.
-                </p>
-              )}
             </div>
           )}
         </div>

@@ -48,4 +48,10 @@ public class AiPlanSessionHistory {
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    // 사이드패널 버튼(확정/해제/다시찾기/제외)처럼 새 턴으로 안 남기고 마지막 스냅샷만
+    // 갱신할 때 씀 (AiPlanSessionSupport.refreshLatestHistorySnapshot 참고)
+    public void changeSlotSnapshotJson(String slotSnapshotJson) {
+        this.slotSnapshotJson = slotSnapshotJson;
+    }
+
 }
