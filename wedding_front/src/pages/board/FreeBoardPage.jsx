@@ -170,7 +170,7 @@ const FreeBoardPage = () => {
 
   return (
     <BoardLayout
-      eyebrow="FREE BOARD"
+      eyebrow="05 — FREE BOARD"
       title="자유게시판"
       subtitle="예비 부부들의 자유로운 이야기"
     >

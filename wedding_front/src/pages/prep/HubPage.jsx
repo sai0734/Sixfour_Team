@@ -183,7 +183,7 @@ const HubPage = () => {
   if (!loginState.email) {
     return (
       <PrepLayout
-        eyebrow="PREP HUB"
+        eyebrow="03 — PREP HUB"
         title="준비 관리"
         subtitle="한눈에 보는 우리 결혼 준비 현황"
       >
@@ -197,7 +197,7 @@ const HubPage = () => {
   if (!loaded) {
     return (
       <PrepLayout
-        eyebrow="PREP HUB"
+        eyebrow="03 — PREP HUB"
         title="준비 관리"
         subtitle="한눈에 보는 우리 결혼 준비 현황"
       >
@@ -296,7 +296,7 @@ const HubPage = () => {
 
   return (
     <PrepLayout
-      eyebrow="PREP HUB"
+      eyebrow="03 — PREP HUB"
       title="준비 관리"
       subtitle="한눈에 보는 우리 결혼 준비 현황"
     >

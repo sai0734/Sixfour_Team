@@ -8,7 +8,7 @@ const AiDressPage = () => {
   if (!loginState.email) {
     return (
       <PrepLayout
-        eyebrow="AI DRESS"
+        eyebrow="03 — AI DRESS"
         title="AI 드레스"
         subtitle="내 사진으로 드레스를 미리 입어보세요"
       >
@@ -21,7 +21,7 @@ const AiDressPage = () => {
 
   return (
     <PrepLayout
-      eyebrow="AI DRESS"
+      eyebrow="03 — AI DRESS"
       title="AI 드레스"
       subtitle="내 사진으로 드레스를 미리 입어보세요"
     >

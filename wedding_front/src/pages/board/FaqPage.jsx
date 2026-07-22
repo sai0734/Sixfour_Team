@@ -63,7 +63,7 @@ const FaqPage = () => {
 
   return (
     <BoardLayout
-      eyebrow="FREQUENTLY ASKED QUESTIONS"
+      eyebrow="05 — FREQUENTLY ASKED QUESTIONS"
       title="자주 묻는 질문"
       subtitle="궁금한 점을 먼저 확인해보세요"
     >

@@ -182,22 +182,7 @@ const CompanyListComponent = () => {
     <section className="text-ink">
       {fetching ? <FetchingModal /> : null}
 
-      {/* ── 헤더: 관리자 뷰 (상품관리 스타일) ── */}
-      {canManageCompany ? (
-        <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
-          <div>
-            <ShopTapeLabel className="mb-2.5">관리자</ShopTapeLabel>
-            <p className="font-['Gowun_Batang'] text-2xl text-ink mt-4">업체 관리</p>
-          </div>
-          <button
-            type="button"
-            className="h-10 px-5 rounded-full bg-brand text-white text-sm font-medium hover:bg-brand-dark transition"
-            onClick={() => navigate({ pathname: `${companyPathPrefix}/add` })}
-          >
-            + 업체 등록
-          </button>
-        </div>
-      ) : (
+      {!canManageCompany && (
         /* ── 배너: 상단 고정 메뉴에 붙이고 좌우 full-bleed / 아래 리스트는 원래 폭 ── */
         <section
           className="relative mb-6 bg-cover bg-center pb-10 pt-24 text-center md:pb-12 sm:pt-28 -mt-20 sm:-mt-28"
@@ -212,7 +197,7 @@ const CompanyListComponent = () => {
 
           <div className="relative z-10 mx-auto max-w-[720px] px-5">
             <ShopTapeLabel tone="white" className="mb-5">
-              01 — WEDDING COMPANY
+              02 — WEDDING COMPANY
             </ShopTapeLabel>
             <h1 className="mb-2.5 font-['Gowun_Batang'] text-2xl leading-snug text-white md:mb-3.5 md:text-4xl">
               우리 결혼식에 어울리는 업체
@@ -224,6 +209,25 @@ const CompanyListComponent = () => {
           </div>
         </section>
       )}
+
+      {/* 답례품(max-w-[1200px])·준비관리와 맞춘 본문 가로폭 */}
+      <div className="mx-auto w-full max-w-[1200px]">
+      {/* ── 헤더: 관리자 뷰 (상품관리 스타일) ── */}
+      {canManageCompany ? (
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <ShopTapeLabel className="mb-2.5">관리자</ShopTapeLabel>
+            <p className="mt-4 font-['Gowun_Batang'] text-2xl text-ink">업체 관리</p>
+          </div>
+          <button
+            type="button"
+            className="h-10 rounded-full bg-brand px-5 text-sm font-medium text-white transition hover:bg-brand-dark"
+            onClick={() => navigate({ pathname: `${companyPathPrefix}/add` })}
+          >
+            + 업체 등록
+          </button>
+        </div>
+      ) : null}
 
       {/* ── 통계 카드 (관리자) 대시보드 페이지랑 겹치는거 같아서 우선 빼는걸로 수정함 ──
       {canManageCompany && (
@@ -238,7 +242,7 @@ const CompanyListComponent = () => {
       {/* ── 필터 (컨테이너 없이 오픈 스타일) ── */}
       <div className="mb-6 space-y-3">
         {/* 검색 */}
-        <div className="flex w-1/2 max-w-full gap-2 mx-auto">
+        <div className="mx-auto flex w-1/2 max-w-full gap-2">
           <input
             className="h-[38px] min-w-0 flex-1 rounded-full border border-line px-4 text-[13px] text-ink outline-none transition focus:border-brand"
             type="text"
@@ -451,6 +455,7 @@ const CompanyListComponent = () => {
 
       <div className="mt-5">
         <PageComponent serverData={serverData} movePage={moveToCompanyList} />
+      </div>
       </div>
     </section>
   );

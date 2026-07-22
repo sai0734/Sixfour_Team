@@ -10,6 +10,7 @@ import {
 import FetchingModal from "../common/FetchingModal";
 import ResultModal from "../common/ResultModal";
 import useCustomLogin from "../../hooks/useCustomLogin";
+import ShopTapeLabel from "../product/ShopTapeLabel";
 
 const initState = {
   category: "HALL",
@@ -30,6 +31,11 @@ const categoryLabels = {
   MAKEUP: "메이크업",
   STUDIO: "스튜디오",
 };
+
+const inputClass =
+  "h-10 w-full rounded-lg border border-line-soft px-3 text-sm text-ink outline-none transition focus:border-brand";
+const textareaClass =
+  "w-full resize-none rounded-lg border border-line-soft p-3 text-sm text-ink outline-none transition focus:border-brand";
 
 const CompanyFormComponent = ({ mode = "add" }) => {
   const { cmno } = useParams();
@@ -234,8 +240,20 @@ const CompanyFormComponent = ({ mode = "add" }) => {
     });
   };
 
+  const goBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate({
+      pathname: isModify
+        ? `${companyPathPrefix}/read/${cmno}`
+        : `${companyPathPrefix}/list`,
+    });
+  };
+
   return (
-    <section className="mx-auto max-w-4xl p-4 text-slate-800">
+    <div className="pb-10 text-ink">
       {fetching ? <FetchingModal /> : null}
       {result ? (
         <ResultModal
@@ -249,202 +267,204 @@ const CompanyFormComponent = ({ mode = "add" }) => {
         />
       ) : null}
 
-      <div className="mb-7 flex items-center gap-3">
-        <button
-          type="button"
-          className="flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 text-slate-600 hover:bg-slate-50"
-          onClick={() => {
-            if (window.history.length > 1) {
-              navigate(-1);
-              return;
-            }
-            navigate({
-              pathname: isModify
-                ? `${companyPathPrefix}/read/${cmno}`
-                : `${companyPathPrefix}/list`,
-            });
-          }}
-          title="뒤로"
-        >
-          {"<"}
-        </button>
-        <div>
-          <h2 className="text-xl font-semibold">
-            {isModify ? "업체 수정" : "업체 등록"}
-          </h2>
-          <p className="mt-1 text-sm text-slate-500">
-            업체 관리자 권한으로 업체 정보를 저장합니다.
-          </p>
-        </div>
-      </div>
+      <div className="mx-auto max-w-[900px]">
+        <ShopTapeLabel className="mb-4">관리자</ShopTapeLabel>
+        <p className="mb-8 font-['Gowun_Batang'] text-2xl">
+          {isModify ? "업체 수정" : "업체 등록"}
+          {isModify ? (
+            <span className="ml-2 text-base text-ink-faint">#{cmno}</span>
+          ) : null}
+        </p>
 
-      <div className="mb-5 flex border-b border-slate-200 text-sm">
-        <div className="border-b-2 border-blue-600 px-4 py-2 font-medium text-blue-700">
-          기본 정보
-        </div>
-        <div className="px-4 py-2 text-slate-500">위치 정보</div>
-        <div className="px-4 py-2 text-slate-500">이미지</div>
-      </div>
-
-      <FormSection title="업체 기본 정보">
-        <div className="grid gap-4 md:grid-cols-2">
-          <Field label="업체명" required>
-            <input
-              className="form-input"
-              name="name"
-              type="text"
-              value={company.name}
-              onChange={handleChange}
-              placeholder="예: 그랜드 웨딩홀"
-            />
-          </Field>
-          <Field label="업체 유형" required>
-            <select
-              className="form-input"
-              name="category"
-              value={company.category}
-              onChange={handleChange}
-            >
-              <option value="HALL">웨딩홀</option>
-              <option value="DRESS">드레스</option>
-              <option value="MAKEUP">메이크업</option>
-              <option value="STUDIO">스튜디오</option>
-            </select>
-            <p className="mt-1 text-xs text-slate-500">{categoryDetail}</p>
-          </Field>
-          <Field label="대표자명">
-            <input
-              className="form-input"
-              name="ceoName"
-              type="text"
-              value={company.ceoName || ""}
-              onChange={handleChange}
-              placeholder="대표자명"
-            />
-          </Field>
-          <Field label="연락처" required>
-            <input
-              className="form-input"
-              name="phone"
-              type="text"
-              value={company.phone || ""}
-              onChange={handleChange}
-              placeholder="02-0000-0000"
-            />
-          </Field>
-          <Field label="업체 소개" full>
-            <textarea
-              className="form-textarea"
-              name="description"
-              value={company.description || ""}
-              onChange={handleChange}
-              placeholder="업체 소개를 입력하세요."
-            />
-          </Field>
-        </div>
-      </FormSection>
-
-      <FormSection title="위치 및 견적 정보">
-        <div className="grid gap-4 md:grid-cols-2">
-          <Field label="주소" required full>
-            <div className="flex gap-2">
+        {/* 기본 정보 */}
+        <div className="mb-6 rounded-2xl bg-white p-6 shadow-[0_8px_24px_-12px_rgba(58,54,47,0.15)]">
+          <p className="mb-4 text-sm font-medium">기본 정보</p>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="md:col-span-2">
+              <label className="mb-1.5 block text-xs text-ink-soft">
+                업체명 *
+              </label>
               <input
-                className="form-input flex-1"
-                name="address"
+                name="name"
                 type="text"
-                value={company.address || ""}
+                value={company.name}
                 onChange={handleChange}
-                placeholder="주소 찾기 버튼을 눌러 주소를 검색하세요"
-                readOnly
+                placeholder="예: 그랜드 웨딩홀"
+                className={inputClass}
               />
-              <button
-                type="button"
-                onClick={handleSearchAddress}
-                className="shrink-0 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-              >
-                주소 찾기
-              </button>
             </div>
-          </Field>
-          <Field label="위도">
-            <input
-              className="form-input bg-slate-50"
-              name="latitude"
-              type="number"
-              value={company.latitude ?? ""}
-              onChange={handleChange}
-              placeholder="주소 검색 시 자동 입력"
-            />
-          </Field>
-          <Field label="경도">
-            <input
-              className="form-input bg-slate-50"
-              name="longitude"
-              type="number"
-              value={company.longitude ?? ""}
-              onChange={handleChange}
-              placeholder="주소 검색 시 자동 입력"
-            />
-          </Field>
-          <Field label="평균 가격" required>
-            <input
-              className="form-input"
-              name="priceAvg"
-              type="number"
-              value={company.priceAvg ?? ""}
-              onChange={handleChange}
-              placeholder="1200000"
-            />
-          </Field>
-          <div className="rounded-md bg-slate-50 p-4">
-            <div className="text-sm text-slate-500">견적 합계</div>
-            <div className="mt-1 text-xl font-semibold">
-              {company.priceAvg
-                ? Number(company.priceAvg).toLocaleString()
-                : "0"}
-              원
+
+            <div>
+              <label className="mb-1.5 block text-xs text-ink-soft">
+                업체 유형 *
+              </label>
+              <select
+                name="category"
+                value={company.category}
+                onChange={handleChange}
+                className={inputClass}
+              >
+                <option value="HALL">웨딩홀</option>
+                <option value="DRESS">드레스</option>
+                <option value="MAKEUP">메이크업</option>
+                <option value="STUDIO">스튜디오</option>
+              </select>
+              <p className="mt-1 text-xs text-ink-faint">{categoryDetail}</p>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs text-ink-soft">
+                대표자명
+              </label>
+              <input
+                name="ceoName"
+                type="text"
+                value={company.ceoName || ""}
+                onChange={handleChange}
+                placeholder="대표자명"
+                className={inputClass}
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs text-ink-soft">
+                연락처 *
+              </label>
+              <input
+                name="phone"
+                type="text"
+                value={company.phone || ""}
+                onChange={handleChange}
+                placeholder="02-0000-0000"
+                className={inputClass}
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs text-ink-soft">
+                평균 가격(원) *
+              </label>
+              <input
+                name="priceAvg"
+                type="number"
+                value={company.priceAvg ?? ""}
+                onChange={handleChange}
+                placeholder="1200000"
+                className={inputClass}
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="mb-1.5 block text-xs text-ink-soft">
+                업체 소개
+              </label>
+              <textarea
+                name="description"
+                rows={5}
+                value={company.description || ""}
+                onChange={handleChange}
+                placeholder="업체 소개를 입력하세요."
+                className={textareaClass}
+              />
             </div>
           </div>
         </div>
-      </FormSection>
 
-      <FormSection title="이미지 관리">
-        {isModify && company.uploadFileNames?.length > 0 ? (
-          <div className="mb-4">
-            <div className="mb-2 text-sm font-medium text-slate-600">
-              등록된 이미지
-            </div>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              {company.uploadFileNames.map((fileName, index) => (
-                <div
-                  key={fileName}
-                  className="relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-100"
+        {/* 위치 */}
+        <div className="mb-6 rounded-2xl bg-white p-6 shadow-[0_8px_24px_-12px_rgba(58,54,47,0.15)]">
+          <p className="mb-4 text-sm font-medium">위치 정보</p>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="md:col-span-2">
+              <label className="mb-1.5 block text-xs text-ink-soft">주소 *</label>
+              <div className="flex gap-2">
+                <input
+                  name="address"
+                  type="text"
+                  value={company.address || ""}
+                  onChange={handleChange}
+                  placeholder="주소 찾기 버튼을 눌러 검색하세요"
+                  readOnly
+                  className={`${inputClass} flex-1 bg-cream/40`}
+                />
+                <button
+                  type="button"
+                  onClick={handleSearchAddress}
+                  className="h-10 shrink-0 rounded-full bg-brand px-4 text-sm font-medium text-white transition hover:bg-brand-dark"
                 >
-                  <img
-                    className="h-full w-full object-cover"
-                    src={getCompanyImageUrl(fileName, true)}
-                    alt={`current ${index + 1}`}
-                  />
+                  주소 찾기
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs text-ink-soft">위도</label>
+              <input
+                name="latitude"
+                type="number"
+                value={company.latitude ?? ""}
+                onChange={handleChange}
+                placeholder="주소 검색 시 자동 입력"
+                className={`${inputClass} bg-cream/40`}
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs text-ink-soft">경도</label>
+              <input
+                name="longitude"
+                type="number"
+                value={company.longitude ?? ""}
+                onChange={handleChange}
+                placeholder="주소 검색 시 자동 입력"
+                className={`${inputClass} bg-cream/40`}
+              />
+            </div>
+
+            <div className="rounded-xl bg-cream/70 px-4 py-3 md:col-span-2">
+              <div className="text-xs text-ink-soft">견적 합계 (평균 가격)</div>
+              <div className="mt-1 font-['Gowun_Batang'] text-xl text-ink">
+                {company.priceAvg
+                  ? `${Number(company.priceAvg).toLocaleString()}원`
+                  : "0원"}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 이미지 */}
+        <div className="mb-6 rounded-2xl bg-white p-6 shadow-[0_8px_24px_-12px_rgba(58,54,47,0.15)]">
+          <p className="mb-4 text-sm font-medium">업체 이미지</p>
+
+          {isModify && company.uploadFileNames?.length > 0 ? (
+            <div className="mb-4 grid grid-cols-3 gap-3 md:grid-cols-4">
+              {company.uploadFileNames.map((fileName, index) => (
+                <div key={fileName} className="relative">
+                  <div className="aspect-square overflow-hidden rounded-lg bg-surface">
+                    <img
+                      alt=""
+                      src={getCompanyImageUrl(fileName, true)}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
                   {index === 0 ? (
-                    <span className="absolute bottom-1 left-1 rounded bg-blue-600 px-1.5 py-0.5 text-xs text-white">
+                    <span className="absolute bottom-1.5 left-1.5 rounded-full bg-brand px-2 py-0.5 text-[10px] font-medium text-white">
                       대표
                     </span>
                   ) : null}
                   <button
-                    className="absolute right-1 top-1 rounded bg-white px-2 py-1 text-xs text-red-600 shadow"
                     type="button"
                     onClick={() => handleRemoveCurrentImage(fileName)}
+                    className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-xs text-white"
                   >
-                    삭제
+                    ×
                   </button>
                 </div>
               ))}
             </div>
-          </div>
-        ) : null}
+          ) : null}
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <label className="flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 p-6 text-center hover:border-blue-400 hover:bg-blue-50">
+          <p className="mb-2 text-xs text-ink-soft">새 이미지 추가</p>
+          <label className="mb-4 flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-line bg-cream/50 px-4 py-6 text-center transition hover:border-brand hover:bg-blush-50">
             <input
               ref={uploadRef}
               className="hidden"
@@ -453,88 +473,56 @@ const CompanyFormComponent = ({ mode = "add" }) => {
               multiple
               onChange={handlePreview}
             />
-            <span className="text-2xl">+</span>
-            <span className="mt-1 text-sm font-medium">업체 이미지 업로드</span>
-            <span className="mt-1 text-xs text-slate-500">
+            <span className="text-lg text-ink-soft">+</span>
+            <span className="mt-1 text-sm font-medium text-ink">
+              업체 이미지 업로드
+            </span>
+            <span className="mt-1 text-xs text-ink-faint">
               첫 번째 이미지가 대표 이미지로 사용됩니다.
             </span>
           </label>
-          <div>
-            <div className="mb-2 text-sm font-medium text-slate-600">
-              새 이미지 미리보기
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              {previews.length > 0 ? (
-                previews.map((preview, index) => (
-                  <div
-                    key={preview}
-                    className="relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-100"
-                  >
-                    <img
-                      className="h-full w-full object-cover"
-                      src={preview}
-                      alt={`preview ${index + 1}`}
-                    />
-                    {index === 0 && !company.uploadFileNames?.length ? (
-                      <span className="absolute bottom-1 left-1 rounded bg-blue-600 px-1.5 py-0.5 text-xs text-white">
-                        대표
-                      </span>
-                    ) : null}
-                  </div>
-                ))
-              ) : (
-                <div className="col-span-3 flex h-28 items-center justify-center rounded-md bg-slate-50 text-sm text-slate-400">
-                  선택한 이미지가 없습니다.
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </FormSection>
 
-      <div className="mt-5 flex items-center justify-between border-t border-slate-200 pt-5">
-        <button
-          className="rounded-md border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
-          type="button"
-          onClick={() =>
-            navigate({
-              pathname: isModify
-                ? `${companyPathPrefix}/read/${cmno}`
-                : `${companyPathPrefix}/list`,
-            })
-          }
-        >
-          취소
-        </button>
-        <button
-          className="rounded-md bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700"
-          type="button"
-          onClick={handleSubmit}
-        >
-          {isModify ? "업체 수정" : "업체 저장"}
-        </button>
+          {previews.length > 0 ? (
+            <div className="grid grid-cols-3 gap-3 md:grid-cols-4">
+              {previews.map((preview, index) => (
+                <div key={preview} className="relative">
+                  <div className="aspect-square overflow-hidden rounded-lg bg-surface">
+                    <img
+                      alt=""
+                      src={preview}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  {index === 0 && !company.uploadFileNames?.length ? (
+                    <span className="absolute bottom-1.5 left-1.5 rounded-full bg-brand px-2 py-0.5 text-[10px] font-medium text-white">
+                      대표
+                    </span>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="flex flex-wrap justify-end gap-2">
+          <button
+            type="button"
+            onClick={goBack}
+            className="h-11 rounded-full border border-line-soft px-6 text-sm"
+          >
+            목록으로
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            className="h-11 rounded-full bg-brand px-6 text-sm font-medium text-white hover:bg-brand-dark"
+          >
+            {isModify ? "수정 완료" : "업체 저장"}
+          </button>
+        </div>
       </div>
-    </section>
+    </div>
   );
 };
-
-const FormSection = ({ title, children }) => (
-  <section className="mb-5 rounded-lg border border-slate-200 bg-white p-5">
-    <div className="mb-5 border-b border-slate-100 pb-3">
-      <h3 className="text-base font-semibold">{title}</h3>
-    </div>
-    {children}
-  </section>
-);
-
-const Field = ({ label, required = false, full = false, children }) => (
-  <label className={`block ${full ? "md:col-span-2" : ""}`}>
-    <div className="mb-1 text-sm font-medium text-slate-600">
-      {label}
-      {required ? <span className="ml-1 text-red-500">*</span> : null}
-    </div>
-    {children}
-  </label>
-);
 
 export default CompanyFormComponent;

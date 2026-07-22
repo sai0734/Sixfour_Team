@@ -125,7 +125,7 @@ const QuickPlanPage = () => {
         <div className="absolute inset-0 bg-black/45" />
         <div className="relative z-10 mx-auto max-w-[720px] px-5">
           <ShopTapeLabel tone="white" className="mb-5">
-            AI WEDDING PLAN
+            01 — AI WEDDING PLAN
           </ShopTapeLabel>
           <h1 className="mb-2.5 font-['Gowun_Batang'] text-2xl leading-snug text-white md:mb-3.5 md:text-4xl">
             예산부터 취향까지, 한 번에 맞추는 웨딩플랜

@@ -1039,16 +1039,27 @@ const MakeupDetail = ({ detail, cmno, canManageCompany, onRefresh }) => {
         </>
       ) : (
         <>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <InfoRow label="헤어 가격" value={formatPrice(detail.hairPrice)} />
-            <InfoRow
-              label="메이크업 가격"
-              value={formatPrice(detail.makeupPrice)}
-            />
-            <InfoRow label="네일 가격" value={formatPrice(detail.nailPrice)} />
+          {/* 단품 가격: 한 줄 밑줄로 묶어서 끊긴 느낌 제거 */}
+          <div className="grid grid-cols-3 gap-2 border-b border-slate-100 pb-4">
+            {[
+              { label: "헤어 가격", value: formatPrice(detail.hairPrice) },
+              {
+                label: "메이크업 가격",
+                value: formatPrice(detail.makeupPrice),
+              },
+              { label: "네일 가격", value: formatPrice(detail.nailPrice) },
+            ].map((row) => (
+              <div key={row.label} className="min-w-0">
+                <div className="text-[11px] text-slate-400">{row.label}</div>
+                <div className="mt-0.5 text-sm font-medium text-slate-800">
+                  {row.value}
+                </div>
+              </div>
+            ))}
           </div>
+
           {packages.length > 0 && (
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="mt-3 flex flex-col gap-2">
               {packages.map((pkg, index) => {
                 const opt = PACKAGE_TYPE_OPTIONS.find(
                   (o) => o.value === pkg.packageType,
@@ -1067,32 +1078,53 @@ const MakeupDetail = ({ detail, cmno, canManageCompany, onRefresh }) => {
                   basePrice > 0 && discountRate > 0
                     ? Math.round(basePrice * (1 - discountRate))
                     : null;
+                const title =
+                  packageTypeLabel[pkg.packageType] ||
+                  pkg.packageType ||
+                  "패키지";
+
                 return (
                   <div
                     key={`${pkg.packageType || "PACKAGE"}-${index}`}
-                    className="border-b border-slate-100 py-3 last:border-b-0"
+                    className="rounded-lg bg-slate-50/80 px-3 py-2.5"
                   >
-                    <div className="text-xs font-medium uppercase text-slate-400 mb-1">
-                      {packageTypeLabel[pkg.packageType] ||
-                        pkg.packageType ||
-                        "패키지"}
+                    <div className="mb-1.5 text-[11px] font-medium text-slate-500">
+                      {title}
                     </div>
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm font-semibold text-rose-500">
+                    <div className="flex items-end justify-between gap-3">
+                      {/* 왼쪽: 할인가 + 원가 */}
+                      <div className="min-w-0">
+                        {discountedPrice != null ? (
+                          <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+                            <span className="text-[15px] font-semibold text-slate-800">
+                              {discountedPrice.toLocaleString()}원
+                            </span>
+                            {basePrice > 0 && (
+                              <span className="text-xs text-slate-400 line-through">
+                                {basePrice.toLocaleString()}원
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-sm font-medium text-slate-700">
+                            {basePrice > 0
+                              ? `${basePrice.toLocaleString()}원`
+                              : "-"}
+                          </span>
+                        )}
+                      </div>
+                      {/* 오른쪽: 할인율 */}
+                      <span
+                        className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${
+                          discountRate > 0
+                            ? "bg-rose-50 text-rose-500"
+                            : "bg-slate-100 text-slate-400"
+                        }`}
+                      >
                         {discountRate > 0
                           ? `${Math.round(discountRate * 100)}% 할인`
                           : "할인 없음"}
                       </span>
-                      {discountedPrice != null && (
-                        <span className="text-sm text-slate-700">
-                          {basePrice > 0 && (
-                            <span className="text-xs text-slate-400 line-through mr-1">
-                              {basePrice.toLocaleString()}원
-                            </span>
-                          )}
-                          {discountedPrice.toLocaleString()}원
-                        </span>
-                      )}
                     </div>
                   </div>
                 );
