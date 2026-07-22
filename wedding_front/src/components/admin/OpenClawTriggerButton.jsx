@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { cancelOpenClawJob } from "../../api/aiOpsApi";
 
 // 관리자가 OpenClaw 작업(일간 점검 / 주간 브리핑)을 즉시 실행시키는 버튼.
 // 실제 작업은 백그라운드에서 도는 거라 HTTP 응답만으로는 완료를 알 수 없다. 그래서:
@@ -17,6 +18,7 @@ const OpenClawTriggerButton = ({
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [baseline, setBaseline] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [cancelling, setCancelling] = useState(false);
 
   const handleClick = async () => {
     setStatus("running");
@@ -38,6 +40,26 @@ const OpenClawTriggerButton = ({
         setErrorMessage("진단 실행에 실패했습니다. OpenClaw 게이트웨이가 켜져 있는지 확인해주세요.");
       }
       setStatus("error");
+    }
+  };
+
+  // 작업 하나만 콕 집어 취소하는 방법이 없어서, 게이트웨이 자체를 재시작해서 강제로 멈춘다.
+  // 그 순간 다른 작업이 같이 돌고 있었다면 그것도 같이 끊기므로 반드시 확인창을 거친다.
+  const handleCancel = async () => {
+    if (!window.confirm("정말 취소할까요? OpenClaw 게이트웨이 자체를 재시작해서 멈추는 거라, 지금 동시에 도는 다른 작업(일간/주간)이 있다면 그것도 같이 중단됩니다.")) {
+      return;
+    }
+    setCancelling(true);
+    try {
+      await cancelOpenClawJob();
+      setStatus("idle");
+      setSecondsLeft(0);
+      setErrorMessage("");
+    } catch (err) {
+      console.error(err);
+      alert("취소(게이트웨이 재시작)에 실패했습니다.");
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -98,10 +120,18 @@ const OpenClawTriggerButton = ({
               d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
             />
           </svg>
-          <div className="text-[11px] leading-relaxed text-ink-soft">
+          <div className="min-w-0 flex-1 text-[11px] leading-relaxed text-ink-soft">
             <p className="font-medium text-ink">지금 진단하고 있습니다...</p>
             <p>완료까지 약 {secondsLeft}초 남았어요.</p>
           </div>
+          <button
+            type="button"
+            onClick={handleCancel}
+            disabled={cancelling}
+            className="h-7 shrink-0 rounded-full border border-red-300 px-3 text-[11px] text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+          >
+            {cancelling ? "취소 중..." : "취소"}
+          </button>
         </div>
       )}
 

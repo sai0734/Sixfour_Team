@@ -47,6 +47,21 @@ public class AdminOpenClawController {
         return runCronJobByName(WEEKLY_BRIEFING_JOB_NAME);
     }
 
+    // 특정 작업 하나만 골라서 취소하는 CLI 명령이 없어서, 게이트웨이 자체를 재시작하는 방식으로
+    // 처리한다. 지금 도는 모든 작업(일간/주간 둘 다 돌고 있었다면 둘 다)이 같이 중단되는
+    // 다소 거친 방법이라 프론트에서 확인창을 띄우고 호출해야 함.
+    @PostMapping("/cancel")
+    public ResponseEntity<?> cancelRunningJob() {
+        try {
+            String outputText = runCommand(30, "daemon", "restart");
+            log.info("OpenClaw 게이트웨이 재시작(취소) 결과: {}", outputText);
+            return ResponseEntity.ok().body(outputText);
+        } catch (Exception e) {
+            log.error("OpenClaw 게이트웨이 재시작 실패: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
     private ResponseEntity<?> runCronJobByName(String jobName) {
         String jobId;
         try {
@@ -107,6 +122,10 @@ public class AdminOpenClawController {
     }
 
     private String runCommand(String... openclawArgs) throws Exception {
+        return runCommand(10, openclawArgs);
+    }
+
+    private String runCommand(int timeoutSeconds, String... openclawArgs) throws Exception {
         String[] fullCommand = new String[openclawArgs.length + 3];
         fullCommand[0] = "cmd";
         fullCommand[1] = "/c";
@@ -126,7 +145,7 @@ public class AdminOpenClawController {
             }
         }
 
-        process.waitFor(10, TimeUnit.SECONDS);
+        process.waitFor(timeoutSeconds, TimeUnit.SECONDS);
         return output.toString();
     }
 }
