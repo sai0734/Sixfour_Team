@@ -181,7 +181,7 @@ const ReviewBoardPage = () => {
 
   return (
     <BoardLayout
-      eyebrow="REVIEW BOARD"
+      eyebrow="05 — REVIEW BOARD"
       title="후기게시판"
       subtitle="먼저 경험한 예비 부부들의 솔직한 후기"
     >

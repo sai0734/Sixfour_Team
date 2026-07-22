@@ -190,7 +190,7 @@ const HubPage = () => {
 
   return (
     <BoardLayout
-      eyebrow="WEDDING COMMUNITY"
+      eyebrow="05 — WEDDING COMMUNITY"
       title="웨딩 커뮤니티"
       subtitle="예비 부부들의 생생한 후기와 정보를 나눠요"
     >

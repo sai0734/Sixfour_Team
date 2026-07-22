@@ -112,7 +112,11 @@ const AiDressTryOnComponent = () => {
     setLoading(true);
 
     try {
-      setMessage("드레스 합성 중... (1~2분)");
+      setMessage(
+        prompt
+          ? "드레스 합성 중... (완료 후 배경까지 적용한 뒤 표시됩니다)"
+          : "드레스 합성 중... (1~2분)",
+      );
       const data = await requestTryOn({
         dressItemId: selectedDressId,
         file: myPhotoFile,
@@ -128,64 +132,44 @@ const AiDressTryOnComponent = () => {
 
       const historyId = `local-${Date.now()}`;
       const base64 = data.resultImageBase64 || "";
+      let finalUrl = tryOnUrl;
+      let finalPrompt = "";
 
-      setResultImageUrl(tryOnUrl);
+      // 배경 프롬프트가 있으면 중간 결과를 화면에 띄우지 않고, 2번까지 끝난 뒤 한 번만 표시
+      if (prompt) {
+        setMessage("배경 적용 중... 잠시만 기다려 주세요.");
+        const bg = await applyBackground({
+          imageBase64: base64 || tryOnUrl,
+          backgroundPrompt: prompt,
+        });
+        const bgUrl =
+          bg.resultImageUrl ||
+          (bg.resultImageBase64
+            ? `data:image/png;base64,${bg.resultImageBase64}`
+            : "");
+        if (!bgUrl) {
+          throw new Error("배경 적용 결과 이미지를 받지 못했습니다.");
+        }
+        finalUrl = bgUrl;
+        finalPrompt = prompt;
+      }
+
+      setResultImageUrl(finalUrl);
       setHistory((prev) => [
         {
           historyId,
           tryOnImageUrl: tryOnUrl,
           tryOnImageBase64: base64,
-          resultImageUrl: tryOnUrl,
+          resultImageUrl: finalUrl,
           dressName: data.dressName || "드레스",
-          backgroundPrompt: "",
+          backgroundPrompt: finalPrompt,
           createdAt: new Date().toISOString(),
         },
         ...prev,
       ]);
-
-      if (prompt) {
-        setMessage("배경 적용 중... 기록에는 이미 합성 결과가 있습니다.");
-        try {
-          const bg = await applyBackground({
-            imageBase64: base64 || tryOnUrl,
-            backgroundPrompt: prompt,
-          });
-          const bgUrl =
-            bg.resultImageUrl ||
-            (bg.resultImageBase64
-              ? `data:image/png;base64,${bg.resultImageBase64}`
-              : "");
-          if (bgUrl) {
-            setResultImageUrl(bgUrl);
-            setHistory((prev) =>
-              prev.map((item) =>
-                item.historyId === historyId
-                  ? {
-                      ...item,
-                      resultImageUrl: bgUrl,
-                      backgroundPrompt: prompt,
-                    }
-                  : item,
-              ),
-            );
-            setMessage(
-              "합성이 완료되었습니다. 기록을 누르면 수정하기·저장하기를 쓸 수 있습니다.",
-            );
-          } else {
-            setMessage(
-              "드레스 합성은 기록에 있습니다. 배경 적용 결과를 받지 못했습니다.",
-            );
-          }
-        } catch (bgErr) {
-          setMessage(
-            `드레스 합성은 기록에 있습니다. 배경 적용 실패: ${extractErrorMessage(bgErr)}`,
-          );
-        }
-      } else {
-        setMessage(
-          "합성이 완료되었습니다. 기록을 누르면 수정하기·저장하기를 쓸 수 있습니다.",
-        );
-      }
+      setMessage(
+        "합성이 완료되었습니다. 기록을 누르면 수정하기·저장하기를 쓸 수 있습니다.",
+      );
     } catch (err) {
       setMessage(extractErrorMessage(err));
     } finally {

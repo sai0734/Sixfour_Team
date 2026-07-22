@@ -225,7 +225,7 @@ const ListComponent = () => {
 
         <div className="relative z-10 mx-auto max-w-[720px] px-5">
           <ShopTapeLabel tone="white" className="mb-5">
-            03 — GIFT SHOP
+            04 — GIFT SHOP
           </ShopTapeLabel>
           <h1 className="mb-2.5 font-['Gowun_Batang'] text-2xl leading-snug text-white md:mb-3.5 md:text-4xl">
             하객들에게 전하는 마음
