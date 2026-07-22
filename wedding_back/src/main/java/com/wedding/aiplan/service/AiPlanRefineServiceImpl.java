@@ -117,7 +117,7 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
         switch (action) {
             case "CONFIRM" -> {
                 slot.changeStatus(SlotStatus.CONFIRMED);
-                message = "확정했어요. 이제부터 이 카테고리는 다듬기에서 안 건드려요.";
+                message = "확정했어요. 이제부터 이 카테고리는 수정하기에서 안 건드려요.";
             }
             case "RECONSIDER" -> {
                 if (slot.getStatus() == SlotStatus.CONFIRMED) {
@@ -128,13 +128,13 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
                 }
             }
             case "EXCLUDE" -> {
-                if (slot.getStatus() == SlotStatus.CONFIRMED) {
-                    message = "확정된 카테고리는 제외할 수 없어요. 먼저 해제해주세요.";
-                } else {
-                    slot.changeStatus(SlotStatus.EXCLUDED);
-                    slot.changeSelectedCmno(null);
-                    message = "제외했어요. 다른 곳에서 예약하신 걸로 볼게요.";
-                }
+                // 확정 상태여도 X는 바로 제외되게 한다 - 확정된 카테고리는 원래 이 액션을
+                // 막았었는데, 그 안내 문구가 상단 배너로만 떠서 카드 쪽으로 스크롤해 내려온
+                // 상태에선 안 보여 "눌러도 반응 없음"처럼 느껴졌다. X는 "이미 다른 데서
+                // 예약해서 이 조합에서 뺀다"는 뜻이라 확정 여부와 상관없이 항상 되는 게 맞다.
+                slot.changeStatus(SlotStatus.EXCLUDED);
+                slot.changeSelectedCmno(null);
+                message = "제외했어요. 다른 곳에서 예약하신 걸로 볼게요.";
             }
             default -> {
                 slot.changeStatus(SlotStatus.PENDING);
@@ -142,8 +142,11 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
             }
         }
 
-        int nextTurn = sessionSupport.historyOf(session.getSessionId()).size();
-        sessionSupport.saveHistory(session, nextTurn, historyNote(action, category));
+        // 사이드패널 버튼은 상단 조합 히스토리 배지에 새 항목으로 안 남는다 - 사용자가 자유발화로
+        // 말한 "턴"만 배지가 되어야 하는데, 확정/해제/다시찾기/제외 버튼까지 배지로 쌓이면
+        // 오히려 뭘 눌렀는지 헷갈린다는 피드백 반영. 대신 마지막 배지의 스냅샷은 갱신해서,
+        // 나중에 그 배지를 다시 봐도 방금 한 조정이 사라지지 않게 한다.
+        sessionSupport.refreshLatestHistorySnapshot(session);
 
         AiPlanPackageCandidateDTO combo = sessionSupport.toCombo(session, "SESSION_COMBO", null);
 
@@ -153,15 +156,6 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
                 .candidates(List.of(combo))
                 .message(message)
                 .build();
-    }
-
-    private String historyNote(String action, CompanyCategory category) {
-        return switch (action) {
-            case "CONFIRM" -> "(확정: " + category + ")";
-            case "RECONSIDER" -> "(다시 찾기: " + category + ")";
-            case "EXCLUDE" -> "(제외: " + category + ")";
-            default -> "(확정 해제: " + category + ")";
-        };
     }
 
     // "다시 찾기" 버튼 - 확정된 카테고리들에 쓴 예산을 빼고 남은 예산을, 아직 확정 안 된
@@ -220,16 +214,26 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
         sessionSupport.applySnapshot(session, target);
 
         AiPlanPackageCandidateDTO combo = sessionSupport.toCombo(session, "SESSION_COMBO", null);
+        BudgetGapInfo gapInfo = budgetGapInfo(combo.getPackagePrice(), session.getBudget());
+
+        String message = turnNo == 0 ? "첫 추천 조합이에요." : "그때 조합을 불러왔어요.";
+        if (gapInfo != null) {
+            message = message + " " + gapInfo.message();
+        }
 
         return AiPlanQuickResultDTO.builder()
                 .sessionId(sessionId)
                 .weddingDate(session.getWeddingDate())
                 .candidates(List.of(combo))
-                .message(turnNo == 0 ? "첫 추천 조합이에요." : "그때 조합을 불러왔어요.")
+                .message(message)
+                .suggestedBudget(gapInfo != null ? gapInfo.suggestedBudget() : null)
                 .build();
     }
 
-    // 새로고침 복원 - 세션이 이미 갖고 있는 상태를 그대로 다시 조립해서 돌려줌 (AI 호출 없음)
+    // 새로고침 복원 - 세션이 이미 갖고 있는 상태를 그대로 다시 조립해서 돌려줌 (AI 호출 없음).
+    // "예산을 더 쓰면 더 맞는 곳을 찾아준다"는 안내는 원래 최초 추천 시점에만 계산되고 세션엔
+    // 저장이 안 돼서, 다른 페이지 갔다가 돌아오면(=새로고침 복원) 이 안내가 사라지는 문제가
+    // 있었다 - 지금 조합 합계가 여전히 예산을 넘으면 매번 다시 계산해서 붙여준다.
     @Override
     public AiPlanQuickResultDTO getSession(Long sessionId) {
 
@@ -237,13 +241,34 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
                 .orElseThrow(() -> new RuntimeException("세션을 찾을 수 없어요"));
 
         AiPlanPackageCandidateDTO combo = sessionSupport.toCombo(session, "SESSION_COMBO", null);
+        BudgetGapInfo gapInfo = budgetGapInfo(combo.getPackagePrice(), session.getBudget());
 
         return AiPlanQuickResultDTO.builder()
                 .sessionId(sessionId)
                 .weddingDate(session.getWeddingDate())
                 .candidates(List.of(combo))
-                .message(null)
+                .message(gapInfo != null ? gapInfo.message() : null)
+                .suggestedBudget(gapInfo != null ? gapInfo.suggestedBudget() : null)
                 .build();
+    }
+
+    private record BudgetGapInfo(String message, Long suggestedBudget) {
+    }
+
+    // AiPlanCandidateBuilder.appendBudgetGapMessage와 같은 조건/문구를 쓰되, 세션 복원·턴 보기처럼
+    // "이미 만들어진 조합"을 다시 보여줄 때 재사용할 수 있도록 메시지+제안 예산을 함께 돌려준다.
+    private BudgetGapInfo budgetGapInfo(java.math.BigDecimal totalPrice, Long budget) {
+        if (budget == null || budget <= 0 || totalPrice == null) {
+            return null;
+        }
+        long gap = totalPrice.longValue() - budget;
+        if (gap <= AiPlanCandidateBuilder.BUDGET_TOLERANCE) {
+            return null;
+        }
+        String message = String.format(
+                "입력하신 조건에 맞는 조합을 찾다 보니 예산보다 %,d원 더 필요해요. 예산을 이만큼 늘리면 이 조합으로 예약할 수 있어요.",
+                gap);
+        return new BudgetGapInfo(message, budget + gap);
     }
 
     // 다듬기 대화 기록 - 턴별 사용자 발화만 뽑아서 돌려줌 (슬롯 스냅샷 JSON은 안 내려줌)

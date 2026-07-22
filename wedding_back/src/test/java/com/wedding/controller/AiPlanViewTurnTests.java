@@ -17,13 +17,17 @@ import lombok.extern.log4j.Log4j2;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-// 결과 화면 상단 "조합 히스토리 배지" 기능 - 0번 턴(첫 추천 조합) 배지를 누르면 그 시점 조합을
-// 그대로 불러와야 하고(EXCLUDE로 스튜디오를 뺐어도 0번을 보면 다시 있어야 함), "보기"만 한
-// 것이므로 히스토리 턴 개수 자체는 늘어나면 안 된다. 롤백 기본값이라 테스트 끝나면 DB에 안 남는다.
+// 피드백: 상단 "조합 히스토리 배지"에 확정/해제/다시찾기/제외 같은 사이드패널 버튼 액션까지
+// 새 배지로 쌓여서 뭘 눌렀는지 헷갈린다 - 자유발화(다듬기 채팅)만 배지가 되어야 한다.
+// 그래서 applySlotAction은 더 이상 새 히스토리 턴을 만들지 않고, 그 대신 마지막 턴의 스냅샷을
+// 지금 상태로 갱신한다(AiPlanSessionSupport.refreshLatestHistorySnapshot) - 안 그러면 나중에
+// 그 배지를 다시 봤을 때 방금 한 확정/제외가 사라져버리기 때문. 롤백 기본값이라 테스트 끝나면
+// DB에 안 남는다.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Log4j2
@@ -37,7 +41,7 @@ public class AiPlanViewTurnTests {
 
     @Test
     @Transactional
-    public void testViewTurnRestoresSnapshotWithoutAddingNewTurn() throws Exception {
+    public void testSlotActionsDoNotAddNewTurnButStillApply() throws Exception {
 
         String detailResponse = mockMvc.perform(get("/api/aiplan/detail")
                         .param("budget", "300000000")
@@ -46,48 +50,69 @@ public class AiPlanViewTurnTests {
                 .andReturn().getResponse().getContentAsString();
 
         Map<?, ?> detailBody = objectMapper.readValue(detailResponse, Map.class);
-        List<?> initialCandidates = (List<?>) detailBody.get("candidates");
-        Map<?, ?> initialCombo = (Map<?, ?>) initialCandidates.get(0);
         Long sessionId = ((Number) detailBody.get("sessionId")).longValue();
-        Number initialStudioCmno = (Number) initialCombo.get("studioCmno");
-        assertNotNull(initialStudioCmno, "초기 추천엔 스튜디오가 있어야 함");
 
-        // 1번 턴: 스튜디오 제외
+        assertEquals(1, historySize(sessionId), "초기 추천 직후엔 턴이 1개(0번)여야 함");
+
         Map<String, Object> excludeRequest = Map.of(
                 "sessionId", sessionId, "category", "STUDIO", "action", "EXCLUDE");
-        mockMvc.perform(post("/api/aiplan/slot")
+        String slotResponse = mockMvc.perform(post("/api/aiplan/slot")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(excludeRequest)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        Map<?, ?> slotBody = objectMapper.readValue(slotResponse, Map.class);
+        Map<?, ?> combo = (Map<?, ?>) ((List<?>) slotBody.get("candidates")).get(0);
+
+        assertEquals("EXCLUDED", combo.get("studioStatus"), "제외 액션 자체는 여전히 정상 반영돼야 함");
+        assertNull(combo.get("studioCmno"), "제외되면 업체는 비어 있어야 함");
+        assertEquals(1, historySize(sessionId),
+                "사이드패널 버튼 액션(제외)은 새 배지(턴)를 만들면 안 됨");
+    }
+
+    @Test
+    @Transactional
+    public void testViewingLatestTurnAfterSlotActionShowsRefreshedStateNotStale() throws Exception {
+
+        String detailResponse = mockMvc.perform(get("/api/aiplan/detail")
+                        .param("budget", "300000000")
+                        .param("region", "강남"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        Map<?, ?> detailBody = objectMapper.readValue(detailResponse, Map.class);
+        Long sessionId = ((Number) detailBody.get("sessionId")).longValue();
+
+        Map<String, Object> confirmRequest = Map.of(
+                "sessionId", sessionId, "category", "HALL", "action", "CONFIRM");
+        mockMvc.perform(post("/api/aiplan/slot")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(confirmRequest)))
                 .andExpect(status().isOk());
 
-        List<?> historyAfterExclude = objectMapper.readValue(
-                mockMvc.perform(get("/api/aiplan/session/" + sessionId + "/history"))
-                        .andExpect(status().isOk())
-                        .andReturn().getResponse().getContentAsString(),
-                List.class);
-        assertEquals(2, historyAfterExclude.size(), "초기(0번) + 제외(1번) = 턴 2개여야 함");
+        // 새 배지가 안 생겼으니 여전히 0번 턴 하나뿐 - 그 0번 배지를 다시 봐도 방금 한 확정이
+        // 사라지면 안 된다(스냅샷을 갱신해두기 때문).
+        assertEquals(1, historySize(sessionId));
 
-        // 0번 턴("첫 추천 조합") 배지를 눌러 그 시점으로 이동
         String viewResponse = mockMvc.perform(post("/api/aiplan/session/" + sessionId + "/turn/0"))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
         Map<?, ?> viewBody = objectMapper.readValue(viewResponse, Map.class);
-        List<?> viewCandidates = (List<?>) viewBody.get("candidates");
-        Map<?, ?> viewedCombo = (Map<?, ?>) viewCandidates.get(0);
+        Map<?, ?> combo = (Map<?, ?>) ((List<?>) viewBody.get("candidates")).get(0);
 
-        log.info("after view turn 0: studioStatus={}, studioCmno={}",
-                viewedCombo.get("studioStatus"), viewedCombo.get("studioCmno"));
+        log.info("after CONFIRM + view turn 0: hallStatus={}", combo.get("hallStatus"));
 
-        assertEquals(initialStudioCmno.longValue(), ((Number) viewedCombo.get("studioCmno")).longValue(),
-                "0번 턴을 보면 제외 전 스튜디오가 다시 보여야 함");
-        assertEquals("PENDING", viewedCombo.get("studioStatus"), "0번 턴에서는 아직 제외 안 된 상태여야 함");
+        assertNotNull(combo.get("hallCmno"));
+        assertEquals("CONFIRMED", combo.get("hallStatus"),
+                "0번 배지를 다시 봐도 방금 확정한 상태가 유지돼야 함(스냅샷 갱신 덕분)");
+    }
 
-        List<?> historyAfterView = objectMapper.readValue(
-                mockMvc.perform(get("/api/aiplan/session/" + sessionId + "/history"))
-                        .andExpect(status().isOk())
-                        .andReturn().getResponse().getContentAsString(),
-                List.class);
-        assertEquals(2, historyAfterView.size(), "턴을 보기만 한 것으로는 히스토리 개수가 늘면 안 됨");
+    private int historySize(Long sessionId) throws Exception {
+        String response = mockMvc.perform(get("/api/aiplan/session/" + sessionId + "/history"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        return objectMapper.readValue(response, List.class).size();
     }
 }
