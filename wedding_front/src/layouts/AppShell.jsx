@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import GlobalInquiryChatHost from "../components/chat/GlobalInquiryChatHost";
@@ -16,6 +17,13 @@ const AppShell = () => {
   const isAllowedForManager = MANAGER_ALLOWED_PREFIXES.some((prefix) =>
     location.pathname.startsWith(prefix),
   );
+
+  // 경로가 바뀔 때마다 스크롤을 맨 위로 리셋한다.
+  // (예: 관리자 페이지에서 아래로 스크롤한 뒤 다른 메뉴로 이동했다가 돌아와도
+  //  이전 스크롤 위치가 그대로 남아있던 문제)
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   if (isManagerOnly && !isAllowedForManager) {
     return <Navigate replace to="/manager/inquiries" />;
