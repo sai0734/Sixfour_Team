@@ -7,6 +7,8 @@ import {
 } from "../../api/weddingplanApi";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import TapeLabel from "../common/TapeLabel";
+import { showAlert } from "../../util/globalAlert";
+import { showConfirm } from "../../util/globalConfirm";
 
 const initState = {
   groomName: "",
@@ -86,7 +88,7 @@ const PlanComponent = () => {
       !editForm.weddingDate ||
       !Number(editForm.totalBudget)
     ) {
-      alert("신랑, 신부, 예식일, 총예산은 필수로 입력해주세요.");
+      showAlert("신랑, 신부, 예식일, 총예산은 필수로 입력해주세요.");
       return false;
     }
     return true;
@@ -105,7 +107,7 @@ const PlanComponent = () => {
       .then(() => fetchPlan())
       .catch((e) => {
         console.error(e);
-        alert(
+        showAlert(
           "등록에 실패했습니다. 이미 등록된 웨딩플랜이 있는지 확인해주세요.",
         );
       });
@@ -129,8 +131,8 @@ const PlanComponent = () => {
       .catch((e) => console.error(e));
   };
 
-  const handleClickDelete = () => {
-    if (!window.confirm("웨딩플랜을 삭제하시겠습니까?")) {
+  const handleClickDelete = async () => {
+    if (!(await showConfirm("웨딩플랜을 삭제하시겠습니까?"))) {
       return;
     }
 

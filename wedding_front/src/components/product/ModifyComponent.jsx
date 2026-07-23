@@ -13,6 +13,8 @@ import FetchingModal from "../common/FetchingModal";
 import { API_SERVER_HOST } from "../../api/reservationApi";
 import useCustomMove from "../../hooks/useCustomMove";
 import ShopTapeLabel from "./ShopTapeLabel";
+import { showAlert } from "../../util/globalAlert";
+import { showConfirm } from "../../util/globalConfirm";
 
 const host = API_SERVER_HOST;
 
@@ -94,19 +96,18 @@ const ModifyComponent = ({ pno }) => {
 
     putOne(pno, formData).then(() => {
       setFetching(false);
-      alert("수정되었습니다.");
-      moveToRead(pno);
+      showAlert("수정되었습니다.", () => moveToRead(pno));
     });
   };
 
-  const handleClickDelete = () => {
-    if (!window.confirm("정말 이 상품을 삭제(숨김) 처리하시겠습니까?")) return;
+  const handleClickDelete = async () => {
+    if (!(await showConfirm("정말 이 상품을 삭제(숨김) 처리하시겠습니까?")))
+      return;
 
     setFetching(true);
     deleteOne(pno).then(() => {
       setFetching(false);
-      alert("삭제되었습니다.");
-      moveToList({ page: 1 });
+      showAlert("삭제되었습니다.", () => moveToList({ page: 1 }));
     });
   };
 
@@ -126,7 +127,7 @@ const ModifyComponent = ({ pno }) => {
 
   const handleAddOption = () => {
     if (!newOption.optionName.trim() || !newOption.optionValue.trim()) {
-      alert("옵션명과 옵션값을 입력해주세요.");
+      showAlert("옵션명과 옵션값을 입력해주세요.");
       return;
     }
 
@@ -151,8 +152,8 @@ const ModifyComponent = ({ pno }) => {
     });
   };
 
-  const handleDeleteOption = (pono) => {
-    if (!window.confirm("이 옵션을 삭제하시겠습니까?")) return;
+  const handleDeleteOption = async (pono) => {
+    if (!(await showConfirm("이 옵션을 삭제하시겠습니까?"))) return;
 
     deleteOption(pno, pono).then(() => {
       getOptions(pno).then((data) => setOptions(data));

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { showAlert } from "../../util/globalAlert";
 
 export const STAGE_LABELS = {
   1: "기본 계획",
@@ -61,7 +62,7 @@ const ChecklistFormModal = ({
 
   const handleSubmit = () => {
     if (!form.title.trim()) {
-      alert("항목명을 입력해주세요.");
+      showAlert("항목명을 입력해주세요.");
       return;
     }
 

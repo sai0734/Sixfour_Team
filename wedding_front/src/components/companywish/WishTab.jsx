@@ -11,6 +11,8 @@ import {
 import { getCompanyImageUrl } from "../../api/companyApi";
 import { API_SERVER_HOST } from "../../api/reservationApi";
 import useCustomLogin from "../../hooks/useCustomLogin";
+import { showAlert } from "../../util/globalAlert";
+import { showConfirm } from "../../util/globalConfirm";
 
 const SUB_TABS = [
   { key: "company", label: "업체 찜" },
@@ -86,7 +88,7 @@ const WishTab = () => {
   // ── 업체 찜 해제 (단건, wishId 기준) ──
   const handleRemoveCompanyWish = async (event, wishId) => {
     event.stopPropagation();
-    if (!window.confirm("찜한 업체에서 삭제하시겠습니까?")) return;
+    if (!(await showConfirm("찜한 업체에서 삭제하시겠습니까?"))) return;
 
     try {
       await removeCompanyWishByWishId(wishId);
@@ -98,7 +100,7 @@ const WishTab = () => {
       });
     } catch (e) {
       console.error("찜 삭제 실패:", e);
-      alert("찜 삭제에 실패했습니다.");
+      showAlert("찜 삭제에 실패했습니다.");
     }
   };
 
@@ -122,7 +124,9 @@ const WishTab = () => {
   // ── 업체 찜 선택 삭제 (wishId 기준) ──
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return;
-    if (!window.confirm(`선택한 ${selectedIds.size}건을 찜 취소하시겠습니까?`))
+    if (
+      !(await showConfirm(`선택한 ${selectedIds.size}건을 찜 취소하시겠습니까?`))
+    )
       return;
 
     try {
@@ -132,7 +136,7 @@ const WishTab = () => {
       setCompanyRefresh((r) => !r);
     } catch (e) {
       console.error("선택 삭제 실패:", e);
-      alert("일부 항목 삭제에 실패했습니다.");
+      showAlert("일부 항목 삭제에 실패했습니다.");
     }
   };
 
@@ -153,9 +157,11 @@ const WishTab = () => {
     );
   };
 
-  const handleBulkDeleteProduct = () => {
+  const handleBulkDeleteProduct = async () => {
     if (selectedPnos.size === 0) return;
-    if (!window.confirm(`선택한 ${selectedPnos.size}개를 찜 취소하시겠습니까?`))
+    if (
+      !(await showConfirm(`선택한 ${selectedPnos.size}개를 찜 취소하시겠습니까?`))
+    )
       return;
 
     Promise.all([...selectedPnos].map((pno) => deleteProductWish(pno)))

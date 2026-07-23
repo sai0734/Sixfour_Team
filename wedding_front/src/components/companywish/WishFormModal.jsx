@@ -1,11 +1,12 @@
 import { useState } from "react";
+import { showAlert } from "../../util/globalAlert";
 
 const WishFormModal = ({ onSubmit, onClose }) => {
   const [cmno, setCmno] = useState("");
 
   const handleSubmit = () => {
     if (!cmno) {
-      alert("업체 번호를 입력해주세요.");
+      showAlert("업체 번호를 입력해주세요.");
       return;
     }
     onSubmit(Number(cmno));

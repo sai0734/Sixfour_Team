@@ -14,6 +14,8 @@ import ReviewSectionComponent from "./ReviewSectionComponent";
 import QnaSectionComponent from "./QnaSectionComponent";
 import ShippingPolicyComponent from "./ShippingPolicyComponent";
 import RelatedProductsComponent from "./RelatedProductsComponent";
+import { showAlert } from "../../util/globalAlert";
+import { showConfirm } from "../../util/globalConfirm";
 
 const initState = {
   pno: 0,
@@ -107,7 +109,7 @@ const ReadComponent = ({ pno }) => {
 
   const handleClickWish = () => {
     if (!loginState.email) {
-      alert("로그인이 필요한 기능입니다.");
+      showAlert("로그인이 필요한 기능입니다.");
       return;
     }
 
@@ -116,7 +118,7 @@ const ReadComponent = ({ pno }) => {
     action.then(() => setWished(!wished));
   };
 
-  const handleClickAddCart = () => {
+  const handleClickAddCart = async () => {
     changeCart({
       email: loginState.email,
       pno: pno,
@@ -130,7 +132,7 @@ const ReadComponent = ({ pno }) => {
       extraPrice: selectedOption?.extraPrice ?? 0,
     });
 
-    const goToCart = window.confirm(
+    const goToCart = await showConfirm(
       "장바구니에 담았습니다. 장바구니로 이동하시겠습니까?",
     );
 
@@ -141,7 +143,7 @@ const ReadComponent = ({ pno }) => {
 
   const handleClickBuyNow = () => {
     if (!loginState.email) {
-      alert("로그인이 필요한 기능입니다.");
+      showAlert("로그인이 필요한 기능입니다.");
       return;
     }
 

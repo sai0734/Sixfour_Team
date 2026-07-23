@@ -18,6 +18,8 @@ import {
 import { upload as uploadImages } from "../../api/boardImageApi";
 import { checkLiked, likeOne, unlikeOne } from "../../api/boardLikeApi";
 import useCustomLogin from "../../hooks/useCustomLogin";
+import { showAlert } from "../../util/globalAlert";
+import { showConfirm } from "../../util/globalConfirm";
 
 const VENDOR_CATEGORIES = ["홀", "스드메", "예복", "예물", "기타"];
 const PAGE_SIZE = 10;
@@ -151,7 +153,7 @@ const ReviewBoardPage = () => {
         if (files && files.length > 0) {
           uploadImages(res.boardId, files).catch((e) => {
             console.error(e);
-            alert(
+            showAlert(
               "글은 등록됐지만, 이미지/동영상 업로드에는 실패했어요. (BoardImage 백엔드가 적용/재시작 됐는지 확인해주세요)",
             );
           });
@@ -172,15 +174,15 @@ const ReviewBoardPage = () => {
         if (files && files.length > 0) {
           uploadImages(editTarget.boardId, files).catch((e) => {
             console.error(e);
-            alert("수정은 됐지만, 이미지/동영상 업로드에는 실패했어요.");
+            showAlert("수정은 됐지만, 이미지/동영상 업로드에는 실패했어요.");
           });
         }
       })
       .catch((e) => console.error(e));
   };
 
-  const handleDelete = () => {
-    if (!window.confirm("삭제하시겠습니까?")) return;
+  const handleDelete = async () => {
+    if (!(await showConfirm("삭제하시겠습니까?"))) return;
 
     deleteOne(detailPost.boardId)
       .then(() => {

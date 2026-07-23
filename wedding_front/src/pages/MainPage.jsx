@@ -157,6 +157,7 @@ const MainPage = () => {
 
         const upcoming = (data || [])
           .filter((r) => r.status !== "취소" && r.weddingDate)
+          .filter((r) => r.payStatus === "PAID")
           .filter((r) => new Date(r.weddingDate) >= today)
           .sort((a, b) => new Date(a.weddingDate) - new Date(b.weddingDate))
           .slice(0, 3);
@@ -338,7 +339,7 @@ const MainPage = () => {
               </Link>
               {/* 예약 방문 D-day 리스트 — 중간 (z-index 2) - 클릭 시 마이페이지 결제 내역 탭으로 */}
               <Link to="/mypage?tab=payment" className="w-card wc-taste">
-                <div className="cap visit-title">업체 방문 일정 📅</div>
+                <div className="cap visit-title">예약 일정 📅</div>
                 {upcomingVisits.length > 0 ? (
                   <ul className="visit-list">
                     {upcomingVisits.map((v) => (
@@ -356,7 +357,7 @@ const MainPage = () => {
                     ))}
                   </ul>
                 ) : (
-                  <p className="visit-empty">예정된 업체 방문이 없어요</p>
+                  <p className="visit-empty">예정된 예약이 없어요</p>
                 )}
               </Link>
               {/* 예산 사용 현황 — 가장 앞 (z-index 3) - 클릭 시 예산관리 페이지로 */}

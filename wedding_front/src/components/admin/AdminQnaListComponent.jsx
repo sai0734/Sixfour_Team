@@ -5,6 +5,7 @@ import { API_SERVER_HOST } from "../../api/reservationApi";
 import PageComponent from "../common/PageComponent";
 import AdminLayout from "../../layouts/AdminLayout";
 import ShopTapeLabel from "../product/ShopTapeLabel";
+import { showAlert } from "../../util/globalAlert";
 
 const initState = {
   dtoList: [],
@@ -71,7 +72,7 @@ const AdminQnaListComponent = () => {
   const handleSubmitReply = async (item) => {
     const content = (replyDrafts[item.qno] || "").trim();
     if (!content) {
-      alert("답변 내용을 입력해주세요.");
+      showAlert("답변 내용을 입력해주세요.");
       return;
     }
 
@@ -86,7 +87,7 @@ const AdminQnaListComponent = () => {
       fetchList();
     } catch (err) {
       console.error(err);
-      alert("답변 등록에 실패했습니다.");
+      showAlert("답변 등록에 실패했습니다.");
     } finally {
       setSubmittingQno(null);
     }

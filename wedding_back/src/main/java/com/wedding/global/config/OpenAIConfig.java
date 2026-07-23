@@ -31,7 +31,7 @@ public class OpenAIConfig {
   public RestTemplate openAiMultipartRestTemplate(RestTemplateBuilder restTemplateBuilder) {
     return restTemplateBuilder
         .setConnectTimeout(Duration.ofSeconds(30))
-        .setReadTimeout(Duration.ofMinutes(3))
+        .setReadTimeout(Duration.ofMinutes(5))
         .build();
   }
 
@@ -48,4 +48,10 @@ public class OpenAIConfig {
             })
         .build();
   }
+
+    /** Google Vision OCR 전용 - Auth 헤더 인터셉터 없음(쿼리파라미터 ?key=로 별도 인증하므로 불필요) */
+    @Bean
+    public RestTemplate visionRestTemplate(RestTemplateBuilder restTemplateBuilder) {
+        return restTemplateBuilder.build();
+    }
 }

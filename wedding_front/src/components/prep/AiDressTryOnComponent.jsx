@@ -6,6 +6,11 @@ import {
   requestTryOn,
 } from "../../api/aiDressApi";
 import PageComponent from "../common/PageComponent";
+import {
+  loadAiDressDraft,
+  saveAiDressDraft,
+} from "../../util/aiDressDraftStorage";
+import { showConfirm } from "../../util/globalConfirm";
 
 const initPage = {
   dtoList: [],
@@ -52,7 +57,7 @@ const downloadImage = (dataUrl, fileName) => {
   link.remove();
 };
 
-const AiDressTryOnComponent = () => {
+const AiDressTryOnComponent = ({ memberEmail }) => {
   const [dressPage, setDressPage] = useState(initPage);
   const [page, setPage] = useState(1);
   /** 서버 저장 없음 — File + 미리보기 URL만 세션에 유지 */
@@ -69,6 +74,70 @@ const AiDressTryOnComponent = () => {
   const [editLoading, setEditLoading] = useState(false);
   const [dressLoading, setDressLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [draftReady, setDraftReady] = useState(false);
+  const draftKey = `ai-dress:${memberEmail}`;
+
+  useEffect(() => {
+    let cancelled = false;
+    let restoredPreviewUrl = "";
+
+    const restoreDraft = async () => {
+      try {
+        const draft = await loadAiDressDraft(draftKey);
+        if (cancelled || !draft) return;
+
+        if (draft.myPhotoFile instanceof Blob) {
+          restoredPreviewUrl = URL.createObjectURL(draft.myPhotoFile);
+          setMyPhotoFile(draft.myPhotoFile);
+          setMyPhotoPreviewUrl(restoredPreviewUrl);
+        }
+        setPage(Number.isInteger(draft.page) && draft.page > 0 ? draft.page : 1);
+        setSelectedDressId(draft.selectedDressId ?? null);
+        setBackgroundPrompt(draft.backgroundPrompt || "");
+        setResultImageUrl(draft.resultImageUrl || "");
+        setHistory(Array.isArray(draft.history) ? draft.history : []);
+        setSelectedHistoryId(draft.selectedHistoryId ?? null);
+      } catch {
+        if (!cancelled) {
+          setMessage("이전 작업을 불러오지 못했습니다.");
+        }
+      } finally {
+        if (!cancelled) {
+          setDraftReady(true);
+        }
+      }
+    };
+
+    void restoreDraft();
+    return () => {
+      cancelled = true;
+      if (restoredPreviewUrl) URL.revokeObjectURL(restoredPreviewUrl);
+    };
+  }, [draftKey]);
+
+  useEffect(() => {
+    if (!draftReady) return;
+
+    void saveAiDressDraft(draftKey, {
+      page,
+      myPhotoFile,
+      selectedDressId,
+      backgroundPrompt,
+      resultImageUrl,
+      history,
+      selectedHistoryId,
+    });
+  }, [
+    backgroundPrompt,
+    draftKey,
+    draftReady,
+    history,
+    myPhotoFile,
+    page,
+    resultImageUrl,
+    selectedDressId,
+    selectedHistoryId,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -258,8 +327,12 @@ const AiDressTryOnComponent = () => {
     setMessage("이미지를 기기에 저장했습니다.");
   };
 
-  const handleDeleteHistory = (item) => {
-    if (!window.confirm("이 합성 기록을 삭제할까요? (이 기기 화면에서만 사라집니다)")) {
+  const handleDeleteHistory = async (item) => {
+    if (
+      !(await showConfirm(
+        "이 합성 기록을 삭제할까요? (이 기기 화면에서만 사라집니다)",
+      ))
+    ) {
       return;
     }
     setHistory((prev) => prev.filter((h) => h.historyId !== item.historyId));

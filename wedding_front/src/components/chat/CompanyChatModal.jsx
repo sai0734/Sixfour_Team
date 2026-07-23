@@ -7,6 +7,8 @@ import {
 } from "../../api/companyInquiryApi";
 import { getOne, getCompanyImageUrl } from "../../api/companyApi";
 import { subscribeInquiryTopic } from "../../util/inquiryWsClient";
+import { showAlert } from "../../util/globalAlert";
+import { showConfirm } from "../../util/globalConfirm";
 
 // 날짜 구분선 표시용 — 메시지 목록에서 날짜가 바뀔 때 사이에 넣는다
 const formatDateSeparator = (regDate) => {
@@ -196,7 +198,7 @@ const CompanyChatModal = ({
       }
     } catch (err) {
       console.error("메시지 전송 실패:", err);
-      alert("메시지 전송에 실패했습니다.");
+      showAlert("메시지 전송에 실패했습니다.");
     } finally {
       setSending(false);
     }
@@ -218,8 +220,8 @@ const CompanyChatModal = ({
   };
 
   // 채팅방 나가기 — 목록에서만 숨김 (서버 대화 기록은 유지, 상대가 새 메시지를 보내면 다시 표시됨)
-  const handleLeaveClick = () => {
-    const confirmed = window.confirm(
+  const handleLeaveClick = async () => {
+    const confirmed = await showConfirm(
       `${companyName} 문의 채팅을 목록에서 나가시겠습니까?\n대화 내용은 서버에 남아있고, 새 메시지가 오면 다시 표시됩니다.`,
     );
     if (confirmed) {

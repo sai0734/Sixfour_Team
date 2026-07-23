@@ -19,6 +19,7 @@ import ProductGridComponent from "./ProductGridComponent";
 import PopularPicksStripComponent from "./PopularPicksStripComponent";
 import { API_SERVER_HOST } from "../../api/reservationApi";
 import useCustomLogin from "../../hooks/useCustomLogin";
+import { showAlert } from "../../util/globalAlert";
 
 const host = API_SERVER_HOST;
 
@@ -188,7 +189,7 @@ const ListComponent = () => {
     e.stopPropagation();
 
     if (!loginState.email) {
-      alert("로그인이 필요한 기능입니다.");
+      showAlert("로그인이 필요한 기능입니다.");
       return;
     }
 

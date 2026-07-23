@@ -96,7 +96,8 @@ public class AiDressTryOnServiceImpl implements AiDressTryOnService {
         aiDressTryOnClient.synthesize(
             personBytes,
             personPhoto.getOriginalFilename(),
-            toPublicImageUrl(dressItem.getImageUrl()));
+            toPublicImageUrl(dressItem.getImageUrl()),
+            dressItem.getItemType());
 
     return AiDressTryOnResponseDTO.builder()
         .resultImageUrl("data:image/png;base64," + tryOnBase64)

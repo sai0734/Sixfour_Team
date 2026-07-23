@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -98,6 +99,52 @@ public class OpenAiClient {
 
         if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
             throw new RuntimeException("OpenAI 이미지 분석 호출 실패");
+        }
+
+        return response.getBody().getChoices().getFirst().getMessage().getContent();
+    }
+
+    // Vision 입력 + JSON 강제 응답을 합친 버전. exampleTurns는 실제 사진 없이 텍스트로만 된
+    // few-shot 예시(사용자 발화 → 모범 답안)를 끼워 넣을 수 있게 한 것 - 구조화 추출 작업은
+    // 예시 하나만 보여줘도 정확도가 크게 오르는 경우가 많다. 예시가 필요 없으면 List.of()를 넘기면 됨.
+    // detail:"high"는 표/영수증처럼 글자가 빽빽한 문서를 읽을 때 정확도를 올려주는 옵션이라 항상 켜둔다.
+    public String describeImageAsJson(byte[] imageBytes, String contentType, String systemPrompt,
+                                      List<OpenAiMessageDTO> exampleTurns, String userPrompt) {
+
+        String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+        String mimeType = (contentType != null && !contentType.isBlank()) ? contentType : "image/jpeg";
+        String dataUrl = "data:" + mimeType + ";base64," + base64Image;
+
+        Map<String, Object> textPart = Map.of("type", "text", "text", userPrompt);
+        Map<String, Object> imagePart = Map.of(
+                "type", "image_url",
+                "image_url", Map.of("url", dataUrl, "detail", "high"));
+
+        Map<String, Object> systemMessage = Map.of("role", "system", "content", systemPrompt);
+        Map<String, Object> userMessage = Map.of(
+                "role", "user",
+                "content", List.of(textPart, imagePart));
+
+        List<Map<String, Object>> messages = new ArrayList<>();
+        messages.add(systemMessage);
+        for (OpenAiMessageDTO turn : exampleTurns) {
+            messages.add(Map.of("role", turn.getRole(), "content", turn.getContent()));
+        }
+        messages.add(userMessage);
+
+        Map<String, Object> requestBody = Map.of(
+                "model", model,
+                "messages", messages,
+                "response_format", Map.of("type", "json_object"));
+
+        ResponseEntity<OpenAiResponseDTO> response = restTemplate.postForEntity(
+                apiUrl,
+                requestBody,
+                OpenAiResponseDTO.class
+        );
+
+        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+            throw new RuntimeException("OpenAI 견적서 분석 호출 실패");
         }
 
         return response.getBody().getChoices().getFirst().getMessage().getContent();

@@ -7,6 +7,8 @@ import {
 import useCustomLogin from "../../hooks/useCustomLogin";
 import useManagedCompany from "../../hooks/useManagedCompany";
 import ManagerReservationDateModal from "./ManagerReservationDateModal";
+import { showAlert } from "../../util/globalAlert";
+import { showConfirm } from "../../util/globalConfirm";
 import {
   WEEKDAY_LABELS,
   buildCalendarDays,
@@ -174,7 +176,7 @@ const ManagerReservationInbox = () => {
         datesOverride ?? getSortedDatesByFilter(reservationsByDate, filter);
 
       if (!dates.length) {
-        alert("해당 예약이 없습니다.");
+        showAlert("해당 예약이 없습니다.");
         return;
       }
 
@@ -230,7 +232,7 @@ const ManagerReservationInbox = () => {
   };
 
   const handleConfirm = async (reservationId) => {
-    if (!window.confirm("예약을 확인하고 결제대기로 전환하시겠습니까?")) return;
+    if (!(await showConfirm("예약을 확인하고 결제대기로 전환하시겠습니까?"))) return;
 
     try {
       setConfirmingId(reservationId);
@@ -253,14 +255,14 @@ const ManagerReservationInbox = () => {
         setNavigationIndex(nextIdx);
         goToCalendarDate(pendingDates[nextIdx]);
       } else if (modalFilter === "pending" && pendingDates.length === 0) {
-        alert("모든 예약대기를 확인했습니다.");
+        showAlert("모든 예약대기를 확인했습니다.");
         closeModal();
       } else {
-        alert("예약이 확인되었습니다. 고객이 결제를 진행할 수 있습니다.");
+        showAlert("예약이 확인되었습니다. 고객이 결제를 진행할 수 있습니다.");
       }
     } catch (err) {
       console.error(err);
-      alert(
+      showAlert(
         err?.response?.data?.message ||
           err?.response?.data?.error ||
           "예약 확인에 실패했습니다.",

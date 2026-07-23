@@ -31,6 +31,12 @@ const MENU_GROUPS = [
         path: "/prep/ai-dress",
         enabled: true,
       },
+      {
+        name: "AI 견적서",
+        shortName: "AI 견적서",
+        path: "/prep/ai-quote",
+        enabled: true,
+      },
     ],
   },
 ];

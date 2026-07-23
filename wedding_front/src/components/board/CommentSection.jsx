@@ -11,6 +11,7 @@ import {
 } from "../../api/commentImageApi";
 import { fileUrl, isVideoFile } from "../../api/boardImageApi";
 import useCustomLogin from "../../hooks/useCustomLogin";
+import { showConfirm } from "../../util/globalConfirm";
 
 const CommentSection = ({ boardId, onCountChange }) => {
   const { loginState } = useCustomLogin();
@@ -122,8 +123,8 @@ const CommentSection = ({ boardId, onCountChange }) => {
       .catch((e) => console.error(e));
   };
 
-  const handleDelete = (commentId) => {
-    if (!window.confirm("댓글을 삭제하시겠습니까?")) return;
+  const handleDelete = async (commentId) => {
+    if (!(await showConfirm("댓글을 삭제하시겠습니까?"))) return;
 
     deleteOne(commentId)
       .then(() => {
