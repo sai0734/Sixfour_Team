@@ -25,7 +25,7 @@ const AiDressPage = () => {
       title="AI 드레스"
       subtitle="내 사진으로 드레스를 미리 입어보세요"
     >
-      <AiDressTryOnComponent />
+      <AiDressTryOnComponent memberEmail={loginState.email} />
     </PrepLayout>
   );
 };
