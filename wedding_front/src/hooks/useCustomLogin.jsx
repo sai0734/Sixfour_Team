@@ -2,6 +2,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { createSearchParams, Navigate, useNavigate } from "react-router-dom";
 import { loginPostAsync, logout } from "../slices/loginSlice";
 import { mergeGuestCartAsync } from "../slices/cartSlice";
+import { showAlert } from "../util/globalAlert";
 
 const LOGIN_REDIRECT_KEY = "loginRedirect";
 
@@ -90,14 +91,16 @@ const useCustomLogin = () => {
     const errorStr = createSearchParams({ error: errorMsg }).toString();
 
     if (errorMsg === "REQUIRE_LOGIN") {
-      alert("로그인 해야만 합니다.");
-      navigate({ pathname: "/auth/login", search: errorStr });
+      showAlert("로그인 해야만 합니다.", () => {
+        navigate({ pathname: "/auth/login", search: errorStr });
+      });
       return;
     }
 
     if (ex.response.data.error === "ERROR_ACCESSDENIED") {
-      alert("해당 메뉴를 사용할수 있는 권한이 없습니다.");
-      navigate({ pathname: "/auth/login", search: errorStr });
+      showAlert("해당 메뉴를 사용할수 있는 권한이 없습니다.", () => {
+        navigate({ pathname: "/auth/login", search: errorStr });
+      });
       return;
     }
   };

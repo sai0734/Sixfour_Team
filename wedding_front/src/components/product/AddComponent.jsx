@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { postAdd, getCategories, postOption } from "../../api/productApi";
 import FetchingModal from "../common/FetchingModal";
 import useCustomMove from "../../hooks/useCustomMove";
+import { showAlert } from "../../util/globalAlert";
 
 const initState = {
   pname: "",
@@ -47,7 +48,7 @@ const AddComponent = () => {
 
   const handleAddPendingOption = () => {
     if (!newOption.optionName.trim() || !newOption.optionValue.trim()) {
-      alert("옵션명과 옵션값을 입력해주세요.");
+      showAlert("옵션명과 옵션값을 입력해주세요.");
       return;
     }
 
@@ -69,11 +70,11 @@ const AddComponent = () => {
 
   const handleClickAdd = async () => {
     if (!product.pname.trim()) {
-      alert("상품명을 입력해주세요.");
+      showAlert("상품명을 입력해주세요.");
       return;
     }
     if (!product.category.trim()) {
-      alert("카테고리를 입력해주세요.");
+      showAlert("카테고리를 입력해주세요.");
       return;
     }
 
@@ -108,14 +109,14 @@ const AddComponent = () => {
         );
       }
 
-      alert(
+      showAlert(
         pendingOptions.length > 0
           ? "상품과 옵션이 등록되었습니다."
           : "상품이 등록되었습니다.",
+        () => moveToList({ page: 1 }),
       );
-      moveToList({ page: 1 });
     } catch (err) {
-      alert("상품 등록에 실패했습니다.");
+      showAlert("상품 등록에 실패했습니다.");
       console.error(err);
     } finally {
       setFetching(false);

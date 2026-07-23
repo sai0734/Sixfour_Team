@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import GlobalInquiryChatHost from "../components/chat/GlobalInquiryChatHost";
+import GlobalAlertHost from "../components/common/GlobalAlertHost";
+import GlobalConfirmHost from "../components/common/GlobalConfirmHost";
 
 // MANAGER 역할 계정이 접근 가능한 경로 (업체페이지 + 로그인/로그아웃 등 인증 관련만)
 const MANAGER_ALLOWED_PREFIXES = ["/manager", "/auth"];
@@ -33,6 +35,8 @@ const AppShell = () => {
     <>
       <Outlet />
       <GlobalInquiryChatHost />
+      <GlobalAlertHost />
+      <GlobalConfirmHost />
     </>
   );
 };

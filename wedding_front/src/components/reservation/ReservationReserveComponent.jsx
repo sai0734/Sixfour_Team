@@ -11,6 +11,7 @@ import {
   categoryLabel,
   buildCompanyOptions,
 } from "../../util/companyOptionBuilder";
+import { showAlert } from "../../util/globalAlert";
 
 // 재원 추가 - 업체 상세페이지 "예약" 버튼 → 이 컴포넌트로 진입
 // 날짜 + 옵션 선택 → 예약 등록(예약대기) → 업체 확인 후 결제대기 전환
@@ -44,8 +45,9 @@ const ReservationReserveComponent = () => {
 
   useEffect(() => {
     if (!loginState.email) {
-      alert("로그인이 필요한 기능입니다.");
-      navigate("/auth/login");
+      showAlert("로그인이 필요한 기능입니다.", () => {
+        navigate("/auth/login");
+      });
       return;
     }
 
@@ -58,8 +60,9 @@ const ReservationReserveComponent = () => {
       .catch((err) => {
         console.error(err);
         setFetching(false);
-        alert("업체 정보를 불러오지 못했습니다.");
-        navigate(`/companies/read/${cmno}`);
+        showAlert("업체 정보를 불러오지 못했습니다.", () => {
+          navigate(`/companies/read/${cmno}`);
+        });
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cmno]);
@@ -140,22 +143,22 @@ const ReservationReserveComponent = () => {
 
   const handleClickSubmit = async () => {
     if (!weddingDate) {
-      alert("예약 날짜를 선택해주세요.");
+      showAlert("예약 날짜를 선택해주세요.");
       return;
     }
     if (weddingDate < minWeddingDate) {
-      alert(
+      showAlert(
         `예식일은 ${formatDate(new Date(minWeddingDate))} 이후로 선택해주세요.`,
       );
       return;
     }
     if (options.length > 0 && !selectedOption) {
-      alert("옵션을 선택해주세요.");
+      showAlert("옵션을 선택해주세요.");
       return;
     }
     // 재원 추가 - 중복 예약 최종 확인 (버튼 비활성화를 우회해도 여기서 한 번 더 막음)
     if (dateTaken) {
-      alert("이미 예약된 날짜입니다. 다른 날짜를 선택해주세요.");
+      showAlert("이미 예약된 날짜입니다. 다른 날짜를 선택해주세요.");
       return;
     }
     // 재원 추가 끝
@@ -179,7 +182,6 @@ const ReservationReserveComponent = () => {
 
         if (remaining.length > 0) {
           const [nextCmno, ...rest] = remaining;
-          alert("예약이 등록되었습니다. 이어서 다음 업체를 예약할게요.");
 
           const nextParams = new URLSearchParams({
             flow: "aiplan",
@@ -190,29 +192,37 @@ const ReservationReserveComponent = () => {
           });
           if (returnSessionId) nextParams.set("returnSessionId", returnSessionId);
 
-          navigate(`/companies/reserve/${nextCmno}?${nextParams.toString()}`);
+          showAlert("예약이 등록되었습니다. 이어서 다음 업체를 예약할게요.", () => {
+            navigate(`/companies/reserve/${nextCmno}?${nextParams.toString()}`);
+          });
           return;
         }
 
-        alert("구성하신 조합 전체 예약 신청이 완료됐어요. 업체 확인 후 결제를 진행할 수 있어요.");
-        navigate(
-          returnSessionId
-            ? `/aiplan/detail?sessionId=${returnSessionId}&reserved=1`
-            : "/mypage?tab=reservation",
+        showAlert(
+          "구성하신 조합 전체 예약 신청이 완료됐어요. 업체 확인 후 결제를 진행할 수 있어요.",
+          () => {
+            navigate(
+              returnSessionId
+                ? `/aiplan/detail?sessionId=${returnSessionId}&reserved=1`
+                : "/mypage?tab=reservation",
+            );
+          },
         );
         return;
       }
 
-      alert(
+      showAlert(
         selectedOption && selectedOption.price > 0
           ? "예약이 등록되었습니다. 업체 확인 후 결제를 진행할 수 있습니다."
           : "예약이 등록되었습니다.",
+        () => {
+          navigate("/mypage?tab=reservation");
+        },
       );
-      navigate("/mypage?tab=reservation");
     } catch (err) {
       console.error(err);
       // 재원 수정 - 서버가 막은 실제 이유(중복 예약 등)를 그대로 보여줌
-      alert(err.response?.data?.msg || "예약 등록 중 오류가 발생했습니다.");
+      showAlert(err.response?.data?.msg || "예약 등록 중 오류가 발생했습니다.");
       // 재원 수정 끝
     } finally {
       setSubmitting(false);

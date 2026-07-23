@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { getOne, getCompanyImageUrl } from "../../api/companyApi";
+import { showConfirm } from "../../util/globalConfirm";
 
 // 마지막 대화 시각 포맷 — 오늘이면 시간만, 아니면 날짜
 const formatLastMessageAt = (value) => {
@@ -58,9 +59,9 @@ const InquiryRoomListModal = ({ sessions, onSelect, onLeave, onClose }) => {
     }
   };
 
-  const handleLeave = (e, roomId, companyName) => {
+  const handleLeave = async (e, roomId, companyName) => {
     e.stopPropagation();
-    const confirmed = window.confirm(
+    const confirmed = await showConfirm(
       `${companyName} 문의 채팅을 목록에서 나가시겠습니까?\n대화 내용은 남아있고, 나중에 다시 문의하면 이어서 볼 수 있습니다.`,
     );
     if (confirmed) {

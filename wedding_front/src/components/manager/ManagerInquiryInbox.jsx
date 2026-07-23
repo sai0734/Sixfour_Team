@@ -5,6 +5,7 @@ import CompanyChatModal from "../chat/CompanyChatModal";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import useManagedCompany from "../../hooks/useManagedCompany";
 import { subscribeInquiryTopic } from "../../util/inquiryWsClient";
+import { showConfirm } from "../../util/globalConfirm";
 
 // 날짜 포맷 — 목록에서 마지막 대화 시각 표시용
 const formatLastMessageAt = (value) => {
@@ -136,9 +137,9 @@ const ManagerInquiryInbox = () => {
   };
 
   // 목록에서 바로 "나가기" — 채팅창을 열지 않고 그 방만 숨긴다
-  const handleLeaveFromList = (e, roomId, memberLabel) => {
+  const handleLeaveFromList = async (e, roomId, memberLabel) => {
     e.stopPropagation();
-    const confirmed = window.confirm(
+    const confirmed = await showConfirm(
       `${memberLabel || "이 회원"} 문의를 목록에서 나가시겠습니까?\n대화 내용은 서버에 남아있고, 새 메시지가 오면 다시 표시됩니다.`,
     );
     if (confirmed) {

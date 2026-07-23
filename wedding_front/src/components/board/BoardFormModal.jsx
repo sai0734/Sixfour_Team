@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { showAlert } from "../../util/globalAlert";
 
 export const BOARD_TYPE_LABELS = {
   FREE: "자유",
@@ -51,11 +52,11 @@ const BoardFormModal = ({
 
   const handleSubmit = () => {
     if (!form.title.trim()) {
-      alert("제목을 입력해주세요.");
+      showAlert("제목을 입력해주세요.");
       return;
     }
     if (!form.content.trim()) {
-      alert("내용을 입력해주세요.");
+      showAlert("내용을 입력해주세요.");
       return;
     }
 

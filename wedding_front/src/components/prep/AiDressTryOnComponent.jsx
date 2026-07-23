@@ -6,6 +6,7 @@ import {
   requestTryOn,
 } from "../../api/aiDressApi";
 import PageComponent from "../common/PageComponent";
+import { showConfirm } from "../../util/globalConfirm";
 
 const initPage = {
   dtoList: [],
@@ -258,8 +259,12 @@ const AiDressTryOnComponent = () => {
     setMessage("이미지를 기기에 저장했습니다.");
   };
 
-  const handleDeleteHistory = (item) => {
-    if (!window.confirm("이 합성 기록을 삭제할까요? (이 기기 화면에서만 사라집니다)")) {
+  const handleDeleteHistory = async (item) => {
+    if (
+      !(await showConfirm(
+        "이 합성 기록을 삭제할까요? (이 기기 화면에서만 사라집니다)",
+      ))
+    ) {
       return;
     }
     setHistory((prev) => prev.filter((h) => h.historyId !== item.historyId));

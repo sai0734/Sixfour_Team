@@ -7,6 +7,7 @@ import {
   addCompanyWish,
   removeCompanyWish,
 } from "../../api/companywishApi";
+import { showAlert } from "../../util/globalAlert";
 
 // MakeupPackageType(백엔드 enum) -> companyOptionBuilder.buildCompanyOptions()가 만드는 옵션 key.
 // buildCompanyOptions는 예약 페이지와 동일한 로직이라, 여기 매핑만 맞으면 예약가와 100% 같은 값이 나온다.
@@ -122,7 +123,7 @@ const FavoriteButton = ({ cmno }) => {
       }
     } catch (err) {
       console.error(err);
-      alert("로그인 후 찜하기를 이용할 수 있어요.");
+      showAlert("로그인 후 찜하기를 이용할 수 있어요.");
     } finally {
       setLoading(false);
     }

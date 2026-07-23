@@ -8,6 +8,8 @@ import {
   deleteQna,
 } from "../../api/qnaApi";
 import ShopTapeLabel from "./ShopTapeLabel";
+import { showAlert } from "../../util/globalAlert";
+import { showConfirm } from "../../util/globalConfirm";
 
 const ITEMS_PER_PAGE = 5;
 
@@ -16,7 +18,7 @@ const QnaForm = ({ initialContent, onCancel, onSubmit, submitLabel }) => {
 
   const handleSubmit = () => {
     if (!content.trim()) {
-      alert("문의 내용을 입력해주세요.");
+      showAlert("문의 내용을 입력해주세요.");
       return;
     }
     onSubmit(content);
@@ -133,7 +135,7 @@ const QnaSectionComponent = ({ pno, isLoggedIn, isAdmin, myEmail }) => {
 
   const handleClickWrite = () => {
     if (!isLoggedIn) {
-      alert("로그인이 필요한 기능입니다.");
+      showAlert("로그인이 필요한 기능입니다.");
       return;
     }
     setShowWriteForm(true);
@@ -156,7 +158,7 @@ const QnaSectionComponent = ({ pno, isLoggedIn, isAdmin, myEmail }) => {
 
   const handleSubmitReply = (qno) => {
     if (!replyContent.trim()) {
-      alert("답변 내용을 입력해주세요.");
+      showAlert("답변 내용을 입력해주세요.");
       return;
     }
     postQnaReply(pno, qno, replyContent).then(() => {
@@ -173,8 +175,8 @@ const QnaSectionComponent = ({ pno, isLoggedIn, isAdmin, myEmail }) => {
     });
   };
 
-  const handleDelete = (qno) => {
-    if (!window.confirm("삭제하시겠습니까?")) return;
+  const handleDelete = async (qno) => {
+    if (!(await showConfirm("삭제하시겠습니까?"))) return;
     deleteQna(pno, qno).then(() => fetchQnaList());
   };
 
