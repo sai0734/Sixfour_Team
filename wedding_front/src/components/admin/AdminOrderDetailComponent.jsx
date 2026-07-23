@@ -16,6 +16,8 @@ import { getReviews, postReply, deleteReview } from "../../api/reviewApi";
 import { API_SERVER_HOST } from "../../api/reservationApi";
 import AdminLayout from "../../layouts/AdminLayout";
 import ShopTapeLabel from "../product/ShopTapeLabel";
+import { showAlert } from "../../util/globalAlert";
+import { showConfirm } from "../../util/globalConfirm";
 
 const host = API_SERVER_HOST;
 
@@ -77,8 +79,8 @@ const AdminReviewMiniSection = ({ pno, pname, thumbnail, memberEmail }) => {
     });
   };
 
-  const handleDelete = (rno) => {
-    if (!window.confirm("삭제하시겠습니까?")) return;
+  const handleDelete = async (rno) => {
+    if (!(await showConfirm("삭제하시겠습니까?"))) return;
     deleteReview(pno, rno).then(fetchReviews);
   };
 
@@ -240,47 +242,47 @@ const AdminOrderDetailComponent = ({ ono }) => {
   const isStatusLocked = isTerminalOrder || isPaymentCanceled;
   const canRefund = !isStatusLocked;
 
-  const handleChangeStatus = (newStatus) => {
+  const handleChangeStatus = async (newStatus) => {
     if (
-      !window.confirm(
+      !(await showConfirm(
         `주문 상태를 "${STATUS_LABEL[newStatus]}"(으)로 변경하시겠습니까? 회원에게 이메일 알림이 발송됩니다.`,
-      )
+      ))
     )
       return;
 
     changeOrderStatus(ono, newStatus)
       .then(() => {
-        alert("상태가 변경되었습니다.");
+        showAlert("상태가 변경되었습니다.");
         fetchDetail();
       })
       .catch((err) => {
         console.error(err);
-        alert(err.response?.data?.msg || "상태 변경에 실패했습니다.");
+        showAlert(err.response?.data?.msg || "상태 변경에 실패했습니다.");
       });
   };
 
-  const handleRefund = () => {
+  const handleRefund = async () => {
     const reason = window.prompt(
       "환불 사유를 입력해주세요.",
       order.exchangeReturnReason || "",
     );
     if (!reason) return;
     if (
-      !window.confirm(
+      !(await showConfirm(
         "정말 환불 처리하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
-      )
+      ))
     )
       return;
 
     refundOrder(ono, reason)
       .then(() => {
-        alert("환불 처리가 완료되었습니다.");
+        showAlert("환불 처리가 완료되었습니다.");
         fetchDetail();
       })
       .catch((err) => {
         console.error("환불 실패:", err);
         console.error("서버 응답:", err.response?.data);
-        alert(
+        showAlert(
           err.response?.data?.msg ||
             err.response?.data?.error ||
             "환불 처리에 실패했습니다. 콘솔을 확인해주세요.",
@@ -288,46 +290,46 @@ const AdminOrderDetailComponent = ({ ono }) => {
       });
   };
 
-  const handleExchangeComplete = () => {
+  const handleExchangeComplete = async () => {
     if (
-      !window.confirm(
+      !(await showConfirm(
         "교환 처리하시겠습니까? 주문 상태가 '교환완료'로 변경됩니다.",
-      )
+      ))
     )
       return;
 
     changeOrderStatus(ono, "EXCHANGE")
       .then(() => {
-        alert("교환 처리가 완료되었습니다.");
+        showAlert("교환 처리가 완료되었습니다.");
         fetchDetail();
       })
       .catch((err) => {
         console.error(err);
-        alert(err.response?.data?.msg || "교환처리에 실패했습니다.");
+        showAlert(err.response?.data?.msg || "교환처리에 실패했습니다.");
       });
   };
 
   const handleSaveShipping = () => {
     updateOrderShipping(ono, shippingForm)
       .then(() => {
-        alert("배송지 정보가 저장되었습니다.");
+        showAlert("배송지 정보가 저장되었습니다.");
         fetchDetail();
       })
       .catch((err) => {
         console.error(err);
-        alert("배송지 저장에 실패했습니다.");
+        showAlert("배송지 저장에 실패했습니다.");
       });
   };
 
   const handleSaveTracking = () => {
     updateOrderTracking(ono, trackingNo)
       .then(() => {
-        alert("운송장 번호가 저장되었습니다.");
+        showAlert("운송장 번호가 저장되었습니다.");
         fetchDetail();
       })
       .catch((err) => {
         console.error(err);
-        alert("운송장 저장에 실패했습니다.");
+        showAlert("운송장 저장에 실패했습니다.");
       });
   };
 
@@ -338,11 +340,11 @@ const AdminOrderDetailComponent = ({ ono }) => {
   const handleSaveMemo = () => {
     updateOrderMemo(ono, memo)
       .then(() => {
-        alert("메모가 저장되었습니다.");
+        showAlert("메모가 저장되었습니다.");
       })
       .catch((err) => {
         console.error(err);
-        alert("메모 저장에 실패했습니다.");
+        showAlert("메모 저장에 실패했습니다.");
       });
   };
 

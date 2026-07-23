@@ -17,6 +17,7 @@ import {
 import PageComponent from "../common/PageComponent";
 import AdminLayout from "../../layouts/AdminLayout";
 import ShopTapeLabel from "../product/ShopTapeLabel";
+import { showAlert } from "../../util/globalAlert";
 
 const initState = {
   dtoList: [],
@@ -118,7 +119,7 @@ const MemberManageComponent = () => {
       .then((data) => setManagerList(data))
       .catch((err) => {
         console.error(err);
-        alert("담당자 목록을 불러오지 못했습니다.");
+        showAlert("담당자 목록을 불러오지 못했습니다.");
       })
       .finally(() => setManagerListLoading(false));
   };
@@ -129,7 +130,7 @@ const MemberManageComponent = () => {
       .then((data) => setAdminList(data))
       .catch((err) => {
         console.error(err);
-        alert("관리자 목록을 불러오지 못했습니다.");
+        showAlert("관리자 목록을 불러오지 못했습니다.");
       })
       .finally(() => setAdminListLoading(false));
   };
@@ -154,7 +155,7 @@ const MemberManageComponent = () => {
       fetchList(queryParam);
     } catch (err) {
       console.error(err);
-      alert("해제 중 오류가 발생했습니다.");
+      showAlert("해제 중 오류가 발생했습니다.");
     }
   };
 
@@ -234,7 +235,7 @@ const MemberManageComponent = () => {
       }
     } catch (err) {
       console.error(err);
-      alert("업체 목록을 불러오지 못했습니다.");
+      showAlert("업체 목록을 불러오지 못했습니다.");
     } finally {
       setManagerLoading(false);
     }
@@ -248,20 +249,20 @@ const MemberManageComponent = () => {
 
   const confirmAssignManager = async () => {
     if (!selectedCmno) {
-      alert("업체를 선택해주세요.");
+      showAlert("업체를 선택해주세요.");
       return;
     }
 
     try {
       setManagerLoading(true);
       await assignCompanyManager(Number(selectedCmno), managerTarget.email);
-      alert(`${managerTarget.email} 님을 담당자로 임명했습니다.`);
+      showAlert(`${managerTarget.email} 님을 담당자로 임명했습니다.`);
       closeManagerModal();
       fetchList(queryParam);
     } catch (err) {
       console.error(err);
       const msg = err.response?.data?.msg;
-      alert(msg || "임명 중 오류가 발생했습니다.");
+      showAlert(msg || "임명 중 오류가 발생했습니다.");
     } finally {
       setManagerLoading(false);
     }
@@ -275,12 +276,12 @@ const MemberManageComponent = () => {
     try {
       setManagerLoading(true);
       await unassignCompanyManager(managerCurrent.cmno);
-      alert("담당자 지정을 해제했습니다.");
+      showAlert("담당자 지정을 해제했습니다.");
       closeManagerModal();
       fetchList(queryParam);
     } catch (err) {
       console.error(err);
-      alert("해제 중 오류가 발생했습니다.");
+      showAlert("해제 중 오류가 발생했습니다.");
     } finally {
       setManagerLoading(false);
     }
@@ -288,7 +289,7 @@ const MemberManageComponent = () => {
 
   const confirmSuspend = async () => {
     if (!suspendReason.trim()) {
-      alert("정지 사유를 입력해주세요.");
+      showAlert("정지 사유를 입력해주세요.");
       return;
     }
 
@@ -301,7 +302,7 @@ const MemberManageComponent = () => {
       fetchList(queryParam);
     } catch (err) {
       console.error(err);
-      alert("정지 처리 중 오류가 발생했습니다.");
+      showAlert("정지 처리 중 오류가 발생했습니다.");
     } finally {
       setActionEmail(null);
     }
@@ -319,7 +320,7 @@ const MemberManageComponent = () => {
       fetchList(queryParam);
     } catch (err) {
       console.error(err);
-      alert("처리 중 오류가 발생했습니다.");
+      showAlert("처리 중 오류가 발생했습니다.");
     } finally {
       setActionEmail(null);
     }
@@ -339,7 +340,7 @@ const MemberManageComponent = () => {
       fetchList(queryParam);
     } catch (err) {
       console.error(err);
-      alert("권한 변경 중 오류가 발생했습니다.");
+      showAlert("권한 변경 중 오류가 발생했습니다.");
     } finally {
       setActionEmail(null);
     }

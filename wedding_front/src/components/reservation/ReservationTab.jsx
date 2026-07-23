@@ -15,6 +15,8 @@ import { TOSS_CLIENT_KEY } from "../../api/tossConfig";
 import { buildCompanyOptions, categoryLabel } from "../../util/companyOptionBuilder";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import ReservationFormModal from "./ReservationFormModal";
+import { showAlert } from "../../util/globalAlert";
+import { showConfirm } from "../../util/globalConfirm";
 
 const STATUS_STYLE = {
   예약대기: "bg-amber-50 text-amber-700",
@@ -157,7 +159,7 @@ const ReservationTab = () => {
   // 모달
   const openEdit = (r) => {
     if (!canEditReservation(r)) {
-      alert("결제대기 상태에서는 일정을 변경할 수 없습니다.");
+      showAlert("결제대기 상태에서는 일정을 변경할 수 없습니다.");
       return;
     }
     setEditTarget(r);
@@ -176,12 +178,12 @@ const ReservationTab = () => {
       })
       .catch((e) => {
         console.error(e);
-        alert(e?.response?.data?.message || "예약 수정에 실패했습니다.");
+        showAlert(e?.response?.data?.message || "예약 수정에 실패했습니다.");
       });
   };
 
-  const handleDelete = (reservationId) => {
-    if (!window.confirm("예약을 취소하시겠습니까?")) return;
+  const handleDelete = async (reservationId) => {
+    if (!(await showConfirm("예약을 취소하시겠습니까?"))) return;
     deleteOne(reservationId)
       .then(() => setRefresh((r) => !r))
       .catch((e) => console.error(e));
@@ -214,7 +216,7 @@ const ReservationTab = () => {
   // 묶음 결제
   const handleBulkPay = async () => {
     if (selectedIds.size === 0) {
-      alert("결제할 예약을 선택해주세요.");
+      showAlert("결제할 예약을 선택해주세요.");
       return;
     }
     if (paying) return;
@@ -252,7 +254,7 @@ const ReservationTab = () => {
           err?.response?.data?.error ||
           err?.message ||
           "결제 처리 중 오류가 발생했습니다.";
-        alert(msg);
+        showAlert(msg);
       }
     } finally {
       setPaying(false);
@@ -283,7 +285,7 @@ const ReservationTab = () => {
         await cancelPayment(r.reservationId).catch(() => {});
       } else {
         console.error("결제 오류:", err);
-        alert("결제 처리 중 오류가 발생했습니다.");
+        showAlert("결제 처리 중 오류가 발생했습니다.");
       }
     } finally {
       setPayingId(null);

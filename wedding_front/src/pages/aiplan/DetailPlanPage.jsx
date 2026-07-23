@@ -19,6 +19,8 @@ import {
   renameSessionHistoryEntry,
   removeSessionHistoryEntry,
 } from "../../api/aiPlanHistory";
+import { showAlert } from "../../util/globalAlert";
+import { showConfirm } from "../../util/globalConfirm";
 
 // com.wedding.company.domain.HallType 그대로 - 한글 라벨만 붙임
 const HALL_TYPE_OPTIONS = [
@@ -400,13 +402,13 @@ const DetailPlanPage = () => {
   // "이 결과 마이페이지에 담기" - 추천 도중 자동 반영이 아니라 사용자가 명시적으로 눌렀을 때만
   // 웨딩플랜/예산관리/체크리스트에 반영한다. 기존에 저장해둔 예식일·총예산·예식장이 있으면
   // 덮어써지므로, 실행 전에 한 번 더 확인받는다.
-  const handleApplyToPlan = () => {
+  const handleApplyToPlan = async () => {
     if (!result?.sessionId) return;
 
     if (
-      !window.confirm(
+      !(await showConfirm(
         "기존에 저장된 예식일 · 총예산 · 예식장 정보가 있다면 덮어씌워져요.",
-      )
+      ))
     ) {
       return;
     }
@@ -415,7 +417,7 @@ const DetailPlanPage = () => {
       .catch((err) => {
         console.error(err);
         const msg = err?.response?.data?.msg;
-        alert(msg || "반영 중 문제가 발생했어요. 로그인 상태를 확인해주세요.");
+        showAlert(msg || "반영 중 문제가 발생했어요. 로그인 상태를 확인해주세요.");
       });
   };
 

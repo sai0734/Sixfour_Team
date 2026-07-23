@@ -7,6 +7,7 @@ import PageComponent from "../common/PageComponent";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import useCustomMove from "../../hooks/useCustomMove";
 import ShopTapeLabel from "../product/ShopTapeLabel";
+import { showConfirm } from "../../util/globalConfirm";
 
 const initState = {
   dtoList: [],
@@ -149,7 +150,7 @@ const CompanyListComponent = () => {
   }, [serverData]);
 
   const handleDelete = async (cmno, name) => {
-    if (!window.confirm(`${name} 업체를 삭제하시겠습니까?`)) {
+    if (!(await showConfirm(`${name} 업체를 삭제하시겠습니까?`))) {
       return;
     }
 

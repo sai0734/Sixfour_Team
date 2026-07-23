@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { cancelOrder } from "../../api/checkoutApi";
+import { showAlert } from "../../util/globalAlert";
 
 const CheckoutFailPage = () => {
   const navigate = useNavigate();
@@ -15,13 +16,13 @@ const CheckoutFailPage = () => {
       cancelOrder(orderId).catch((err) => console.error(err));
     }
 
-    alert(message || "결제가 취소되었거나 실패했습니다.");
-
     sessionStorage.removeItem("checkout_cinos");
     sessionStorage.removeItem("checkout_orderNumber");
     sessionStorage.removeItem("checkout_amount");
 
-    navigate("/cart", { replace: true });
+    showAlert(message || "결제가 취소되었거나 실패했습니다.", () => {
+      navigate("/cart", { replace: true });
+    });
   }, []);
 
   return null;

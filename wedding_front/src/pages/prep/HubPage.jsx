@@ -14,6 +14,7 @@ import {
   putOne,
   deleteOne,
 } from "../../api/ddayEventApi";
+import { showConfirm } from "../../util/globalConfirm";
 
 // 예전엔 준비관리 허브 / D-day 관리가 별도 탭이었는데, 마이페이지(플랜의 예식일, 예약 현황의
 // 결제 마감일)와 계속 겹쳐서 "이 탭이 따로 필요한가"라는 문제가 있었음 - 그래서 D-day 관리
@@ -172,8 +173,8 @@ const HubPage = () => {
     }
   };
 
-  const handleDelete = (ddayId) => {
-    if (!window.confirm("일정을 삭제하시겠습니까?")) return;
+  const handleDelete = async (ddayId) => {
+    if (!(await showConfirm("일정을 삭제하시겠습니까?"))) return;
 
     deleteOne(ddayId)
       .then(() => setRefresh((r) => !r))

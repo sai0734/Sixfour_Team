@@ -11,6 +11,8 @@ import {
 import PageComponent from "../common/PageComponent";
 import AdminLayout from "../../layouts/AdminLayout";
 import ShopTapeLabel from "../product/ShopTapeLabel";
+import { showAlert } from "../../util/globalAlert";
+import { showConfirm } from "../../util/globalConfirm";
 
 const STATUS_TABS = [
   { key: "", label: "전체" },
@@ -127,20 +129,20 @@ const AdminOrderListComponent = () => {
     }
   };
 
-  const handleBulkChange = () => {
+  const handleBulkChange = async () => {
     if (selectedOnos.length === 0) {
-      alert("변경할 주문을 선택해주세요.");
+      showAlert("변경할 주문을 선택해주세요.");
       return;
     }
     if (
-      !window.confirm(
+      !(await showConfirm(
         `선택한 ${selectedOnos.length}건을 상태 변경하시겠습니까?`,
-      )
+      ))
     )
       return;
 
     bulkChangeOrderStatus(selectedOnos, bulkStatus).then(() => {
-      alert("일괄 상태 변경이 완료되었습니다.");
+      showAlert("일괄 상태 변경이 완료되었습니다.");
       fetchList();
     });
   };

@@ -30,6 +30,8 @@ import ShopTapeLabel from "../product/ShopTapeLabel";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import useManagedCompany from "../../hooks/useManagedCompany";
 import useInquiryChat from "../../context/InquiryChatContext";
+import { showAlert } from "../../util/globalAlert";
+import { showConfirm } from "../../util/globalConfirm";
 
 const initState = {
   cmno: 0,
@@ -155,7 +157,7 @@ const CompanyReadComponent = () => {
   }, [cmno]);
 
   const handleDelete = async () => {
-    if (!window.confirm(`${company.name} 업체를 삭제하시겠습니까?`)) {
+    if (!(await showConfirm(`${company.name} 업체를 삭제하시겠습니까?`))) {
       return;
     }
 
@@ -242,8 +244,9 @@ const CompanyReadComponent = () => {
 
   const handleToggleWishOption = async (option) => {
     if (!isLoggedIn) {
-      alert("로그인 후 찜하기를 이용할 수 있습니다.");
-      navigate("/auth/login");
+      showAlert("로그인 후 찜하기를 이용할 수 있습니다.", () => {
+        navigate("/auth/login");
+      });
       return;
     }
 
@@ -292,8 +295,9 @@ const CompanyReadComponent = () => {
     if (!company.cmno || favoriteLoading) return;
 
     if (!isLoggedIn) {
-      alert("로그인 후 찜하기를 이용할 수 있습니다.");
-      navigate("/auth/login");
+      showAlert("로그인 후 찜하기를 이용할 수 있습니다.", () => {
+        navigate("/auth/login");
+      });
       return;
     }
 
@@ -337,8 +341,9 @@ const CompanyReadComponent = () => {
   // 용현 추가 문의하기 클릭 — 로그인 확인 후 채팅 시작
   const handleInquiryClick = () => {
     if (!loginState.email) {
-      alert("로그인이 필요한 기능입니다.");
-      navigate("/auth/login");
+      showAlert("로그인이 필요한 기능입니다.", () => {
+        navigate("/auth/login");
+      });
       return;
     }
     startInquiry(company.cmno, company.name);
@@ -348,8 +353,9 @@ const CompanyReadComponent = () => {
     // 재원 추가 - 드레스/홀 아이템 "크게 보기" 모달의 찜 버튼처럼 옵션 선택 모달을
     // 거치지 않고 바로 이 함수가 호출되는 경로가 생겨서, 로그인 체크를 여기로도 추가
     if (!isLoggedIn) {
-      alert("로그인 후 찜하기를 이용할 수 있습니다.");
-      navigate("/auth/login");
+      showAlert("로그인 후 찜하기를 이용할 수 있습니다.", () => {
+        navigate("/auth/login");
+      });
       return;
     }
 
@@ -366,7 +372,7 @@ const CompanyReadComponent = () => {
       // 재원 추가 - "크게 보기" 모달의 하트 상태와 일관되도록 여기서도 세트에 반영
       setWishedOptionNames((prev) => new Set(prev).add(option.label));
       // 재원 추가 끝
-      alert(`"${option.label}" 옵션으로 찜했습니다.`);
+      showAlert(`"${option.label}" 옵션으로 찜했습니다.`);
     } catch (err) {
       console.error("업체 찜 처리 실패:", err);
       exceptionHandle(err);
@@ -522,8 +528,9 @@ const CompanyReadComponent = () => {
               type="button"
               onClick={() => {
                 if (!loginState.email) {
-                  alert("로그인이 필요한 기능입니다.");
-                  navigate("/auth/login");
+                  showAlert("로그인이 필요한 기능입니다.", () => {
+                    navigate("/auth/login");
+                  });
                   return;
                 }
                 navigate(`/companies/reserve/${company.cmno}?mode=reserve`);
@@ -876,19 +883,19 @@ const MakeupDetail = ({ detail, cmno, canManageCompany, onRefresh }) => {
         err?.response?.data?.message || err?.response?.data || "";
       console.error("메이크업 상세 저장 실패:", status, serverMsg, err);
       if (status === 403) {
-        alert(
+        showAlert(
           "권한이 없습니다. 관리자 계정으로 로그인되어 있는지 확인해주세요.",
         );
       } else if (status === 404) {
-        alert(
+        showAlert(
           `저장 실패: 해당 업체의 메이크업 상세 정보를 찾을 수 없습니다. (cmno: ${cmno})`,
         );
       } else if (status === 500) {
-        alert(
+        showAlert(
           `서버 오류가 발생했습니다. 백엔드 로그를 확인해주세요.\n${serverMsg}`,
         );
       } else {
-        alert(`저장에 실패했습니다. (${status ?? "네트워크 오류"})`);
+        showAlert(`저장에 실패했습니다. (${status ?? "네트워크 오류"})`);
       }
     } finally {
       setSaving(false);
@@ -1359,7 +1366,7 @@ const DressItemModal = ({ modalData, isSuitFn, onSave, onDelete, onClose }) => {
       const uploaded = await uploadCompanyImages([file]);
       if (uploaded?.[0]) setLocalItem((p) => ({ ...p, imageUrl: uploaded[0] }));
     } catch {
-      alert("이미지 업로드에 실패했습니다.");
+      showAlert("이미지 업로드에 실패했습니다.");
     } finally {
       setUploading(false);
       e.target.value = "";
@@ -1648,16 +1655,16 @@ const DressDetail = ({ detail, cmno, canManageCompany, onRefresh, wish }) => {
         err?.response?.data?.message || err?.response?.data || "";
       console.error("드레스 상세 저장 실패:", status, serverMsg, err);
       if (status === 403)
-        alert(
+        showAlert(
           "권한이 없습니다. 관리자 계정으로 로그인되어 있는지 확인해주세요.",
         );
       else if (status === 404)
-        alert(`저장 실패: 업체를 찾을 수 없습니다. (cmno: ${cmno})`);
+        showAlert(`저장 실패: 업체를 찾을 수 없습니다. (cmno: ${cmno})`);
       else if (status === 500)
-        alert(
+        showAlert(
           `서버 오류가 발생했습니다. 백엔드 로그를 확인해주세요.\n${serverMsg}`,
         );
-      else alert(`저장에 실패했습니다. (${status ?? "네트워크 오류"})`);
+      else showAlert(`저장에 실패했습니다. (${status ?? "네트워크 오류"})`);
     } finally {
       setSaving(false);
     }
@@ -1728,8 +1735,8 @@ const DressDetail = ({ detail, cmno, canManageCompany, onRefresh, wish }) => {
   };
 
   /* ── 모달 "삭제" ── */
-  const handleModalDelete = (idx) => {
-    if (!window.confirm("이 항목을 삭제하시겠습니까?")) return;
+  const handleModalDelete = async (idx) => {
+    if (!(await showConfirm("이 항목을 삭제하시겠습니까?"))) return;
     setForm((prev) => ({
       ...prev,
       items: prev.items.filter((_, i) => i !== idx),

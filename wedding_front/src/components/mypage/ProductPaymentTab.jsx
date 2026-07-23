@@ -5,6 +5,7 @@ import { getOne as getProduct } from "../../api/productApi";
 import { API_SERVER_HOST } from "../../api/reservationApi";
 import OrderTrackingModal from "./OrderTrackingModal";
 import ExchangeReturnModal from "./ExchangeReturnModal";
+import { showAlert } from "../../util/globalAlert";
 
 // 주문 상태값 -> 표시 라벨/색상. MailServiceImpl의 한글 매핑과 동일한 값 기준.
 const STATUS_LABELS = {
@@ -234,7 +235,7 @@ const ProductPaymentTab = () => {
           order={exchangeOrder}
           onClose={() => setExchangeOrder(null)}
           onSubmitted={async ({ type }) => {
-            alert(
+            showAlert(
               `${type === "EXCHANGE" ? "교환" : "환불"} 신청이 접수됐어요.`,
             );
             await loadOrders();
