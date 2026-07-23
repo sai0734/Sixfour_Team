@@ -12,6 +12,8 @@ import {
 import { getKakaoLinkLink } from "../../api/kakaoAuthApi";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import TapeLabel from "../common/TapeLabel";
+import { showAlert } from "../../util/globalAlert";
+import { showConfirm } from "../../util/globalConfirm";
 
 const initState = {
   email: "",
@@ -114,18 +116,18 @@ const ModifyComponent = () => {
 
   const isKakaoLinked = linkedProviders.includes("kakao");
 
-  const handleUnlinkKakao = () => {
-    if (!window.confirm("카카오 계정 연동을 해제할까요?")) return;
+  const handleUnlinkKakao = async () => {
+    if (!(await showConfirm("카카오 계정 연동을 해제할까요?"))) return;
 
     unlinkSocialAccount(loginInfo.email, "kakao")
       .then(() => {
-        alert("카카오 연동이 해제되었습니다.");
+        showAlert("카카오 연동이 해제되었습니다.");
         setLinkedProviders((prev) => prev.filter((p) => p !== "kakao"));
       })
       .catch((err) => {
         console.error(err);
         const msg = err.response?.data?.msg;
-        alert(msg || "연동 해제 중 오류가 발생했습니다.");
+        showAlert(msg || "연동 해제 중 오류가 발생했습니다.");
       });
   };
 
@@ -188,7 +190,7 @@ const ModifyComponent = () => {
 
   const handleClickAddressSearch = () => {
     if (!window.daum || !window.daum.Postcode) {
-      alert(
+      showAlert(
         "주소 검색 기능을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
       );
       return;
@@ -243,7 +245,7 @@ const ModifyComponent = () => {
     // 아무것도 안 바꿨으면 저장 요청 자체를 보내지 않음
     // (예전엔 무조건 요청을 보내서, 아무것도 안 바꿔도 "수정되었습니다"가 떴음)
     if (!nicknameChanged && !passwordChanged && !detailChanged) {
-      alert("변경된 내용이 없어요.");
+      showAlert("변경된 내용이 없어요.");
       return;
     }
 
@@ -290,13 +292,17 @@ const ModifyComponent = () => {
 
     withdrawPost(loginInfo.email)
       .then(() => {
-        alert("회원탈퇴가 완료되었습니다. 그동안 이용해주셔서 감사합니다.");
-        doLogout();
-        moveToPath("/");
+        showAlert(
+          "회원탈퇴가 완료되었습니다. 그동안 이용해주셔서 감사합니다.",
+          () => {
+            doLogout();
+            moveToPath("/");
+          },
+        );
       })
       .catch((err) => {
         console.error(err);
-        alert("탈퇴 처리 중 오류가 발생했습니다.");
+        showAlert("탈퇴 처리 중 오류가 발생했습니다.");
       })
       .finally(() => setWithdrawing(false));
   };

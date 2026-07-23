@@ -9,6 +9,8 @@ import {
   deleteReview,
 } from "../../api/reviewApi";
 import ShopTapeLabel from "./ShopTapeLabel";
+import { showAlert } from "../../util/globalAlert";
+import { showConfirm } from "../../util/globalConfirm";
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 const MAX_VIDEO_SIZE = 50 * 1024 * 1024;
@@ -159,7 +161,7 @@ const ReviewForm = ({
   const handleChangeFiles = (e) => {
     const errorMsg = validateFiles(e.target.files);
     if (errorMsg) {
-      alert(errorMsg);
+      showAlert(errorMsg);
       e.target.value = "";
       setNewFiles(null);
       return;
@@ -173,7 +175,7 @@ const ReviewForm = ({
 
   const handleSubmit = () => {
     if (!content.trim()) {
-      alert("리뷰 내용을 입력해주세요.");
+      showAlert("리뷰 내용을 입력해주세요.");
       return;
     }
     onSubmit({ rating, content, keepFileNames, newFiles });
@@ -252,7 +254,7 @@ const ReplyEditForm = ({ initialContent, onCancel, onSubmit }) => {
 
   const handleSubmit = () => {
     if (!content.trim()) {
-      alert("답변 내용을 입력해주세요.");
+      showAlert("답변 내용을 입력해주세요.");
       return;
     }
     onSubmit(content);
@@ -353,7 +355,7 @@ const ReviewSectionComponent = ({
 
   const handleClickWriteReview = () => {
     if (!isLoggedIn) {
-      alert("리뷰는 구매 회원만 작성이 가능합니다.");
+      showAlert("리뷰는 구매 회원만 작성이 가능합니다.");
       return;
     }
 
@@ -362,7 +364,7 @@ const ReviewSectionComponent = ({
       .catch((err) => {
         const msg =
           err.response?.data?.msg || "리뷰는 구매 회원만 작성이 가능합니다.";
-        alert(msg);
+        showAlert(msg);
       });
   };
 
@@ -380,7 +382,7 @@ const ReviewSectionComponent = ({
         onStatsChange?.();
       })
       .catch((err) => {
-        alert(err.response?.data?.msg || "리뷰 등록에 실패했습니다.");
+        showAlert(err.response?.data?.msg || "리뷰 등록에 실패했습니다.");
       });
   };
 
@@ -395,13 +397,13 @@ const ReviewSectionComponent = ({
         onStatsChange?.();
       })
       .catch((err) => {
-        alert(err.response?.data?.msg || "리뷰 수정에 실패했습니다.");
+        showAlert(err.response?.data?.msg || "리뷰 수정에 실패했습니다.");
       });
   };
 
   const handleSubmitReply = (rno) => {
     if (!replyContent.trim()) {
-      alert("답변 내용을 입력해주세요.");
+      showAlert("답변 내용을 입력해주세요.");
       return;
     }
 
@@ -419,12 +421,12 @@ const ReviewSectionComponent = ({
         fetchReviews();
       })
       .catch((err) => {
-        alert(err.response?.data?.msg || "답변 수정에 실패했습니다.");
+        showAlert(err.response?.data?.msg || "답변 수정에 실패했습니다.");
       });
   };
 
-  const handleDeleteReview = (rno) => {
-    if (!window.confirm("이 리뷰를 삭제하시겠습니까?")) return;
+  const handleDeleteReview = async (rno) => {
+    if (!(await showConfirm("이 리뷰를 삭제하시겠습니까?"))) return;
 
     deleteReview(pno, rno).then(() => {
       fetchReviews();

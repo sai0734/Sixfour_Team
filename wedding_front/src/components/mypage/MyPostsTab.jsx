@@ -8,6 +8,8 @@ import { API_SERVER_HOST } from "../../api/reservationApi";
 import BoardFormModal, { BOARD_TYPE_LABELS } from "../board/BoardFormModal";
 import DetailModal from "../board/DetailModal";
 import useCustomLogin from "../../hooks/useCustomLogin";
+import { showAlert } from "../../util/globalAlert";
+import { showConfirm } from "../../util/globalConfirm";
 
 const SUB_TABS = [
   { key: "community", label: "커뮤니티" },
@@ -107,15 +109,15 @@ const MyPostsTab = () => {
         if (files && files.length > 0) {
           uploadImages(editTarget.boardId, files).catch((e) => {
             console.error(e);
-            alert("수정은 됐지만, 이미지/동영상 업로드에는 실패했어요.");
+            showAlert("수정은 됐지만, 이미지/동영상 업로드에는 실패했어요.");
           });
         }
       })
       .catch((e) => console.error(e));
   };
 
-  const handleDelete = () => {
-    if (!window.confirm("삭제하시겠습니까?")) return;
+  const handleDelete = async () => {
+    if (!(await showConfirm("삭제하시겠습니까?"))) return;
 
     deleteOne(detailPost.boardId)
       .then(() => {
@@ -125,8 +127,8 @@ const MyPostsTab = () => {
       .catch((e) => console.error(e));
   };
 
-  const handleDeleteReview = (pno, rno) => {
-    if (!window.confirm("이 리뷰를 삭제하시겠습니까?")) return;
+  const handleDeleteReview = async (pno, rno) => {
+    if (!(await showConfirm("이 리뷰를 삭제하시겠습니까?"))) return;
 
     deleteReview(pno, rno)
       .then(() => setReviewRefresh((r) => !r))

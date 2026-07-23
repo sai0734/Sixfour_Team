@@ -7,6 +7,8 @@ import FetchingModal from "../../components/common/FetchingModal";
 import { calculateShippingFee } from "../../util/shippingPolicy";
 import BasicLayout from "../../layouts/BasicLayout";
 import ShopTapeLabel from "../../components/product/ShopTapeLabel";
+import { showAlert } from "../../util/globalAlert";
+import { showConfirm } from "../../util/globalConfirm";
 
 const host = API_SERVER_HOST;
 
@@ -82,13 +84,13 @@ const CartPage = () => {
 
   const handleClickDeleteSelected = async () => {
     if (selectedCinos.length === 0) {
-      alert("삭제할 상품을 선택해주세요.");
+      showAlert("삭제할 상품을 선택해주세요.");
       return;
     }
     if (
-      !window.confirm(
+      !(await showConfirm(
         `선택한 ${selectedCinos.length}개 상품을 삭제하시겠습니까?`,
-      )
+      ))
     )
       return;
 
@@ -116,14 +118,16 @@ const CartPage = () => {
 
   const handleClickCheckout = () => {
     if (!loginState.email) {
-      alert(
+      showAlert(
         "결제하려면 로그인이 필요합니다. 담아둔 장바구니는 로그인 후에도 그대로 유지됩니다.",
+        () => {
+          moveToLogin("/cart");
+        },
       );
-      moveToLogin("/cart");
       return;
     }
     if (selectedCinos.length === 0) {
-      alert("결제할 상품을 선택해주세요.");
+      showAlert("결제할 상품을 선택해주세요.");
       return;
     }
 

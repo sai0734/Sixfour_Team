@@ -6,6 +6,8 @@ import {
   withdrawPost,
 } from "../../api/authApi";
 import { getKakaoLinkLink } from "../../api/kakaoAuthApi";
+import { showAlert } from "../../util/globalAlert";
+import { showConfirm } from "../../util/globalConfirm";
 
 const WITHDRAW_CONFIRM_TEXT = "회원탈퇴";
 
@@ -30,18 +32,18 @@ const AccountSettingsTab = () => {
 
   const isKakaoLinked = linkedProviders.includes("kakao");
 
-  const handleUnlinkKakao = () => {
-    if (!window.confirm("카카오 계정 연동을 해제할까요?")) return;
+  const handleUnlinkKakao = async () => {
+    if (!(await showConfirm("카카오 계정 연동을 해제할까요?"))) return;
 
     unlinkSocialAccount(loginState.email, "kakao")
       .then(() => {
-        alert("카카오 연동이 해제되었습니다.");
+        showAlert("카카오 연동이 해제되었습니다.");
         setLinkedProviders((prev) => prev.filter((p) => p !== "kakao"));
       })
       .catch((err) => {
         console.error(err);
         const msg = err.response?.data?.msg;
-        alert(msg || "연동 해제 중 오류가 발생했습니다.");
+        showAlert(msg || "연동 해제 중 오류가 발생했습니다.");
       });
   };
 
@@ -52,13 +54,14 @@ const AccountSettingsTab = () => {
 
     withdrawPost(loginState.email)
       .then(() => {
-        alert("회원탈퇴가 완료되었습니다. 그동안 이용해주셔서 감사합니다.");
-        doLogout();
-        moveToPath("/");
+        showAlert("회원탈퇴가 완료되었습니다. 그동안 이용해주셔서 감사합니다.", () => {
+          doLogout();
+          moveToPath("/");
+        });
       })
       .catch((err) => {
         console.error(err);
-        alert("탈퇴 처리 중 오류가 발생했습니다.");
+        showAlert("탈퇴 처리 중 오류가 발생했습니다.");
       })
       .finally(() => setWithdrawing(false));
   };

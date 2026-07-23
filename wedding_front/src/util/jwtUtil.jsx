@@ -1,6 +1,7 @@
 import axios from "axios";
 import { getCookie, setCookie, removeCookie } from "./cookieUtil";
 import { API_SERVER_HOST } from "../api/reservationApi";
+import { showAlert } from "./globalAlert";
 
 const jwtAxios = axios.create();
 
@@ -51,8 +52,9 @@ const requestFail = (err) => {
 // 정지/휴면 등으로 강제 로그아웃 처리 (쿠키 삭제 + 안내 + 로그인 페이지로 이동)
 const forceLogout = (message) => {
   removeCookie("auth");
-  alert(message);
-  window.location.href = "/auth/login";
+  showAlert(message, () => {
+    window.location.href = "/auth/login";
+  });
 };
 
 //before return response

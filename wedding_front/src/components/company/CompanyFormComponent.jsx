@@ -11,6 +11,8 @@ import FetchingModal from "../common/FetchingModal";
 import ResultModal from "../common/ResultModal";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import ShopTapeLabel from "../product/ShopTapeLabel";
+import { showAlert } from "../../util/globalAlert";
+import { showConfirm } from "../../util/globalConfirm";
 
 const initState = {
   category: "HALL",
@@ -106,7 +108,7 @@ const CompanyFormComponent = ({ mode = "add" }) => {
 
   const handleSearchAddress = async () => {
     if (!window.daum || !window.daum.Postcode) {
-      alert(
+      showAlert(
         "주소 검색 기능을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
       );
       return;
@@ -148,19 +150,19 @@ const CompanyFormComponent = ({ mode = "add" }) => {
 
   const validate = () => {
     if (!company.name.trim()) {
-      alert("업체명을 입력해주세요.");
+      showAlert("업체명을 입력해주세요.");
       return false;
     }
     if (!company.phone.trim()) {
-      alert("연락처를 입력해주세요.");
+      showAlert("연락처를 입력해주세요.");
       return false;
     }
     if (!company.address.trim()) {
-      alert("주소를 입력해주세요.");
+      showAlert("주소를 입력해주세요.");
       return false;
     }
     if (company.priceAvg === "") {
-      alert("평균 가격을 입력해주세요.");
+      showAlert("평균 가격을 입력해주세요.");
       return false;
     }
     return true;
@@ -197,7 +199,7 @@ const CompanyFormComponent = ({ mode = "add" }) => {
     }
 
     if (isModify) {
-      const confirmed = window.confirm("변경된 사항을 저장하겠습니까?");
+      const confirmed = await showConfirm("변경된 사항을 저장하겠습니까?");
       if (!confirmed) return;
     }
 
@@ -216,14 +218,15 @@ const CompanyFormComponent = ({ mode = "add" }) => {
       setFetching(false);
       const errorMsg = err?.response?.data?.error || "";
       if (errorMsg === "ERROR_ACCESS_TOKEN") {
-        alert("로그인 세션이 만료되었습니다.\n다시 로그인해주세요.");
-        window.location.href = "/auth/login";
+        showAlert("로그인 세션이 만료되었습니다.\n다시 로그인해주세요.", () => {
+          window.location.href = "/auth/login";
+        });
         return;
       }
       try {
         exceptionHandle(err);
       } catch {
-        alert("저장에 실패했습니다. 다시 시도해주세요.");
+        showAlert("저장에 실패했습니다. 다시 시도해주세요.");
       }
     } finally {
       setFetching(false);

@@ -5,6 +5,7 @@ import useCustomMove from "../../hooks/useCustomMove";
 import FetchingModal from "../common/FetchingModal";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import useCustomCart from "../../hooks/useCustomCart";
+import { showConfirm } from "../../util/globalConfirm";
 
 const initState = {
   pno: 0,
@@ -31,14 +32,14 @@ const DressItemReadComponent = ({ pno }) => {
   // 로그인 정보
   const { loginState } = useCustomLogin();
 
-  const handleClickAddCart = () => {
+  const handleClickAddCart = async () => {
     let qty = 1;
 
     const addedItem = cartItems.filter((item) => item.pno === parseInt(pno))[0];
 
     if (addedItem) {
       if (
-        window.confirm("이미 추가된 상품입니다. 추가하시겠습니까? ") === false
+        (await showConfirm("이미 추가된 상품입니다. 추가하시겠습니까? ")) === false
       ) {
         return;
       }

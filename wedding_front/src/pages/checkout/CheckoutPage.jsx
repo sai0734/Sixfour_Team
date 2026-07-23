@@ -8,6 +8,7 @@ import { API_SERVER_HOST } from "../../api/reservationApi";
 import { calculateShippingFee } from "../../util/shippingPolicy";
 import BasicLayout from "../../layouts/BasicLayout";
 import ShopTapeLabel from "../../components/product/ShopTapeLabel";
+import { showAlert } from "../../util/globalAlert";
 
 const host = API_SERVER_HOST;
 
@@ -62,7 +63,7 @@ const CheckoutPage = () => {
 
   const handleClickSearchAddress = () => {
     if (!window.daum || !window.daum.Postcode) {
-      alert(
+      showAlert(
         "주소 검색 기능을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
       );
       return;
@@ -79,7 +80,7 @@ const CheckoutPage = () => {
   const handleClickLoadLastAddress = () => {
     getLastAddress().then((data) => {
       if (!data) {
-        alert("불러올 수 있는 최근 배송지가 없습니다.");
+        showAlert("불러올 수 있는 최근 배송지가 없습니다.");
         return;
       }
       setReceiverName(data.receiverName);
@@ -92,11 +93,11 @@ const CheckoutPage = () => {
 
   const handleClickPay = async () => {
     if (safeCartItems.length === 0) {
-      alert("주문할 상품이 없습니다.");
+      showAlert("주문할 상품이 없습니다.");
       return;
     }
     if (!receiverName || !receiverPhone || !address) {
-      alert("받으실 분 정보와 주소를 모두 입력해주세요.");
+      showAlert("받으실 분 정보와 주소를 모두 입력해주세요.");
       return;
     }
 
@@ -145,10 +146,11 @@ const CheckoutPage = () => {
       });
     } catch (err) {
       console.error(err);
-      alert("결제가 취소되었거나 오류가 발생했습니다.");
-      window.location.href = directItem
-        ? `/product/read/${directItem.pno}`
-        : "/cart";
+      showAlert("결제가 취소되었거나 오류가 발생했습니다.", () => {
+        window.location.href = directItem
+          ? `/product/read/${directItem.pno}`
+          : "/cart";
+      });
     } finally {
       setSubmitting(false);
     }

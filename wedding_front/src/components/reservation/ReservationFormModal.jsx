@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getCompanyImageUrl } from "../../api/companyApi";
 import { buildCompanyOptions, categoryLabel } from "../../util/companyOptionBuilder";
+import { showAlert } from "../../util/globalAlert";
 export const STATUS_OPTIONS = ["대기", "확정", "취소"];
 
 const initState = {
@@ -84,7 +85,7 @@ const ReservationFormModal = ({
   const handleSubmit = () => {
     if (mode === "add") {
       if (!form.cmno) {
-        alert("업체 번호를 입력해주세요.");
+        showAlert("업체 번호를 입력해주세요.");
         return;
       }
       onSubmit({ ...form, cmno: Number(form.cmno) });
@@ -92,11 +93,11 @@ const ReservationFormModal = ({
     }
 
     if (!form.weddingDate) {
-      alert("예약 날짜를 선택해주세요.");
+      showAlert("예약 날짜를 선택해주세요.");
       return;
     }
     if (options.length > 0 && !selectedOption) {
-      alert("옵션을 선택해주세요.");
+      showAlert("옵션을 선택해주세요.");
       return;
     }
 

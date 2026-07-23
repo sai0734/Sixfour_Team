@@ -10,6 +10,8 @@ import { API_SERVER_HOST } from "../../api/reservationApi";
 import PageComponent from "../common/PageComponent";
 import AdminLayout from "../../layouts/AdminLayout";
 import ShopTapeLabel from "../product/ShopTapeLabel";
+import { showAlert } from "../../util/globalAlert";
+import { showConfirm } from "../../util/globalConfirm";
 
 const host = API_SERVER_HOST;
 
@@ -104,14 +106,14 @@ const AdminProductListComponent = () => {
     navigate({ pathname: `/product/modify/${pno}`, search: listQuery });
   };
 
-  const handleClickDelete = (e, pno, pname) => {
+  const handleClickDelete = async (e, pno, pname) => {
     e.stopPropagation();
 
-    if (!window.confirm(`"${pname}" 상품을 삭제(숨김) 처리하시겠습니까?`))
+    if (!(await showConfirm(`"${pname}" 상품을 삭제(숨김) 처리하시겠습니까?`)))
       return;
 
     deleteOne(pno).then(() => {
-      alert("삭제되었습니다.");
+      showAlert("삭제되었습니다.");
       fetchList();
     });
   };

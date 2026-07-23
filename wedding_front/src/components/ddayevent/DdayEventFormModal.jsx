@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { showAlert } from "../../util/globalAlert";
 
 const initState = {
   title: "",
@@ -30,11 +31,11 @@ const DdayEventFormModal = ({
 
   const handleSubmit = () => {
     if (!form.title.trim()) {
-      alert("일정명을 입력해주세요.");
+      showAlert("일정명을 입력해주세요.");
       return;
     }
     if (!form.eventDate) {
-      alert("날짜를 선택해주세요.");
+      showAlert("날짜를 선택해주세요.");
       return;
     }
 
