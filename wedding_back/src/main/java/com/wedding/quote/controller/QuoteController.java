@@ -29,6 +29,7 @@ import lombok.extern.log4j.Log4j2;
 // AI 견적서 - 업체 견적서 사진을 업로드하면 AI가 고정 스키마로 정보를 추출하고, 같은 카테고리
 // 견적서끼리는 가격/항목/조건 차이점을 뽑아 비교해준다("어느 쪽이 더 좋다"는 판단하지 않음).
 // 회원 개인 자료(가격 정보)라 전부 로그인 필수, 이미지 조회도 소유권 확인 후에만 서빙한다.
+// 비교 결과는 비교할 때마다 자동으로 기록(QuoteComparison)되어 나중에 다시 볼 수 있다.
 @RestController
 @RequiredArgsConstructor
 @Log4j2
@@ -55,6 +56,7 @@ public class QuoteController {
     }
 
     // 예: GET /api/quotes/compare?ids=1&ids=2 - 정확히 2개, 같은 카테고리여야 함(아니면 400)
+    // 성공하면 QuoteComparison으로 자동 기록됨.
     @PreAuthorize("hasAnyRole('USER')")
     @GetMapping("/compare")
     public QuoteCompareResultDTO compare(Principal principal, @RequestParam("ids") List<Long> ids) {
@@ -62,6 +64,22 @@ public class QuoteController {
         log.info("Quote compare: memberEmail=" + principal.getName() + ", ids=" + ids);
 
         return quoteService.compare(principal.getName(), ids);
+    }
+
+    // 비교 기록 목록 - 다른 페이지 갔다가 돌아와도(=새로고침) 서버에서 다시 불러와 그대로 복원됨.
+    @PreAuthorize("hasAnyRole('USER')")
+    @GetMapping("/comparisons")
+    public List<QuoteCompareResultDTO> listComparisons(Principal principal) {
+
+        return quoteService.listComparisons(principal.getName());
+    }
+
+    // 기록 하나(히스토리 배지 클릭) 다시 조회
+    @PreAuthorize("hasAnyRole('USER')")
+    @GetMapping("/comparisons/{comparisonId}")
+    public QuoteCompareResultDTO getComparison(Principal principal, @PathVariable Long comparisonId) {
+
+        return quoteService.getComparison(principal.getName(), comparisonId);
     }
 
     @PreAuthorize("hasAnyRole('USER')")
