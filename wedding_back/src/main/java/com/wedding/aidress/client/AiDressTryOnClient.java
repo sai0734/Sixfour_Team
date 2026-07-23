@@ -2,6 +2,7 @@ package com.wedding.aidress.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wedding.company.domain.DressItemType;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -36,6 +37,9 @@ public class AiDressTryOnClient {
   @Value("${catvton.cloth.type:overall}")
   private String clothType;
 
+  @Value("${catvton.insert.mode:native}")
+  private String insertMode;
+
   @Value("${com.wedding.upload.path}")
   private String uploadPath;
 
@@ -52,7 +56,11 @@ public class AiDressTryOnClient {
    * @param garmentImgUrl 드레스 이미지 (upload 경로)
    * @return PNG base64 (data: 접두사 없음)
    */
-  public String synthesize(byte[] personBytes, String personFilename, String garmentImgUrl) {
+  public String synthesize(
+      byte[] personBytes,
+      String personFilename,
+      String garmentImgUrl,
+      DressItemType dressItemType) {
     if (personBytes == null || personBytes.length == 0) {
       throw new IllegalArgumentException("합성할 내 사진이 없습니다.");
     }
@@ -73,6 +81,8 @@ public class AiDressTryOnClient {
     body.add("person", personResource);
     body.add("cloth", new FileSystemResource(garmentFile));
     body.add("cloth_type", clothType);
+    body.add("dress_shape", toDressShape(dressItemType));
+    body.add("insert_mode", insertMode);
 
     try {
       ResponseEntity<String> response =
@@ -131,6 +141,20 @@ public class AiDressTryOnClient {
       return fallback;
     }
     return null;
+  }
+
+  private String toDressShape(DressItemType dressItemType) {
+    if (dressItemType == null) {
+      return "standard";
+    }
+    return switch (dressItemType) {
+      case BELL -> "bell";
+      case ALINE -> "a_line";
+      case MERMAID -> "mermaid";
+      case SLIM -> "slim";
+      case MINI -> "mini";
+      default -> "standard";
+    };
   }
 
   private String extractFileName(String imageUrl) {

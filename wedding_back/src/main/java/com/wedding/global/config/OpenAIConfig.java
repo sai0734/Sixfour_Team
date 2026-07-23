@@ -31,7 +31,7 @@ public class OpenAIConfig {
   public RestTemplate openAiMultipartRestTemplate(RestTemplateBuilder restTemplateBuilder) {
     return restTemplateBuilder
         .setConnectTimeout(Duration.ofSeconds(30))
-        .setReadTimeout(Duration.ofMinutes(3))
+        .setReadTimeout(Duration.ofMinutes(5))
         .build();
   }
 
