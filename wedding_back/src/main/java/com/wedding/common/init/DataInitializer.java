@@ -164,6 +164,7 @@ public class DataInitializer implements ApplicationRunner {
     if (boardRepository.count() == 0) {
       log.info("===== Board dummy seed start =====");
       insertBoards();
+      forceRecentDemoBoardDates();
       log.info("===== Board dummy seed complete =====");
     }
 
@@ -609,24 +610,40 @@ public class DataInitializer implements ApplicationRunner {
         .build());
 
     siteHealthIssueRepository.save(SiteHealthIssue.builder()
-        .pageUrl("http://localhost:3000/companies")
-        .issueType("CONSOLE_ERROR")
-        .detail("업체 목록 페이지에서 일부 카드가 정상적으로 표시되지 않고 있습니다. 개발팀 확인이 필요합니다.")
+        .pageUrl("http://localhost:3000/product/list")
+        .issueType("IMAGE_BROKEN")
+        .detail("답례품 카테고리 7번째 상품에 실제 사진이 없어 기본 이미지가 대신 표시되고 있습니다.")
         .build());
 
+    // 실제로 board.json에 심어둔 데모용 문제 게시글(스팸/저격/욕설)과 매칭시켜서
+    // 플로팅 패널의 고정 더미도 실제 상황과 어긋나지 않게 함
     List<Board> sampleBoards = boardRepository.findAll();
-    Long boardIdForFlag1 = sampleBoards.isEmpty() ? 1L : sampleBoards.get(0).getBoardId();
-    Long boardIdForFlag2 = sampleBoards.size() > 1 ? sampleBoards.get(1).getBoardId() : boardIdForFlag1;
+    Long boardIdForSpam = findBoardIdByContentMarker(sampleBoards, "addme1234");
+    Long boardIdForHostile = findBoardIdByContentMarker(sampleBoards, "눈치 좀 챙기세요");
+    Long boardIdForProfanity = findBoardIdByContentMarker(sampleBoards, "지랄맞게");
 
     flaggedPostRepository.save(FlaggedPost.builder()
-        .boardId(boardIdForFlag1)
+        .boardId(boardIdForSpam)
         .reason("동일한 문구가 짧은 시간 내 반복 게시되어 광고성 도배 글로 의심됩니다.")
         .build());
 
     flaggedPostRepository.save(FlaggedPost.builder()
-        .boardId(boardIdForFlag2)
+        .boardId(boardIdForHostile)
         .reason("특정 회원을 반복적으로 저격하는 듯한 표현이 있어 확인이 필요합니다.")
         .build());
+
+    flaggedPostRepository.save(FlaggedPost.builder()
+        .boardId(boardIdForProfanity)
+        .reason("다른 회원을 향한 명확한 욕설/비하 표현이 포함되어 있어 확인이 필요합니다.")
+        .build());
+  }
+
+  private Long findBoardIdByContentMarker(List<Board> boards, String marker) {
+    return boards.stream()
+        .filter(b -> b.getContent() != null && b.getContent().contains(marker))
+        .map(Board::getBoardId)
+        .findFirst()
+        .orElse(boards.isEmpty() ? 1L : boards.get(0).getBoardId());
   }
 
   // 업체 상세 테이블 legacy NOT NULL 컬럼 보정 (더미 삽입 아님, INFORMATION_SCHEMA 조회)
@@ -1058,7 +1075,45 @@ public class DataInitializer implements ApplicationRunner {
       memberDetailRepository.save(detail);
     }
 
+    // 다른 더미(주문/리뷰/QnA 등)와 동일하게, member.json에 박혀있는 고정 날짜 대신
+    // 시딩 실행 시점(now()) 기준 최근 6개월에 걸쳐 상대적으로 분산시킴
+    spreadMemberRegDates();
+
     log.info("Inserted {} members (password: 1111).", memberRepository.count());
+  }
+
+  // Member는 email(String) PK라 spreadRecentRegDates(Long PK 전용)를 못 그대로 재사용해서 별도로 작성.
+  // 주문/예약과 같은 6개월 창 + 최근일수록 가중치 패턴을 그대로 따름.
+  private void spreadMemberRegDates() {
+    List<String> emails = jdbcTemplate.queryForList("select email from member", String.class);
+    if (emails.isEmpty()) {
+      return;
+    }
+
+    int monthsBack = 5; // 이번 달 포함 총 6개월
+    YearMonth currentMonth = YearMonth.now();
+    List<YearMonth> months = new ArrayList<>();
+    for (int i = monthsBack; i >= 0; i--) {
+      months.add(currentMonth.minusMonths(i));
+    }
+
+    List<Integer> weights = new ArrayList<>();
+    for (int i = 1; i <= months.size(); i++) {
+      weights.add(i);
+    }
+    int totalWeight = weights.stream().mapToInt(Integer::intValue).sum();
+
+    Random random = new Random();
+
+    for (String email : emails) {
+      YearMonth month = pickWeightedMonth(months, weights, totalWeight, random);
+      LocalDateTime regDate = randomDateTimeInMonth(month, random);
+
+      jdbcTemplate.update("update member set regdate = ? where email = ?", regDate, email);
+    }
+
+    log.info("Spread {} member regdate values across {} months ({} ~ {}).",
+            emails.size(), months.size(), months.get(0), months.get(months.size() - 1));
   }
 
   // data/board.json → tbl_board. 작성자는 고정 가짜 이메일이 아니라 실제 ACTIVE 회원을 순환 배정
@@ -1101,6 +1156,14 @@ public class DataInitializer implements ApplicationRunner {
     boardRepository.saveAll(boards);
 
     log.info("Inserted {} boards (authors: real ACTIVE members).", boards.size());
+  }
+
+  // insertBoards()의 daysAgo = i % 45 만으로는 board.json 끝에 추가로 심어둔
+  // 데모용 욕설 게시글까지 "오늘"로 보장할 수 없어서, 이 글만 별도로 날짜를 고정함.
+  private void forceRecentDemoBoardDates() {
+    jdbcTemplate.update(
+        "update tbl_board set reg_date = ? where content like ?",
+        LocalDateTime.now(), "%지랄맞게%");
   }
 
   // data/comment.json → tbl_comment. board.json과 동일하게 ACTIVE 회원을 순환 배정 (offset 7)
@@ -1209,6 +1272,7 @@ public class DataInitializer implements ApplicationRunner {
       }
       spreadOrderRegDates();
       spreadOrderStatuses();
+      refreshProductSalesCount();
     }
 
     List<Map<String, Object>> reviews = castList(root.get("reviews"));
@@ -1216,6 +1280,8 @@ public class DataInitializer implements ApplicationRunner {
       for (Map<String, Object> r : reviews) {
         saveReviewFromJson(r, orderItemMap, admin);
       }
+      spreadReviewRegDates();
+      forceRecentDemoReviewDate();
     }
 
     List<Map<String, Object>> qnas = castList(root.get("qnas"));
@@ -1223,6 +1289,7 @@ public class DataInitializer implements ApplicationRunner {
       for (Map<String, Object> q : qnas) {
         saveQnaFromJson(q, admin);
       }
+      spreadQnaRegDates();
     }
 
     refreshAllProductRatingStats(productRepository.findAll());
@@ -1268,6 +1335,70 @@ public class DataInitializer implements ApplicationRunner {
             orderIds.size(), months.size(), months.get(0), months.get(months.size() - 1));
   }
 
+  // 리뷰도 orders와 같은 이유로 전부 "지금" 시각에 몰려있어서, OpenClaw 일간 체크가
+  // "어제 올라온 리뷰만" 걸러보려 해도 항상 0건만 나옴. 최근 30일에 걸쳐 분산시킴
+  // (최근일수록 조금 더 많도록 가중치를 둬서 실제 서비스처럼 보이게 함).
+  private void spreadReviewRegDates() {
+    spreadRecentRegDates("tbl_review", "rno");
+  }
+
+  // spreadReviewRegDates()의 가중 랜덤 분산은 "오늘"에 뭐가 걸릴지 매번 달라서,
+  // OpenClaw 일간 체크(최근 24시간 리뷰만 검사)가 실제로 걸러낼 게 있는 데모용 리뷰가
+  // 항상 최근 24시간 이내에 있도록 별도로 날짜를 고정함.
+  private void forceRecentDemoReviewDate() {
+    jdbcTemplate.update(
+        "update tbl_review set regdate = ? where content like ?",
+        LocalDateTime.now(), "%addme1234%");
+  }
+
+  // QnA도 리뷰와 동일한 문제라 같은 방식으로 분산
+  private void spreadQnaRegDates() {
+    spreadRecentRegDates("tbl_qna", "qno");
+  }
+
+  // 최근 N일에 걸쳐 regdate를 무작위로(최근일수록 가중치 높게) 재분배하는 공용 헬퍼
+  private void spreadRecentRegDates(String table, String idColumn) {
+    List<Long> ids = jdbcTemplate.queryForList("select " + idColumn + " from " + table, Long.class);
+    if (ids.isEmpty()) {
+      return;
+    }
+
+    int daysBack = 29; // 오늘 포함 총 30일
+    List<Integer> weights = new ArrayList<>();
+    for (int i = 1; i <= daysBack + 1; i++) {
+      weights.add(i); // 오래된 날일수록 가중치 낮게, 오늘에 가까울수록 높게
+    }
+    int totalWeight = weights.stream().mapToInt(Integer::intValue).sum();
+
+    Random random = new Random();
+
+    for (Long id : ids) {
+      int daysAgo = pickWeightedDaysAgo(daysBack, weights, totalWeight, random);
+      LocalDateTime regDate = LocalDateTime.now()
+              .minusDays(daysAgo)
+              .withHour(random.nextInt(24))
+              .withMinute(random.nextInt(60))
+              .withSecond(random.nextInt(60));
+
+      jdbcTemplate.update("update " + table + " set regdate = ? where " + idColumn + " = ?", regDate, id);
+    }
+
+    log.info("Spread {} regdate values in {} across the last {} days.", ids.size(), table, daysBack + 1);
+  }
+
+  // weights[0]이 daysBack(가장 오래전)에 대응하고 마지막이 0일(오늘)에 대응하도록 역순으로 뽑음
+  private int pickWeightedDaysAgo(int daysBack, List<Integer> weights, int totalWeight, Random random) {
+    int r = random.nextInt(totalWeight);
+    int cumulative = 0;
+    for (int i = 0; i < weights.size(); i++) {
+      cumulative += weights.get(i);
+      if (r < cumulative) {
+        return daysBack - i;
+      }
+    }
+    return 0;
+  }
+
   // commerce_dummy.json 주문은 전부 orderStatus가 PAID/SHIPPING/DELIVERED 셋 중 하나로만 채워져 있어서
   // 관리자 대시보드 "처리 필요 주문" 카드(결제완료/배송준비/교환신청/환불신청 4분류)가 결제완료 쪽으로만
   // 쏠려 보임. 그래서 PAID 주문 일부를 배송준비/교환신청/환불신청으로 재분배해 실제 서비스처럼 고르게 보이게 함.
@@ -1300,6 +1431,20 @@ public class DataInitializer implements ApplicationRunner {
     for (Long ono : onos) {
       jdbcTemplate.update("update tbl_orders set order_status = ? where ono = ?", status, ono);
     }
+  }
+
+  // 실제 결제 로직은 주문 완료 시 Product.salesCount를 올리지만, 더미 주문은 JDBC로 직접 꽂아 넣어서
+  // 이 로직을 안 타기 때문에 전 상품이 salesCount=0으로 남아있었음. 주문 다 넣은 뒤 한 번에 집계해서 채움.
+  private void refreshProductSalesCount() {
+    jdbcTemplate.update("update tbl_product set sales_count = 0");
+    List<Map<String, Object>> totals = jdbcTemplate.queryForList(
+            "select product_pno, sum(qty) as total_qty from tbl_order_item group by product_pno");
+    for (Map<String, Object> row : totals) {
+      Long pno = ((Number) row.get("product_pno")).longValue();
+      int totalQty = ((Number) row.get("total_qty")).intValue();
+      jdbcTemplate.update("update tbl_product set sales_count = ? where pno = ?", totalQty, pno);
+    }
+    log.info("Refreshed sales_count for {} products from tbl_order_item.", totals.size());
   }
 
   private YearMonth pickWeightedMonth(List<YearMonth> months, List<Integer> weights, int totalWeight, Random random) {

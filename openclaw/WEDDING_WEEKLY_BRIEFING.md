@@ -9,24 +9,42 @@
 ## 1. 데이터 수집 (전부 관리자 API, JWT 로그인 필요 — WEDDING_DAILY_CHECK.md와 동일하게
 `user1@naver.com`/시드 관리자 계정으로 로그인해서 얻은 토큰을 Authorization 헤더로 사용)
 
+**주의 1 (페이징): `/api/companies/list`와 `/api/product/list`는 둘 다 페이징 API라 파라미터 없이 부르면 10개만 나옴** (업체는 40개 중 10개, 상품은 31개 중 10개만 나와서 실제로 카테고리 집계가 크게 틀어질 뻔한 적 있음). **반드시 `?size=100`을 붙여서 한 번에 전체가 나오는지(`dtoList.length` == `totalCount`) 확인할 것.**
+
+**주의 2 (한글 GET 응답 인코딩): `Invoke-RestMethod ... | ConvertTo-Json`의 터미널 출력을 그대로 읽지 말 것** — 이 실행 환경의 콘솔 코드페이지 문제로 한글(업체명/상품명 등)이 깨져서 보임(실제로 발생한 적 있음). 결과를 `Out-File -Encoding utf8`로 파일에 저장한 뒤 그 파일을 파일읽기 도구로 읽을 것.
+
 - `GET /api/admin/dashboard/summary` — 회원/주문/게시판/예약/문의/상품/업체매출/월별매출 전부 여기서 나옴.
   이 응답 안의 `orderStats.paid` / `shipping` / `delivered` (주문 상태별 건수), `memberStats.active`(전체 회원),
   `orderStats.totalRevenue`(누적 매출), `productStats.total`(판매 상품 수)를 그래프/KPI에 그대로 사용.
 - `GET /api/admin/dashboard/company-ranking` — 업체 랭킹
-- **업체 카테고리별 등록 수** — `GET /api/companies/list`(또는 관리자 업체 목록 API)로 전체 업체를 가져와서
+- **업체 카테고리별 등록 수** — `GET /api/companies/list?size=100`(또는 관리자 업체 목록 API)로 전체 업체를 가져와서
   `category`(HALL/DRESS/STUDIO/MAKEUP) 기준으로 직접 개수를 세어라. 대시보드 요약엔 카테고리별 "등록 수"가
   없으므로 반드시 원본 목록을 가져와서 집계할 것.
 - `GET /api/admin/site-health` — 이번 주 미해결 사이트 이슈
 - `GET /api/admin/flagged-posts` — 이번 주 미해결 의심 게시글
-- 상품 목록(`GET /api/product/list`)도 참고해서 답례품처럼 카테고리 구성/가격대를 직접 평가
+- 상품 목록(`GET /api/product/list?size=100`)도 참고해서 답례품처럼 카테고리 구성/가격대를 직접 평가
+
+## 1-1. 확장 데이터 수집 (신규회원 그래프 / 업체·상품 TOP / 매출추이)
+
+**(a) 이번 주 일별 신규 회원 (회원 동향 그래프용)**
+전용 API가 없으므로 `GET /api/admin/members?size=1000` (역시 페이징 API — `size` 반드시 붙일 것)로 전체 회원을 가져온 뒤, `regDate`를 `{{WEEK_OF}}`(월요일) ~ 그 다음 일요일 범위로 필터링해서 요일별로 개수를 세어라. 결과를 UTF-8 파일로 저장(터미널 출력 직접 읽지 말 것 — 위 주의 2와 동일).
+
+**(b) 카테고리별 매출 TOP1 업체 + 사진**
+`categoryRevenueCards`(1번에서 이미 가져온 summary)에 `topCompanyName`/`topAmount`는 있지만 사진은 없음. `GET /api/companies/list?size=100`로 전체 업체를 가져와서 `name`이 `topCompanyName`과 일치하는 업체를 찾고, 그 업체의 `uploadFileNames[0]`(또는 `images[0]`)을 사용해 이미지 URL을 `http://localhost:8080/api/companies/images/view/{파일명}`으로 구성. **업체에 등록된 사진이 하나도 없으면 그 카테고리 카드의 이미지는 비워두지 말고 아무 톤이든 무난한 placeholder 이미지 URL 없이 `img` 태그 자체를 생략**(즉 해당 `{{..._TOP_IMAGE_URL}}` 자리에 빈 문자열).
+
+**(c) 판매량 TOP3 상품 + 사진**
+`GET /api/product/list?sortType=popular&size=3`로 바로 판매량(salesCount) 내림차순 TOP3를 가져옴 (페이징 걱정 없음, size=3이면 정확히 3개). 각 상품의 `uploadFileNames[0]`으로 이미지 URL을 `http://localhost:8080/api/product/view/{파일명}`으로 구성 (없으면 (b)와 동일하게 이미지 생략).
 
 ## 2. 요즘 추세 참고 (선택, 7번 섹션용)
 공개된 웨딩업계 트렌드 기사를 웹서치로 가볍게 조사 (특정 경쟁사 사이트를 스크래핑하지 말 것 — 뉴스/공개 통계만).
 정보를 못 찾으면 이 섹션은 "이번 주는 특별한 트렌드 이슈 없음"으로 채울 것.
 
 ## 3. 리포트 작성
+
+**주의 (파일명에 반드시 시간까지 포함할 것)**: 파일명을 `briefing_2026-07-20.html`처럼 날짜까지만 쓰면, 같은 주에 두 번 이상 실행됐을 때(수동 재실행 포함) 이전 실행이 남긴 파일이 이미 존재해서 **그 낡은 파일을 그대로 재사용해버리는 문제가 실제로 발생한 적 있음** — 그 결과 데이터/차트/문체를 전부 다시 작성했다고 착각하고 사실은 지난 실행 결과를 그대로 재업로드하게 됨. 그러니 **파일명에 시(HH)·분(MM)·초(SS)까지 포함**해서 실행할 때마다 항상 새 파일이 되게 할 것 (예: `briefing_2026-07-20_143205.html`). weekOf 값 자체(`{{WEEK_OF}}`, 백엔드에 업로드하는 필드)는 그대로 월요일 날짜만 쓰면 됨 — 시간을 붙이는 건 파일명에만 해당.
+
 `WEEKLY_BRIEFING_TEMPLATE.html` 파일을 열어서, 그 안의 `{{...}}` 자리를 아래 규칙대로 채운 새 HTML 파일을
-워크스페이스에 생성 (예: `briefing_2026-07-20.html`).
+워크스페이스에 생성 (예: `briefing_2026-07-20_143205.html`).
 
 **날짜(`{{WEEK_OF}}`) 반드시 실제 날짜로 계산할 것 — 절대 예시 문자열을 그대로 베끼지 말 것**
 - 오늘이 속한 주의 월요일 날짜를 `YYYY-MM-DD` 형식으로 계산해서 채운다. (`2026-W30` 같은 ISO 주차 표기는 쓰지 않음 — 사람이 바로 못 알아봄)
@@ -49,26 +67,50 @@
 ```
 이 문자열 형태 그대로 `{{PIE_GRADIENT}}`에 채울 것 (실제 숫자로 바꿔서).
 
-**본문 9개 섹션**: 숫자만 나열하지 말고, 답례품 평가했을 때처럼 "그래서 어떻게 하면 좋을지"까지 문장으로 써줄 것.
-`{{ACTION_ITEMS}}` 자리는 `<li>...</li>` 여러 개로 채울 것.
+**신규 회원 막대그래프 (7일)**: `{{NM_D1_COUNT}}`~`{{NM_D7_COUNT}}`는 1-1(a)에서 집계한 요일별 실제 인원수, `{{NM_D1_LABEL}}`~`{{NM_D7_LABEL}}`은 `07/20(월)`처럼 `MM/DD(요일)` 형식. `{{NM_D1_PCT}}`~`{{NM_D7_PCT}}`는 주문 막대그래프와 같은 방식 — **7개 중 최댓값을 100으로 놓고** 나머지를 `round(값/최댓값*100)`으로 계산 (전부 0이면 전부 0으로 둘 것, 0으로 나누지 말 것).
+
+**카테고리별 TOP1 업체 카드**: `{{HALL_TOP_NAME}}`/`{{HALL_TOP_REVENUE}}`(예: `868,100,000원`) 등 4개 카테고리 전부 1-1(b) 결과 그대로. `{{HALL_TOP_IMAGE_URL}}` 등은 1-1(b)에서 구성한 이미지 URL (없으면 빈 문자열).
+
+**판매 TOP3 상품 카드**: `{{PRODUCT_TOP1_NAME}}`/`{{PRODUCT_TOP1_SALES}}`(숫자만, "건 판매"는 템플릿에 이미 있음) 등 3개 전부 1-1(c) 결과 그대로.
+
+**매출 추이 그래프 (`{{REVENUE_TREND_SVG}}`)**: 이 자리는 완성된 `<svg>...</svg>` 블록 전체를 통째로 채워 넣을 것 (다른 자리처럼 값 하나만 넣는 게 아님). `monthlyRevenue`(6개월치 `{month, revenue}`) 데이터로 아래 규칙에 따라 라인+영역 차트를 직접 그릴 것:
+- `viewBox="0 0 680 220"`, 실제 그래프 영역은 상단 20px ~ 하단 170px(즉 plotTop=20, plotBottom=170, plotHeight=150), 6개 포인트를 `x = 20 + i * 128` (i=0..5)에 배치.
+- `axisMax`는 "6개월 매출 중 최댓값을 50만원 단위로 올림"한 값: `axisMax = ceil(최댓값 / 500000) * 500000`.
+- 각 포인트의 `y = plotBottom - (revenue / axisMax) * plotHeight`.
+- 이 6개 좌표를 `<polyline>`으로 잇고(선 색 `#C06080`, `stroke-width="2.5"`, `fill="none"`), 각 포인트에 반지름 4의 `<circle>`(`fill="#C06080"`) 마커를 찍을 것.
+- 선 아래는 `<linearGradient>`(위쪽 `#C06080` 25% 투명도 → 아래쪽 0% 투명도)로 채운 `<polygon>`을 선보다 먼저 그릴 것(선/점에 가려지지 않게).
+- **각 점 위에 매출 숫자(예: `691,000`)를 따로 띄우지 말 것** — 실제로 이 값 라벨이 왼쪽 y축 라벨과 겹쳐서 뭉개진 적 있음. 점과 선, 격자선, 축 라벨만으로 충분함.
+- y축 격자선 4개(`plotBottom`에서 `plotHeight/4`씩 위로)와 왼쪽에 값 라벨(`0만`, `axisMax/4`를 만 단위로 변환해서 표시, 예: 1500000 → `150만`).
+- **x축 라벨은 한글("월") 없이 숫자만 두 자리로 적을 것** (예: `02`, `03`...`07`) — `monthlyRevenue`의 `month`(`2026-02`)에서 마지막 2자리만 뽑아 쓸 것. **실제로 여기에 "2월"처럼 한글을 넣으려다가 이 실행 환경 인코딩 문제로 "월"자가 깨져서 `2�`처럼 나온 적 있음 — 한글을 아예 넣지 않으면 이 문제 자체가 발생하지 않음.**
+- **다음은 계산 예시(그대로 베끼지 말고 실제 데이터로 재계산할 것)**: `monthlyRevenue`가 677000/1323500/1890500/2144000/2873500/4166000이면 최댓값 4,166,000 → `axisMax = ceil(4166000/500000)*500000 = 4,500,000`. 첫 포인트 y = 170 - (677000/4500000)*150 ≈ 147.4, 마지막 포인트 y = 170 - (4166000/4500000)*150 ≈ 31.1. 이런 식으로 6개 다 계산해서 `<polyline points="20,147.4 148,... ... 660,31.1">`처럼 채울 것.
+
+**본문 9개 섹션 — 말투는 대화체/서술형이 아니라 회사 보고서체(개조식)로 쓸 것. (실제로 이 지시를 무시하고 대화체로 쓴 적 있음 — 아래 규칙을 절대 건너뛰지 말 것)**
+- 문장은 "~습니다/~해요/~됩니다/~합니다" 같은 대화체 종결을 **전부 금지**. 반드시 "~함", "~됨", "~임", "~추정", "~필요", "~검토" 처럼 명사형/개조식 종결로 끝낼 것.
+- 한 문단에 스토리텔링하듯 길게 풀어쓰지 말고, 핵심만 짧은 문장 여러 개로 끊어 쓸 것 (필요하면 문장 안에서 `<br>`로 줄바꿈해도 됨).
+- 숫자만 나열하지 말고 "그래서 어떻게 해야 하는지"까지는 담되, 그것도 개조식으로 간결하게 쓸 것.
+- 예시 (before → after):
+  - before(X, 대화체 서술형 — 실제로 이렇게 썼다가 지적받은 문장): "전체 주문 85건이 남아 있어 처리 속도가 이번 주 운영의 핵심입니다. 누적 매출은 13,074,500원이고... 규모 자체는 안정적입니다."
+  - after(O, 보고서체): "전체 주문 85건 잔여. 처리 속도가 이번 주 핵심 관리 포인트임. 누적 매출 13,074,500원. 회원·상품·업체 규모는 안정적."
+  - before(X): "이번 주에는 신규 회원이 꽤 많이 늘어난 편인데, 아마 최근 진행한 이벤트 효과가 컸던 것 같고 앞으로도 이런 이벤트를 좀 더 자주 하면 좋을 것 같습니다."
+  - after(O): "신규 회원 증가율 전주 대비 상승. 최근 이벤트 효과로 추정됨. 유사 이벤트 정기 운영 검토 필요."
+- **9개 섹션을 전부 쓴 다음, 마지막에 반드시 한 번 더 처음부터 훑어보면서 "~습니다"/"~해요"/"~합니다"로 끝나는 문장이 하나라도 남아있는지 검사하고, 있으면 전부 개조식으로 다시 고칠 것.** 이 자기검토 단계를 생략하지 말 것.
+`{{ACTION_ITEMS}}` 자리는 `<li>...</li>` 여러 개로 채울 것 — 이것도 같은 개조식 말투로.
 
 ## 4. PDF로 변환
 chrome-devtools-mcp 브라우저 도구로 방금 만든 HTML 파일을 열고, 인쇄(PDF로 저장) 기능으로 PDF 파일을 워크스페이스에 저장.
 그래프/색상이 깨지지 않고 제대로 보이는지 확인 후 저장할 것.
 
 ## 5. 백엔드에 업로드
+
+**주의 1 (`Invoke-RestMethod -Form`은 여기서 안 됨)**: 이 실행 환경은 Windows PowerShell 5.1이라 `-Form` 파라미터 자체가 없음(`A parameter cannot be found that matches parameter name 'Form'` 에러남 — 실제로 발생한 적 있음, PowerShell 6+/Core 전용 기능임). **반드시 `curl.exe -F`로 멀티파트 업로드할 것.**
+
+**주의 2 (절대 두 번 호출하지 말 것)**: 업로드가 잘 됐는지 확인하려고 같은 curl 명령을 "한 번 실행 → 결과 보고 → 확인차 한 번 더 실행" 식으로 두 번 부르면 **브리핑이 실제로 2건 중복 생성됨** (실제로 이 문제가 발생한 적 있음 — POST를 부를 때마다 매번 새 레코드가 생성되기 때문). 아래처럼 **`-o`(응답 저장)와 `-w`(HTTP 상태코드 출력)를 한 번의 호출에 같이 써서, 정확히 한 번만 호출하고 그 결과로 성공 여부까지 같이 확인할 것.**
+
+**한글 인코딩 주의**: `summaryText`(한글 요약)를 커맨드 문자열에 직접 타이핑하지 말고, 파일쓰기 도구로 미리 UTF-8 파일(`_tmp_briefing_summary.txt`)에 저장해둔 뒤 curl의 `-F "summaryText=<파일경로"` 문법(파일 내용을 그대로 필드값으로 읽어들임)으로 넘길 것:
 ```powershell
-$headers = @{ "X-OpenClaw-Key" = $env:OPENCLAW_INTERNAL_KEY }
-$form = @{
-  file = Get-Item "<방금 만든 PDF 경로>"
-  weekOf = "<3번에서 계산한 실제 월요일 날짜, 예: 2026-07-20>"
-  summaryText = "<2~3줄 요약>"
-  lowStockCount = <숫자>
-  flaggedPostCount = <숫자>
-  siteIssueCount = <숫자>
-}
-Invoke-RestMethod -Uri "http://localhost:8080/api/openclaw/ai-briefing" -Method Post -Headers $headers -Form $form
+curl.exe -s -o "C:\Users\hjc13\.openclaw\workspace\_tmp_briefing_upload_result.json" -w "%{http_code}" -X POST -H "X-OpenClaw-Key: $env:OPENCLAW_INTERNAL_KEY" -F "file=@<방금 만든 PDF 경로>" -F "weekOf=<3번에서 계산한 실제 월요일 날짜, 예: 2026-07-20>" -F "summaryText=<C:\Users\hjc13\.openclaw\workspace\_tmp_briefing_summary.txt" -F "lowStockCount=<숫자>" -F "flaggedPostCount=<숫자>" -F "siteIssueCount=<숫자>" http://localhost:8080/api/openclaw/ai-briefing
 ```
+이 한 번의 호출로 출력되는 http_code가 200이면 성공. `_tmp_briefing_upload_result.json`을 열어서 응답 본문도 확인 가능 (이것도 별도 호출 없이 파일읽기 도구로).
 
 ## 마무리
 업로드 성공했는지 확인하고, 무엇을 리포트에 담았는지 짧게 요약해서 남길 것.

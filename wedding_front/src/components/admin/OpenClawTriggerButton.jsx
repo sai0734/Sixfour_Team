@@ -14,7 +14,7 @@ const OpenClawTriggerButton = ({
   pollIntervalSeconds = 5,
   estimatedSeconds = 90,
 }) => {
-  const [status, setStatus] = useState("idle"); // idle | running | done | done-early | error
+  const [status, setStatus] = useState("idle"); // idle | running | overtime | done-early | error
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [baseline, setBaseline] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
@@ -63,12 +63,13 @@ const OpenClawTriggerButton = ({
     }
   };
 
-  // 카운트다운
+  // 카운트다운 — 예상 시간이 다 돼도 실제로 끝났다는 뜻이 아니라서,
+  // 폴링을 멈추지 않고 "예상보다 오래 걸리는 중" 상태로만 넘어감
   useEffect(() => {
     if (status !== "running") return undefined;
 
     if (secondsLeft <= 0) {
-      setStatus("done");
+      setStatus("overtime");
       return undefined;
     }
 
@@ -76,9 +77,12 @@ const OpenClawTriggerButton = ({
     return () => clearTimeout(timer);
   }, [status, secondsLeft]);
 
-  // 실제 완료 여부 폴링 (pollFn을 넘겼을 때만)
+  // 실제 완료 여부 폴링 (pollFn을 넘겼을 때만) — 예상 시간이 지나도(overtime)
+  // pollFn이 실제 변화를 감지할 때까지 계속 돌아야 진짜 완료를 알 수 있음
   useEffect(() => {
-    if (status !== "running" || !pollFn || baseline === null) return undefined;
+    if ((status !== "running" && status !== "overtime") || !pollFn || baseline === null) {
+      return undefined;
+    }
 
     const interval = setInterval(async () => {
       try {
@@ -100,13 +104,13 @@ const OpenClawTriggerButton = ({
       <button
         type="button"
         onClick={handleClick}
-        disabled={status === "running"}
+        disabled={status === "running" || status === "overtime"}
         className="h-9 w-full rounded-full bg-brand-deep text-xs font-medium text-white transition hover:opacity-90 disabled:opacity-60"
       >
-        {status === "running" ? "실행 중..." : label}
+        {status === "running" || status === "overtime" ? "실행 중..." : label}
       </button>
 
-      {status === "running" && (
+      {(status === "running" || status === "overtime") && (
         <div className="mt-3 flex items-center gap-3 rounded-xl bg-cream px-3 py-3">
           <svg
             className="h-6 w-6 shrink-0 animate-spin text-brand-deep"
@@ -122,7 +126,13 @@ const OpenClawTriggerButton = ({
           </svg>
           <div className="min-w-0 flex-1 text-[11px] leading-relaxed text-ink-soft">
             <p className="font-medium text-ink">지금 진단하고 있습니다...</p>
-            <p>완료까지 약 {secondsLeft}초 남았어요.</p>
+            {status === "running" ? (
+              <p>완료까지 약 {secondsLeft}초 남았어요.</p>
+            ) : pollFn ? (
+              <p>예상보다 오래 걸리고 있어요. 계속 확인 중이니 조금만 기다려주세요.</p>
+            ) : (
+              <p>진단이 끝났을 거예요. 새로고침해서 결과를 확인해보세요.</p>
+            )}
           </div>
           <button
             type="button"
@@ -138,12 +148,6 @@ const OpenClawTriggerButton = ({
       {status === "done-early" && (
         <p className="mt-2 text-[11px] leading-relaxed text-brand-deep">
           진단이 완료되어 결과를 새로 불러왔습니다. ✅
-        </p>
-      )}
-
-      {status === "done" && (
-        <p className="mt-2 text-[11px] leading-relaxed text-ink-faint">
-          진단이 끝났을 거예요. 새로고침해서 결과를 확인해보세요.
         </p>
       )}
 

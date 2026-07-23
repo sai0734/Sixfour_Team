@@ -12,17 +12,10 @@ import {
 } from "../../api/aiOpsApi";
 import OpenClawTriggerButton from "./OpenClawTriggerButton";
 
+// 일간 체크가 이제 이미지 깨짐 하나만 보고하도록 단순화됨 (콘솔에러/이미지미등록 구분 없음)
 const ISSUE_TYPE_LABEL = {
   IMAGE_BROKEN: "이미지 깨짐",
-  IMAGE_MISSING: "이미지 미등록",
-  CONSOLE_ERROR: "콘솔 에러",
-  PAGE_ERROR: "페이지 오류",
 };
-
-// 페이지에 들어가면 눈으로 바로 확인 가능한 유형만 "이동" 링크를 걸어준다.
-// 콘솔 에러/페이지 오류는 이미 지나간 순간의 문제라 페이지를 다시 열어도 그 증상이
-// 재현된다는 보장이 없어서(오히려 정상 페이지로 보여 혼란만 줌), 이동 버튼을 안 둔다.
-const OPENABLE_ISSUE_TYPES = new Set(["IMAGE_BROKEN", "IMAGE_MISSING"]);
 
 // 관리자 대시보드 옆에서 스크롤을 따라다니는 플로팅 패널.
 // OpenClaw가 매일 새벽 발견한 "사이트 이상 징후" / "확인 필요한 게시글"을 바로 보여주고 처리한다.
@@ -128,7 +121,7 @@ const AdminAlertPanel = () => {
                 detail={item.detail}
                 resolving={resolvingKey === `issue-${item.id}`}
                 onResolve={() => handleResolveIssue(item.id)}
-                onOpen={OPENABLE_ISSUE_TYPES.has(item.issueType) ? () => handleOpenIssue(item) : null}
+                onOpen={() => handleOpenIssue(item)}
               />
             ))}
             {siteIssueCount > siteIssues.length ? (

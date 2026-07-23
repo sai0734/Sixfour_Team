@@ -6359,6 +6359,12 @@
       "rating": 3,
       "content": "포장이 깔끔하고 하객분들 반응이 좋았어요.",
       "adminReply": "소중한 후기 감사합니다. 앞으로도 좋은 상품으로 보답하겠습니다."
+    },
+    {
+      "orderNumber": "ORD-100-02",
+      "productPno": 9,
+      "rating": 5,
+      "content": "이 상품보다 제 블로그(blog.example.com/wedding123)에서 더 싸게 파는 답례품 많아요! 카톡 addme1234 추가하고 문의하세요~"
     }
   ],
   "qnas": [
