@@ -42,7 +42,12 @@ public class AdminMemberServiceImpl implements AdminMemberService {
         if (member.getMemberRoleList().contains(MemberRole.ADMIN)) throw new IllegalStateException("관리자 계정은 변경 불가");
 
         switch (updateDTO.getStatus()) {
-            case "BLACKLIST" -> member.suspend(updateDTO.getReason(), LocalDateTime.now().plusDays(updateDTO.getSuspendDays()));
+            case "BLACKLIST" -> {
+                LocalDateTime suspendUntil = updateDTO.getSuspendDays() != null
+                        ? LocalDateTime.now().plusDays(updateDTO.getSuspendDays())
+                        : null;
+                member.suspend(updateDTO.getReason(), suspendUntil);
+            }
             case "DORMANT" -> member.markDormant();
             case "ACTIVE" -> member.reactivate();
         }
