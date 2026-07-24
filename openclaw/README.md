@@ -118,6 +118,20 @@ openclaw cron add "wedding-weekly-briefing" "웨딩 프로젝트 워크스페이
 "에러"로 잘못 집계됨 (실제 작업은 성공했는데도 `openclaw cron list`에 `error`로 나옴). `--no-deliver`를 빼먹었다면
 나중에라도 `openclaw cron edit <이름 또는 id> --no-deliver`로 고칠 수 있음.
 
+## 5-1. 대화 세션 기본 모델/thinking 맞추기 (선택)
+
+크론(위 5번)에 준 `--model`은 크론 작업 전용이고, **사람이 직접 `openclaw chat`으로 대화할 때 쓰는 기본
+모델/사고 깊이는 별도 설정**이라 이것도 컴퓨터마다 새로 맞춰야 함(마찬가지로 git에 안 따라옴):
+
+```powershell
+openclaw config set agents.defaults.model.primary "openai/gpt-5.4-mini"
+openclaw config set agents.defaults.thinkingDefault "medium"
+```
+
+게이트웨이 재시작 불필요, 바로 적용됨. 단 **이미 열려있는 세션엔 소급 적용 안 됨** — 그 세션은 그 세션 안에서
+`/model <provider/model>`, `/think <off|minimal|low|medium|high>`로 직접 바꾸거나, `/new`로 새 세션을 열어야
+방금 바꾼 기본값을 물려받음. 터미널 UI에서는 `Ctrl+L`로 모델 선택기(화살표로 목록 선택)도 뜸.
+
 ## 6. 확인
 
 1. `openclaw gateway status` → `Runtime: running` 확인
