@@ -11,27 +11,3 @@ export const getList = async (category) => {
 
   return res.data;
 };
-
-export const getOne = async (faqId) => {
-  const res = await jwtAxios.get(`${prefix}/${faqId}`);
-
-  return res.data;
-};
-
-export const postAdd = async (faq) => {
-  const res = await jwtAxios.post(`${prefix}/`, faq);
-
-  return res.data;
-};
-
-export const putOne = async (faq) => {
-  const res = await jwtAxios.put(`${prefix}/${faq.faqId}`, faq);
-
-  return res.data;
-};
-
-export const deleteOne = async (faqId) => {
-  const res = await jwtAxios.delete(`${prefix}/${faqId}`);
-
-  return res.data;
-};

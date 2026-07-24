@@ -116,16 +116,6 @@ public class ReservationServiceImpl implements ReservationService {
   }
 
   @Override
-  public ReservationDTO get(Long reservationId) {
-
-    Optional<Reservation> result = reservationRepository.findById(reservationId);
-
-    Reservation reservation = result.orElseThrow();
-
-    return toDTO(reservation);
-  }
-
-  @Override
   public void modify(ReservationDTO reservationDTO) {
 
     Optional<Reservation> result =

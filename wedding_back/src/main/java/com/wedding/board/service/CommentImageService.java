@@ -12,6 +12,4 @@ public interface CommentImageService {
 
     List<CommentImageDTO> listByComment(Long commentId);
 
-    void remove(Long imageId);
-
 }

@@ -21,12 +21,6 @@ export const listByBoard = async (boardId) => {
   return res.data;
 };
 
-export const deleteOne = async (imageId) => {
-  const res = await jwtAxios.delete(`${prefix}/${imageId}`);
-
-  return res.data;
-};
-
 // 실제 파일 접근 URL (img/video src에 그대로 사용)
 export const fileUrl = (fileName) => `${prefix}/view/${fileName}`;
 

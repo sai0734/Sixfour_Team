@@ -9,12 +9,6 @@ export const getListByMember = async (memberEmail) => {
   return res.data;
 };
 
-export const getOne = async (checklistId) => {
-  const res = await jwtAxios.get(`${prefix}/${checklistId}`);
-
-  return res.data;
-};
-
 export const postAdd = async (checklist) => {
   const res = await jwtAxios.post(`${prefix}/`, checklist);
 

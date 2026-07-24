@@ -19,8 +19,8 @@ public interface QuoteService {
     // 비교 기록 목록 - 최신순
     List<QuoteCompareResultDTO> listComparisons(String memberEmail);
 
-    // 기록 하나(히스토리 배지 클릭 등) 다시 조회
-    QuoteCompareResultDTO getComparison(String memberEmail, Long comparisonId);
+    // 비교 기록 하나 삭제 (히스토리 배지의 x 버튼)
+    void removeComparison(String memberEmail, Long comparisonId);
 
     void remove(String memberEmail, Long quoteId);
 

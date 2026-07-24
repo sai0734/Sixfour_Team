@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCompanyImageUrl, getOne } from "../../api/companyApi";
-import { buildCompanyOptions, packageTypeLabel } from "../../util/companyOptionBuilder";
+import {
+  buildCompanyOptions,
+  packageTypeLabel,
+} from "../../util/companyOptionBuilder";
 import {
   checkCompanyWish,
   addCompanyWish,
@@ -102,7 +105,8 @@ const FavoriteButton = ({ cmno }) => {
     let cancelled = false;
     checkCompanyWish(cmno)
       .then((data) => {
-        if (!cancelled) setLiked(typeof data === "boolean" ? data : Boolean(data?.liked));
+        if (!cancelled)
+          setLiked(typeof data === "boolean" ? data : Boolean(data?.liked));
       })
       .catch(() => {});
     return () => {
@@ -136,7 +140,9 @@ const FavoriteButton = ({ cmno }) => {
       disabled={loading}
       aria-label={liked ? "찜 해제" : "찜하기"}
       className={`absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full text-sm shadow-sm transition disabled:opacity-60 ${
-        liked ? "bg-white text-rose-500" : "bg-white/80 text-ink-faint hover:text-rose-400"
+        liked
+          ? "bg-white text-rose-500"
+          : "bg-white/80 text-ink-faint hover:text-rose-400"
       }`}
     >
       {liked ? "♥" : "♡"}
@@ -268,11 +274,15 @@ const VendorCard = ({
       {/* 웨딩홀/드레스만 optionName(연회장 이름/드레스 옵션명)이 있어서 그 줄만큼 아래 내용이
           내려간다 - 스튜디오/메이크업처럼 optionName이 없는 카드도 같은 높이의 빈 줄을 넣어서
           같은 행에 있는 카드끼리 가격·추천 이유·확정 버튼 위치가 나란히 맞도록 한다. */}
-      <span className={`block truncate text-xs text-ink-soft ${optionName ? "" : "invisible"}`}>
+      <span
+        className={`block truncate text-xs text-ink-soft ${optionName ? "" : "invisible"}`}
+      >
         {optionName || " "}
       </span>
       {displayPrice != null && (
-        <span className="block text-xs font-medium text-ink-muted">{formatWon(displayPrice)}</span>
+        <span className="block text-xs font-medium text-ink-muted">
+          {formatWon(displayPrice)}
+        </span>
       )}
       {/* "왜 이 업체를 골랐는지" - 예산/지역 기준으로 매번 새로 계산돼서 내려오는 값이라
           (백엔드 AiPlanCandidateBuilder.pickReason) 확정 여부와 상관없이 항상 붙어있다. */}
@@ -312,7 +322,16 @@ const VendorCard = ({
 // packageType(메이크업 패키지 취향)이 있으면 그 업체의 실제 옵션가를 다시 계산해서 보여준다 -
 // 없으면(홀/드레스/스튜디오, 또는 취향 없이 고른 메이크업) price prop을 그대로 씀.
 // 조회 실패/매칭 실패 시에도 조용히 price prop으로 폴백 - 카드 렌더링을 막지 않는다.
-const SlotCard = ({ label, cmno, name, optionName, imageUrl, reason, price, packageType }) => {
+const SlotCard = ({
+  label,
+  cmno,
+  name,
+  optionName,
+  imageUrl,
+  reason,
+  price,
+  packageType,
+}) => {
   const [resolvedPrice, setResolvedPrice] = useState(null);
 
   useEffect(() => {
@@ -359,17 +378,21 @@ const SlotCard = ({ label, cmno, name, optionName, imageUrl, reason, price, pack
         <p className="mt-2 truncate text-sm text-ink-soft">{text}</p>
       )}
       {optionName && (
-        <span className="block truncate text-xs text-ink-soft">{optionName}</span>
+        <span className="block truncate text-xs text-ink-soft">
+          {optionName}
+        </span>
       )}
       {displayPrice != null && (
-        <span className="block text-xs font-medium text-ink-muted">{formatWon(displayPrice)}</span>
+        <span className="block text-xs font-medium text-ink-muted">
+          {formatWon(displayPrice)}
+        </span>
       )}
       {reason && <span className="block text-xs text-ink-faint">{reason}</span>}
     </div>
   );
 };
 
-// 카드 그리드에 보이는 순서 그대로(2x2) - 홀/스튜디오/드레스/메이크업
+// 카드 그리드에 보이는 순서 그대로(2x2) - 웨딩홀/스튜디오/드레스/메이크업
 const SLOT_DEFS = [
   { key: "hall", category: "HALL", label: "웨딩홀", optionKey: "hallRoomName" },
   { key: "studio", category: "STUDIO", label: "스튜디오", optionKey: null },
@@ -394,7 +417,8 @@ const SLOT_DEFS = [
 // 가장 풍성한 조합으로 대체됨 - AiPlanCandidateBuilder.bestMakeupType)을 한글 라벨로 보여준다.
 const resolveOptionName = (def, combo) => {
   if (def.key === "studio") return "스튜디오 촬영/이용";
-  if (def.key === "makeup") return packageTypeLabel[combo.makeupPackageType] || null;
+  if (def.key === "makeup")
+    return packageTypeLabel[combo.makeupPackageType] || null;
   return def.optionKey ? combo[def.optionKey] : null;
 };
 
@@ -419,7 +443,8 @@ const ResultCards = ({
   const [pendingTurnNo, setPendingTurnNo] = useState(null);
 
   const handleTurnClick = async (turnNo) => {
-    if (!onSelectTurn || pendingTurnNo != null || turnNo === activeTurnNo) return;
+    if (!onSelectTurn || pendingTurnNo != null || turnNo === activeTurnNo)
+      return;
     setPendingTurnNo(turnNo);
     try {
       await onSelectTurn(turnNo);
@@ -471,7 +496,9 @@ const ResultCards = ({
   // 체크된 업체만 큐에 담아 첫 업체 예약 페이지로 보낸다 - 그 업체 예약이 끝나면
   // ReservationReserveComponent가 알아서 다음 큐 항목으로 이어준다 (flow=aiplan 파라미터).
   const handleReserveCombo = () => {
-    const cmnos = slots.filter((s) => selectedCmnos.has(s.cmno)).map((s) => s.cmno);
+    const cmnos = slots
+      .filter((s) => selectedCmnos.has(s.cmno))
+      .map((s) => s.cmno);
     if (cmnos.length === 0) return;
 
     const [first, ...rest] = cmnos;
@@ -528,7 +555,9 @@ const ResultCards = ({
           바로 알 수 있게 큰 제목을 둔다. 아래 히스토리 배지/카드/액션 박스가 전부 이 조합
           하나에 대한 것이라는 문맥을 먼저 잡아준다. */}
       {soleCombo && (
-        <h2 className="mb-3 font-['Gowun_Batang'] text-xl text-ink">✨ 완성된 조합</h2>
+        <h2 className="mb-3 font-['Gowun_Batang'] text-xl text-ink">
+          ✨ 완성된 조합
+        </h2>
       )}
 
       {/* 조합 히스토리 배지 - "첫 추천 조합"에서 시작해서 다시찾기/확정/제외/다듬기로 손댈
@@ -545,7 +574,9 @@ const ResultCards = ({
               {turns.length > 0 ? (
                 turns.map((turn) => {
                   const isFirst = turn.turnNo === 0;
-                  const label = isFirst ? "첫 추천 조합" : turn.message || `${turn.turnNo}번째 조정`;
+                  const label = isFirst
+                    ? "첫 추천 조합"
+                    : turn.message || `${turn.turnNo}번째 조정`;
                   const active = turn.turnNo === activeTurnNo;
                   return (
                     <button
@@ -573,7 +604,9 @@ const ResultCards = ({
           </div>
           <span className="shrink-0 text-sm text-ink">
             <span className="text-ink-faint">합계 </span>
-            <span className="font-semibold">{formatWon(soleCombo.packagePrice)}</span>
+            <span className="font-semibold">
+              {formatWon(soleCombo.packagePrice)}
+            </span>
           </span>
         </div>
       )}
@@ -599,7 +632,11 @@ const ResultCards = ({
                   imageUrl={soleCombo[`${def.key}ImageUrl`]}
                   reason={soleCombo[`${def.key}Reason`]}
                   price={soleCombo[`${def.key}Price`]}
-                  packageType={def.packageTypeKey ? soleCombo[def.packageTypeKey] : undefined}
+                  packageType={
+                    def.packageTypeKey
+                      ? soleCombo[def.packageTypeKey]
+                      : undefined
+                  }
                   status={soleCombo[`${def.key}Status`]}
                   sessionId={sessionId}
                   onSlotAction={onSlotAction}
@@ -644,7 +681,8 @@ const ResultCards = ({
                     선택한 업체 예약 진행 ({selectedCmnos.size}곳)
                   </button>
                   <p className="text-xs text-ink-faint">
-                    업체별로 순서대로 예약 페이지로 안내해드려요. 로그인이 필요해요.
+                    업체별로 순서대로 예약 페이지로 안내해드려요. 로그인이
+                    필요해요.
                   </p>
                 </div>
               </div>
@@ -652,7 +690,9 @@ const ResultCards = ({
 
             {sessionId && onApplyToPlan && (
               <div className="flex flex-col items-center gap-2 rounded-2xl border border-line bg-white px-5 py-4 text-center">
-                <p className="text-xs text-ink-soft">아직 예약은 미루고 계획만 저장해둘까요?</p>
+                <p className="text-xs text-ink-soft">
+                  아직 예약은 미루고 계획만 저장해둘까요?
+                </p>
                 <button
                   type="button"
                   onClick={onApplyToPlan}

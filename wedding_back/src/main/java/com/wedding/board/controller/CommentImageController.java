@@ -1,9 +1,7 @@
 package com.wedding.board.controller;
 
 import java.util.List;
-import java.util.Map;
 
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -42,15 +40,5 @@ public class CommentImageController {
 
     // 실제 파일 서빙은 /api/boardimages/view/{fileName}를 그대로 재사용
     // (같은 업로드 폴더를 쓰는 CustomFileUtil 기반이라 중복 만들 필요 없음)
-
-    @DeleteMapping("/{imageId}")
-    public Map<String, String> remove(@PathVariable(name = "imageId") Long imageId) {
-
-        log.info("Remove comment image: " + imageId);
-
-        service.remove(imageId);
-
-        return Map.of("RESULT", "SUCCESS");
-    }
 
 }

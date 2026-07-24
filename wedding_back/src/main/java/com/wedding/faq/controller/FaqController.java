@@ -39,12 +39,6 @@ public class FaqController {
         return service.listByCategory(category);
     }
 
-    @GetMapping("/{faqId}")
-    public FaqDTO get(@PathVariable(name = "faqId") Long faqId) {
-
-        return service.get(faqId);
-    }
-
     // 등록/수정/삭제는 관리자 페이지에서만 - 팀 큐레이션(또는 나중에 AI 생성)
     @PreAuthorize("hasAnyRole('ADMIN')")
     @PostMapping("/")

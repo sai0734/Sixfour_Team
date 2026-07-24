@@ -3,7 +3,6 @@ package com.wedding.aiplan.controller;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,17 +11,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.wedding.aiplan.dto.AiPlanDetailRequestDTO;
-import com.wedding.aiplan.dto.AiPlanProgressDTO;
 import com.wedding.aiplan.dto.AiPlanQuickRequestDTO;
 import com.wedding.aiplan.dto.AiPlanQuickResultDTO;
 import com.wedding.aiplan.dto.AiPlanRefineRequestDTO;
 import com.wedding.aiplan.dto.AiPlanSlotActionRequestDTO;
 import com.wedding.aiplan.dto.AiPlanTurnDTO;
 import com.wedding.aiplan.service.AiPlanAiService;
-import com.wedding.aiplan.service.AiPlanDetailService;
 import com.wedding.aiplan.service.AiPlanQuickService;
 import com.wedding.aiplan.service.AiPlanRefineService;
-import com.wedding.aiplan.service.AiPlanSessionSupport;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -36,10 +32,8 @@ import lombok.extern.log4j.Log4j2;
 public class AiPlanController {
 
     private final AiPlanQuickService aiPlanQuickService;
-    private final AiPlanDetailService aiPlanDetailService;
     private final AiPlanAiService aiPlanAiService;
     private final AiPlanRefineService aiPlanRefineService;
-    private final AiPlanSessionSupport aiPlanSessionSupport;
 
     // 예: GET /api/aiplan/quick?budget=30000000&region=강남&weddingDate=2027-05-01
     @GetMapping("/quick")
@@ -50,16 +44,10 @@ public class AiPlanController {
         return aiPlanQuickService.getQuickRecommendations(requestDTO);
     }
 
-    // 예: GET /api/aiplan/detail?budget=30000000&region=강남&hallType=GARDEN&studioMood=내추럴
-    @GetMapping("/detail")
-    public AiPlanQuickResultDTO detail(AiPlanDetailRequestDTO requestDTO) {
-
-        log.info("AiPlan detail request: {}", requestDTO);
-
-        return aiPlanDetailService.getDetailRecommendations(requestDTO);
-    }
-
     // 외부 AI API를 호출하는 비용이 드는 작업이라 GET 쿼리파라미터가 아니라 POST 바디로 받음
+    // "자세히 설정하기" 화면(DetailPlanPage)이 실제로 부르는 게 이 엔드포인트다 - AI 없이 규칙
+    // 기반으로만 추천하던 옛 /detail 엔드포인트는 안 쓰여서 정리함(AiPlanDetailRequestDTO는
+    // 이 엔드포인트가 계속 쓰므로 그대로 둠).
     @PostMapping("/ai")
     public AiPlanQuickResultDTO ai(@RequestBody AiPlanDetailRequestDTO requestDTO) {
 
@@ -120,14 +108,6 @@ public class AiPlanController {
         log.info("AiPlan apply to plan request: sessionId={}", sessionId);
 
         return aiPlanRefineService.applyToPlan(sessionId);
-    }
-
-    // 메인 화면 "AI 매칭 진행중" 위젯용 - 로그인 회원의 가장 최근 세션 기준 홀/드레스/스튜디오 진행률
-    @PreAuthorize("hasAnyRole('USER')")
-    @GetMapping("/progress")
-    public AiPlanProgressDTO progress() {
-
-        return aiPlanSessionSupport.getMyProgress();
     }
 
 }

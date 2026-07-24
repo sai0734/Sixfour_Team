@@ -9,12 +9,6 @@ export const getListByMember = async (memberEmail) => {
   return res.data;
 };
 
-export const getOne = async (budgetId) => {
-  const res = await jwtAxios.get(`${prefix}/${budgetId}`);
-
-  return res.data;
-};
-
 export const postAdd = async (budget) => {
   const res = await jwtAxios.post(`${prefix}/`, budget);
 

@@ -28,12 +28,6 @@ public class BudgetController {
 
     private final BudgetService service;
 
-    @GetMapping("/{budgetId}")
-    public BudgetDTO get(@PathVariable(name = "budgetId") Long budgetId) {
-
-        return service.get(budgetId);
-    }
-
     // 특정 회원의 예산 항목 전체 조회
     // 예: GET /api/budgets/member/test@test.com
     @GetMapping("/member/{memberEmail}")

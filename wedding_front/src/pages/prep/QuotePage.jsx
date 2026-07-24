@@ -10,7 +10,7 @@ const QuotePage = () => {
       <PrepLayout
         eyebrow="AI QUOTE"
         title="AI 견적서"
-        subtitle="견적서 사진을 올리면 항목을 정리하고, 같은 종류끼리 비교해드려요"
+        subtitle="견적서 사진을 올리면 항목을 정리하고, 같은 업체끼리 비교해드려요"
       >
         <div className="p-10 text-center text-ink-faint">
           로그인 후 이용해주세요.
@@ -23,7 +23,7 @@ const QuotePage = () => {
     <PrepLayout
       eyebrow="AI QUOTE"
       title="AI 견적서"
-      subtitle="견적서 사진을 올리면 항목을 정리하고, 같은 종류끼리 비교해드려요"
+      subtitle="견적서 사진을 올리면 항목을 정리하고, 같은 업체끼리 비교해드려요"
     >
       <QuoteCompareComponent />
     </PrepLayout>

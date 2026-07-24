@@ -36,16 +36,6 @@ public class BudgetServiceImpl implements BudgetService {
     }
 
     @Override
-    public BudgetDTO get(Long budgetId) {
-
-        Optional<Budget> result = budgetRepository.findById(budgetId);
-
-        Budget budget = result.orElseThrow();
-
-        return modelMapper.map(budget, BudgetDTO.class);
-    }
-
-    @Override
     public void modify(BudgetDTO budgetDTO, String requesterEmail) {
 
         Optional<Budget> result = budgetRepository.findById(budgetDTO.getBudgetId());

@@ -8,8 +8,6 @@ public interface BudgetService {
 
     Long register(BudgetDTO budgetDTO);
 
-    BudgetDTO get(Long budgetId);
-
     void modify(BudgetDTO budgetDTO, String requesterEmail);
 
     void remove(Long budgetId, String requesterEmail);
