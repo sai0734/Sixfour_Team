@@ -70,14 +70,6 @@ public class WishServiceImpl implements WishService{
 
     }
 
-    // 찜 삭제
-    @Override
-    public void remove(Long wno) {
-
-        wishRepository.deleteById(wno);
-
-    }
-
     // 찜 취소 (하트 토글용)
     @Override
     public void removeByMemberAndProduct(String memberEmail, Long pno) {

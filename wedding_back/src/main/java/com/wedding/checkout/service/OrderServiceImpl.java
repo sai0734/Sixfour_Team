@@ -37,6 +37,7 @@ public class OrderServiceImpl implements OrderService {
 
     private static final Set<String> TERMINAL_ORDER_STATUSES = Set.of("REFUNDED", "CANCELLED");
 
+    // 관리자용 주문 리스트 조회
     @Override
     public PageResponseDTO<AdminOrderListDTO> listOrders(AdminOrderSearchDTO searchDTO) {
 
@@ -67,6 +68,7 @@ public class OrderServiceImpl implements OrderService {
                 .build();
     }
 
+    // 주문 상세 조회 (결제정보 포함)
     @Override
     public AdminOrderDetailDTO getOrderDetail(Long ono) {
 
@@ -126,6 +128,7 @@ public class OrderServiceImpl implements OrderService {
         return builder.build();
     }
 
+    // 주문 상태 변경 (+ 회원에게 이메일 알림)
     @Override
     public void changeStatus(Long ono, String newStatus) {
 
@@ -148,11 +151,13 @@ public class OrderServiceImpl implements OrderService {
         orderNotificationService.sendStatusChangeNotification(orders.getMember().getEmail(), orders, newStatus);
     }
 
+    // 여러 주문 상태 일괄 변경
     @Override
     public void bulkChangeStatus(List<Long> onos, String newStatus) {
         onos.forEach(ono -> changeStatus(ono, newStatus));
     }
 
+    // 배송지/연락처 수정
     @Override
     public void updateShippingInfo(Long ono, String receiverName, String receiverPhone,
                                    String zipcode, String address, String addressDetail) {
@@ -164,6 +169,7 @@ public class OrderServiceImpl implements OrderService {
         orderRepository.save(orders);
     }
 
+    // 운송장 번호 등록/수정
     @Override
     public void updateTrackingNo(Long ono, String trackingNo) {
 
@@ -174,6 +180,7 @@ public class OrderServiceImpl implements OrderService {
         orderRepository.save(orders);
     }
 
+    // 관리자 메모(CS 요청사항 등) 등록/수정
     @Override
     public void updateAdminMemo(Long ono, String memo) {
 
@@ -184,6 +191,7 @@ public class OrderServiceImpl implements OrderService {
         orderRepository.save(orders);
     }
 
+    // 환불 처리 (토스 결제취소 API 연동)
     @Override
     public void refund(Long ono, String reason) {
 

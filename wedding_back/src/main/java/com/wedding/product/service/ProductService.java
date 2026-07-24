@@ -1,6 +1,5 @@
 package com.wedding.product.service;
 
-import com.wedding.global.dto.PageRequestDTO;
 import com.wedding.global.dto.PageResponseDTO;
 import com.wedding.product.domain.Product;
 import com.wedding.product.dto.AdminProductListDTO;
@@ -13,9 +12,6 @@ import java.util.List;
 
 @Transactional
 public interface ProductService {
-
-    // 상품 전체 리스트 조회하기 (대표이미지 1개, 삭제안된 상품)
-    PageResponseDTO<ProductDTO> getProductList(PageRequestDTO pageRequestDTO);
 
     // 상품 1개 조회하기
     ProductDTO getProductOne(Long pno);

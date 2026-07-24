@@ -1,6 +1,5 @@
 package com.wedding.product.service;
 
-import com.wedding.global.dto.PageRequestDTO;
 import com.wedding.global.dto.PageResponseDTO;
 import com.wedding.product.domain.Product;
 import com.wedding.product.domain.ProductImage;
@@ -30,18 +29,6 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
 
     private static final int LOW_STOCK_THRESHOLD = 10;
-
-    // 상품 전체 리스트 조회하기 (대표이미지 1개, 삭제안된 상품) - 검색조건 없이 새 메서드로 위임
-    @Override
-    public PageResponseDTO<ProductDTO> getProductList(PageRequestDTO pageRequestDTO) {
-
-        ProductSearchDTO searchDTO = ProductSearchDTO.builder()
-                .page(pageRequestDTO.getPage())
-                .size(pageRequestDTO.getSize())
-                .build();
-
-        return getProductList(searchDTO);
-    }
 
     // 상품 전체 리스트 조회하기 (카테고리/가격/평점/검색어/정렬 지원)
     @Override

@@ -33,7 +33,7 @@ public class CartController {
         return cartService.addOrModify(itemDTO);
     }
 
-    // 내 장바구니 목록 조회
+    // 장바구니 목록 조회
     @PreAuthorize("hasAnyRole('USER')")
     @GetMapping("/items")
     public List<CartItemListDTO> getCartItems(Principal principal) {

@@ -44,11 +44,12 @@ public class CheckoutServiceImpl implements CheckoutService {
 
     private static final Set<String> EXCHANGE_RETURN_TYPES = Set.of("EXCHANGE", "RETURN");
 
+    // 배송비 계산 (3만원 이상 무료)
     private int calculateShippingFee(int productSubtotal) {
         return productSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
     }
 
-    // 주문 생성 (결제 전, PENDING 상태) - 아직 장바구니는 건드리지 않음
+    // 주문 생성 (결제 전, PENDING 상태)
     @Override
     public OrderDTO prepareOrder(String memberEmail, CheckoutRequestDTO requestDTO) {
 
@@ -143,7 +144,7 @@ public class CheckoutServiceImpl implements CheckoutService {
         return toDTO(saved);
     }
 
-    // 결제 승인 처리
+    // 결제 승인 처리 (토스 승인 API 호출 + 주문상태 변경 + 장바구니 정리 + 알림 발송)
     @Override
     public OrderDTO confirmPayment(String memberEmail, ConfirmRequestDTO confirmRequestDTO) {
 
@@ -184,6 +185,7 @@ public class CheckoutServiceImpl implements CheckoutService {
         return toDTO(orders);
     }
 
+    // 결제 취소/실패 처리
     @Override
     public void cancelOrder(String memberEmail, String orderNumber) {
 
@@ -194,7 +196,7 @@ public class CheckoutServiceImpl implements CheckoutService {
         orderRepository.save(orders);
     }
 
-    // 가장 최근 결제완료 주문의 배송지 조회
+    // 가장 최근 결제완료 주문의 배송지 조회 (배송지 불러오기용)
     @Override
     public AddressDTO getLatestAddress(String memberEmail) {
 
@@ -216,6 +218,7 @@ public class CheckoutServiceImpl implements CheckoutService {
                 .build();
     }
 
+    // Orders 엔티티 → OrderDTO 변환
     private OrderDTO toDTO(Orders orders) {
 
         List<OrderItemDTO> items = orders.getOrderItems().stream()
@@ -257,8 +260,8 @@ public class CheckoutServiceImpl implements CheckoutService {
                 .build();
     }
 
+    // 회원 본인 주문 목록(마이페이지 결제 내역용)
     @Override
-    // 회원 본인 주문 목록 조회
     public List<OrderDTO> listMyOrders(String memberEmail) {
 
         return orderRepository.listByMember(memberEmail).stream().map(order -> toDTO(order))

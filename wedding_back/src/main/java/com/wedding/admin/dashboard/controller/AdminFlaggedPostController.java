@@ -24,11 +24,13 @@ public class AdminFlaggedPostController {
         return flaggedPostRepository.findTop5ByResolvedFalseOrderByRegDateDesc();
     }
 
+    // 미해결 건수 조회
     @GetMapping("/count")
     public long count() {
         return flaggedPostRepository.countByResolvedFalse();
     }
 
+    // 처리 완료 표시
     @PutMapping("/{id}/resolve")
     public void resolve(@PathVariable Long id) {
         flaggedPostRepository.findById(id).ifPresent(post -> {
