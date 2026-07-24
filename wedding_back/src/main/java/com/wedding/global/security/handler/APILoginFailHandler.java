@@ -109,7 +109,7 @@ public class APILoginFailHandler implements AuthenticationFailureHandler{
                 "suspendUntil", suspendUntil == null ? "" : suspendUntil
         ));
 
-        response.setContentType("application/json");
+        response.setContentType("application/json; charset=UTF-8");
 
         PrintWriter printWriter = response.getWriter();
         printWriter.println(jsonStr);

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import BoardLayout from "../../layouts/BoardLayout";
 import BoardTopTabs from "../../components/board/BoardTopTabs";
 import BoardFilterSidebar from "../../components/board/BoardFilterSidebar";
@@ -25,6 +26,7 @@ const PAGE_SIZE = 10;
 
 const FreeBoardPage = () => {
   const { loginState, moveToLogin } = useCustomLogin();
+  const [searchParams] = useSearchParams();
   const isAdmin = loginState.roleNames?.some((r) =>
     ["ADMIN", "ROLE_ADMIN"].includes(r),
   );
@@ -89,6 +91,15 @@ const FreeBoardPage = () => {
       setRefresh((r) => !r);
     });
   };
+
+  // 관리자 알림(확인 필요한 게시글)에서 "?openId=123" 형태로 들어왔을 때 해당 글을 바로 열어줌
+  useEffect(() => {
+    const openId = searchParams.get("openId");
+    if (openId) {
+      openDetail(Number(openId));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const handleToggleLike = () => {
     const action = liked

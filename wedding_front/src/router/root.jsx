@@ -46,6 +46,7 @@ const AdminOrderDetailPage = lazy(
   () => import("../pages/admin/AdminOrderDetailPage"),
 );
 const AdminQnaListPage = lazy(() => import("../pages/admin/AdminQnaListPage"));
+const AdminAiBriefingPage = lazy(() => import("../pages/admin/AdminAiBriefingPage"));
 const CompanyListPage = lazy(() => import("../pages/company/CompanyListPage"));
 const CompanyAddPage = lazy(() => import("../pages/company/CompanyAddPage"));
 const CompanyModifyPage = lazy(
@@ -162,6 +163,16 @@ const appRoutes = [
       <AdminOnly>
         <Suspense fallback={Loading}>
           <AdminQnaListPage />
+        </Suspense>
+      </AdminOnly>
+    ),
+  },
+  {
+    path: "admin/ai-briefing",
+    element: (
+      <AdminOnly>
+        <Suspense fallback={Loading}>
+          <AdminAiBriefingPage />
         </Suspense>
       </AdminOnly>
     ),

@@ -383,6 +383,9 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
                 .link("/admin/qna")
                 .build());
 
+        // 사이트 이상 징후 / 확인 필요한 게시글은 여기(todos)가 아니라 대시보드 옆
+        // 스크롤 따라다니는 플로팅 패널(AdminAlertPanel)에서 보여준다 - 전용 페이지 없이 바로 처리.
+
         return todos;
 
     }

@@ -57,6 +57,12 @@ public class JWTCheckFilter extends OncePerRequestFilter{
             return true;
         }
 
+        // OpenClaw(로컬 개인 자동화 에이전트) 전용 API - 로그인 세션이 없으므로 JWT 대신
+        // OpenClawIngestController 자체에서 고정 시크릿 헤더(X-OpenClaw-Key)로 인증한다.
+        if(path.startsWith("/api/openclaw/")) {
+            return true;
+        }
+
         // 이미지 조회 경로는 체크하지 않는다면 ()
         if(method.equals("GET")) {
 
@@ -295,7 +301,7 @@ public class JWTCheckFilter extends OncePerRequestFilter{
             Gson gson = new Gson();
             String msg = gson.toJson(Map.of("error", "ERROR_ACCESS_TOKEN"));
 
-            response.setContentType("application/json");
+            response.setContentType("application/json; charset=UTF-8");
             PrintWriter printWriter = response.getWriter();
             printWriter.println(msg);
             printWriter.close();
