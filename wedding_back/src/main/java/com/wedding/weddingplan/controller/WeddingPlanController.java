@@ -27,13 +27,7 @@ public class WeddingPlanController {
 
     private final WeddingPlanService service;
 
-    @GetMapping("/{weddingPlanId}")
-    public WeddingPlanDTO get(@PathVariable(name = "weddingPlanId") Long weddingPlanId) {
-
-        return service.get(weddingPlanId);
-    }
-
-    // 회원 이메일로 단건 조회 (1:1)
+    // 1:1 관계라 회원 이메일로 단건 조회 (마이페이지 허브 진입 시 사용)
     // 예: GET /api/weddingplans/member/test@test.com
     @GetMapping("/member/{memberEmail}")
     public WeddingPlanDTO getByMember(@PathVariable(name = "memberEmail") String memberEmail) {

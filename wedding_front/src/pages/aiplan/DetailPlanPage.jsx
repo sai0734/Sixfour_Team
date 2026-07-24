@@ -131,7 +131,9 @@ const DetailPlanPage = () => {
   // 바로 fetch를 시작하므로, 첫 렌더부터 로딩 상태로 시작한다
   // (effect 안에서 setLoading(true)를 동기 호출하지 않기 위함)
   const [loading, setLoading] = useState(() =>
-    Boolean(searchParams.get("sessionId") || localStorage.getItem(LAST_SESSION_KEY)),
+    Boolean(
+      searchParams.get("sessionId") || localStorage.getItem(LAST_SESSION_KEY),
+    ),
   );
   const [error, setError] = useState(null);
   const [retryAction, setRetryAction] = useState(null);
@@ -208,7 +210,8 @@ const DetailPlanPage = () => {
 
   // 복원 - URL에 sessionId가 있으면 그걸, 없으면 localStorage에 남은 마지막 세션을 불러옴
   useEffect(() => {
-    const sessionId = searchParams.get("sessionId") || localStorage.getItem(LAST_SESSION_KEY);
+    const sessionId =
+      searchParams.get("sessionId") || localStorage.getItem(LAST_SESSION_KEY);
     if (!sessionId || result) {
       return;
     }
@@ -246,10 +249,13 @@ const DetailPlanPage = () => {
 
   // 칩 하나 클릭 = 단일 선택 (메이크업 패키지 전용). 이미 선택된 칩을 다시 누르면 "상관없음"(빈 값)으로 해제.
   const handleChipSelect = (field, value) => {
-    setForm((prev) => ({ ...prev, [field]: prev[field] === value ? "" : value }));
+    setForm((prev) => ({
+      ...prev,
+      [field]: prev[field] === value ? "" : value,
+    }));
   };
 
-  // 칩 여러 개 클릭 = 중복 선택 (홀/스튜디오/드레스). "상관없음"을 누르면 전체 해제,
+  // 칩 여러 개 클릭 = 중복 선택 (웨딩홀/스튜디오/드레스). "상관없음"을 누르면 전체 해제,
   // 그 외 칩은 이미 선택돼 있으면 빼고 아니면 추가.
   const handleChipMultiSelect = (field, value) => {
     if (value === "") {
@@ -384,7 +390,9 @@ const DetailPlanPage = () => {
 
   // 다듬기 텍스트를 처음부터 다 안 써도 되게, 자주 쓸 법한 문구를 눌러서 채워넣을 수 있게 함
   const appendRefineSuggestion = (suggestion) => {
-    setRefineText((prev) => (prev.trim() ? `${prev.trim()} ${suggestion}` : suggestion));
+    setRefineText((prev) =>
+      prev.trim() ? `${prev.trim()} ${suggestion}` : suggestion,
+    );
   };
 
   const handleSlotAction = (category, action) => {
@@ -413,12 +421,13 @@ const DetailPlanPage = () => {
       return;
     }
 
-    applySessionToPlan(result.sessionId)
-      .catch((err) => {
-        console.error(err);
-        const msg = err?.response?.data?.msg;
-        showAlert(msg || "반영 중 문제가 발생했어요. 로그인 상태를 확인해주세요.");
-      });
+    applySessionToPlan(result.sessionId).catch((err) => {
+      console.error(err);
+      const msg = err?.response?.data?.msg;
+      showAlert(
+        msg || "반영 중 문제가 발생했어요. 로그인 상태를 확인해주세요.",
+      );
+    });
   };
 
   // 사이드바에서 예전 회차를 클릭하면 그 세션을 다시 불러옴
@@ -489,378 +498,419 @@ const DetailPlanPage = () => {
       </section>
 
       <div className="mx-auto max-w-[1160px] px-4 py-10">
-      {loading && (
-        <AiPlanLoadingModal
-          message={result ? "불러오는 중이에요" : "조건에 맞는 곳을 찾고 있어요"}
-        />
-      )}
-
-      <div className="flex flex-col gap-6 md:flex-row">
-        {history.length > 0 && (
-          <aside className="w-full shrink-0 md:w-56 md:sticky md:top-6 md:self-start">
-            <button
-              type="button"
-              onClick={() => setHistoryOpen((prev) => !prev)}
-              className="mb-2 flex w-full items-center justify-between rounded-xl border border-line bg-white px-4 py-2.5 text-sm font-medium text-ink-soft md:hidden"
-            >
-              <span>추천 기록 ({history.length})</span>
-              <span>{historyOpen ? "숨기기 ▲" : "펼치기 ▼"}</span>
-            </button>
-            <div className={`${historyOpen ? "block" : "hidden"} md:block`}>
-              <SessionHistoryPanel
-                history={history}
-                activeSessionId={result?.sessionId}
-                onSelect={handleSelectHistory}
-                onRename={handleRenameHistory}
-                onRemove={handleRemoveHistory}
-                onStartNew={handleReset}
-                disabled={loading}
-              />
-            </div>
-          </aside>
+        {loading && (
+          <AiPlanLoadingModal
+            message={
+              result ? "불러오는 중이에요" : "조건에 맞는 곳을 찾고 있어요"
+            }
+          />
         )}
 
-        <div className="mx-auto w-full max-w-[900px]">
-          {showReservedBanner && (
-            <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-brand-dark bg-blush-50 px-4 py-3 text-sm text-brand-deep">
-              <span>이 조합으로 예약 신청을 모두 마쳤어요. 업체 확인 후 결제를 진행하실 수 있어요.</span>
+        <div className="flex flex-col gap-6 md:flex-row">
+          {history.length > 0 && (
+            <aside className="w-full shrink-0 md:w-56 md:sticky md:top-6 md:self-start">
               <button
                 type="button"
-                onClick={() => setShowReservedBanner(false)}
-                aria-label="닫기"
-                className="shrink-0 text-brand-deep hover:opacity-70"
+                onClick={() => setHistoryOpen((prev) => !prev)}
+                className="mb-2 flex w-full items-center justify-between rounded-xl border border-line bg-white px-4 py-2.5 text-sm font-medium text-ink-soft md:hidden"
               >
-                ×
+                <span>추천 기록 ({history.length})</span>
+                <span>{historyOpen ? "숨기기 ▲" : "펼치기 ▼"}</span>
               </button>
-            </div>
-          )}
-
-          {!result && (
-            <div className="mb-8 text-center">
-              <p className="text-sm text-ink-muted">
-                비워두면 취향 없이, 입력한 항목만 반영해서 추천해드려요
-              </p>
-            </div>
-          )}
-
-          {!result ? (
-            <form
-              onSubmit={handleSubmitAi}
-              className="rounded-2xl border border-line bg-white p-6 shadow-sm md:p-8"
-            >
-              <p className="mb-3 text-xs font-medium text-ink-muted">공통 정보</p>
-              <div className="mb-6 grid grid-cols-1 gap-5 border-b border-line pb-6 md:grid-cols-2">
-                <div>
-                  <label className={labelClass}>총 예산 (만원) *</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={form.budgetManwon}
-                    onChange={handleChange("budgetManwon")}
-                    placeholder="예: 3000"
-                    className={inputClass}
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass}>희망 지역 *</label>
-                  <input
-                    type="text"
-                    value={form.region}
-                    onChange={handleChange("region")}
-                    placeholder="예: 강남"
-                    className={inputClass}
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass}>신랑 이름</label>
-                  <input
-                    type="text"
-                    value={form.groomName}
-                    onChange={handleChange("groomName")}
-                    className={inputClass}
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass}>신부 이름</label>
-                  <input
-                    type="text"
-                    value={form.brideName}
-                    onChange={handleChange("brideName")}
-                    className={inputClass}
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass}>결혼 날짜</label>
-                  <input
-                    type="date"
-                    min={MIN_WEDDING_DATE}
-                    value={form.weddingDate}
-                    onChange={handleChange("weddingDate")}
-                    className={inputClass}
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass}>하객수 (명)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={form.guestCount}
-                    onChange={handleChange("guestCount")}
-                    placeholder="예: 200"
-                    className={inputClass}
-                  />
-                </div>
-              </div>
-
-              <p className="mb-3 text-xs font-medium text-ink-muted">
-                카테고리별 취향 (전부 선택 사항)
-              </p>
-              <div className="space-y-4">
-                <div className="rounded-xl border border-line bg-white px-4 py-3.5">
-                  <label className={labelClass}>홀 분위기</label>
-                  <p className="mb-2 text-xs text-ink-muted">
-                    여러 개 선택하면 그 중 하나라도 맞는 홀을 찾아요
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {HALL_TYPE_OPTIONS.map((opt) => (
-                      <button
-                        key={opt.value || "none"}
-                        type="button"
-                        onClick={() => handleChipMultiSelect("hallTypes", opt.value)}
-                        className={
-                          (opt.value === "" ? form.hallTypes.length === 0 : form.hallTypes.includes(opt.value))
-                            ? "rounded-full border border-brand-dark bg-brand px-3 py-1 text-xs text-white"
-                            : "rounded-full border border-line bg-white px-3 py-1 text-xs text-ink-soft hover:bg-blush-100"
-                        }
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-line bg-white px-4 py-3.5">
-                  <label className={labelClass}>스튜디오 분위기</label>
-                  <p className="mb-2 text-xs text-ink-muted">
-                    여러 개 선택하면 전부 가진 곳을 찾아요
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {STUDIO_MOOD_OPTIONS.map((opt) => (
-                      <button
-                        key={opt.value || "none"}
-                        type="button"
-                        onClick={() => handleChipMultiSelect("studioMoods", opt.value)}
-                        className={
-                          (opt.value === "" ? form.studioMoods.length === 0 : form.studioMoods.includes(opt.value))
-                            ? "rounded-full border border-brand-dark bg-brand px-3 py-1 text-xs text-white"
-                            : "rounded-full border border-line bg-white px-3 py-1 text-xs text-ink-soft hover:bg-blush-100"
-                        }
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-line bg-white px-4 py-3.5">
-                  <label className={labelClass}>드레스 스타일</label>
-                  <p className="mb-2 text-xs text-ink-muted">
-                    여러 개 선택하면 전부 가진 아이템을 찾아요
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {DRESS_STYLE_OPTIONS.map((opt) => (
-                      <button
-                        key={opt.value || "none"}
-                        type="button"
-                        onClick={() => handleChipMultiSelect("dressStyles", opt.value)}
-                        className={
-                          (opt.value === "" ? form.dressStyles.length === 0 : form.dressStyles.includes(opt.value))
-                            ? "rounded-full border border-brand-dark bg-brand px-3 py-1 text-xs text-white"
-                            : "rounded-full border border-line bg-white px-3 py-1 text-xs text-ink-soft hover:bg-blush-100"
-                        }
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-line bg-white px-4 py-3.5">
-                  <label className={labelClass}>메이크업 패키지</label>
-                  <p className="mb-2 text-xs text-ink-muted">하나만 선택할 수 있어요</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {MAKEUP_TYPE_OPTIONS.map((opt) => (
-                      <button
-                        key={opt.value || "none"}
-                        type="button"
-                        onClick={() => handleChipSelect("makeupStyle", opt.value)}
-                        className={
-                          form.makeupStyle === opt.value
-                            ? "rounded-full border border-brand-dark bg-brand px-3 py-1 text-xs text-white"
-                            : "rounded-full border border-line bg-white px-3 py-1 text-xs text-ink-soft hover:bg-blush-100"
-                        }
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-5 rounded-xl border border-dashed border-line bg-surface px-4 py-3.5">
-                <label className={labelClass}>
-                  AI에게 추가로 요청하고 싶은 말
-                </label>
-                <p className="mb-2 text-xs text-ink-muted">
-                  위 칩으로 고르기 애매한 요청은 여기 자유롭게 적어주세요. 'AI에게 맡기기'로 추천받을 때만 반영돼요.
-                </p>
-                <textarea
-                  value={form.freeText}
-                  onChange={handleChange("freeText")}
-                  rows={3}
-                  placeholder="예: 하객이 많아서 넓은 홀이었으면 좋겠어요"
-                  className={inputClass}
+              <div className={`${historyOpen ? "block" : "hidden"} md:block`}>
+                <SessionHistoryPanel
+                  history={history}
+                  activeSessionId={result?.sessionId}
+                  onSelect={handleSelectHistory}
+                  onRename={handleRenameHistory}
+                  onRemove={handleRemoveHistory}
+                  onStartNew={handleReset}
+                  disabled={loading}
                 />
               </div>
+            </aside>
+          )}
 
-              {error && (
-                <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#F0C4C4] bg-[#FDEEEE] px-4 py-2.5 text-sm text-[#B23B3B]">
-                  <span>{error}</span>
-                  {retryAction && (
-                    <button
-                      type="button"
-                      onClick={() => retryAction()}
-                      className="shrink-0 font-medium underline underline-offset-2"
-                    >
-                      다시 시도
-                    </button>
-                  )}
-                </div>
-              )}
-
-              <div className="mt-6 flex flex-col gap-3 md:flex-row">
+          <div className="mx-auto w-full max-w-[900px]">
+            {showReservedBanner && (
+              <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-brand-dark bg-blush-50 px-4 py-3 text-sm text-brand-deep">
+                <span>
+                  이 조합으로 예약 신청을 모두 마쳤어요. 업체 확인 후 결제를
+                  진행하실 수 있어요.
+                </span>
                 <button
                   type="button"
-                  onClick={goQuickMode}
-                  className="h-12 flex-1 rounded-full border border-line text-sm font-medium text-ink-soft hover:bg-surface"
+                  onClick={() => setShowReservedBanner(false)}
+                  aria-label="닫기"
+                  className="shrink-0 text-brand-deep hover:opacity-70"
                 >
-                  빠르게 추천받기
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="h-12 flex-1 rounded-full bg-brand text-sm font-medium text-white hover:bg-brand-dark disabled:opacity-60"
-                >
-                  AI에게 맡기기
+                  ×
                 </button>
               </div>
-            </form>
-          ) : (
-            <div>
-              <ResultCards
-                result={result}
-                onSlotAction={handleSlotAction}
-                onBumpBudget={handleBumpBudget}
-                onApplyToPlan={handleApplyToPlan}
-                turns={turns}
-                activeTurnNo={activeTurnNo}
-                onSelectTurn={handleSelectTurn}
-              />
+            )}
 
-              {error && (
-                <div className="mt-4 flex flex-wrap items-center justify-center gap-2 rounded-xl border border-[#F0C4C4] bg-[#FDEEEE] px-4 py-2.5 text-sm text-[#B23B3B]">
-                  <span>{error}</span>
-                  {retryAction && (
+            {!result && (
+              <div className="mb-8 text-center">
+                <p className="text-sm text-ink-muted">
+                  비워두면 취향 없이, 입력한 항목만 반영해서 추천해드려요
+                </p>
+              </div>
+            )}
+
+            {!result ? (
+              <form
+                onSubmit={handleSubmitAi}
+                className="rounded-2xl border border-line bg-white p-6 shadow-sm md:p-8"
+              >
+                <p className="mb-3 text-xs font-medium text-ink-muted">
+                  공통 정보
+                </p>
+                <div className="mb-6 grid grid-cols-1 gap-5 border-b border-line pb-6 md:grid-cols-2">
+                  <div>
+                    <label className={labelClass}>총 예산 (만원) *</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={form.budgetManwon}
+                      onChange={handleChange("budgetManwon")}
+                      placeholder="예: 3000"
+                      className={inputClass}
+                    />
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>희망 지역 *</label>
+                    <input
+                      type="text"
+                      value={form.region}
+                      onChange={handleChange("region")}
+                      placeholder="예: 강남"
+                      className={inputClass}
+                    />
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>신랑 이름</label>
+                    <input
+                      type="text"
+                      value={form.groomName}
+                      onChange={handleChange("groomName")}
+                      className={inputClass}
+                    />
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>신부 이름</label>
+                    <input
+                      type="text"
+                      value={form.brideName}
+                      onChange={handleChange("brideName")}
+                      className={inputClass}
+                    />
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>결혼 날짜</label>
+                    <input
+                      type="date"
+                      min={MIN_WEDDING_DATE}
+                      value={form.weddingDate}
+                      onChange={handleChange("weddingDate")}
+                      className={inputClass}
+                    />
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>하객수 (명)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={form.guestCount}
+                      onChange={handleChange("guestCount")}
+                      placeholder="예: 200"
+                      className={inputClass}
+                    />
+                  </div>
+                </div>
+
+                <p className="mb-3 text-xs font-medium text-ink-muted">
+                  카테고리별 취향 (전부 선택 사항)
+                </p>
+                <div className="space-y-4">
+                  <div className="rounded-xl border border-line bg-white px-4 py-3.5">
+                    <label className={labelClass}>홀 분위기</label>
+                    <p className="mb-2 text-xs text-ink-muted">
+                      여러 개 선택하면 그 중 하나라도 맞는 홀을 찾아요
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {HALL_TYPE_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value || "none"}
+                          type="button"
+                          onClick={() =>
+                            handleChipMultiSelect("hallTypes", opt.value)
+                          }
+                          className={
+                            (
+                              opt.value === ""
+                                ? form.hallTypes.length === 0
+                                : form.hallTypes.includes(opt.value)
+                            )
+                              ? "rounded-full border border-brand-dark bg-brand px-3 py-1 text-xs text-white"
+                              : "rounded-full border border-line bg-white px-3 py-1 text-xs text-ink-soft hover:bg-blush-100"
+                          }
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-line bg-white px-4 py-3.5">
+                    <label className={labelClass}>스튜디오 분위기</label>
+                    <p className="mb-2 text-xs text-ink-muted">
+                      여러 개 선택하면 전부 가진 곳을 찾아요
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {STUDIO_MOOD_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value || "none"}
+                          type="button"
+                          onClick={() =>
+                            handleChipMultiSelect("studioMoods", opt.value)
+                          }
+                          className={
+                            (
+                              opt.value === ""
+                                ? form.studioMoods.length === 0
+                                : form.studioMoods.includes(opt.value)
+                            )
+                              ? "rounded-full border border-brand-dark bg-brand px-3 py-1 text-xs text-white"
+                              : "rounded-full border border-line bg-white px-3 py-1 text-xs text-ink-soft hover:bg-blush-100"
+                          }
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-line bg-white px-4 py-3.5">
+                    <label className={labelClass}>드레스 스타일</label>
+                    <p className="mb-2 text-xs text-ink-muted">
+                      여러 개 선택하면 전부 가진 아이템을 찾아요
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {DRESS_STYLE_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value || "none"}
+                          type="button"
+                          onClick={() =>
+                            handleChipMultiSelect("dressStyles", opt.value)
+                          }
+                          className={
+                            (
+                              opt.value === ""
+                                ? form.dressStyles.length === 0
+                                : form.dressStyles.includes(opt.value)
+                            )
+                              ? "rounded-full border border-brand-dark bg-brand px-3 py-1 text-xs text-white"
+                              : "rounded-full border border-line bg-white px-3 py-1 text-xs text-ink-soft hover:bg-blush-100"
+                          }
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-line bg-white px-4 py-3.5">
+                    <label className={labelClass}>메이크업 패키지</label>
+                    <p className="mb-2 text-xs text-ink-muted">
+                      하나만 선택할 수 있어요
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {MAKEUP_TYPE_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value || "none"}
+                          type="button"
+                          onClick={() =>
+                            handleChipSelect("makeupStyle", opt.value)
+                          }
+                          className={
+                            form.makeupStyle === opt.value
+                              ? "rounded-full border border-brand-dark bg-brand px-3 py-1 text-xs text-white"
+                              : "rounded-full border border-line bg-white px-3 py-1 text-xs text-ink-soft hover:bg-blush-100"
+                          }
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-5 rounded-xl border border-dashed border-line bg-surface px-4 py-3.5">
+                  <label className={labelClass}>
+                    AI에게 추가로 요청하고 싶은 말
+                  </label>
+                  <p className="mb-2 text-xs text-ink-muted">
+                    위 칩으로 고르기 애매한 요청은 여기 자유롭게 적어주세요.
+                    'AI에게 맡기기'로 추천받을 때만 반영돼요.
+                  </p>
+                  <textarea
+                    value={form.freeText}
+                    onChange={handleChange("freeText")}
+                    rows={3}
+                    placeholder="예: 하객이 많아서 넓은 홀이었으면 좋겠어요"
+                    className={inputClass}
+                  />
+                </div>
+
+                {error && (
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#F0C4C4] bg-[#FDEEEE] px-4 py-2.5 text-sm text-[#B23B3B]">
+                    <span>{error}</span>
+                    {retryAction && (
+                      <button
+                        type="button"
+                        onClick={() => retryAction()}
+                        className="shrink-0 font-medium underline underline-offset-2"
+                      >
+                        다시 시도
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                <div className="mt-6 flex flex-col gap-3 md:flex-row">
+                  <button
+                    type="button"
+                    onClick={goQuickMode}
+                    className="h-12 flex-1 rounded-full border border-line text-sm font-medium text-ink-soft hover:bg-surface"
+                  >
+                    빠르게 추천받기
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="h-12 flex-1 rounded-full bg-brand text-sm font-medium text-white hover:bg-brand-dark disabled:opacity-60"
+                  >
+                    AI에게 맡기기
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div>
+                <ResultCards
+                  result={result}
+                  onSlotAction={handleSlotAction}
+                  onBumpBudget={handleBumpBudget}
+                  onApplyToPlan={handleApplyToPlan}
+                  turns={turns}
+                  activeTurnNo={activeTurnNo}
+                  onSelectTurn={handleSelectTurn}
+                />
+
+                {error && (
+                  <div className="mt-4 flex flex-wrap items-center justify-center gap-2 rounded-xl border border-[#F0C4C4] bg-[#FDEEEE] px-4 py-2.5 text-sm text-[#B23B3B]">
+                    <span>{error}</span>
+                    {retryAction && (
+                      <button
+                        type="button"
+                        onClick={() => retryAction()}
+                        className="shrink-0 font-medium underline underline-offset-2"
+                      >
+                        다시 시도
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* 조합이 마음에 안 들면 여기서 바로 - 버튼을 누르는 자리 바로 아래에서 폼이
+                  펼쳐지게 해서, 예전처럼 페이지 맨 아래 버튼을 누르면 훨씬 위쪽에 폼이
+                  나타나는 어색함을 없앴다. */}
+                {result.sessionId && (
+                  <div className="mt-6 rounded-2xl border border-line bg-white p-5">
                     <button
                       type="button"
-                      onClick={() => retryAction()}
-                      className="shrink-0 font-medium underline underline-offset-2"
+                      onClick={() => setRefineOpen((prev) => !prev)}
+                      className="flex w-full items-center justify-between text-left"
                     >
-                      다시 시도
+                      <span>
+                        <span className="block text-sm font-semibold text-ink">
+                          마음에 안 드는 부분이 있나요?
+                        </span>
+                        <span className="block text-xs text-ink-faint">
+                          자유롭게 말씀해주시면 그 부분만 다시 찾아드려요
+                        </span>
+                      </span>
+                      <span className="shrink-0 rounded-full bg-brand px-5 py-2 text-sm font-medium text-white">
+                        {refineOpen ? "닫기" : "플랜 수정하기"}
+                      </span>
+                    </button>
+
+                    {refineOpen && (
+                      <form
+                        onSubmit={handleRefineSubmit}
+                        className="mt-4 border-t border-line pt-4"
+                      >
+                        <div className="mb-2 flex flex-wrap gap-1.5">
+                          {REFINE_SUGGESTIONS.map((suggestion) => (
+                            <button
+                              key={suggestion}
+                              type="button"
+                              onClick={() => appendRefineSuggestion(suggestion)}
+                              className="rounded-full border border-line bg-white px-3 py-1 text-xs text-ink-soft hover:bg-blush-100"
+                            >
+                              {suggestion}
+                            </button>
+                          ))}
+                        </div>
+                        <textarea
+                          value={refineText}
+                          onChange={(e) => setRefineText(e.target.value)}
+                          rows={3}
+                          placeholder="예: 스튜디오는 예산 초과라서 빼고 나머지로 추천해줘. 홀이랑 메이크업은 마음에 들어서 확정, 드레스만 다른 스타일로 다시 찾아줘"
+                          className="w-full rounded-xl border border-line bg-surface px-4 py-2.5 text-sm text-ink outline-none focus:border-brand-dark"
+                        />
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <button
+                            type="submit"
+                            disabled={refineLoading || !refineText.trim()}
+                            className="h-10 rounded-full bg-brand px-5 text-sm font-medium text-white hover:bg-brand-dark disabled:opacity-60"
+                          >
+                            {refineLoading ? "반영하는 중..." : "보내기"}
+                          </button>
+                        </div>
+                      </form>
+                    )}
+                  </div>
+                )}
+
+                {/* 새로 시작하거나 공유하는 건 부가 기능이라, 위 핵심 액션들보다 눈에 덜 띄게
+                  아래쪽에 작은 텍스트 링크 느낌으로 둔다. */}
+                <div className="mt-6 flex flex-col items-center gap-3 text-sm text-ink-muted md:flex-row md:justify-center md:gap-6">
+                  <button
+                    type="button"
+                    onClick={handleReset}
+                    className="hover:text-ink-soft hover:underline"
+                  >
+                    다른 조건으로 새로 찾기
+                  </button>
+                  {result.sessionId && (
+                    <button
+                      type="button"
+                      onClick={handleCopyLink}
+                      className="hover:text-ink-soft hover:underline"
+                    >
+                      {linkCopied ? "복사됐어요!" : "링크로 공유하기"}
                     </button>
                   )}
                 </div>
-              )}
-
-              {/* 조합이 마음에 안 들면 여기서 바로 - 버튼을 누르는 자리 바로 아래에서 폼이
-                  펼쳐지게 해서, 예전처럼 페이지 맨 아래 버튼을 누르면 훨씬 위쪽에 폼이
-                  나타나는 어색함을 없앴다. */}
-              {result.sessionId && (
-                <div className="mt-6 rounded-2xl border border-line bg-white p-5">
-                  <button
-                    type="button"
-                    onClick={() => setRefineOpen((prev) => !prev)}
-                    className="flex w-full items-center justify-between text-left"
-                  >
-                    <span>
-                      <span className="block text-sm font-semibold text-ink">
-                        마음에 안 드는 부분이 있나요?
-                      </span>
-                      <span className="block text-xs text-ink-faint">
-                        자유롭게 말씀해주시면 그 부분만 다시 찾아드려요
-                      </span>
-                    </span>
-                    <span className="shrink-0 rounded-full bg-brand px-5 py-2 text-sm font-medium text-white">
-                      {refineOpen ? "닫기" : "플랜 수정하기"}
-                    </span>
-                  </button>
-
-                  {refineOpen && (
-                    <form onSubmit={handleRefineSubmit} className="mt-4 border-t border-line pt-4">
-                      <div className="mb-2 flex flex-wrap gap-1.5">
-                        {REFINE_SUGGESTIONS.map((suggestion) => (
-                          <button
-                            key={suggestion}
-                            type="button"
-                            onClick={() => appendRefineSuggestion(suggestion)}
-                            className="rounded-full border border-line bg-white px-3 py-1 text-xs text-ink-soft hover:bg-blush-100"
-                          >
-                            {suggestion}
-                          </button>
-                        ))}
-                      </div>
-                      <textarea
-                        value={refineText}
-                        onChange={(e) => setRefineText(e.target.value)}
-                        rows={3}
-                        placeholder="예: 스튜디오는 예산 초과라서 빼고 나머지로 추천해줘. 홀이랑 메이크업은 마음에 들어서 확정, 드레스만 다른 스타일로 다시 찾아줘"
-                        className="w-full rounded-xl border border-line bg-surface px-4 py-2.5 text-sm text-ink outline-none focus:border-brand-dark"
-                      />
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        <button
-                          type="submit"
-                          disabled={refineLoading || !refineText.trim()}
-                          className="h-10 rounded-full bg-brand px-5 text-sm font-medium text-white hover:bg-brand-dark disabled:opacity-60"
-                        >
-                          {refineLoading ? "반영하는 중..." : "보내기"}
-                        </button>
-                      </div>
-                    </form>
-                  )}
-                </div>
-              )}
-
-              {/* 새로 시작하거나 공유하는 건 부가 기능이라, 위 핵심 액션들보다 눈에 덜 띄게
-                  아래쪽에 작은 텍스트 링크 느낌으로 둔다. */}
-              <div className="mt-6 flex flex-col items-center gap-3 text-sm text-ink-muted md:flex-row md:justify-center md:gap-6">
-                <button type="button" onClick={handleReset} className="hover:text-ink-soft hover:underline">
-                  다른 조건으로 새로 찾기
-                </button>
-                {result.sessionId && (
-                  <button type="button" onClick={handleCopyLink} className="hover:text-ink-soft hover:underline">
-                    {linkCopied ? "복사됐어요!" : "링크로 공유하기"}
-                  </button>
-                )}
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
       </div>
     </div>
   );

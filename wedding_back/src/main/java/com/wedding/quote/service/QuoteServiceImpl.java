@@ -49,6 +49,18 @@ import lombok.extern.log4j.Log4j2;
 // 가격 차이 문구는 AI가 문장으로 생성하게 하면 큰 숫자에 콤마(,) 구분을 빠뜨리는 경우가 있어서
 // (이 프로젝트에서 AI의 숫자 처리 정확도 문제가 반복적으로 있었음), AI한테 맡기지 않고 서버에서
 // 저장된 totalPrice 값으로 직접 계산 + 포맷팅한다(buildPriceDifference 참고).
+//
+// 업체명 오인식 방지: 견적서 안에 "스튜디오 촬영은 OO스튜디오와 제휴"처럼 다른 카테고리
+// 하청/제휴 업체 이름이 비고란에 섞여 나오는 경우가 있는데, 이걸 vendorNameGuess로 잘못
+// 채우면 "웨딩홀 - 청스튜디오"처럼 카테고리와 업체명이 안 맞는 이상한 결과가 나온다. 그래서
+// category로 판단한 서비스 자체를 제공하는 업체명이 명확할 때만 채우고, 그 외엔 null로 두게
+// 프롬프트에 명시 규칙 + few-shot 예시를 추가했다(EXTRACT_SYSTEM_PROMPT 규칙 4).
+//
+// 여러 안(A안/B안 등)이 나란히 있는 표: 호텔/컨벤션 견적서는 A안/B안, 스탠다드/프리미엄처럼
+// 옵션 여러 개가 한 표에 나란히 배치되는 경우가 흔한데, 이 스키마는 견적서 하나당 옵션 하나만
+// 담을 수 있어서 AI가 두 옵션의 숫자를 섞어 읽는 문제가 있었다(예: 항목명은 A안인데 금액은
+// B안). 그래서 "여러 옵션이 있으면 첫 번째(가장 왼쪽) 옵션 하나만 기준으로 추출하고, 다른
+// 옵션이 있었다는 사실은 hiddenNotes에 남기라"는 규칙 + few-shot 예시를 추가했다.
 @Service
 @RequiredArgsConstructor
 @Log4j2
@@ -87,10 +99,24 @@ public class QuoteServiceImpl implements QuoteService {
                     + "이어서 읽으세요. 예를 들어 '97,078,300'이라는 숫자는 반드시 97078300으로 읽어야 "
                     + "하고, 97078처럼 뒷자리를 잘라서 읽으면 안 됩니다. OCR 특성상 숫자 중간에 공백이나 "
                     + "이상한 기호가 섞여 있을 수 있으니 무시하고 숫자만 이어붙이세요.\n"
-                    + "4. 텍스트 상단이나 제목 줄에 웨딩홀/스튜디오 같은 실제 업체명이 명확히 적혀있으면 "
-                    + "vendorNameGuess에 채우세요. 단, 출처 표시·블로그 주소·신문사나 매체 이름·사진 "
-                    + "저작권 표시(예: '경향신문', 'blog.naver.com/...')는 업체명이 아니니 절대 넣지 "
-                    + "마세요. 확신이 안 서면 null로 두세요.\n\n"
+                    + "4. vendorNameGuess에는 반드시 'category로 판단한 서비스 자체(홀/스튜디오/드레스/"
+                    + "메이크업 중 이 견적서 본래의 서비스)를 제공하는 업체'의 이름만 넣으세요. 텍스트 "
+                    + "상단이나 제목 줄에 그 업체명이 명확히 적혀있을 때만 채우고, 확신이 안 서면 반드시 "
+                    + "null로 두세요(빈 문자열이나 추측성 이름 금지). 다음은 vendorNameGuess에 절대 넣으면 "
+                    + "안 되는 것들입니다: 출처 표시·블로그 주소·신문사나 매체 이름·사진 저작권 표시(예: "
+                    + "'경향신문', 'blog.naver.com/...'), 그리고 비고/특이사항 등에 '스튜디오 촬영은 "
+                    + "OO스튜디오와 제휴', 'OO드레스와 협력' 처럼 언급되는 다른 카테고리의 하청·제휴 "
+                    + "업체명(이런 업체명은 category로 판단한 서비스 자체를 제공하는 업체가 아니므로, "
+                    + "카테고리와 업체명이 서로 안 맞는 이상한 결과가 됩니다 - 이런 하청·제휴 언급은 "
+                    + "대신 hiddenNotes에 정보로 남기세요).\n"
+                    + "5. 표 하나에 A안/B안, 스탠다드/프리미엄, 340 PKG/360 PKG처럼 여러 옵션(플랜)이 "
+                    + "나란히 배치되어 있으면, 이 스키마는 견적서 하나당 옵션 하나만 담을 수 있으니 "
+                    + "반드시 가장 먼저 나오는(가장 왼쪽) 옵션 하나만 기준으로 items와 totalPrice를 "
+                    + "채우세요. 서로 다른 옵션의 단가·금액을 섞어서 읽으면 절대 안 됩니다(예: 항목명은 "
+                    + "A안인데 금액은 B안 것을 넣는 식의 혼동 금지) - 한 항목의 모든 숫자는 반드시 같은 "
+                    + "옵션 열에서만 가져오세요. 그리고 다른 옵션이 있었다는 사실을 hiddenNotes에 "
+                    + "'이 외에 B안 등 다른 옵션도 있음 - 여기서는 첫 번째 옵션 기준으로만 추출됨'처럼 "
+                    + "반드시 안내하세요.\n\n"
                     + "[숫자를 모를 때]\n"
                     + "totalPrice, perGuestPrice, items 안의 price 모두에 적용됩니다: 텍스트에서 그 값을 "
                     + "명확히 찾지 못했거나 확신이 없으면 절대로 0을 쓰지 말고 반드시 JSON null을 "
@@ -111,7 +137,10 @@ public class QuoteServiceImpl implements QuoteService {
 
     // OCR로 뽑은 원문처럼 보이는 텍스트 예시 - "단가 아니라 금액 넣기", "큰 숫자 안 잘라먹기",
     // "모르면 0 아니라 null" 세 가지를 정답 예시로 각인시키고, 두 번째 예시(자동차 견적서)로
-    // "웨딩 업체 견적서가 아니면 거절" 패턴도 실제 정답 예시로 보여준다.
+    // "웨딩 업체 견적서가 아니면 거절" 패턴, 세 번째 예시(비고란의 제휴 스튜디오)로 "카테고리와
+    // 안 맞는 다른 업체 이름은 vendorNameGuess에 넣지 않고 null로 둔다" 패턴, 네 번째 예시
+    // (A안/B안 나란히 있는 표)로 "여러 옵션 중 첫 번째만 기준으로, 섞어 읽지 않는다" 패턴을
+    // 각인시킨다.
     private static final List<OpenAiMessageDTO> EXTRACT_FEW_SHOT_TURNS = List.of(
             OpenAiMessageDTO.of("user",
                     "(예시 - 실제 OCR 결과 아님) 다음은 OCR로 추출한 견적서 원문입니다. 줄바꿈이 뒤섞여 "
@@ -140,7 +169,35 @@ public class QuoteServiceImpl implements QuoteService {
             OpenAiMessageDTO.of("assistant",
                     "{\"rejectReason\":\"이 사진은 웨딩 업체 견적서가 아니라 자동차 견적서로 보입니다.\","
                             + "\"category\":null,\"vendorNameGuess\":null,\"totalPrice\":null,"
-                            + "\"perGuestPrice\":null,\"items\":[],\"hiddenNotes\":[]}")
+                            + "\"perGuestPrice\":null,\"items\":[],\"hiddenNotes\":[]}"),
+            OpenAiMessageDTO.of("user",
+                    "(예시 - 실제 OCR 결과 아님) 다음은 OCR로 추출한 원문입니다. 이 내용으로 정확히 "
+                            + "추출 연습을 해보세요.\n"
+                            + "예식 견적서\n"
+                            + "대관료 300명 8,000,000원\n"
+                            + "식대 300명 55,000원 16,500,000원\n"
+                            + "비고: 스튜디오 촬영은 제휴업체 청아름스튜디오와 진행됩니다\n"
+                            + "합계 24,500,000원"),
+            OpenAiMessageDTO.of("assistant",
+                    "{\"rejectReason\":null,\"category\":\"HALL\",\"vendorNameGuess\":null,\"totalPrice\":24500000,"
+                            + "\"perGuestPrice\":null,\"items\":["
+                            + "{\"name\":\"대관료\",\"price\":8000000,\"includedInTotal\":true},"
+                            + "{\"name\":\"식대\",\"price\":16500000,\"includedInTotal\":true}],"
+                            + "\"hiddenNotes\":[\"스튜디오 촬영은 제휴업체 청아름스튜디오와 진행\"]}"),
+            OpenAiMessageDTO.of("user",
+                    "(예시 - 실제 OCR 결과 아님) 다음은 OCR로 추출한 원문입니다. 이 내용으로 정확히 "
+                            + "추출 연습을 해보세요.\n"
+                            + "구분 항목 수량 A안단가 A안금액 B안단가 B안금액 비고\n"
+                            + "식대 뷔페(양식) 300명 70,000원 21,000,000원 140,000원 42,000,000원 -\n"
+                            + "음료 웰컴티 300명 3,000원 900,000원 선택사항 - -\n"
+                            + "소계 21,900,000원 42,000,000원"),
+            OpenAiMessageDTO.of("assistant",
+                    "{\"rejectReason\":null,\"category\":\"HALL\",\"vendorNameGuess\":null,\"totalPrice\":21900000,"
+                            + "\"perGuestPrice\":null,\"items\":["
+                            + "{\"name\":\"뷔페(양식)\",\"price\":21000000,\"includedInTotal\":true},"
+                            + "{\"name\":\"웰컴티\",\"price\":900000,\"includedInTotal\":true}],"
+                            + "\"hiddenNotes\":[\"이 외에 B안(뷔페 42,000,000원 등) 다른 옵션도 있음 - "
+                            + "여기서는 첫 번째 옵션(A안) 기준으로만 추출됨\"]}")
     );
 
     private static final String COMPARE_SYSTEM_PROMPT =
@@ -320,16 +377,16 @@ public class QuoteServiceImpl implements QuoteService {
     }
 
     @Override
-    public QuoteCompareResultDTO getComparison(String memberEmail, Long comparisonId) {
+    public void removeComparison(String memberEmail, Long comparisonId) {
 
         QuoteComparison comparison = quoteComparisonRepository.findById(comparisonId)
                 .orElseThrow(() -> new NoSuchElementException("비교 기록을 찾을 수 없습니다."));
 
         if (!Objects.equals(comparison.getMemberEmail(), memberEmail)) {
-            throw new IllegalArgumentException("본인의 비교 기록만 볼 수 있습니다.");
+            throw new IllegalArgumentException("본인의 비교 기록만 삭제할 수 있습니다.");
         }
 
-        return toComparisonDto(comparison);
+        quoteComparisonRepository.delete(comparison);
     }
 
     @Override

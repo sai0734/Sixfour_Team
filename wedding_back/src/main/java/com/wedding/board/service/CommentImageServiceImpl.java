@@ -1,7 +1,6 @@
 package com.wedding.board.service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -71,18 +70,6 @@ public class CommentImageServiceImpl implements CommentImageService {
                         .sortOrder(img.getSortOrder())
                         .build())
                 .collect(Collectors.toList());
-    }
-
-    @Override
-    public void remove(Long imageId) {
-
-        Optional<CommentImage> result = commentImageRepository.findById(imageId);
-
-        CommentImage image = result.orElseThrow();
-
-        fileUtil.deleteFiles(List.of(image.getImageUrl()));
-
-        commentImageRepository.deleteById(imageId);
     }
 
 }

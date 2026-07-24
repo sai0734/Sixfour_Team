@@ -8,8 +8,6 @@ public interface ChecklistService {
 
     Long register(ChecklistDTO checklistDTO);
 
-    ChecklistDTO get(Long checklistId);
-
     void modify(ChecklistDTO checklistDTO, String requesterEmail);
 
     void remove(Long checklistId, String requesterEmail);

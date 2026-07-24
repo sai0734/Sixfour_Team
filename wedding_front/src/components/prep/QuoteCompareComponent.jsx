@@ -4,10 +4,12 @@ import {
   listMyQuotes,
   compareQuotes,
   listComparisons,
+  deleteComparison,
   deleteQuote,
   fetchQuoteImageUrl,
 } from "../../api/quoteApi";
 import { categoryLabel } from "../../util/companyOptionBuilder";
+import { showConfirm } from "../../util/globalConfirm";
 
 const extractErrorMessage = (err) => {
   const data = err?.response?.data;
@@ -138,7 +140,7 @@ const QuoteCompareComponent = () => {
     setMessage("견적서 사진을 분석하는 중... (10~20초 정도 걸려요)");
     try {
       await uploadQuote(file);
-      setMessage("업로드 완료! 아래 목록에 추가됐어요.");
+      setMessage("업로드 완료! 아래에서 견적서 2개를 눌러 비교해보세요.");
       loadQuotes();
     } catch (err) {
       setMessage(extractErrorMessage(err));
@@ -158,7 +160,7 @@ const QuoteCompareComponent = () => {
       }
       const first = quotes.find((q) => q.quoteId === prev[0]);
       if (first && first.category !== quote.category) {
-        setMessage("같은 종류의 견적서끼리만 비교할 수 있어요.");
+        setMessage("같은 업체의 견적서끼리만 비교할 수 있어요.");
         return prev;
       }
       if (prev.length >= 2) {
@@ -183,8 +185,10 @@ const QuoteCompareComponent = () => {
     }
   };
 
+  // 삭제 확인창은 브라우저 기본 confirm() 대신 다른 페이지(AI웨딩플랜 등)와 동일한
+  // 전역 확인 모달(showConfirm)을 쓴다 - Promise<boolean>이라 반드시 await로 받아야 함.
   const handleDelete = async (quoteId) => {
-    if (!window.confirm("이 견적서를 삭제할까요?")) return;
+    if (!(await showConfirm("이 견적서를 삭제할까요?"))) return;
     try {
       await deleteQuote(quoteId);
       setSelectedIds((prev) => prev.filter((id) => id !== quoteId));
@@ -199,6 +203,21 @@ const QuoteCompareComponent = () => {
     setActiveComparisonId((prev) =>
       prev === comparisonId ? null : comparisonId,
     );
+  };
+
+  // 배지의 작은 x 버튼 - 비교 기록 자체를 삭제. 배지 클릭(토글)과 겹치지 않게 stopPropagation.
+  const handleDeleteComparison = async (e, comparisonId) => {
+    e.stopPropagation();
+    if (!(await showConfirm("이 비교 기록을 삭제할까요?"))) return;
+    try {
+      await deleteComparison(comparisonId);
+      setComparisons((prev) =>
+        prev.filter((c) => c.comparisonId !== comparisonId),
+      );
+      setActiveComparisonId((prev) => (prev === comparisonId ? null : prev));
+    } catch (err) {
+      setMessage(extractErrorMessage(err));
+    }
   };
 
   // 견적서 한쪽 카드 - 항목이 많아도 페이지 전체가 늘어지지 않게 목록 안에서만 스크롤되게 함
@@ -242,7 +261,7 @@ const QuoteCompareComponent = () => {
   return (
     <div className="space-y-4">
       {/* 비교 기록 배지 - 맨 위, 짧게. 업체명 두 개로 라벨을 보여줘서 어느 견적서끼리 비교한
-          건지 한눈에 알아볼 수 있게 함. 이미 선택된 배지를 다시 누르면 해제됨 */}
+          건지 한눈에 알아볼 수 있게 함. 배지를 누르면 토글, 오른쪽 작은 x로 기록 자체를 삭제 */}
       {comparisons.length > 0 && (
         <div className="flex items-center gap-2 overflow-x-auto pb-1">
           <span className="shrink-0 text-xs font-medium text-ink-muted">
@@ -255,19 +274,28 @@ const QuoteCompareComponent = () => {
               ? "다시 누르면 결과가 접혀요"
               : `${label} · ${formatDate(c.regDate)}`;
             return (
-              <button
-                key={c.comparisonId}
-                type="button"
-                onClick={() => handleBadgeClick(c.comparisonId)}
-                title={tooltip}
-                className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium transition ${
-                  active
-                    ? "border-brand-dark bg-blush-100 text-brand-deep"
-                    : "border-line text-ink-soft hover:bg-blush-50"
-                }`}
-              >
-                {label}
-              </button>
+              <div key={c.comparisonId} className="relative shrink-0">
+                <button
+                  type="button"
+                  onClick={() => handleBadgeClick(c.comparisonId)}
+                  title={tooltip}
+                  className={`whitespace-nowrap rounded-full border py-1.5 pl-3 pr-6 text-xs font-medium transition ${
+                    active
+                      ? "border-brand-dark bg-blush-100 text-brand-deep"
+                      : "border-line text-ink-soft hover:bg-blush-50"
+                  }`}
+                >
+                  {label}
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => handleDeleteComparison(e, c.comparisonId)}
+                  title="비교 기록 삭제"
+                  className="absolute right-1.5 top-1/2 flex h-4 w-4 -translate-y-1/2 items-center justify-center rounded-full text-[11px] leading-none text-ink-faint hover:bg-red-100 hover:text-red-600"
+                >
+                  ×
+                </button>
+              </div>
             );
           })}
         </div>
@@ -316,22 +344,8 @@ const QuoteCompareComponent = () => {
 
           {/* 견적서 2개 - 각 카드 안 항목 목록만 내부 스크롤(max-h-40), 카드 자체는 짧게 유지 */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              {renderQuoteColumn(activeComparison.quoteA)}
-              {activeComparison.onlyInA.length > 0 && (
-                <p className="mt-1.5 text-[11px] text-ink-muted">
-                  이 견적서에만 있음: {activeComparison.onlyInA.join(", ")}
-                </p>
-              )}
-            </div>
-            <div>
-              {renderQuoteColumn(activeComparison.quoteB)}
-              {activeComparison.onlyInB.length > 0 && (
-                <p className="mt-1.5 text-[11px] text-ink-muted">
-                  이 견적서에만 있음: {activeComparison.onlyInB.join(", ")}
-                </p>
-              )}
-            </div>
+            {renderQuoteColumn(activeComparison.quoteA)}
+            {renderQuoteColumn(activeComparison.quoteB)}
           </div>
         </section>
       ) : (
@@ -342,7 +356,7 @@ const QuoteCompareComponent = () => {
               : "아직 비교 결과가 없어요."}
           </p>
           <p className="mt-1 text-xs text-ink-faint">
-            아래에서 같은 종류의 견적서 2개를 골라 비교해보세요 ↓
+            아래에서 같은 업체의 견적서 2개를 골라 비교해보세요 ↓
           </p>
         </section>
       )}
@@ -352,9 +366,15 @@ const QuoteCompareComponent = () => {
         <p className="mb-1 text-xs font-semibold text-ink-muted">
           견적서 업로드
         </p>
+        <p className="mb-1 text-[11px] text-ink-faint">
+          웨딩홀/스튜디오/드레스/메이크업 견적서 사진(JPG/PNG)을 올리면 AI가
+          항목을 정리해요. 업로드 후 30일이 지나면 자동으로 삭제돼요.
+        </p>
+        {/* 낙서/메모가 겹친 사진이나 표가 복잡한 사진은 OCR 정확도가 떨어지는 걸
+            실제 테스트로 확인해서, 업로드 전에 미리 기대치를 낮춰두는 안내 문구 추가 */}
         <p className="mb-3 text-[11px] text-ink-faint">
-          홀/스튜디오/드레스/메이크업 견적서 사진(JPG/PNG)을 올리면 AI가 항목을
-          정리해요. 업로드 후 30일이 지나면 자동으로 삭제돼요.
+          손글씨로 동그라미·메모가 적혀 있거나 사진이 흐릿하면 정확도가 떨어질
+          수 있어요. 가능하면 깨끗하고 선명한 사진을 올려주세요.
         </p>
         <label className="inline-flex cursor-pointer rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-dark">
           {uploading ? "분석 중..." : "사진 선택"}
@@ -387,6 +407,16 @@ const QuoteCompareComponent = () => {
           )}
         </div>
 
+        {/* 사용자가 사진만 올려두고 다음에 뭘 해야할지 몰라 헤매지 않도록, 견적서가 2개
+            이상인데 아직 2개를 고르지 않았으면 바로 눈에 띄는 안내 문구를 보여준다 */}
+        {quotes.length >= 2 && selectedIds.length < 2 && (
+          <p className="mb-3 rounded-lg bg-blush-50 px-3 py-2 text-xs font-medium text-brand-deep">
+            {selectedIds.length === 0
+              ? "💡 아래에서 같은 업체의 견적서 2개를 눌러서 선택하면 비교할 수 있어요"
+              : "1개만 더 선택하면 비교할 수 있어요"}
+          </p>
+        )}
+
         {loading ? (
           <p className="text-sm text-ink-faint">불러오는 중...</p>
         ) : quotes.length === 0 ? (
@@ -396,21 +426,27 @@ const QuoteCompareComponent = () => {
         ) : (
           <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4 md:grid-cols-6">
             {quotes.map((quote) => {
-              const selected = selectedIds.includes(quote.quoteId);
+              const selectedOrder = selectedIds.indexOf(quote.quoteId);
+              const selected = selectedOrder !== -1;
               return (
                 <div
                   key={quote.quoteId}
-                  className={`overflow-hidden rounded-lg border p-1.5 ${
+                  className={`relative overflow-hidden rounded-lg border-2 p-1.5 transition ${
                     selected
-                      ? "border-brand ring-2 ring-brand/30"
+                      ? "border-brand bg-blush-50 shadow-[0_0_0_3px_rgba(0,0,0,0.04)] ring-2 ring-brand ring-offset-1"
                       : "border-line"
                   }`}
                 >
                   <button
                     type="button"
                     onClick={() => toggleSelect(quote)}
-                    className="block w-full text-left"
+                    className="relative block w-full text-left"
                   >
+                    {selected && (
+                      <span className="absolute right-1 top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-brand text-[11px] font-bold text-white shadow">
+                        {selectedOrder + 1}
+                      </span>
+                    )}
                     <QuoteThumbnail quoteId={quote.quoteId} />
                     <p className="mt-1 truncate text-[11px] font-medium text-ink">
                       {categoryLabel[quote.category]}
@@ -418,6 +454,11 @@ const QuoteCompareComponent = () => {
                     <p className="truncate text-[10px] text-ink-faint">
                       {quote.vendorNameGuess || "업체명 미상"}
                     </p>
+                    {selected && (
+                      <p className="truncate text-[10px] font-semibold text-brand-dark">
+                        선택됨
+                      </p>
+                    )}
                   </button>
                   <button
                     type="button"

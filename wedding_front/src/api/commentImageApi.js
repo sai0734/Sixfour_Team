@@ -19,9 +19,3 @@ export const listByComment = async (commentId) => {
 
   return res.data;
 };
-
-export const deleteOne = async (imageId) => {
-  const res = await jwtAxios.delete(`${prefix}/${imageId}`);
-
-  return res.data;
-};

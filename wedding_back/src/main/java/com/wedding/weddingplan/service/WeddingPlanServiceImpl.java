@@ -41,16 +41,6 @@ public class WeddingPlanServiceImpl implements WeddingPlanService {
     }
 
     @Override
-    public WeddingPlanDTO get(Long weddingPlanId) {
-
-        Optional<WeddingPlan> result = weddingPlanRepository.findById(weddingPlanId);
-
-        WeddingPlan weddingPlan = result.orElseThrow();
-
-        return modelMapper.map(weddingPlan, WeddingPlanDTO.class);
-    }
-
-    @Override
     public WeddingPlanDTO getByMember(String memberEmail) {
 
         Optional<WeddingPlan> result = weddingPlanRepository.findByMemberEmail(memberEmail);

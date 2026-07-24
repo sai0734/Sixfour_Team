@@ -1,8 +1,6 @@
 // 페이지 번호를 현재 페이지 기준으로 5개씩 보여주는 페이지네이션.
 // 1페이지 -> 1 2 3 4 5, 7페이지 -> 5 6 7 8 9 (항상 현재 페이지가 가운데 오도록,
 // 앞/뒤 끝에서는 5개를 채우기 위해 창을 안쪽으로 당김)
-const WINDOW_SIZE = 5;
-
 const getPageWindow = (currentPage, totalPages) => {
   let start = currentPage - 2;
   let end = currentPage + 2;

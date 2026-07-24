@@ -12,6 +12,4 @@ public interface BoardImageService {
 
     List<BoardImageDTO> listByBoard(Long boardId);
 
-    void remove(Long imageId);
-
 }

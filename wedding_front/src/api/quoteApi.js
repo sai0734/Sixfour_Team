@@ -37,8 +37,8 @@ export const listComparisons = async () => {
   return res.data;
 };
 
-export const getComparison = async (comparisonId) => {
-  const res = await jwtAxios.get(`${prefix}/comparisons/${comparisonId}`);
+export const deleteComparison = async (comparisonId) => {
+  const res = await jwtAxios.delete(`${prefix}/comparisons/${comparisonId}`);
 
   return res.data;
 };
