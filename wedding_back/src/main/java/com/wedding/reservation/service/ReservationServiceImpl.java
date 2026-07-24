@@ -6,6 +6,7 @@ import java.util.ArrayList;
 // 승진 코드 추가 끝
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -63,6 +64,18 @@ public class ReservationServiceImpl implements ReservationService {
   // 재원 추가 - 결제 최소 기한: 예식일(weddingDate) 기준 며칠 전까지만 결제 가능한지
   // (업계 관행상 잔금 결제가 본식 1~2주 전에 몰리는 편이라 2주로 설정)
   private static final long PAYMENT_DEADLINE_DAYS = 14;
+
+  // 재원 추가 - ChecklistServiceImpl.seedDefaults()가 회원 가입 직후 미리 채워두는 2단계
+  // 기본 항목의 제목과 정확히 일치해야 하는 값들. 실제 업체 예약이 확정되면 해당 카테고리의
+  // 이 "막연한 기본 항목"을 지우고 실제 업체명이 들어간 구체적인 항목으로 대체한다
+  // (createContractChecklistItem 참고) - 안 그러면 "웨딩홀 계약"과 "시그니엘서울 결제"가
+  // 중복으로 남는다.
+  private static final Map<CompanyCategory, String> DEFAULT_CONTRACT_TITLE = Map.of(
+          CompanyCategory.HALL, "웨딩홀 계약",
+          CompanyCategory.STUDIO, "스튜디오 촬영 예약",
+          CompanyCategory.DRESS, "드레스 업체 계약",
+          CompanyCategory.MAKEUP, "메이크업 업체 예약"
+  );
 
   // 예식일 - 14일 = 결제 가능한 마지막 날짜 (예식일이 없으면 마감일 없음)
   private LocalDate calculatePaymentDeadline(Reservation reservation) {
@@ -459,7 +472,7 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     if (!checklistRepository.existsByReservationId(reservation.getReservationId())) {
-      createContractChecklistItem(reservation, company.getName());
+      createContractChecklistItem(reservation, company);
     }
   }
 
@@ -550,10 +563,25 @@ public class ReservationServiceImpl implements ReservationService {
             .build());
   }
 
-  private void createContractChecklistItem(Reservation reservation, String companyName) {
+  // 재원 추가 - 예약이 확정(결제대기)되면 그 카테고리의 "기본 체크리스트 항목"(회원가입 직후
+  // seedDefaults()가 미리 채워둔, 아직 사용자가 손 안 댄 막연한 항목 - 예: "웨딩홀 계약")이
+  // 남아있으면 먼저 지우고, 실제 예약한 업체명이 들어간 구체적인 항목으로 대체한다. 스튜디오처럼
+  // 이 예약 시스템을 안 거치고 사용자가 따로 처리하는 카테고리의 기본 항목은 그대로 남는다.
+  private void createContractChecklistItem(Reservation reservation, Company company) {
 
     List<Checklist> checklists =
             checklistRepository.findByMemberEmailOrderByStageAscSortOrderAsc(reservation.getMemberEmail());
+
+    String defaultTitle = DEFAULT_CONTRACT_TITLE.get(company.getCategory());
+    if (defaultTitle != null) {
+      checklists.stream()
+              .filter(c -> c.getStage() == 2)
+              .filter(c -> c.getReservationId() == null)
+              .filter(c -> defaultTitle.equals(c.getTitle()))
+              .findFirst()
+              .ifPresent(checklistRepository::delete);
+    }
+
     int nextOrder = checklists.stream()
             .filter(c -> c.getStage() == 2)
             .mapToInt(Checklist::getSortOrder)
@@ -562,7 +590,7 @@ public class ReservationServiceImpl implements ReservationService {
 
     checklistRepository.save(Checklist.builder()
             .memberEmail(reservation.getMemberEmail())
-            .title(companyName + " 결제")
+            .title(company.getName() + " 결제")
             .isDone(false)
             .dueDate(calculatePaymentDeadline(reservation))
             .stage(2)

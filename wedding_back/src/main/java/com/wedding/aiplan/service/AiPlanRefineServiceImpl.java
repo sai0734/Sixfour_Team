@@ -168,8 +168,15 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
                 // 막았었는데, 그 안내 문구가 상단 배너로만 떠서 카드 쪽으로 스크롤해 내려온
                 // 상태에선 안 보여 "눌러도 반응 없음"처럼 느껴졌다. X는 "이미 다른 데서
                 // 예약해서 이 조합에서 뺀다"는 뜻이라 확정 여부와 상관없이 항상 되는 게 맞다.
+                //
+                // 재원 수정 - selectedCmno/pickReason은 일부러 안 지운다. EXCLUDED 상태 자체가
+                // 화면(resolve())과 프롬프트(appendSlot())에서 이미 "제외됨"으로 취급해 감추는
+                // 역할을 하므로, 굳이 지웠다가 "다시 찾기"에서 새로 검색할 필요가 없다 - 지워두지
+                // 않으면 다시 찾기를 눌렀을 때 원래 있던 업체와 이유가 그대로 복원된다
+                // (reconsiderOne 참고. 예전엔 여기서 지워버려서 다시 찾기가 항상 새 업체+AI로
+                // 새로 지어낸 이유를 보여줬는데, "그냥 제외를 취소하고 싶은 건데 왜 다른 업체가
+                // 나오냐"는 피드백으로 순수 복원 방식으로 바꿨다).
                 slot.changeStatus(SlotStatus.EXCLUDED);
-                slot.changeSelectedCmno(null);
             }
             default -> slot.changeStatus(SlotStatus.PENDING);
         }
@@ -198,10 +205,20 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
                 .build();
     }
 
-    // "다시 찾기" 버튼 - 확정된 카테고리들에 쓴 예산을 빼고 남은 예산을, 아직 확정 안 된
-    // 카테고리들끼리 원래 비율(HALL/DRESS/STUDIO/MAKEUP_RATIO)대로 나눠서 이 카테고리 몫만큼만
-    // 배정한다 (reconsiderAndReallocate와 같은 사상이지만, 자유발화 없이 버튼 하나로 즉시 실행).
+    // "다시 찾기" 버튼 - 프론트에서 이 버튼은 EXCLUDED(제외됨) 상태 자리에서만 뜨고, X는 더 이상
+    // selectedCmno/pickReason을 지우지 않으므로(applySlotAction의 EXCLUDE 참고), 대부분은 그냥
+    // 상태만 PENDING으로 되돌리는 순수 "복원"이다 - 새로 검색하거나 AI를 새로 부르지 않는다.
+    // "제외를 취소했을 뿐인데 왜 다른 업체/이유가 나오냐"는 피드백을 반영해 예전의 재검색 방식을
+    // 걷어냈다. 다만 이 변경 이전에 이미 제외되어 selectedCmno가 지워진 옛날 세션까지 대비해,
+    // 복원할 정보가 없을 때(selectedCmno==null)만 예외적으로 예전처럼 새로 검색한다.
     private void reconsiderOne(AiPlanSession session, CompanyCategory category) {
+
+        SlotState target = slotFor(session, category);
+
+        if (target.getSelectedCmno() != null) {
+            target.changeStatus(SlotStatus.PENDING);
+            return;
+        }
 
         BigDecimal confirmedSpend = confirmedSpend(session);
         Long budget = session.getBudget();
@@ -216,18 +233,21 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
                 ? Math.round(remaining * (ratioFor(category) / ratioSum))
                 : null;
 
-        // 지금 이 슬롯에 들어있는 업체를 후보에서 빼야 "다시 찾기"가 실제로 다른 곳을 돌려준다.
-        Long currentCmno = slotFor(session, category).getSelectedCmno();
         AiPlanCandidateBuilder.PickResult picked = candidateBuilder.pickOne(
-                category, session.getRegion(), categoryBudget, preferencesForReconsider(category, session), currentCmno);
+                category, session.getRegion(), categoryBudget, preferencesForReconsider(category, session), null);
 
-        SlotState target = slotFor(session, category);
         target.changeStatus(SlotStatus.PENDING);
         target.changeSelectedCmno(picked != null && picked.company() != null ? picked.company().getCmno() : null);
         target.changeNote(null);
-        target.changePickReason(picked != null && picked.company() != null
-                ? candidateBuilder.pickReason(category, picked.company(), categoryBudget, session.getRegion())
-                : null);
+
+        String reason = null;
+        if (picked != null && picked.company() != null) {
+            reason = explainReasonWithAi(category, picked.company(), null, session);
+            if (reason == null) {
+                reason = candidateBuilder.pickReason(category, picked.company(), categoryBudget, session.getRegion());
+            }
+        }
+        target.changePickReason(reason);
     }
 
     private double ratioFor(CompanyCategory category) {
@@ -473,9 +493,9 @@ public class AiPlanRefineServiceImpl implements AiPlanRefineService {
             return; // UNCHANGED 또는 RECONSIDER(재검토는 아래 reconsiderAndReallocate에서 따로 처리)
         }
         slot.changeStatus(action.status());
-        if (action.status() == SlotStatus.EXCLUDED) {
-            slot.changeSelectedCmno(null);
-        }
+        // 재원 수정 - 사이드패널 EXCLUDE(applySlotAction)와 동일하게, 자유발화로 "빼줘"라고
+        // 해도 selectedCmno/pickReason은 지우지 않는다 - "다시 찾기"로 원래 업체를 그대로
+        // 복원할 수 있어야 하기 때문 (reconsiderOne 참고).
     }
 
     // ── 재검토 카테고리 예산 재분배 + 재검색 ────────────────────────────
