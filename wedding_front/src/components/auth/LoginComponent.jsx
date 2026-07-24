@@ -13,6 +13,48 @@ const errMsgClass = "text-rose-600 text-xs mt-1";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// APILoginFailHandler.java의 suspendUntil은 Member.suspendUntil(LocalDateTime)의 toString()이라
+// "2026-08-15T10:30:00" 형태로 온다. 날짜만 뽑고, 오늘 기준 남은 일수도 같이 계산해서 보여준다.
+const formatSuspendUntil = (suspendUntil) => {
+  if (!suspendUntil) return null;
+
+  const dateLabel = suspendUntil.slice(0, 10);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const untilDay = new Date(dateLabel);
+  const daysLeft = Math.ceil((untilDay - today) / 86400000);
+
+  return daysLeft > 0
+    ? `${dateLabel}까지 (${daysLeft}일 남음)`
+    : `${dateLabel}까지`;
+};
+
+// APILoginFailHandler.java가 내려주는 error 코드/failCount/maxFailCount를 실제로 반영한 안내 문구.
+// (예전엔 data.error 존재 여부만 보고 항상 같은 문구를 띄워서 5회 잠금·정지·휴면 안내가 전혀 안 보였음)
+const buildLoginErrorMessage = (data) => {
+  switch (data.error) {
+    case "ERROR_ACCOUNT_LOCKED":
+      return "로그인 5회 실패로 계정이 잠겼습니다. 비밀번호 찾기로 재설정해주세요.";
+    case "ERROR_ACCOUNT_SUSPENDED": {
+      const untilLabel = formatSuspendUntil(data.suspendUntil);
+      const parts = [
+        `이용이 정지된 계정입니다. ${untilLabel ?? "(정지 해제일 미지정 · 영구 정지)"}`,
+      ];
+      if (data.suspendReason) parts.push(`사유: ${data.suspendReason}`);
+      return parts.join("\n");
+    }
+    case "ERROR_ACCOUNT_DORMANT":
+      return "휴면 처리된 계정입니다. 휴면 해제 절차를 진행해주세요.";
+    case "ERROR_ACCOUNT_WITHDRAWN":
+      return "탈퇴한 계정입니다.";
+    case "ERROR_EMAIL_NOT_VERIFIED":
+      return "이메일 인증이 완료되지 않은 계정입니다.";
+    default:
+      // 실패 횟수는 비밀번호 입력칸 아래 진행바(failInfo)로 시각 표시하므로 여기선 중복하지 않음
+      return "이메일 또는 비밀번호가 일치하지 않습니다.";
+  }
+};
+
 const LoginComponent = () => {
   const [loginParam, setLoginParam] = useState({
     email: "",
@@ -26,6 +68,7 @@ const LoginComponent = () => {
   });
 
   const [alertMessage, setAlertMessage] = useState("");
+  const [failInfo, setFailInfo] = useState(null);
 
   const location = useLocation();
   const { doLogin, moveToPath, getLoginRedirectPath, clearLoginRedirectPath } =
@@ -64,9 +107,16 @@ const LoginComponent = () => {
 
     doLogin(loginParam).then((data) => {
       if (data.error) {
-        setAlertMessage("이메일 또는 비밀번호가 일치하지 않습니다.");
+        setAlertMessage(buildLoginErrorMessage(data));
+        setFailInfo(
+          data.failCount > 0
+            ? { failCount: data.failCount, maxFailCount: data.maxFailCount }
+            : null,
+        );
         return;
       }
+
+      setFailInfo(null);
 
       // 로그인 페이지로 오기 전 보고 있던(혹은 가려던) 경로가 있으면 역할과 무관하게 그곳으로 우선 복귀
       const redirectPath =
@@ -174,6 +224,22 @@ const LoginComponent = () => {
             />
           </div>
           {renderPwMsg()}
+          {failInfo && (
+            <div className="mt-2">
+              <div className="text-rose-600 text-xs font-medium mb-1">
+                ⚠ 비밀번호가 틀렸어요 ({failInfo.failCount}/
+                {failInfo.maxFailCount}회)
+              </div>
+              <div className="w-full h-1.5 bg-rose-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-rose-500 transition-all"
+                  style={{
+                    width: `${(failInfo.failCount / failInfo.maxFailCount) * 100}%`,
+                  }}
+                ></div>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center justify-between mb-6 text-sm">
