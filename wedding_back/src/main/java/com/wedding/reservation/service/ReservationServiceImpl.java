@@ -53,7 +53,8 @@ public class ReservationServiceImpl implements ReservationService {
   private final CompanyService companyService;
   // 승진 코드 추가 끝
 
-  // 재원 추가 - 매니저 확인(결제대기 전환) 시 준비관리(예산관리/체크리스트)에 자동 반영하기 위함
+  // 재원 추가 - 매니저 확인(결제대기 전환)/실제 결제 완료 시 준비관리(예산관리/체크리스트)에
+  // 자동 반영하기 위함
   private final CompanyRepository companyRepository;
   private final BudgetRepository budgetRepository;
   private final ChecklistRepository checklistRepository;
@@ -231,6 +232,9 @@ public class ReservationServiceImpl implements ReservationService {
     reservation.completePayment(requestDTO.getPaymentKey(), java.time.LocalDateTime.now());
     reservationRepository.save(reservation);
 
+    // 재원 추가 - 실제 결제가 끝난 시점에 예산관리 실지출/체크리스트 완료 표시에 반영
+    syncPaymentArtifacts(reservation);
+
     log.info("reservation confirmPayment 완료 - reservationId: " + reservationId);
 
     return toDTO(reservation);
@@ -354,6 +358,10 @@ public class ReservationServiceImpl implements ReservationService {
 
       r.completePayment(requestDTO.getPaymentKey(), now);
       reservationRepository.save(r);
+
+      // 재원 추가 - 묶음결제도 개별결제와 동일하게, 결제 완료된 건 하나하나 예산관리/체크리스트에 반영
+      syncPaymentArtifacts(r);
+
       result.add(modelMapper.map(r, ReservationDTO.class));
     }
 
@@ -455,6 +463,29 @@ public class ReservationServiceImpl implements ReservationService {
     }
   }
 
+  // 재원 추가 - 실제 결제가 완료된 시점에 예산관리 실지출을 쌓고, 그 예약이 만든 체크리스트
+  // 항목을 완료 체크한다. syncPrepArtifacts()는 "결제대기로 넘어온 시점"에 계획예산/체크리스트
+  // 항목을 미리 만들어두는 것이고, 이건 그 뒤 실제 결제(confirmPayment/confirmBulkPayment)가
+  // 끝난 시점에 실지출·완료 여부를 반영하는 것 - 서로 다른 이벤트라 메서드를 분리했다.
+  private void syncPaymentArtifacts(Reservation reservation) {
+
+    Company company = companyRepository.findById(reservation.getCmno()).orElse(null);
+    if (company == null) {
+      return;
+    }
+
+    String category = budgetCategoryOf(company.getCategory());
+    if (category != null) {
+      addBudgetActualAmount(reservation.getMemberEmail(), category, (long) reservation.getAmount());
+    }
+
+    checklistRepository.findByReservationId(reservation.getReservationId())
+            .ifPresent(checklist -> {
+              checklist.changeIsDone(true);
+              checklistRepository.save(checklist);
+            });
+  }
+
   private String budgetCategoryOf(CompanyCategory category) {
     if (category == null) {
       return null;
@@ -488,6 +519,33 @@ public class ReservationServiceImpl implements ReservationService {
             .category(category)
             .budgetAmount(amount)
             .actualAmount(0L)
+            .sortOrder(nextOrder)
+            .build());
+  }
+
+  // 재원 추가 - 같은 카테고리 항목이 있으면 실지출에 결제 금액을 더하고(계획예산은 안 건드림),
+  // 없으면(계획예산 단계 없이 바로 결제까지 간 예외적인 경우 대비) 새로 만든다.
+  private void addBudgetActualAmount(String memberEmail, String category, Long amount) {
+
+    List<Budget> budgets = budgetRepository.findByMemberEmailOrderBySortOrderAsc(memberEmail);
+    Budget existing = budgets.stream()
+            .filter(b -> category.equals(b.getCategory()))
+            .findFirst()
+            .orElse(null);
+
+    if (existing != null) {
+      long current = existing.getActualAmount() != null ? existing.getActualAmount() : 0L;
+      existing.changeActualAmount(current + amount);
+      budgetRepository.save(existing);
+      return;
+    }
+
+    int nextOrder = budgets.stream().mapToInt(Budget::getSortOrder).max().orElse(0) + 1;
+    budgetRepository.save(Budget.builder()
+            .memberEmail(memberEmail)
+            .category(category)
+            .budgetAmount(0L)
+            .actualAmount(amount)
             .sortOrder(nextOrder)
             .build());
   }
