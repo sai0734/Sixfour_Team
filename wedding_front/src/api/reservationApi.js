@@ -6,12 +6,6 @@ export const API_SERVER_HOST = "http://localhost:8080";
 
 const prefix = `${API_SERVER_HOST}/api/reservations`;
 
-export const getOne = async (reservationId) => {
-  const res = await jwtAxios.get(`${prefix}/${reservationId}`);
-
-  return res.data;
-};
-
 export const getListByMember = async (memberEmail) => {
   const res = await jwtAxios.get(`${prefix}/member/${memberEmail}`);
 

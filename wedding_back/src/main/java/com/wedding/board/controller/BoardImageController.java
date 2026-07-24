@@ -1,11 +1,9 @@
 package com.wedding.board.controller;
 
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -49,16 +47,6 @@ public class BoardImageController {
     public ResponseEntity<Resource> viewFile(@PathVariable(name = "fileName") String fileName) {
 
         return fileUtil.getFile(fileName);
-    }
-
-    @DeleteMapping("/{imageId}")
-    public Map<String, String> remove(@PathVariable(name = "imageId") Long imageId) {
-
-        log.info("Remove image: " + imageId);
-
-        service.remove(imageId);
-
-        return Map.of("RESULT", "SUCCESS");
     }
 
 }

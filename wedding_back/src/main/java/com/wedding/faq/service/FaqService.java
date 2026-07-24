@@ -8,8 +8,6 @@ public interface FaqService {
 
     Long register(FaqDTO faqDTO);
 
-    FaqDTO get(Long faqId);
-
     void modify(FaqDTO faqDTO);
 
     void remove(Long faqId);

@@ -11,15 +11,6 @@ export const getQuickRecommendations = async (params) => {
   return res.data;
 };
 
-// jwtAxios는 토큰이 없어도 그냥 통과시키므로(비로그인) 여기서도 안전하게 쓸 수 있다.
-// 로그인 상태면 토큰을 실어 보내서, 서버가 세션에 회원 이메일을 남길 수 있게 한다
-// (detail/ai 모드만 세션을 만듦 - quick 모드는 세션이 없어서 그대로 axios 유지).
-export const getDetailRecommendations = async (params) => {
-  const res = await jwtAxios.get(`${prefix}/detail`, { params });
-
-  return res.data;
-};
-
 // 외부 AI 호출이라 비용이 드는 작업 - POST로 바디에 담아 보냄
 export const getAiRecommendations = async (payload) => {
   const res = await jwtAxios.post(`${prefix}/ai`, payload);
@@ -65,14 +56,9 @@ export const viewSessionTurn = async (sessionId, turnNo) => {
 
 // "이 결과 마이페이지에 담기" - 웨딩플랜/예산관리/체크리스트에 반영. 로그인 필수라 jwtAxios로 호출.
 export const applySessionToPlan = async (sessionId) => {
-  const res = await jwtAxios.post(`${prefix}/session/${sessionId}/apply-to-plan`);
-
-  return res.data;
-};
-
-// 메인 화면 "AI 매칭 진행중" 위젯 - 로그인 회원의 가장 최근 세션 기준 홀/드레스/스튜디오 진행률
-export const getMyAiPlanProgress = async () => {
-  const res = await jwtAxios.get(`${prefix}/progress`);
+  const res = await jwtAxios.post(
+    `${prefix}/session/${sessionId}/apply-to-plan`,
+  );
 
   return res.data;
 };

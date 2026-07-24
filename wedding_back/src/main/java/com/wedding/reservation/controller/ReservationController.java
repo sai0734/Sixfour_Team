@@ -88,12 +88,6 @@ public class ReservationController {
   }
   // 승진 코드 추가 끝
 
-  @GetMapping("/{reservationId}")
-  public ReservationDTO get(@PathVariable(name = "reservationId") Long reservationId) {
-
-    return service.get(reservationId);
-  }
-
   // D파트 업체탐색 "예약하기" 버튼에서도 이 엔드포인트를 그대로 호출
   @PostMapping("/")
   public Map<String, Long> register(@RequestBody ReservationDTO reservationDTO) {

@@ -445,7 +445,10 @@ public class CompanyServiceImpl implements CompanyService {
   }
 
   private Sort getSort(String sort) {
-    if ("priceAsc".equalsIgnoreCase(sort)) {
+    if ("name".equalsIgnoreCase(sort)) {
+      return Sort.by("name").ascending();
+    }
+    if ("price".equalsIgnoreCase(sort) || "priceAsc".equalsIgnoreCase(sort)) {
       return Sort.by("priceAvg").ascending();
     }
     if ("priceDesc".equalsIgnoreCase(sort)) {

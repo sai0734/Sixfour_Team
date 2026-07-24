@@ -36,16 +36,6 @@ public class FaqServiceImpl implements FaqService {
     }
 
     @Override
-    public FaqDTO get(Long faqId) {
-
-        Optional<Faq> result = faqRepository.findById(faqId);
-
-        Faq faq = result.orElseThrow();
-
-        return modelMapper.map(faq, FaqDTO.class);
-    }
-
-    @Override
     public void modify(FaqDTO faqDTO) {
 
         Optional<Faq> result = faqRepository.findById(faqDTO.getFaqId());

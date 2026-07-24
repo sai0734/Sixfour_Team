@@ -11,12 +11,4 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     // 게시글 하나의 댓글+대댓글 전체를 등록순으로 조회 (삭제된 것도 포함 - 대댓글이 부모 잃지 않게, 프론트에서 deleted 여부로 "삭제된 댓글입니다" 처리)
     List<Comment> findByBoardIdOrderByRegDateAsc(Long boardId);
 
-    // 게시글 삭제 시 댓글 개수 파악 등에 사용 가능
-    long countByBoardIdAndDeletedFalse(Long boardId);
-
-    // 더미데이터 중복 삽입 방지용
-    long countByMemberEmail(String memberEmail);
-
-    void deleteByMemberEmail(String memberEmail);
-
 }

@@ -52,7 +52,7 @@ const PaymentTab = () => {
       </div>
 
       {topTab === "vendor" && (
-        /* 홀/스튜디오/드레스/메이크업 전체 카드 그리드 */
+        /* 웨딩홀/스튜디오/드레스/메이크업 전체 카드 그리드 */
         <VendorReservationPaymentTab />
       )}
       {/* 승진 코드 추가 끝 */}

@@ -83,16 +83,6 @@ public class ChecklistServiceImpl implements ChecklistService {
     }
 
     @Override
-    public ChecklistDTO get(Long checklistId) {
-
-        Optional<Checklist> result = checklistRepository.findById(checklistId);
-
-        Checklist checklist = result.orElseThrow();
-
-        return modelMapper.map(checklist, ChecklistDTO.class);
-    }
-
-    @Override
     public void modify(ChecklistDTO checklistDTO, String requesterEmail) {
 
         Optional<Checklist> result = checklistRepository.findById(checklistDTO.getChecklistId());

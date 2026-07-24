@@ -74,12 +74,14 @@ public class QuoteController {
         return quoteService.listComparisons(principal.getName());
     }
 
-    // 기록 하나(히스토리 배지 클릭) 다시 조회
+    // 비교 기록 하나 삭제 (히스토리 배지의 작은 x 버튼)
     @PreAuthorize("hasAnyRole('USER')")
-    @GetMapping("/comparisons/{comparisonId}")
-    public QuoteCompareResultDTO getComparison(Principal principal, @PathVariable Long comparisonId) {
+    @DeleteMapping("/comparisons/{comparisonId}")
+    public Map<String, String> removeComparison(Principal principal, @PathVariable Long comparisonId) {
 
-        return quoteService.getComparison(principal.getName(), comparisonId);
+        quoteService.removeComparison(principal.getName(), comparisonId);
+
+        return Map.of("RESULT", "SUCCESS");
     }
 
     @PreAuthorize("hasAnyRole('USER')")

@@ -28,12 +28,6 @@ public class ChecklistController {
 
     private final ChecklistService service;
 
-    @GetMapping("/{checklistId}")
-    public ChecklistDTO get(@PathVariable(name = "checklistId") Long checklistId) {
-
-        return service.get(checklistId);
-    }
-
     // 특정 회원의 체크리스트 전체 조회
     // 예: GET /api/checklists/member/test@test.com
     @GetMapping("/member/{memberEmail}")
