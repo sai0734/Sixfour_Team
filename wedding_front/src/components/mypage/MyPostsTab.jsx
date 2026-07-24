@@ -4,6 +4,7 @@ import { getListByMember, getOne, putOne, deleteOne } from "../../api/boardApi";
 import { checkLiked, likeOne, unlikeOne } from "../../api/boardLikeApi";
 import { upload as uploadImages } from "../../api/boardImageApi";
 import { getMyReviews, deleteReview } from "../../api/reviewApi";
+import { getOne as getProduct } from "../../api/productApi";
 import { API_SERVER_HOST } from "../../api/reservationApi";
 import BoardFormModal, { BOARD_TYPE_LABELS } from "../board/BoardFormModal";
 import DetailModal from "../board/DetailModal";
@@ -51,6 +52,10 @@ const MyPostsTab = () => {
   const [productReviews, setProductReviews] = useState([]);
   const [reviewRefresh, setReviewRefresh] = useState(false);
 
+  // pno -> { pname, thumbnail } 캐시. ReviewDTO엔 pno만 있고 상품명/썸네일이 없어서
+  // (ProductPaymentTab.jsx가 주문 항목 썸네일을 따로 조회하는 것과 같은 이유) 별도로 불러온다.
+  const [productInfo, setProductInfo] = useState({});
+
   useEffect(() => {
     if (!loginState.email) return;
 
@@ -61,7 +66,24 @@ const MyPostsTab = () => {
     if (!loginState.email) return;
 
     getMyReviews()
-      .then((data) => setProductReviews(data))
+      .then((data) => {
+        setProductReviews(data);
+
+        const pnoSet = new Set(data.map((r) => r.pno));
+        pnoSet.forEach((pno) => {
+          getProduct(pno)
+            .then((product) => {
+              setProductInfo((prev) => ({
+                ...prev,
+                [pno]: {
+                  pname: product.pname,
+                  thumbnail: product.uploadFileNames?.[0],
+                },
+              }));
+            })
+            .catch(() => {});
+        });
+      })
       .catch((e) => console.error(e));
   }, [loginState.email, reviewRefresh]);
 
@@ -154,7 +176,7 @@ const MyPostsTab = () => {
               className={`pb-3 border-b cursor-pointer ${
                 subTab === tab.key
                   ? "text-brand border-brand"
-                  : "text-ink-soft border-transparent hover:text-ink"
+                  : "text-ink-soft hover:text-ink"
               }`}
             >
               {tab.label}
@@ -218,59 +240,78 @@ const MyPostsTab = () => {
             )}
 
             <div className="flex flex-col gap-3">
-              {productReviews.map((review) => (
-                <div
-                  key={review.rno}
-                  className="bg-white rounded-2xl border border-line p-5"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        {review.rating && (
-                          <span className="text-[11px] bg-brand-light text-brand-accent px-2.5 py-1 rounded-full font-medium">
-                            {"★".repeat(review.rating)}
+              {productReviews.map((review) => {
+                const product = productInfo[review.pno];
+
+                return (
+                  <div
+                    key={review.rno}
+                    className="bg-white rounded-2xl border border-line p-5"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0 flex-1">
+                        {/* 어떤 상품에 대한 리뷰인지 이름+썸네일로 바로 알 수 있게 함
+                            (기존엔 "상품 보러가기 →" 텍스트 링크뿐이라 눌러보기 전엔 몰랐음) */}
+                        <Link
+                          to={`/product/read/${review.pno}`}
+                          className="mb-2 flex items-center gap-3 hover:opacity-80"
+                        >
+                          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-surface">
+                            {product?.thumbnail && (
+                              <img
+                                src={`${API_SERVER_HOST}/api/product/view/s_${product.thumbnail}`}
+                                alt={product?.pname || ""}
+                                className="h-full w-full object-cover"
+                              />
+                            )}
+                          </div>
+                          <span className="text-sm font-medium text-ink hover:text-brand">
+                            {product?.pname || "상품 정보 불러오는 중..."}
                           </span>
+                        </Link>
+
+                        <div className="flex items-center gap-2 mb-1.5">
+                          {review.rating && (
+                            <span className="text-[11px] bg-brand-light text-brand-accent px-2.5 py-1 rounded-full font-medium">
+                              {"★".repeat(review.rating)}
+                            </span>
+                          )}
+                          <span className="text-[11px] text-ink-faint">
+                            {review.regDate?.toString().slice(0, 10)}
+                          </span>
+                        </div>
+
+                        <p className="text-sm text-ink-soft whitespace-pre-wrap">
+                          {review.content}
+                        </p>
+
+                        {review.uploadFileNames?.length > 0 && (
+                          <div className="flex gap-2 mt-3">
+                            {review.uploadFileNames.map((fileName, i) => (
+                              <img
+                                key={i}
+                                src={`${API_SERVER_HOST}/api/product/view/${fileName}`}
+                                alt=""
+                                className="w-16 h-16 rounded-lg object-cover"
+                              />
+                            ))}
+                          </div>
                         )}
-                        <span className="text-[11px] text-ink-faint">
-                          {review.regDate?.toString().slice(0, 10)}
-                        </span>
                       </div>
 
-                      <Link
-                        to={`/product/read/${review.pno}`}
-                        className="text-sm font-medium text-ink hover:text-brand mb-1 block"
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleDeleteReview(review.pno, review.rno)
+                        }
+                        className="h-8 px-4 rounded-full border border-line-soft text-xs text-red-600 hover:bg-cream shrink-0"
                       >
-                        상품 보러가기 →
-                      </Link>
-
-                      <p className="text-sm text-ink-soft whitespace-pre-wrap">
-                        {review.content}
-                      </p>
-
-                      {review.uploadFileNames?.length > 0 && (
-                        <div className="flex gap-2 mt-3">
-                          {review.uploadFileNames.map((fileName, i) => (
-                            <img
-                              key={i}
-                              src={`${API_SERVER_HOST}/api/product/view/${fileName}`}
-                              alt=""
-                              className="w-16 h-16 rounded-lg object-cover"
-                            />
-                          ))}
-                        </div>
-                      )}
+                        삭제
+                      </button>
                     </div>
-
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteReview(review.pno, review.rno)}
-                      className="h-8 px-4 rounded-full border border-line-soft text-xs text-red-600 hover:bg-cream shrink-0"
-                    >
-                      삭제
-                    </button>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
