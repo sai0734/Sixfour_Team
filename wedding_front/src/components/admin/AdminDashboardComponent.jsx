@@ -441,7 +441,7 @@ const AdminDashboardComponent = () => {
 
       {panelLeft !== null && (
         <div
-          className="fixed top-24 z-30 hidden w-72 lg:block"
+          className="fixed top-24 z-30 hidden max-h-[calc(100vh-8rem)] w-72 overflow-y-auto lg:block"
           style={{ left: panelLeft }}
         >
           <AdminAlertPanel />

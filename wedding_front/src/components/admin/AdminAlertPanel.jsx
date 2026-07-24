@@ -178,7 +178,7 @@ const AdminAlertPanel = () => {
 const AlertSection = ({ title, children }) => (
   <div className="mb-4 last:mb-0">
     <p className="mb-2 text-xs font-medium text-ink-faint">{title}</p>
-    <div className="space-y-2">{children}</div>
+    <div className="max-h-72 space-y-2 overflow-y-auto pr-1">{children}</div>
   </div>
 );
 
