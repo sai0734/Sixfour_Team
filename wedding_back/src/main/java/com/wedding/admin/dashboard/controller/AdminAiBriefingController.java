@@ -24,11 +24,13 @@ public class AdminAiBriefingController {
     private final AiBriefingRepository aiBriefingRepository;
     private final CustomFileUtil customFileUtil;
 
+    // 브리핑 목록 조회 (최신순)
     @GetMapping
     public List<AiBriefing> list() {
         return aiBriefingRepository.findAllByOrderByRegDateDesc();
     }
 
+    // 브리핑 PDF 파일 조회
     @GetMapping("/{id}/pdf")
     public ResponseEntity<Resource> getPdf(@PathVariable Long id) {
         AiBriefing briefing = aiBriefingRepository.findById(id)
@@ -37,6 +39,7 @@ public class AdminAiBriefingController {
         return customFileUtil.getFile(briefing.getPdfFileName());
     }
 
+    // 브리핑 삭제 (PDF 파일도 함께 삭제)
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id) {
         AiBriefing briefing = aiBriefingRepository.findById(id)

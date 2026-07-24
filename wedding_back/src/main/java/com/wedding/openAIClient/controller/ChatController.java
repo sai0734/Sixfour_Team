@@ -25,6 +25,7 @@ public class ChatController {
 
     private final ChatService chatService;
 
+    // 회원 질문에 대한 답변 생성 (Function Calling 기반)
     // 회원별 대화 이력을 구분해야 하니 로그인 사용자만 호출 가능하게, 이메일도 넘겨야 함
     @PreAuthorize("hasAnyRole('USER')")
     @PostMapping
@@ -39,7 +40,7 @@ public class ChatController {
         return ResponseEntity.ok(response);
     }
 
-    // 드레스 사진 업로드 → 비슷한 드레스 아이템 추천 (버튼 메뉴 전용, 기존 대화형 흐름과 별개)
+    // 드레스 사진 업로드 → 유사 아이템 추천 (버튼 메뉴 전용, 기존 대화형 흐름과 별개)
     @PreAuthorize("hasAnyRole('USER')")
     @PostMapping(value = "/dress-photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ChatResponseDTO> recommendByPhoto(

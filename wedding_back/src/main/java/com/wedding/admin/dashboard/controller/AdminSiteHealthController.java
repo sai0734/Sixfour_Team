@@ -24,11 +24,13 @@ public class AdminSiteHealthController {
         return siteHealthIssueRepository.findTop5ByResolvedFalseOrderByRegDateDesc();
     }
 
+    // 미해결 건수 조회
     @GetMapping("/count")
     public long count() {
         return siteHealthIssueRepository.countByResolvedFalse();
     }
 
+    // 처리 완료 표시
     @PutMapping("/{id}/resolve")
     public void resolve(@PathVariable Long id) {
         siteHealthIssueRepository.findById(id).ifPresent(issue -> {

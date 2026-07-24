@@ -18,12 +18,14 @@ public class AdminDashboardController {
 
     private final AdminDashboardService adminDashboardService;
 
+    // 대시보드 요약 조회
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/summary")
     public AdminDashboardSummaryDTO getSummary() {
         return adminDashboardService.getSummary();
     }
 
+    // "업체 매출 전체 순위" - categoryParam: "ALL" 또는 HALL/DRESS/STUDIO/MAKEUP, monthParam: "yyyy-MM" (없으면 이번 달)
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/company-ranking")
     public List<CompanyRankingItem> getCompanyRanking(

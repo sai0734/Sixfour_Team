@@ -1,6 +1,5 @@
 package com.wedding.product.controller;
 
-import com.wedding.global.dto.PageRequestDTO;
 import com.wedding.global.dto.PageResponseDTO;
 import com.wedding.global.util.CustomFileUtil;
 import com.wedding.product.dto.ProductDTO;
@@ -27,17 +26,6 @@ public class ProductController {
 
     private final ProductService productService;
     private final CustomFileUtil customFileUtil;
-
-//    // 상품 전체 리스트 조회하기 (대표이미지 1개, 삭제안된 상품)
-//    @GetMapping("/list")
-//    public PageResponseDTO<ProductDTO> list(PageRequestDTO pageRequestDTO) {
-//
-//        log.info("ProductController_list 실행~~~~~~~~");
-//
-//        PageResponseDTO<ProductDTO> pageResponseDTO = productService.getProductList(pageRequestDTO);
-//
-//        return pageResponseDTO;
-//    }
 
     // 상품 1개 조회하기
     @GetMapping("/{pno}")

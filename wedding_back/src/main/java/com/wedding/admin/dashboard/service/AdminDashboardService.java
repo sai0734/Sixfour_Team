@@ -6,6 +6,7 @@ import java.util.List;
 
 public interface AdminDashboardService {
 
+    // 대시보드 요약 조회
     AdminDashboardSummaryDTO getSummary();
 
     // "업체 매출 전체 순위" - categoryParam: "ALL" 또는 HALL/DRESS/STUDIO/MAKEUP, monthParam: "yyyy-MM" (없으면 이번 달)
