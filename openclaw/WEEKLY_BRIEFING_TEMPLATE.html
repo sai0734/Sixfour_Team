@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>웨딩 주간 브리핑</title>
+  <style>
+    @page { size: A4; margin: 14mm; }
+    :root {
+      --ink: #372f2a;
+      --muted: #7f7168;
+      --line: #eadfd5;
+      --bg: #faf5ef;
+      --card: #fffaf7;
+      --accent: #C06080;
+      --accent2: #C5B3D3;
+      --accent3: #7FB069;
+      --accent4: #D9A65B;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+      background: linear-gradient(180deg, #fffdfb 0%, #faf5ef 100%);
+    }
+    .page {
+      width: 100%;
+      padding: 16px 18px 20px;
+    }
+    .hero {
+      background: radial-gradient(circle at top right, rgba(192,96,128,0.11), transparent 34%), linear-gradient(135deg, #fffaf7 0%, #fbf2ec 100%);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px 20px 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 12px 30px rgba(68, 45, 30, 0.06);
+    }
+    .eyebrow {
+      font-size: 11px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+    }
+    .meta {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 14px 0 16px;
+    }
+    .kpi {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 10px;
+      min-height: 78px;
+      box-shadow: 0 8px 18px rgba(68, 45, 30, 0.04);
+    }
+    .kpi .value {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+    .kpi .label {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .kpi.revenue .value { color: var(--accent); }
+    .kpi.member .value { color: var(--accent2); }
+    .kpi.product .value { color: var(--accent3); }
+    .kpi.company .value { color: var(--accent4); }
+    .overview {
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: 0 8px 18px rgba(68, 45, 30, 0.04);
+    }
+    .panel-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+    .orders {
+      display: grid;
+      gap: 10px;
+    }
+    .order-row {
+      display: grid;
+      grid-template-columns: 74px 1fr 46px;
+      gap: 10px;
+      align-items: center;
+      font-size: 12px;
+    }
+    .order-row .bar {
+      height: 11px;
+      border-radius: 999px;
+      background: #f0e8e2;
+      overflow: hidden;
+    }
+    .order-row .bar > span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      color: var(--muted);
+      background: #f8f1eb;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 8px;
+      margin-left: 6px;
+    }
+    .pie-wrap {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 14px;
+      align-items: center;
+    }
+    .pie {
+      width: 112px;
+      height: 112px;
+      border-radius: 50%;
+      margin: 0 auto;
+      box-shadow: inset 0 0 0 12px rgba(255,255,255,0.92);
+    }
+    .legend {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 7px;
+    }
+    .swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      display: inline-block;
+      flex: 0 0 auto;
+    }
+    .section {
+      margin-top: 12px;
+      padding-top: 2px;
+      break-inside: avoid;
+    }
+    h2 {
+      margin: 16px 0 8px;
+      font-size: 15px;
+      color: var(--accent);
+      letter-spacing: -0.01em;
+    }
+    p, li {
+      font-size: 13px;
+      line-height: 1.68;
+      color: var(--ink);
+    }
+    .member-chart {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      align-items: end;
+      margin: 10px 0 6px;
+    }
+    .member-col {
+      text-align: center;
+    }
+    .member-bar-wrap {
+      height: 110px;
+      display: flex;
+      align-items: end;
+      background: linear-gradient(180deg, rgba(197,179,211,0.08), rgba(197,179,211,0.02));
+      border: 1px solid #efe6ea;
+      border-radius: 12px;
+      padding: 8px 0 0;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    .member-bar {
+      width: 58%;
+      margin: 0 auto;
+      border-radius: 10px 10px 0 0;
+      background: linear-gradient(180deg, #cdbdde, #c5b3d3);
+      min-height: 4px;
+    }
+    .member-value {
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: var(--ink);
+    }
+    .member-labels {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      font-size: 10px;
+      color: var(--muted);
+      text-align: center;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 10px 0 8px;
+    }
+    .cards.products {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .top-card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fffdfb;
+      overflow: hidden;
+      box-shadow: 0 8px 18px rgba(68,45,30,0.04);
+    }
+    .top-card .img {
+      height: 88px;
+      background: #efe6df;
+      background-size: cover;
+      background-position: center;
+    }
+    .top-card .body {
+      padding: 10px;
+    }
+    .top-card .tag {
+      font-size: 10px;
+      color: var(--muted);
+    }
+    .top-card .name {
+      font-size: 12px;
+      font-weight: 800;
+      margin-top: 3px;
+      line-height: 1.35;
+      min-height: 34px;
+    }
+    .top-card .value {
+      font-size: 11px;
+      color: var(--accent);
+      margin-top: 4px;
+    }
+    .chart-card {
+      margin-top: 8px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+      background: #fffdfb;
+      box-shadow: 0 8px 18px rgba(68,45,30,0.04);
+    }
+    .chart-card .chart-head {
+      padding: 12px 14px 0;
+    }
+    .chart-card .chart-body {
+      padding: 6px 8px 10px;
+    }
+    .summary-box {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .summary-stat {
+      background: #fbf6f1;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 12px;
+    }
+    .summary-stat b {
+      display: block;
+      font-size: 16px;
+      margin-top: 4px;
+    }
+    ul {
+      margin: 8px 0 0 18px;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="hero">
+      <div class="eyebrow">Wedding Weekly Briefing</div>
+      <h1>웨딩 프로젝트 이번 주 종합 브리핑</h1>
+      <div class="meta">주간 기준: {{WEEK_OF}} · 생성 시각: {{GENERATED_AT}}</div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi revenue"><div class="value">{{REVENUE_VALUE}}</div><div class="label">누적 매출</div></div>
+      <div class="kpi member"><div class="value">{{MEMBER_VALUE}}</div><div class="label">전체 회원</div></div>
+      <div class="kpi product"><div class="value">{{PRODUCT_VALUE}}</div><div class="label">상품 수</div></div>
+      <div class="kpi company"><div class="value">{{COMPANY_VALUE}}</div><div class="label">업체 수</div></div>
+    </div>
+
+    <div class="overview">
+      <div class="panel">
+        <div class="panel-title">주문 상태</div>
+        <div class="orders">
+          <div class="order-row"><div>결제완료</div><div class="bar"><span style="width:{{PAID_PCT}}%; background:#C06080"></span></div><div>{{PAID_COUNT}}</div></div>
+          <div class="order-row"><div>배송준비</div><div class="bar"><span style="width:{{SHIPPING_PCT}}%; background:#C5B3D3"></span></div><div>{{SHIPPING_COUNT}}</div></div>
+          <div class="order-row"><div>배송완료</div><div class="bar"><span style="width:{{DELIVERED_PCT}}%; background:#7FB069"></span></div><div>{{DELIVERED_COUNT}}</div></div>
+        </div>
+        <div class="meta" style="margin-top:10px;">기준은 가장 큰 상태값을 100으로 둔 상대 비율입니다.</div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">업체 카테고리 분포</div>
+        <div class="pie-wrap">
+          <div class="pie" style="background: conic-gradient({{PIE_GRADIENT}});"></div>
+          <div class="legend">
+            <div class="legend-row"><span class="swatch" style="background:#C06080"></span>웨딩홀 {{HALL_COUNT}}개</div>
+            <div class="legend-row"><span class="swatch" style="background:#C5B3D3"></span>드레스 {{DRESS_COUNT}}개</div>
+            <div class="legend-row"><span class="swatch" style="background:#7FB069"></span>스튜디오 {{STUDIO_COUNT}}개</div>
+            <div class="legend-row"><span class="swatch" style="background:#D9A65B"></span>메이크업 {{MAKEUP_COUNT}}개</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2>1. 이번 주 핵심 요약</h2>
+    <p>{{SECTION_SUMMARY}}</p>
+
+    <h2>2. 회원 동향</h2>
+    <div class="member-chart">
+      <div class="member-col">
+        <div class="member-value">{{NM_D1_COUNT}}</div>
+        <div class="member-bar-wrap"><div class="member-bar" style="height:{{NM_D1_PCT}}%"></div></div>
+      </div>
+      <div class="member-col">
+        <div class="member-value">{{NM_D2_COUNT}}</div>
+        <div class="member-bar-wrap"><div class="member-bar" style="height:{{NM_D2_PCT}}%"></div></div>
+      </div>
+      <div class="member-col">
+        <div class="member-value">{{NM_D3_COUNT}}</div>
+        <div class="member-bar-wrap"><div class="member-bar" style="height:{{NM_D3_PCT}}%"></div></div>
+      </div>
+      <div class="member-col">
+        <div class="member-value">{{NM_D4_COUNT}}</div>
+        <div class="member-bar-wrap"><div class="member-bar" style="height:{{NM_D4_PCT}}%"></div></div>
+      </div>
+      <div class="member-col">
+        <div class="member-value">{{NM_D5_COUNT}}</div>
+        <div class="member-bar-wrap"><div class="member-bar" style="height:{{NM_D5_PCT}}%"></div></div>
+      </div>
+      <div class="member-col">
+        <div class="member-value">{{NM_D6_COUNT}}</div>
+        <div class="member-bar-wrap"><div class="member-bar" style="height:{{NM_D6_PCT}}%"></div></div>
+      </div>
+      <div class="member-col">
+        <div class="member-value">{{NM_D7_COUNT}}</div>
+        <div class="member-bar-wrap"><div class="member-bar" style="height:{{NM_D7_PCT}}%"></div></div>
+      </div>
+    </div>
+    <div class="member-labels"><div>{{NM_D1_LABEL}}</div><div>{{NM_D2_LABEL}}</div><div>{{NM_D3_LABEL}}</div><div>{{NM_D4_LABEL}}</div><div>{{NM_D5_LABEL}}</div><div>{{NM_D6_LABEL}}</div><div>{{NM_D7_LABEL}}</div></div>
+    <p>{{SECTION_MEMBER}}</p>
+
+    <h2>3. 업체 현황</h2>
+    <div class="cards">
+      <div class="top-card">
+        <div class="img" style="background-image:url('{{HALL_TOP_IMAGE_URL}}')"></div>
+        <div class="body">
+          <div class="tag">웨딩홀 TOP1</div>
+          <div class="name">{{HALL_TOP_NAME}}</div>
+          <div class="value">{{HALL_TOP_REVENUE}}</div>
+        </div>
+      </div>
+      <div class="top-card">
+        <div class="img" style="background-image:url('{{DRESS_TOP_IMAGE_URL}}')"></div>
+        <div class="body">
+          <div class="tag">드레스 TOP1</div>
+          <div class="name">{{DRESS_TOP_NAME}}</div>
+          <div class="value">{{DRESS_TOP_REVENUE}}</div>
+        </div>
+      </div>
+      <div class="top-card">
+        <div class="img" style="background-image:url('{{STUDIO_TOP_IMAGE_URL}}')"></div>
+        <div class="body">
+          <div class="tag">스튜디오 TOP1</div>
+          <div class="name">{{STUDIO_TOP_NAME}}</div>
+          <div class="value">{{STUDIO_TOP_REVENUE}}</div>
+        </div>
+      </div>
+      <div class="top-card">
+        <div class="img" style="background-image:url('{{MAKEUP_TOP_IMAGE_URL}}')"></div>
+        <div class="body">
+          <div class="tag">메이크업 TOP1</div>
+          <div class="name">{{MAKEUP_TOP_NAME}}</div>
+          <div class="value">{{MAKEUP_TOP_REVENUE}}</div>
+        </div>
+      </div>
+    </div>
+    <p>{{SECTION_COMPANY}}</p>
+
+    <h2>4. 상품 판매 인사이트</h2>
+    <div class="cards products">
+      <div class="top-card">
+        <div class="img" style="background-image:url('{{PRODUCT_TOP1_IMAGE_URL}}')"></div>
+        <div class="body">
+          <div class="tag">판매 TOP1</div>
+          <div class="name">{{PRODUCT_TOP1_NAME}}</div>
+          <div class="value">{{PRODUCT_TOP1_SALES}}건 판매</div>
+        </div>
+      </div>
+      <div class="top-card">
+        <div class="img" style="background-image:url('{{PRODUCT_TOP2_IMAGE_URL}}')"></div>
+        <div class="body">
+          <div class="tag">판매 TOP2</div>
+          <div class="name">{{PRODUCT_TOP2_NAME}}</div>
+          <div class="value">{{PRODUCT_TOP2_SALES}}건 판매</div>
+        </div>
+      </div>
+      <div class="top-card">
+        <div class="img" style="background-image:url('{{PRODUCT_TOP3_IMAGE_URL}}')"></div>
+        <div class="body">
+          <div class="tag">판매 TOP3</div>
+          <div class="name">{{PRODUCT_TOP3_NAME}}</div>
+          <div class="value">{{PRODUCT_TOP3_SALES}}건 판매</div>
+        </div>
+      </div>
+    </div>
+    <p>{{SECTION_PRODUCT}}</p>
+
+    <h2>5. 매출 추이</h2>
+    <div class="chart-card">
+      <div class="chart-head">
+        <div class="panel-title" style="margin:0;">월별 매출 추이</div>
+      </div>
+      <div class="chart-body">
+        {{REVENUE_TREND_SVG}}
+      </div>
+    </div>
+    <p>{{SECTION_REVENUE}}</p>
+
+    <h2>6. 고객 반응</h2>
+    <p>{{SECTION_FEEDBACK}}</p>
+
+    <h2>7. 추세 해석</h2>
+    <p>{{SECTION_TREND}}</p>
+
+    <h2>8. 이번 주 체크 포인트</h2>
+    <div class="summary-box">
+      <div class="summary-stat">저재고<br><b>{{LOW_STOCK_COUNT}}건</b></div>
+      <div class="summary-stat">플래그 게시물<br><b>{{FLAGGED_POST_COUNT}}건</b></div>
+      <div class="summary-stat">사이트 이슈<br><b>{{SITE_ISSUE_COUNT}}건</b></div>
+    </div>
+    <p>{{SECTION_DAILY_RECAP}}</p>
+
+    <h2>9. 종합 판단 + 다음 주 액션</h2>
+    <p>{{SECTION_CONCLUSION}}</p>
+    <ul>
+{{ACTION_ITEMS}}
+    </ul>
+  </div>
+</body>
+</html>

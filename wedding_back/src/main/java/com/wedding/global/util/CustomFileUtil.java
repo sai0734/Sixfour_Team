@@ -80,6 +80,21 @@ public class CustomFileUtil {
     return uploadNames;
   }
 
+  // MultipartFile 없이(서버 기동 시 더미데이터 시딩 등) 바이트 배열을 그대로 저장할 때 사용
+  public String saveBytes(byte[] content, String suggestedFileName) {
+
+    String savedName = UUID.randomUUID().toString() + "_" + suggestedFileName;
+    Path savePath = Paths.get(uploadPath, savedName);
+
+    try {
+      Files.write(savePath, content);
+    } catch (IOException e) {
+      throw new RuntimeException(e.getMessage());
+    }
+
+    return savedName;
+  }
+
     public ResponseEntity<Resource> getFile(String fileName){
     Resource resource = new FileSystemResource(uploadPath + File.separator + fileName);
 

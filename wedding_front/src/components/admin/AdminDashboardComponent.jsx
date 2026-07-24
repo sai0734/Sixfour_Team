@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Area,
@@ -14,6 +14,7 @@ import {
   YAxis,
 } from "recharts";
 import { getCompanyRanking, getDashboardSummary } from "../../api/adminDashboardApi";
+import AdminAlertPanel from "./AdminAlertPanel";
 
 // 관리자 페이지 톤에 맞춘 차분한 브랜드 팔레트 (파이차트 3색용)
 const ORDER_STATUS_COLORS = ["#C06080", "#C5B3D3", "#E8A8A8"];
@@ -71,6 +72,23 @@ const AdminDashboardComponent = () => {
   const [rankingData, setRankingData] = useState([]);
   const [rankingFetching, setRankingFetching] = useState(true);
 
+  // AdminLayout 공용 래퍼에 overflow-x-hidden이 있어서 position:sticky의 기준점이 깨진다
+  // (overflow-x를 하나라도 hidden으로 주면 overflow-y가 강제로 auto가 되는 CSS 동작 때문).
+  // 공용 레이아웃은 건드리지 않고, 이 패널만 fixed로 띄우고 spacer의 위치를 측정해 left를 맞춘다.
+  const asideRef = useRef(null);
+  const [panelLeft, setPanelLeft] = useState(null);
+
+  useEffect(() => {
+    const updatePanelPosition = () => {
+      if (asideRef.current) {
+        setPanelLeft(asideRef.current.getBoundingClientRect().left);
+      }
+    };
+    updatePanelPosition();
+    window.addEventListener("resize", updatePanelPosition);
+    return () => window.removeEventListener("resize", updatePanelPosition);
+  }, []);
+
   useEffect(() => {
     setSummaryFetching(true);
     setSummaryError("");
@@ -115,7 +133,8 @@ const AdminDashboardComponent = () => {
   };
 
   return (
-    <section className="mx-auto max-w-6xl p-4 text-ink">
+    <div className="mx-auto flex max-w-7xl items-start gap-4 p-4">
+      <section className="min-w-0 flex-1 text-ink">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold text-ink">관리자 대시보드</h2>
@@ -415,7 +434,20 @@ const AdminDashboardComponent = () => {
           <EmptyText>매출 데이터가 없습니다.</EmptyText>
         )}
       </Panel>
-    </section>
+      </section>
+
+      {/* 실제 컨텐츠 폭을 차지하는 spacer - 보이지는 않고 위치 측정용 */}
+      <aside ref={asideRef} className="hidden w-72 shrink-0 lg:block" aria-hidden="true" />
+
+      {panelLeft !== null && (
+        <div
+          className="fixed top-24 z-30 hidden max-h-[calc(100vh-8rem)] w-72 overflow-y-auto lg:block"
+          style={{ left: panelLeft }}
+        >
+          <AdminAlertPanel />
+        </div>
+      )}
+    </div>
   );
 };
 
