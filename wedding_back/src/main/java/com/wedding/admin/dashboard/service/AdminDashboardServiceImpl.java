@@ -59,6 +59,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
     private final ProductRepository productRepository;
     private final QnaRepository qnaRepository;
 
+    // 대시보드 요약 조회
     @Override
     public AdminDashboardSummaryDTO getSummary() {
 

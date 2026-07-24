@@ -19,7 +19,7 @@ public class CheckoutController {
 
     private final CheckoutService checkoutService;
 
-    // 주문 생성 (결제 전)
+    // 주문 생성 (결제 전, PENDING 상태)
     @PreAuthorize("hasAnyRole('USER')")
     @PostMapping("/prepare")
     public OrderDTO prepare(Principal principal, @RequestBody CheckoutRequestDTO requestDTO) {
@@ -29,7 +29,7 @@ public class CheckoutController {
         return checkoutService.prepareOrder(principal.getName(), requestDTO);
     }
 
-    // 결제 승인
+    // 결제 승인 처리 (토스 승인 API 호출 + 주문상태 변경 + 장바구니 정리 + 알림 발송)
     @PreAuthorize("hasAnyRole('USER')")
     @PostMapping("/confirm")
     public OrderDTO confirm(Principal principal, @RequestBody ConfirmRequestDTO confirmRequestDTO) {
@@ -49,7 +49,7 @@ public class CheckoutController {
         checkoutService.cancelOrder(principal.getName(), orderNumber);
     }
 
-    // 최근 배송지 불러오기
+    // 가장 최근 결제완료 주문의 배송지 조회 (배송지 불러오기용)
     @PreAuthorize("hasAnyRole('USER')")
     @GetMapping("/last-address")
     public AddressDTO lastAddress(Principal principal) {
@@ -70,7 +70,7 @@ public class CheckoutController {
 
     }
 
-    // 교환/환불 신청
+    // 교환/환불 신청 (사유 저장만 - 배송완료 주문만 신청 가능)
     @PreAuthorize("hasAnyRole('USER')")
     @PostMapping("/orders/{orderNumber}/exchange-return")
     public Map<String, String> requestExchangeReturn(Principal principal, @PathVariable String orderNumber,

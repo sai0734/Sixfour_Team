@@ -20,6 +20,7 @@ public class OrderController {
 
     private final OrderService adminOrderService;
 
+    // 관리자용 주문 리스트 조회
     @GetMapping
     public PageResponseDTO<AdminOrderListDTO> list(AdminOrderSearchDTO searchDTO) {
 
@@ -29,6 +30,7 @@ public class OrderController {
 
     }
 
+    // 주문 상세 조회 (결제정보 포함)
     @GetMapping("/{ono}")
     public AdminOrderDetailDTO detail(@PathVariable Long ono) {
 
@@ -38,6 +40,7 @@ public class OrderController {
 
     }
 
+    // 주문 상태 변경 (+ 회원에게 이메일 알림)
     @PutMapping("/{ono}/status")
     public Map<String, String> changeStatus(@PathVariable Long ono, @RequestParam String status) {
 
@@ -49,6 +52,7 @@ public class OrderController {
 
     }
 
+    // 여러 주문 상태 일괄 변경
     @PutMapping("/bulk-status")
     public Map<String, String> bulkChangeStatus(@RequestBody Map<String, Object> body) {
 
@@ -64,6 +68,7 @@ public class OrderController {
         return Map.of("RESULT", "SUCCESS");
     }
 
+    // 배송지/연락처 수정
     @PutMapping("/{ono}/shipping")
     public Map<String, String> updateShipping(@PathVariable Long ono, @RequestBody Map<String, String> body) {
 
@@ -82,6 +87,7 @@ public class OrderController {
 
     }
 
+    // 운송장 번호 등록/수정
     @PutMapping("/{ono}/tracking")
     public Map<String, String> updateTracking(@PathVariable Long ono, @RequestParam String trackingNo) {
 
@@ -93,6 +99,7 @@ public class OrderController {
 
     }
 
+    // 관리자 메모(CS 요청사항 등) 등록/수정
     @PutMapping("/{ono}/memo")
     public Map<String, String> updateMemo(@PathVariable Long ono, @RequestParam String memo) {
 
@@ -104,6 +111,7 @@ public class OrderController {
 
     }
 
+    // 환불 처리 (토스 결제취소 API 연동)
     @PostMapping("/{ono}/refund")
     public Map<String, String> refund(@PathVariable Long ono, @RequestParam String reason) {
 
