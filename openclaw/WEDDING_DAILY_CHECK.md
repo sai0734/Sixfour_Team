@@ -42,14 +42,15 @@ const headers = { "X-OpenClaw-Key": process.env.OPENCLAW_INTERNAL_KEY || "" };
 '@ | node -
 ```
 그 다음 `_tmp_image_issues.json`(또는 위 콘솔 출력)을 보고 `issues` 배열의 각 항목에 대해 아래처럼 보고할 것. `type`이 `MISSING`이든 `BROKEN`이든 **구분하지 않고 전부 `IMAGE_BROKEN`으로 보고**할 것.
-- **detail은 개발자가 아니라 일반 관리자가 읽는 문구다.** 파일명, API 경로, HTTP 상태 코드, `undefined` 같은 개발자 전용 용어/기술 디테일을 절대 넣지 말 것 — **실제로 이 규칙을 어기고 이렇게 잘못 쓴 적이 있음**: `` 상품 '교동복' (pno 4)의 대표 이미지 `imgi_19_1515_temp_...png`를 `/api/product/view/...`로 요청하면 404가 반환됩니다. `` **(절대 이렇게 쓰지 말 것)** — 오직 "상품명(상품번호)에 실제 사진이 없어 기본 이미지가 대신 표시되고 있습니다"(`MISSING`) 또는 "상품명(상품번호)의 이미지가 깨져서 표시되지 않습니다"(`BROKEN`)처럼, 상품명/상품번호와 상황 설명만 담은 한 문장으로 적을 것.
+- **detail 문구는 이제 서버가 상품 정보를 DB에서 직접 조회해서 고정된 문구로 자동 생성한다.** `productPno`만 정확히 보내면 되고, `detail`은 신경 쓰지 않아도 됨(비워 보내거나 아무 값이나 보내도 서버가 무시하고 덮어씀) — 예전처럼 상품명을 문장에 직접 써넣다가 콘솔 인코딩이 깨지던 문제, 개발자 용어(파일명/API 경로/HTTP 코드)가 섞여 들어가던 문제가 이 방식으로 원천 차단됨.
 - **pageUrl은 항상 프론트엔드 상품 상세 페이지** `http://localhost:3000/product/read/{pno}` 형식으로 적을 것. `/api/product/view/...`(백엔드 이미지 API 경로)나 다른 형태를 넣지 말 것 — 실제로 이걸 잘못 넣은 적 있음.
+- **`productPno`는 반드시 숫자 그대로(따옴표 없이) 넣을 것.** 이게 있어야 서버가 상품명을 조회해서 문구를 만들 수 있음 — 빠뜨리면 예전처럼 AI가 쓴 문장이 그대로 detail로 들어가 형식이 흐트러짐.
 
 문제를 발견할 때마다 아래처럼 즉시 보고 (문제 없으면 아무것도 호출하지 않음):
 
-1. 파일쓰기 도구로 `C:\Users\hjc13\.openclaw\workspace\_tmp_site_health.json`에 아래 형태의 JSON을 UTF-8로 저장 (한글 그대로 넣을 것):
+1. 파일쓰기 도구로 `C:\Users\hjc13\.openclaw\workspace\_tmp_site_health.json`에 아래 형태의 JSON을 UTF-8로 저장:
 ```json
-{ "pageUrl": "http://localhost:3000/product/read/<pno>", "issueType": "IMAGE_BROKEN", "detail": "<구체적으로 뭐가 문제였는지, 한글, 개발자 용어 없이>" }
+{ "pageUrl": "http://localhost:3000/product/read/<pno>", "issueType": "IMAGE_BROKEN", "productPno": <pno>, "detail": "" }
 ```
 2. 그 파일을 바이트 그대로 읽어서 전송:
 ```powershell
@@ -99,17 +100,19 @@ $recentReviews | ConvertTo-Json -Depth 6 |
 (상품 목록 응답 형태가 `dtoList`가 아니라 배열 자체일 수도 있으니, 위 스크립트 실행 전에 `$products`의 실제 구조를 먼저 한 번 확인해서 맞게 조정할 것.)
 그 다음 `_tmp_recent_reviews.json`을 파일읽기 도구로 열어서 검사 — 이미 24시간 필터링과 전체 상품 순회가 끝난 상태라 바로 판단만 하면 됨.
 
-(a), (b)에서 골라낸(최근 24시간 이내) 글/리뷰만 아래에 해당하는지 판단:
-- 광고/스팸성 홍보 글로 의심됨
-- 도배(동일/유사 글 반복)로 보임
-- 다른 회원에게 불쾌감을 줄 수 있는 애매한 표현
-- 명확한 욕설/비하 표현 (이런 걸 걸러주는 별도 실시간 필터는 아직 없으므로, 이것도 반드시 이 점검에서 직접 잡아서 보고할 것)
+(a), (b)에서 골라낸(최근 24시간 이내) 글/리뷰만 아래 4가지 중 하나로 분류될만한지 판단 (`flagType` 값):
+- `SPAM` — 광고/스팸성 홍보 글, 또는 도배(동일/유사 글 반복)
+- `PERSONAL_ATTACK` — 다른 회원(닉네임 등)을 특정해서 저격하거나 불쾌감을 줄 수 있는 애매한 표현
+- `PROFANITY` — 명확한 욕설/비하 표현 (이런 걸 걸러주는 별도 실시간 필터는 아직 없으므로, 이것도 반드시 이 점검에서 직접 잡아서 보고할 것)
+- `OTHER` — 위 셋에 딱 안 맞지만 그래도 확인이 필요한 경우
 
-의심되는 글/리뷰를 발견하면 (리뷰는 boardId 대신 review의 rno와 소속 상품명을 reason에 명시):
+**게시글 제목은 이제 서버가 board 테이블에서 직접 조회해서 카드에 표시한다 — reason에 제목을 따로 적을 필요 없음.** `reason`에는 왜 의심되는지 판단 근거만 짧게 한글로 적을 것 (리뷰는 boardId 대신 review의 rno와 소속 상품명을 reason에 명시).
+
+의심되는 글/리뷰를 발견하면:
 
 1. 파일쓰기 도구로 `C:\Users\hjc13\.openclaw\workspace\_tmp_flagged_post.json`에 아래 형태의 JSON을 UTF-8로 저장 (한글 그대로 넣을 것):
 ```json
-{ "boardId": <해당 boardId>, "reason": "<왜 의심되는지 구체적으로, 한글>" }
+{ "boardId": <해당 boardId>, "flagType": "<SPAM|PERSONAL_ATTACK|PROFANITY|OTHER 중 하나>", "reason": "<왜 의심되는지 판단 근거만 짧게, 한글>" }
 ```
 2. 그 파일을 바이트 그대로 읽어서 전송:
 ```powershell

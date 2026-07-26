@@ -6,7 +6,10 @@ import com.wedding.admin.dashboard.domain.SiteHealthIssue;
 import com.wedding.admin.dashboard.repository.AiBriefingRepository;
 import com.wedding.admin.dashboard.repository.FlaggedPostRepository;
 import com.wedding.admin.dashboard.repository.SiteHealthIssueRepository;
+import com.wedding.board.domain.Board;
+import com.wedding.board.repository.BoardRepository;
 import com.wedding.global.util.CustomFileUtil;
+import com.wedding.product.repository.ProductRepository;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Set;
 
 // OpenClaw(로컬에서 도는 개인 자동화 에이전트)가 우리 백엔드에 결과를 보고하는 전용 API.
 // 로그인 세션이 없는 외부 프로세스라 JWT 대신 고정 시크릿 헤더(X-OpenClaw-Key)로만 인증한다.
@@ -27,9 +31,13 @@ import java.util.List;
 @RequestMapping("/api/openclaw")
 public class OpenClawIngestController {
 
+    private static final Set<String> VALID_FLAG_TYPES = Set.of("SPAM", "PERSONAL_ATTACK", "PROFANITY", "OTHER");
+
     private final SiteHealthIssueRepository siteHealthIssueRepository;
     private final FlaggedPostRepository flaggedPostRepository;
     private final AiBriefingRepository aiBriefingRepository;
+    private final BoardRepository boardRepository;
+    private final ProductRepository productRepository;
     private final CustomFileUtil customFileUtil;
 
     @Value("${openclaw.internal-key:}")
@@ -44,10 +52,23 @@ public class OpenClawIngestController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
+        // IMAGE_BROKEN이고 productPno가 왔으면, AI가 쓴 문장을 믿지 않고 서버가 DB에서
+        // 상품명을 직접 읽어와 고정된 문구로 조합한다 - AI가 콘솔 인코딩 문제로 상품명을
+        // 깨뜨려 보내는 문제를 원천 차단하고, 카드 문구 형식도 항상 동일하게 유지된다.
+        String detail = dto.getDetail();
+        if ("IMAGE_BROKEN".equals(dto.getIssueType()) && dto.getProductPno() != null) {
+            detail = productRepository.findById(dto.getProductPno())
+                    .map(p -> String.format("%s(상품번호 %d)의 대표 이미지를 불러올 수 없습니다.",
+                            p.getPname(), dto.getProductPno()))
+                    .orElseGet(() -> String.format("상품번호 %d의 대표 이미지를 불러올 수 없습니다. (상품 정보를 찾을 수 없음)",
+                            dto.getProductPno()));
+        }
+
         SiteHealthIssue issue = SiteHealthIssue.builder()
                 .pageUrl(dto.getPageUrl())
                 .issueType(dto.getIssueType())
-                .detail(dto.getDetail())
+                .productPno(dto.getProductPno())
+                .detail(detail)
                 .build();
 
         siteHealthIssueRepository.save(issue);
@@ -64,8 +85,18 @@ public class OpenClawIngestController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
+        // 게시글 제목은 AI가 쓴 텍스트가 아니라 서버가 board 테이블에서 직접 조회해 스냅샷으로
+        // 저장한다 - 인코딩이 깨지지 않고, 나중에 게시글이 삭제돼도 제목이 카드에 남아있다.
+        String boardTitle = boardRepository.findById(dto.getBoardId())
+                .map(Board::getTitle)
+                .orElse(null);
+
+        String flagType = VALID_FLAG_TYPES.contains(dto.getFlagType()) ? dto.getFlagType() : "OTHER";
+
         FlaggedPost flaggedPost = FlaggedPost.builder()
                 .boardId(dto.getBoardId())
+                .flagType(flagType)
+                .boardTitle(boardTitle)
                 .reason(dto.getReason())
                 .build();
 
@@ -118,11 +149,13 @@ public class OpenClawIngestController {
         private String pageUrl;
         private String issueType;
         private String detail;
+        private Long productPno;
     }
 
     @Data
     public static class FlaggedPostRequestDTO {
         private Long boardId;
+        private String flagType;
         private String reason;
     }
 }
