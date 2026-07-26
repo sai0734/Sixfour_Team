@@ -68,7 +68,7 @@ const AdminAiBriefingComponent = () => {
         <ShopTapeLabel className="mb-2.5">관리자</ShopTapeLabel>
         <p className="font-['Gowun_Batang'] text-2xl text-ink">AI 매니저 주간 브리핑</p>
         <p className="mt-1 text-sm text-ink-soft">
-          OpenClaw가 매주 월요일 새벽에 만든 경영 인사이트 리포트입니다.
+          매주 월요일 새벽에 만든 경영 인사이트 리포트입니다.
         </p>
       </div>
 

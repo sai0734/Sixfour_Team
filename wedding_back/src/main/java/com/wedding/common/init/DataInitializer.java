@@ -624,18 +624,32 @@ public class DataInitializer implements ApplicationRunner {
 
     flaggedPostRepository.save(FlaggedPost.builder()
         .boardId(boardIdForSpam)
+        .flagType("SPAM")
+        .boardTitle(findBoardTitleById(sampleBoards, boardIdForSpam))
         .reason("동일한 문구가 짧은 시간 내 반복 게시되어 광고성 도배 글로 의심됩니다.")
         .build());
 
     flaggedPostRepository.save(FlaggedPost.builder()
         .boardId(boardIdForHostile)
+        .flagType("PERSONAL_ATTACK")
+        .boardTitle(findBoardTitleById(sampleBoards, boardIdForHostile))
         .reason("특정 회원을 반복적으로 저격하는 듯한 표현이 있어 확인이 필요합니다.")
         .build());
 
     flaggedPostRepository.save(FlaggedPost.builder()
         .boardId(boardIdForProfanity)
+        .flagType("PROFANITY")
+        .boardTitle(findBoardTitleById(sampleBoards, boardIdForProfanity))
         .reason("다른 회원을 향한 명확한 욕설/비하 표현이 포함되어 있어 확인이 필요합니다.")
         .build());
+  }
+
+  private String findBoardTitleById(List<Board> boards, Long boardId) {
+    return boards.stream()
+        .filter(b -> b.getBoardId().equals(boardId))
+        .map(Board::getTitle)
+        .findFirst()
+        .orElse(null);
   }
 
   private Long findBoardIdByContentMarker(List<Board> boards, String marker) {

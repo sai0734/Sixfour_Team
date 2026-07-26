@@ -17,6 +17,14 @@ const ISSUE_TYPE_LABEL = {
   IMAGE_BROKEN: "이미지 깨짐",
 };
 
+// 서버가 flagType을 정해진 값으로만 저장하므로, 카드 배지가 항상 같은 틀로 나온다
+const FLAG_TYPE_LABEL = {
+  SPAM: "스팸/도배",
+  PERSONAL_ATTACK: "저격성",
+  PROFANITY: "욕설",
+  OTHER: "기타",
+};
+
 // 관리자 대시보드 옆에서 스크롤을 따라다니는 플로팅 패널.
 // OpenClaw가 매일 새벽 발견한 "사이트 이상 징후" / "확인 필요한 게시글"을 바로 보여주고 처리한다.
 const AdminAlertPanel = () => {
@@ -100,7 +108,7 @@ const AdminAlertPanel = () => {
   return (
     <div className="w-full rounded-2xl bg-white p-4 shadow-[0_8px_24px_-12px_rgba(58,54,47,0.15)]">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-ink">OpenClaw 알림</h3>
+        <h3 className="text-sm font-semibold text-ink">일일체크</h3>
         <span className="rounded-full bg-brand-light px-2.5 py-1 text-xs text-brand-deep">
           {fetching ? "확인 중" : `${totalCount}건`}
         </span>
@@ -141,7 +149,8 @@ const AdminAlertPanel = () => {
             {flaggedPosts.map((item) => (
               <AlertCard
                 key={item.id}
-                badge={`게시글 #${item.boardId}`}
+                badge={FLAG_TYPE_LABEL[item.flagType] || FLAG_TYPE_LABEL.OTHER}
+                title={`게시글 #${item.boardId}`}
                 detail={item.reason}
                 resolving={resolvingKey === `post-${item.id}`}
                 onResolve={() => handleResolvePost(item.id)}

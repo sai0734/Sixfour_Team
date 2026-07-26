@@ -32,6 +32,8 @@
 **(b) 카테고리별 매출 TOP1 업체 + 사진**
 `categoryRevenueCards`(1번에서 이미 가져온 summary)에 `topCompanyName`/`topAmount`는 있지만 사진은 없음. `GET /api/companies/list?size=100`로 전체 업체를 가져와서 `name`이 `topCompanyName`과 일치하는 업체를 찾고, 그 업체의 `uploadFileNames[0]`(또는 `images[0]`)을 사용해 이미지 URL을 `http://localhost:8080/api/companies/images/view/{파일명}`으로 구성. **업체에 등록된 사진이 하나도 없으면 그 카테고리 카드의 이미지는 비워두지 말고 아무 톤이든 무난한 placeholder 이미지 URL 없이 `img` 태그 자체를 생략**(즉 해당 `{{..._TOP_IMAGE_URL}}` 자리에 빈 문자열).
 
+**주의 3 (업체 사진 파일명의 한글 인코딩 — 실제로 이 문제가 발생한 적 있음)**: 답례품 상품 이미지 파일명은 보통 영문/숫자(`dress_10_1.jpg` 등)라 괜찮지만, **업체 대표사진 파일명(`uploadFileNames[0]`)은 `웨딩홀_토브헤세드_플로렌스홀_main.png`, `메이크업_메이크업5.png`처럼 한글이 포함된 경우가 많다.** 이 값을 콘솔 출력에서 그대로 옮겨 적거나 터미널에 찍힌 걸 보고 타이핑하면, 위 주의 2와 동일한 콘솔 인코딩 문제로 한글 부분이 깨져서(예: `%EF%BF%BD` 같은 대체문자로) HTML의 `background-image` URL에 그대로 박제되고, PDF에서 그 카드만 이미지가 안 뜬다. **`GET /api/companies/list?size=100` 응답은 반드시 `Out-File -Encoding utf8`로 파일에 저장한 뒤 그 파일을 파일읽기 도구로 열어서 `uploadFileNames[0]` 값을 그대로(타이핑하지 말고) 복사해 URL을 구성할 것.**
+
 **(c) 판매량 TOP3 상품 + 사진**
 `GET /api/product/list?sortType=popular&size=3`로 바로 판매량(salesCount) 내림차순 TOP3를 가져옴 (페이징 걱정 없음, size=3이면 정확히 3개). 각 상품의 `uploadFileNames[0]`으로 이미지 URL을 `http://localhost:8080/api/product/view/{파일명}`으로 구성 (없으면 (b)와 동일하게 이미지 생략).
 

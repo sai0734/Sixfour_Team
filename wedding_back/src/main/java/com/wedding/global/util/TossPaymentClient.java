@@ -1,13 +1,11 @@
 package com.wedding.global.util;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -27,7 +25,6 @@ public class TossPaymentClient {
     private String confirmUrl;
 
     private final RestTemplate restTemplate = new RestTemplate();
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private HttpHeaders buildHeaders() {
 
@@ -60,8 +57,11 @@ public class TossPaymentClient {
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
         try {
-            ResponseEntity<String> response = restTemplate.postForEntity(confirmUrl, request, String.class);
-            return objectMapper.readTree(response.getBody());
+            // String.class로 받으면 응답 Content-Type에 charset이 없을 때 RestTemplate이
+            // ISO-8859-1로 잘못 디코딩해서 한글(결제수단 등)이 깨진 채로 파싱됨 - 실제로 이
+            // 문제가 있었음. JsonNode.class로 바로 받으면 Jackson 컨버터가 바이트를 직접
+            // UTF-8로 읽어서 이 문제가 없다.
+            return restTemplate.postForEntity(confirmUrl, request, JsonNode.class).getBody();
         } catch (HttpClientErrorException e) {
             log.error("토스페이먼츠 승인 실패: " + e.getResponseBodyAsString());
             throw new IllegalStateException("결제 승인에 실패했습니다: " + e.getResponseBodyAsString());
@@ -81,8 +81,7 @@ public class TossPaymentClient {
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, buildHeaders());
 
         try {
-            ResponseEntity<String> response = restTemplate.postForEntity(cancelUrl, request, String.class);
-            return objectMapper.readTree(response.getBody());
+            return restTemplate.postForEntity(cancelUrl, request, JsonNode.class).getBody();
         } catch (HttpClientErrorException e) {
             log.error("토스페이먼츠 환불 실패: " + e.getResponseBodyAsString());
             throw new IllegalStateException("환불 처리에 실패했습니다: " + e.getResponseBodyAsString());
