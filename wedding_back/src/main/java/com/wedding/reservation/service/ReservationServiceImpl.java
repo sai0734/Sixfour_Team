@@ -226,6 +226,11 @@ public class ReservationServiceImpl implements ReservationService {
       throw new IllegalStateException("본인의 예약만 결제할 수 있습니다.");
     }
 
+
+    if ("PAID".equals(reservation.getPayStatus())) {
+      return toDTO(reservation);
+    }
+
     if (reservation.getOrderNumber() == null
             || !reservation.getOrderNumber().equals(requestDTO.getOrderNumber())) {
       throw new IllegalStateException("주문 정보가 일치하지 않습니다.");
@@ -340,6 +345,17 @@ public class ReservationServiceImpl implements ReservationService {
 
     if (requestDTO.getReservationIds() == null || requestDTO.getReservationIds().isEmpty()) {
       throw new IllegalArgumentException("결제할 예약 정보가 없습니다.");
+    }
+
+    // 재원 추가 - 이 주문번호로 묶인 건들이 이미 전부 결제 완료 상태면(뒤로가기 후 재제출 등)
+    // 토스 재승인 없이 기존 결과 그대로 반환한다. (단건 confirmPayment와 동일한 취지)
+    List<Reservation> targets = requestDTO.getReservationIds().stream()
+            .map(id -> reservationRepository.findById(id).orElseThrow())
+            .toList();
+    boolean alreadyConfirmed = targets.stream().allMatch(r ->
+            "PAID".equals(r.getPayStatus()) && requestDTO.getOrderNumber().equals(r.getOrderNumber()));
+    if (alreadyConfirmed) {
+      return targets.stream().map(r -> modelMapper.map(r, ReservationDTO.class)).toList();
     }
 
     int expectedTotal = 0;
