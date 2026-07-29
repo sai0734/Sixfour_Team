@@ -266,46 +266,60 @@
 ### ① N+1 방지 — 목록과 이미지를 한 번에 조회
 `@EntityGraph` `FetchType.LAZY` · 적용 화면: 홀/스드메 업체 목록
 
-| 최적화 코드 |  |
-|---|---|
-| ![코드1](docs/images/opt1-code-1.png) | ![코드2](docs/images/opt1-code-2.png) |
-
-**적용 화면**
-![최적화 ① 스크린샷](docs/images/opt1-screenshot.png)
+<table>
+<tr><th colspan="2" align="center">최적화 코드</th></tr>
+<tr>
+<td><img src="docs/images/opt1-code-1.png" width="100%"></td>
+<td><img src="docs/images/opt1-code-2.png" width="100%"></td>
+</tr>
+</table>
 
 - `CompanyRepository`의 목록 조회 메서드에 `@EntityGraph(attributePaths = "imageList")`를 적용해, 업체 목록을 가져올 때 이미지도 함께 조회(N+1 제거)
 - 가져온 이미지 중 첫 번째 이미지를 대표 이미지로 선택해 `CompanyListDTO`로 변환 — 프론트 업체 목록에서 이미지와 함께 표시
 - 홀·스튜디오 상세정보는 `FetchType.LAZY`로 유지해 목록 조회 시 불필요한 데이터까지 가져오지 않도록 제한
 
+**적용 화면**
+
+![최적화 ① 스크린샷](docs/images/opt1-screenshot.png)
+
 ### ② 서버 사이드 페이징 — Page 단위로만 조회
 `Pageable` `PRODUCT_LIST_PAGE_SIZE` · 적용 화면: 답례품 상품 목록
 
-**최적화 코드**
-![코드1](docs/images/opt2-code-1.png)
-![코드2](docs/images/opt2-code-2.png)
-
-**적용 화면**
-![최적화 ② 스크린샷](docs/images/opt2-screenshot.png)
+<table>
+<tr><th colspan="2" align="center">최적화 코드</th></tr>
+<tr>
+<td><img src="docs/images/opt2-code-1.png" width="100%"></td>
+<td><img src="docs/images/opt2-code-2.png" width="100%"></td>
+</tr>
+</table>
 
 - 상품 검색 시 조건(카테고리·가격·평점·검색어)에 맞는 상품 전체를 가져오지 않고, 현재 화면에 보여줄 한 페이지 분량만 DB에서 조회
 - 조회 결과의 전체 개수(`totalCount`)만 따로 뽑아 `PageResponseDTO`에 함께 담아 응답 — 프론트는 목록 데이터를 다시 요청하지 않고도 이 값 하나로 페이지 번호 네비게이션을 구성
 
+**적용 화면**
+
+![최적화 ② 스크린샷](docs/images/opt2-screenshot.png)
+
 ### ③ 라우트 단위 Code Splitting
 `React.lazy` `Suspense`
 
-**최적화 코드**
-![코드1](docs/images/opt3-code-1.png)
-![코드2](docs/images/opt3-code-2.png)
-
-**Before / After (React DevTools Profiler 렌더 시간)**
-
-| Before | After |
-|---|---|
-| ![Before](docs/images/opt3-before.png) | ![After](docs/images/opt3-after.png) |
+<table>
+<tr><th colspan="2" align="center">최적화 코드</th></tr>
+<tr>
+<td><img src="docs/images/opt3-code-1.png" width="100%"></td>
+<td><img src="docs/images/opt3-code-2.png" width="100%"></td>
+</tr>
+</table>
 
 - 모든 페이지 코드를 한꺼번에 불러오지 않고, 각 페이지를 `React.lazy`로 감싸서 해당 페이지에 실제로 들어갈 때만 코드를 불러오도록 구성
 - 그 코드가 아직 불려오지 않은 짧은 순간 화면에 무엇을 보여줄지는 `Suspense`가 담당(로딩 중 화면)
 - 그 결과 사용자가 사이트에 처음 들어왔을 때는 지금 보고 있는 페이지 코드만 받으면 되고, 마이페이지·관리자 페이지처럼 아직 안 들어간 페이지 코드는 나중에 그 페이지로 이동할 때 받아 첫 화면이 뜨는 속도가 빨라짐
+
+**적용 화면 (React DevTools Profiler 렌더 시간)**
+
+| Before | After |
+|---|---|
+| ![Before](docs/images/opt3-before.png) | ![After](docs/images/opt3-after.png) |
 
 <br>
 
@@ -331,11 +345,13 @@
 |---|---|---|
 | 결제 승인 API 중복 호출 시 409 오류 노출 | PAID 확인 없이 토스 승인 API를 반복 호출 | 이미 PAID 상태면 기존 결제 결과를 즉시 반환 |
 
-**중복 결제 방지 코드**
-
-| | |
-|---|---|
-| ![코드1](docs/images/trouble2-code-1.png) | ![코드2](docs/images/trouble2-code-2.png) |
+<table>
+<tr><th colspan="2" align="center">중복 결제 방지 코드</th></tr>
+<tr>
+<td><img src="docs/images/trouble2-code-1.png" width="100%"></td>
+<td><img src="docs/images/trouble2-code-2.png" width="100%"></td>
+</tr>
+</table>
 
 **Postman 검증 (BEFORE / AFTER)**
 
@@ -347,13 +363,20 @@
 |---|---|---|
 | 제외(X)한 업체를 '다시 찾기'로 되돌리면, 원래 업체가 아닌 매번 다른 업체·추천 사유가 무작위로 표시됨 | 제외 처리 시 선택 업체·추천 사유를 함께 초기화(null)해, 복원할 정보가 없어 매번 새로 검색·재생성 | 제외 시 상태만 `EXCLUDED`로 바꾸고 선택 정보는 보존 → '다시 찾기'는 새로 검색하지 않고 원래 업체·사유를 그대로 복원 |
 
-| BEFORE (매번 다른 업체 표시) | AFTER (원래 업체 그대로 복원) |
-|---|---|
-| ![Before](docs/images/trouble3-before.gif) | ![After](docs/images/trouble3-after.gif) |
-
 **관련 코드**
 
 ![코드](docs/images/trouble3-code.png)
+
+<table align="center">
+<tr>
+<th align="center">BEFORE (매번 다른 업체 표시)</th>
+<th align="center">AFTER (원래 업체 그대로 복원)</th>
+</tr>
+<tr>
+<td align="center"><img src="docs/images/trouble3-before.gif" width="220"></td>
+<td align="center"><img src="docs/images/trouble3-after.gif" width="220"></td>
+</tr>
+</table>
 
 <br>
 
