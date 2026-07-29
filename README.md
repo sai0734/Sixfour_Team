@@ -144,7 +144,7 @@
 - Access/Refresh 만료시간을 상수로 표준화하고, refresh 토큰은 Redis에 TTL과 함께 저장해 자동 정리되도록 구성
 - 로그인 성공/실패를 커스텀 핸들러로 가로채고, JWT 검증 필터를 앞단에 끼워 넣어 세션 없는 REST 인증 흐름을 구성
 
-> 🎬 데모 GIF 추가 예정
+![로그인 데모](docs/images/demo-login.gif)
 
 ### 📝 회원가입
 `Spring Security` `JWT`
@@ -155,7 +155,16 @@
 - 가입 신청과 이메일 인증 사이에 시간차가 있기 때문에, 그 사이 같은 이메일/휴대폰으로 다른 경로 가입이 먼저 끝났을 가능성을 인증 확정 직전에 한 번 더 검사
 - 인증 메일을 못 받았거나 30분이 지나 만료됐을 때, 회원가입 폼을 처음부터 다시 채우게 하지 않고 이전에 저장해둔 payload(입력값 JSON)를 그대로 재사용하면서 토큰과 만료시간만 새로 발급
 
-> 🎬 데모 GIF 추가 예정
+<table>
+<tr>
+<th align="center">일반 회원가입</th>
+<th align="center">소셜 회원가입</th>
+</tr>
+<tr>
+<td><img src="docs/images/demo-signup-normal.gif" width="100%"></td>
+<td><img src="docs/images/demo-signup-social.gif" width="100%"></td>
+</tr>
+</table>
 
 ### 🏢 업체관리
 `Spring Data JPA`
@@ -165,7 +174,16 @@
 - 목록/검색/유형/필터, 등록/보기/수정/삭제가 컨트롤러의 list/CRUD 엔드포인트와 연결
 - `roleNames`에 ADMIN이 있는지로 관리자 여부를 판단해 같은 업체 목록이라도 이동 경로를 `/admin/companies/list`(관리자용)와 `/companies/list`(일반유저용)로 분리하고, 등록/수정/삭제 API는 `@PreAuthorize("hasRole('ADMIN')")`로 서버 단에서 한 번 더 관리자 권한을 검증
 
-> 🎬 데모 GIF 추가 예정
+<table>
+<tr>
+<th align="center">업체 상세조회 (일반 사용자)</th>
+<th align="center">업체 관리자 페이지</th>
+</tr>
+<tr>
+<td><img src="docs/images/demo-company-detail.gif" width="100%"></td>
+<td><img src="docs/images/demo-company-admin.gif" width="100%"></td>
+</tr>
+</table>
 
 ### 🎁 답례품
 `REST CRUD` `Toss Payments`
@@ -175,7 +193,16 @@
 - 로그인 전엔 장바구니를 Redux 상태로만 유지하다가 로그인하는 순간 서버 DB로 이관 — 여러 상품을 한꺼번에 보내지 않고 `for...of` + `await`로 하나씩 순서대로 처리해 꼬임 방지
 - 결제창을 띄우기 전 서버에서 먼저 주문을 만들어 실제 금액을 저장하고, 결제 승인 시점에 저장된 금액과 클라이언트가 보낸 금액을 대조 — 클라이언트 쪽 요청 조작으로 다른 금액이 결제되는 것을 방지
 
-> 🎬 데모 GIF 추가 예정
+<table>
+<tr>
+<th align="center">장바구니 (Redux → DB 이관)</th>
+<th align="center">결제</th>
+</tr>
+<tr>
+<td><img src="docs/images/demo-giftshop-redux.gif" width="100%"></td>
+<td><img src="docs/images/demo-giftshop-checkout.gif" width="100%"></td>
+</tr>
+</table>
 
 ### 💬 커뮤니티 & AI 한줄요약
 `Spring Data JPA` `OpenAI Chat Completions API`
@@ -209,7 +236,7 @@
 - 구독(SUBSCRIBE) 요청이 올 때마다 요청자가 해당 방/업체/이메일 알림을 볼 권한이 있는지 검증
 - 인터넷이 끊긴 경우 5초마다 재연결을 시도해 자동으로 알림을 복구
 
-> 🎬 데모 GIF 추가 예정
+![업체 문의 실시간 채팅 데모](docs/images/demo-inquiry-chat.gif)
 
 ### 🤖 AI 챗봇
 `OpenAI Function/Tool`
@@ -221,7 +248,7 @@
 - 추출된 키워드마다 DB를 검색하고, 같은 드레스가 여러 키워드에 걸릴 때마다 매칭 점수를 1점씩 더해 겹치는 키워드가 많을수록 유사한 드레스로 판단
 - 대화가 끊기거나 사라지지 않도록 DB에 안전하게 저장 — 멀티턴으로 이어지는 문맥을 유지
 
-> 🎬 데모 GIF 추가 예정
+![AI 챗봇 데모](docs/images/demo-chatbot.gif)
 
 ### 👗 AI 드레스
 `외부 CatVTON 이미지합성 API` `OpenAI gpt-image-2`
@@ -232,7 +259,7 @@
 - 배경 합성은 OpenAI gpt-image-2가 담당 — 사용자가 입력한 프롬프트를 인식해 원하는 배경 이미지를 새로 생성
 - 결과 이미지는 DB에 저장하지 않고 Base64로만 주고받다가, 사용자가 "저장하기" 버튼을 눌러야만 사용자 컴퓨터에 저장
 
-> 🎬 데모 GIF 추가 예정
+![AI 드레스 합성 데모](docs/images/demo-aidress-tryon.gif)
 
 ### 🧾 AI 견적서
 `Google Vision OCR` `OpenAI Chat Completions(JSON)`
@@ -257,7 +284,16 @@
 - 실행된 OpenClaw는 자체 판단으로 백엔드 REST API를 호출해 데이터 조회 및 정상 로드 여부를 직접 검증 — DB에 직접 접근하지 않고 백엔드 API를 통해서만 확인
 - 점검을 마친 OpenClaw는 발견한 문제를 콜백 API로 전송하고, 서버는 이를 DB에 저장해 관리자 화면에 즉시 반영
 
-> 🎬 데모 GIF 추가 예정
+<table>
+<tr>
+<th align="center">일일 체크</th>
+<th align="center">AI 주간 브리핑</th>
+</tr>
+<tr>
+<td><img src="docs/images/demo-openclaw-daily.gif" width="100%"></td>
+<td><img src="docs/images/demo-openclaw-weekly.gif" width="100%"></td>
+</tr>
+</table>
 
 <br>
 
