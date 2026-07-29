@@ -4,6 +4,7 @@
 > 결혼 준비의 모든 과정을 하나의 플랫폼에서 — 탐색부터 예약, 결제, 커뮤니티, AI 추천까지
 
 **Notion**: [노션 페이지](https://app.notion.com/p/38367e72aa2780c3a5aadf157d27bd96)
+**YouTube**: [시연 영상](https://www.youtube.com/watch?v=Itr_3dvikuc)
 
 <br>
 
