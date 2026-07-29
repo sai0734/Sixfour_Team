@@ -155,16 +155,13 @@
 - 가입 신청과 이메일 인증 사이에 시간차가 있기 때문에, 그 사이 같은 이메일/휴대폰으로 다른 경로 가입이 먼저 끝났을 가능성을 인증 확정 직전에 한 번 더 검사
 - 인증 메일을 못 받았거나 30분이 지나 만료됐을 때, 회원가입 폼을 처음부터 다시 채우게 하지 않고 이전에 저장해둔 payload(입력값 JSON)를 그대로 재사용하면서 토큰과 만료시간만 새로 발급
 
-<table>
-<tr>
-<th align="center">일반 회원가입</th>
-<th align="center">소셜 회원가입</th>
-</tr>
-<tr>
-<td><img src="docs/images/demo-signup-normal.gif" width="100%"></td>
-<td><img src="docs/images/demo-signup-social.gif" width="100%"></td>
-</tr>
-</table>
+**일반 회원가입**
+
+![일반 회원가입 데모](docs/images/demo-signup-normal.gif)
+
+**소셜 회원가입**
+
+![소셜 회원가입 데모](docs/images/demo-signup-social.gif)
 
 ### 🏢 업체관리
 `Spring Data JPA`
@@ -174,16 +171,13 @@
 - 목록/검색/유형/필터, 등록/보기/수정/삭제가 컨트롤러의 list/CRUD 엔드포인트와 연결
 - `roleNames`에 ADMIN이 있는지로 관리자 여부를 판단해 같은 업체 목록이라도 이동 경로를 `/admin/companies/list`(관리자용)와 `/companies/list`(일반유저용)로 분리하고, 등록/수정/삭제 API는 `@PreAuthorize("hasRole('ADMIN')")`로 서버 단에서 한 번 더 관리자 권한을 검증
 
-<table>
-<tr>
-<th align="center">업체 상세조회 (일반 사용자)</th>
-<th align="center">업체 관리자 페이지</th>
-</tr>
-<tr>
-<td><img src="docs/images/demo-company-detail.gif" width="100%"></td>
-<td><img src="docs/images/demo-company-admin.gif" width="100%"></td>
-</tr>
-</table>
+**업체 상세조회 (일반 사용자)**
+
+![업체 상세조회 데모](docs/images/demo-company-detail.gif)
+
+**업체 관리자 페이지**
+
+![업체 관리자 페이지 데모](docs/images/demo-company-admin.gif)
 
 ### 🎁 답례품
 `REST CRUD` `Toss Payments`
@@ -193,16 +187,13 @@
 - 로그인 전엔 장바구니를 Redux 상태로만 유지하다가 로그인하는 순간 서버 DB로 이관 — 여러 상품을 한꺼번에 보내지 않고 `for...of` + `await`로 하나씩 순서대로 처리해 꼬임 방지
 - 결제창을 띄우기 전 서버에서 먼저 주문을 만들어 실제 금액을 저장하고, 결제 승인 시점에 저장된 금액과 클라이언트가 보낸 금액을 대조 — 클라이언트 쪽 요청 조작으로 다른 금액이 결제되는 것을 방지
 
-<table>
-<tr>
-<th align="center">장바구니 (Redux → DB 이관)</th>
-<th align="center">결제</th>
-</tr>
-<tr>
-<td><img src="docs/images/demo-giftshop-redux.gif" width="100%"></td>
-<td><img src="docs/images/demo-giftshop-checkout.gif" width="100%"></td>
-</tr>
-</table>
+**장바구니 (Redux → DB 이관)**
+
+![장바구니 데모](docs/images/demo-giftshop-redux.gif)
+
+**결제**
+
+![결제 데모](docs/images/demo-giftshop-checkout.gif)
 
 ### 💬 커뮤니티 & AI 한줄요약
 `Spring Data JPA` `OpenAI Chat Completions API`
@@ -213,7 +204,7 @@
 - 본문 150자 미만인 글은 요약 의미가 없다고 판단해 API 요청 자체를 생략, 이미 캐시된 요약은 재요청하지 않음 — 불필요한 OpenAI 호출을 프론트 단에서부터 축소
 - 서버는 댓글을 시간순 평평한 목록으로만 내려주고, `parentId` 유무로 최상위 댓글/대댓글을 나눠 프론트에서 트리 구조로 렌더링 — 부모 댓글이 삭제돼도 소프트 삭제 처리라 대댓글은 그대로 유지
 
-> 🎬 데모 GIF 추가 예정
+![커뮤니티 데모](docs/images/demo-community.gif)
 
 ### 🤵 AI 웨딩플랜
 `OpenAI Chat Completions(JSON)` `서버 슬롯 상태머신`
@@ -224,7 +215,13 @@
 - 사용자의 자연어 요청을 AI가 JSON으로 강제 응답시켜 카테고리별 CONFIRM/EXCLUDE/RECONSIDER로 분류 — 파싱 실패 시 조용히 규칙 기반으로 넘어가지 않고 세션을 그대로 유지
 - 1차 배분 후 남은 예산이 있으면 취향이 반영 안 된 카테고리부터 더 비싼 옵션으로 업그레이드 — 사용자가 명확히 취향을 지정한 카테고리는 예산 때문에 임의로 바꾸지 않음
 
-> 🎬 데모 GIF 추가 예정
+**빠른 설정 → AI 추천 결과 → 재요청**
+
+![AI 웨딩플랜 데모 1](docs/images/demo-aiplan-01.gif)
+
+**추천 조합 확정 → 예약 진행**
+
+![AI 웨딩플랜 데모 2](docs/images/demo-aiplan-02.gif)
 
 ### 📩 업체 문의 (실시간 채팅)
 `WebSocket(STOMP)` `SockJS` `JWT + STOMP 인증`
@@ -270,7 +267,7 @@
 - 가격 차이 문구는 AI가 생성한 텍스트가 아니라 저장된 금액으로 서버가 직접 계산 — AI가 숫자를 잘못 세거나 콤마를 빠뜨리는 실수를 원천 차단
 - AI가 웨딩 업체 견적서가 아니라고 판단하거나(자동차·가전 등) 카테고리를 확신 못하면 업로드 자체를 거절하고, 구체적인 거절 사유를 그대로 사용자에게 표시
 
-> 🎬 데모 GIF 추가 예정
+![AI 견적서 데모](docs/images/demo-aiquote.gif)
 
 <br>
 
@@ -284,16 +281,13 @@
 - 실행된 OpenClaw는 자체 판단으로 백엔드 REST API를 호출해 데이터 조회 및 정상 로드 여부를 직접 검증 — DB에 직접 접근하지 않고 백엔드 API를 통해서만 확인
 - 점검을 마친 OpenClaw는 발견한 문제를 콜백 API로 전송하고, 서버는 이를 DB에 저장해 관리자 화면에 즉시 반영
 
-<table>
-<tr>
-<th align="center">일일 체크</th>
-<th align="center">AI 주간 브리핑</th>
-</tr>
-<tr>
-<td><img src="docs/images/demo-openclaw-daily.gif" width="100%"></td>
-<td><img src="docs/images/demo-openclaw-weekly.gif" width="100%"></td>
-</tr>
-</table>
+**일일 체크**
+
+![일일 체크 데모](docs/images/demo-openclaw-daily.gif)
+
+**AI 주간 브리핑**
+
+![AI 주간 브리핑 데모](docs/images/demo-openclaw-weekly.gif)
 
 <br>
 
