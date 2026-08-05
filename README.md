@@ -3,7 +3,7 @@
 > AI 웨딩플랜 · 쇼핑/커뮤니티 · 업체 탐색/예약 · 준비관리 · OpenClaw
 > 결혼 준비의 모든 과정을 하나의 플랫폼에서 — 탐색부터 예약, 결제, 커뮤니티, AI 추천까지
 
-**Notion**: [노션 페이지](https://app.notion.com/p/38367e72aa2780c3a5aadf157d27bd96)
+**Notion**: [노션 페이지](https://app.notion.com/p/Team_SixFour-38367e72aa2780a6b0a9ef5203399855)
 **YouTube**: [시연 영상](https://www.youtube.com/watch?v=Itr_3dvikuc)
 **Fullstack-PDF**: [웨딩올인원(풀스텍).pdf](docs/pdf/wedding-allinone-fullstack.pdf)
 **AI-PDF**: [웨딩올인원(AI).pdf](docs/pdf/wedding-allinone-ai.pdf)
