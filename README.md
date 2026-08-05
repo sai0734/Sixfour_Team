@@ -17,6 +17,7 @@
 - [핵심 ERD](#핵심-erd)
 - [유스케이스 다이어그램](#유스케이스-다이어그램)
 - [성능 최적화](#성능-최적화)
+- [배포](#배포)
 - [트러블슈팅](#트러블슈팅)
 - [주요 기능](#주요-기능)
 - [AI 운영관제 (OpenClaw)](#ai-운영관제-openclaw)
@@ -38,31 +39,33 @@
 → **가격 투명성 + 준비 과정 통합**이 필요합니다.
 
 **참고 근거**
+
 - 조선일보(2023) — 서울 웨딩홀 90곳 중 약 8할 인상, 스드메 300만원대 → 500만원 안팎 상승 언급 ([기사](https://www.chosun.com/national/national_general/2023/02/14/JYSICKCUXBC5LOZOBU2YGZQLEQ/))
 - 세계일보(2019) — 평균 결혼비용 약 2억 3,186만원, 예식장 가격 비공개·추가비로 비교 자체가 어려움 ([기사](https://www.segye.com/newsView/20190410517854))
 
 **핵심 수치**
 
-| 식대 평균 | 전국 대관료 평균 | 강남 대관료 평균 |
-|:---:|:---:|:---:|
-| 약 6.5만원 | 약 389만원 | 약 700만원 |
+| 식대 평균  | 전국 대관료 평균 | 강남 대관료 평균 |
+| :--------: | :--------------: | :--------------: |
+| 약 6.5만원 |    약 389만원    |    약 700만원    |
 
 <br>
 
 ## 문제 정의 및 해결 방향
 
-| # | 문제 | 해결 |
-|---|------|------|
-| 1 | **정보 분산** — 웨딩홀·스튜디오·드레스·메이크업 정보가 여러 사이트/블로그/카페에 흩어짐 | **원스톱 흐름** — 검색 → 비교 → 찜 → 예약 → 결제까지 한 플랫폼에서 완결 |
-| 2 | **수기 관리 한계** — 예산·일정을 엑셀/메모앱으로 관리하며 누락·중복 발생 | **준비관리 통합** — 체크리스트 + 예산 + D-day 연동으로 진행상황을 한눈에 |
-| 3 | **비교 번거로움** — 동일 조건으로 비교가 어려움 | **AI 웨딩플랜 자동 추천** — 예산·날짜·하객수·스타일 입력만으로 업체 조합 자동 추천 |
-| 4 | **문의 채널 파편화** — 전화·카카오톡·인스타DM 등으로 분산 | **소통 통합** — 실시간 문의 채팅으로 업체-회원 커뮤니케이션을 플랫폼 내로 통합 |
+| #   | 문제                                                                                    | 해결                                                                               |
+| --- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| 1   | **정보 분산** — 웨딩홀·스튜디오·드레스·메이크업 정보가 여러 사이트/블로그/카페에 흩어짐 | **원스톱 흐름** — 검색 → 비교 → 찜 → 예약 → 결제까지 한 플랫폼에서 완결            |
+| 2   | **수기 관리 한계** — 예산·일정을 엑셀/메모앱으로 관리하며 누락·중복 발생                | **준비관리 통합** — 체크리스트 + 예산 + D-day 연동으로 진행상황을 한눈에           |
+| 3   | **비교 번거로움** — 동일 조건으로 비교가 어려움                                         | **AI 웨딩플랜 자동 추천** — 예산·날짜·하객수·스타일 입력만으로 업체 조합 자동 추천 |
+| 4   | **문의 채널 파편화** — 전화·카카오톡·인스타DM 등으로 분산                               | **소통 통합** — 실시간 문의 채팅으로 업체-회원 커뮤니케이션을 플랫폼 내로 통합     |
 
 <br>
 
 ## 기술 스택
 
 ### Frontend
+
 ![React](https://img.shields.io/badge/React_18.3-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 ![Redux Toolkit](https://img.shields.io/badge/Redux_Toolkit-764ABC?style=for-the-badge&logo=redux&logoColor=white)
@@ -71,6 +74,7 @@
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
 
 ### Backend
+
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot_3.5-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
 ![Java](https://img.shields.io/badge/Java_21-007396?style=for-the-badge&logo=openjdk&logoColor=white)
 ![Spring Security](https://img.shields.io/badge/Spring_Security-6DB33F?style=for-the-badge&logo=springsecurity&logoColor=white)
@@ -79,19 +83,23 @@
 ![WebSocket](https://img.shields.io/badge/Spring_WebSocket-6DB33F?style=for-the-badge&logo=spring&logoColor=white)
 
 ### Data & Infra
+
 ![MariaDB](https://img.shields.io/badge/MariaDB-003545?style=for-the-badge&logo=mariadb&logoColor=white)
 ![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
+![AWS](https://img.shields.io/badge/AWS_EC2_%7C_RDS_%7C_EB-232F3E?style=for-the-badge&logo=amazonaws&logoColor=white)
 
 ### External API
+
 ![OpenAI](https://img.shields.io/badge/OpenAI_API-412991?style=for-the-badge&logo=openai&logoColor=white)
 ![Kakao](https://img.shields.io/badge/Kakao_Login-FFCD00?style=for-the-badge&logo=kakaotalk&logoColor=black)
 ![Toss](https://img.shields.io/badge/Toss_Payments-0064FF?style=for-the-badge&logo=toss&logoColor=white)
 
-| 구분 | 스택 |
-|---|---|
-| Frontend | React 18.3(Vite) · Redux Toolkit · React Router v7 · Axios · Tailwind CSS · STOMP/SockJS · Recharts |
-| Backend | Spring Boot 3.5 · Java 21 · Spring Security · Spring Data JPA · JJWT · WebSocket · Spring Mail/Validation · ModelMapper |
-| Data | MariaDB(영속) · Redis(Refresh 토큰/블랙리스트 등 단기 상태) |
+| 구분          | 스택                                                                                                                              |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Frontend      | React 18.3(Vite) · Redux Toolkit · React Router v7 · Axios · Tailwind CSS · STOMP/SockJS · Recharts                               |
+| Backend       | Spring Boot 3.5 · Java 21 · Spring Security · Spring Data JPA · JJWT · WebSocket · Spring Mail/Validation · ModelMapper           |
+| Data          | MariaDB(영속) · Redis(Refresh 토큰/블랙리스트 등 단기 상태)                                                                       |
+| Infra         | AWS EC2 · Elastic Beanstalk · RDS · IAM                                                                                           |
 | AI / External | OpenAI API(gpt-4o-mini, gpt-image-2) · Google Vision OCR · CatVTON(이미지 합성) · Kakao Login · Toss Payments · Daum 우편번호 API |
 
 <br>
@@ -99,23 +107,27 @@
 ## 팀원 소개
 
 ### 황용현 · 팀장
+
 - 답례품 쇼핑몰(장바구니/주문/결제) — REST CRUD + Toss Payments 연동
 - 업체문의 실시간 채팅 — WebSocket(STOMP) + SockJS
 - AI챗봇 — OpenAI Function/Tool Calling
 - OpenClaw — AI 대시보드 주간브리핑/게시글·리뷰 욕설탐지/PDF생성
 
 ### 권용익 · 팀원
+
 - 로그인 — JWT(Access/Refresh) + Spring Security + Redis(토큰/블랙리스트 TTL)
 - 회원가입 — Spring Security(BCrypt) + 이메일 인증
 - 회원관리·업체담당자 관리자 페이지, 관리자 대시보드(통계/차트)
 - 커뮤니티 AI 한줄요약 프롬프트 설계·캐싱 로직
 
 ### 이재원 · 팀원
+
 - AI 웨딩플랜 — OpenAI Chat Completions + 서버 슬롯 상태머신
 - 커뮤니티 게시판 — OpenAI 한줄요약(캐싱)
 - 준비관리(체크리스트/예산/웨딩플랜), 예약, 찜(업체), FAQ, AI 견적서(Quote) — Google Vision OCR + OpenAI
 
 ### 윤승진 · 팀원
+
 - 업체관리(홀/드레스/스튜디오/메이크업 CRUD) — JPA + 파일 업로드
 - AI 드레스 가상피팅 — 외부 CatVTON 이미지합성 API + OpenAI gpt-image-2(배경 교체)
 - 업체 예약 일부
@@ -137,6 +149,7 @@
 ## 성능 최적화
 
 ### ① N+1 방지 — 목록과 이미지를 한 번에 조회
+
 `@EntityGraph` `FetchType.LAZY` · 적용 화면: 홀/스드메 업체 목록
 
 <table>
@@ -156,6 +169,7 @@
 ![최적화 ① 스크린샷](docs/images/opt1-screenshot.png)
 
 ### ② 서버 사이드 페이징 — Page 단위로만 조회
+
 `Pageable` `PRODUCT_LIST_PAGE_SIZE` · 적용 화면: 답례품 상품 목록
 
 <table>
@@ -174,6 +188,7 @@
 ![최적화 ② 스크린샷](docs/images/opt2-screenshot.png)
 
 ### ③ 라우트 단위 Code Splitting
+
 `React.lazy` `Suspense`
 
 <table>
@@ -190,9 +205,40 @@
 
 **적용 화면 (React DevTools Profiler 렌더 시간)**
 
-| Before | After |
-|---|---|
+| Before                                 | After                                |
+| -------------------------------------- | ------------------------------------ |
 | ![Before](docs/images/opt3-before.png) | ![After](docs/images/opt3-after.png) |
+
+### ④ 반응형 웹 구현
+
+`CSS Flexbox/Grid` `Media Query`
+
+- PC·태블릿·모바일 등 다양한 디바이스 환경에 맞춰 레이아웃이 자동으로 변경되도록 구현하여 어떤 화면에서도 최적의 UI를 제공
+- 화면 크기에 따라 컴포넌트의 크기와 배치, 여백을 유동적으로 조정해 가독성과 사용성을 높이고 직관적인 사용자 경험을 제공
+- 다양한 해상도와 브라우저 환경에서도 일관된 UI/UX를 유지할 수 있도록 반응형 웹을 적용하여 접근성과 호환성을 향상
+
+**적용 화면 (답례품 상세 — PC / 모바일)**
+
+| Before (PC)                                         | After (모바일)                                    |
+| --------------------------------------------------- | ------------------------------------------------- |
+| ![반응형 Before](docs/images/responsive-before.png) | ![반응형 After](docs/images/responsive-after.png) |
+
+<br>
+
+## 배포
+
+### AWS 배포
+
+`EC2` `Elastic Beanstalk` `RDS` `IAM`
+
+- **EC2 + Elastic Beanstalk** — 애플리케이션을 배포하고, 일관된 서버 환경에서 안정적으로 서비스를 운영
+- **RDS 연동** — 애플리케이션과 데이터베이스를 분리해, 데이터의 안정적인 저장 및 관리 환경을 구축 (port 3306, 보안그룹으로 EC2만 접근 허용)
+- **IAM** — 사용자 및 권한을 관리하여 보안을 강화하고, AWS 리소스에 대한 접근 권한을 안전하게 제어
+- 사용자는 SSH(22)를 통해서만 EC2에 접근 가능하도록 보안그룹을 제한
+
+**배포된 서비스 화면**
+
+![AWS 배포 데모](docs/images/aws-deploy-demo.png)
 
 <br>
 
@@ -200,12 +246,12 @@
 
 ### ① 하드코딩된 서명 키로 관리자 토큰 위조 가능
 
-| 문제 | 원인 | 해결 |
-|---|---|---|
+| 문제                                       | 원인                                   | 해결                                            |
+| ------------------------------------------ | -------------------------------------- | ----------------------------------------------- |
 | 하드코딩된 서명 키로 관리자 토큰 위조 가능 | `JWTUtil.java`에 고정 문자열로 키 저장 | `JWT_SECRET` 환경변수로 분리하고 랜덤 키로 교체 |
 
-| BEFORE (하드코딩) | AFTER (환경변수 분리) |
-|---|---|
+| BEFORE (하드코딩)                               | AFTER (환경변수 분리)                         |
+| ----------------------------------------------- | --------------------------------------------- |
 | ![Before](docs/images/trouble1-before-code.png) | ![After](docs/images/trouble1-after-code.png) |
 
 **Postman 검증 (BEFORE / AFTER)**
@@ -214,8 +260,8 @@
 
 ### ② 결제 승인 API 중복 호출 시 오류 노출
 
-| 문제 | 원인 | 해결 |
-|---|---|---|
+| 문제                                     | 원인                                     | 해결                                        |
+| ---------------------------------------- | ---------------------------------------- | ------------------------------------------- |
 | 결제 승인 API 중복 호출 시 409 오류 노출 | PAID 확인 없이 토스 승인 API를 반복 호출 | 이미 PAID 상태면 기존 결제 결과를 즉시 반환 |
 
 <table>
@@ -232,8 +278,8 @@
 
 ### ③ AI 웨딩플랜 "다시 찾기" 시 업체가 무작위로 바뀌는 문제
 
-| 문제 | 원인 | 해결 |
-|---|---|---|
+| 문제                                                                                                 | 원인                                                                                             | 해결                                                                                                                |
+| ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
 | 제외(X)한 업체를 '다시 찾기'로 되돌리면, 원래 업체가 아닌 매번 다른 업체·추천 사유가 무작위로 표시됨 | 제외 처리 시 선택 업체·추천 사유를 함께 초기화(null)해, 복원할 정보가 없어 매번 새로 검색·재생성 | 제외 시 상태만 `EXCLUDED`로 바꾸고 선택 정보는 보존 → '다시 찾기'는 새로 검색하지 않고 원래 업체·사유를 그대로 복원 |
 
 **관련 코드**
@@ -256,6 +302,7 @@
 ## 주요 기능
 
 ### 🔐 로그인 및 소셜로그인
+
 `JWT` `Spring Security` `Redis`
 
 ![로그인 Flow](docs/images/flow-login.png)
@@ -267,6 +314,7 @@
 ![로그인 데모](docs/images/demo-login.gif)
 
 ### 📝 회원가입
+
 `Spring Security` `JWT`
 
 ![회원가입 Flow](docs/images/flow-signup.png)
@@ -284,6 +332,7 @@
 ![소셜 회원가입 데모](docs/images/demo-signup-social.gif)
 
 ### 🏢 업체관리
+
 `Spring Data JPA`
 
 ![업체관리 Flow](docs/images/flow-company.png)
@@ -300,6 +349,7 @@
 ![업체 관리자 페이지 데모](docs/images/demo-company-admin.gif)
 
 ### 🎁 답례품
+
 `REST CRUD` `Toss Payments`
 
 ![답례품 Flow](docs/images/flow-giftshop.png)
@@ -316,6 +366,7 @@
 ![결제 데모](docs/images/demo-giftshop-checkout.gif)
 
 ### 💬 커뮤니티 & AI 한줄요약
+
 `Spring Data JPA` `OpenAI Chat Completions API`
 
 ![커뮤니티 Flow](docs/images/flow-community.png)
@@ -327,6 +378,7 @@
 ![커뮤니티 데모](docs/images/demo-community.gif)
 
 ### 🤵 AI 웨딩플랜
+
 `OpenAI Chat Completions(JSON)` `서버 슬롯 상태머신`
 
 ![AI 웨딩플랜 Flow](docs/images/flow-aiplan.png)
@@ -344,6 +396,7 @@
 ![AI 웨딩플랜 데모 2](docs/images/demo-aiplan-02.gif)
 
 ### 📩 업체 문의 (실시간 채팅)
+
 `WebSocket(STOMP)` `SockJS` `JWT + STOMP 인증`
 
 ![업체 문의 Flow](docs/images/flow-inquiry.png)
@@ -356,6 +409,7 @@
 ![업체 문의 실시간 채팅 데모](docs/images/demo-inquiry-chat.gif)
 
 ### 🤖 AI 챗봇
+
 `OpenAI Function/Tool`
 
 ![AI 챗봇 Flow](docs/images/flow-chatbot.png)
@@ -368,6 +422,7 @@
 ![AI 챗봇 데모](docs/images/demo-chatbot.gif)
 
 ### 👗 AI 드레스
+
 `외부 CatVTON 이미지합성 API` `OpenAI gpt-image-2`
 
 ![AI 드레스 Flow](docs/images/flow-aidress.png)
@@ -379,6 +434,7 @@
 ![AI 드레스 합성 데모](docs/images/demo-aidress-tryon.gif)
 
 ### 🧾 AI 견적서
+
 `Google Vision OCR` `OpenAI Chat Completions(JSON)`
 
 ![AI 견적서 Flow](docs/images/flow-aiquote.png)
@@ -413,12 +469,12 @@
 
 ## 회고
 
-| 🏆 주요 성과 | 💡 배운 점 |
-|---|---|
-| - AI 4종 통합 — 웨딩플랜·챗봇·드레스·견적서를 하나의 플랫폼에서 유기적으로 연결<br>- 실시간 커뮤니케이션 구축 — WebSocket(STOMP) 기반 업체-회원 실시간 문의 채팅 완성<br>- 성능 최적화 3종 적용 — N+1 방지, 서버 사이드 페이징, 코드 스플리팅으로 체감 속도 개선 | - 보안은 나중이 아니라 처음부터 — JWT 시크릿 하드코딩을 겪으며 설정값 외부화 습관의 중요성 체감<br>- "동작한다" ≠ "안전하다" — 결제 승인 API는 여러 번 호출돼도 같은 결과가 나오도록 처음부터 설계해야 함을 체득<br>- 초기 DB 설계는 완성본이 아니었다 — 개발 중 필드는 물론 테이블까지 새로 추가되며 유연한 스키마 설계의 중요성 체감 |
+| 🏆 주요 성과                                                                                                                                                                                                                                                                                                                                                        | 💡 배운 점                                                                                                                                                                                                                                                                                                                             |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| - AI 4종 통합 — 웨딩플랜·챗봇·드레스·견적서를 하나의 플랫폼에서 유기적으로 연결<br>- 실시간 커뮤니케이션 구축 — WebSocket(STOMP) 기반 업체-회원 실시간 문의 채팅 완성<br>- 성능 최적화 4종 적용 — N+1 방지, 서버 사이드 페이징, 코드 스플리팅, 반응형 웹으로 체감 속도와 사용성 개선<br>- AWS 인프라 구축 — EC2·Elastic Beanstalk·RDS·IAM 기반 배포 파이프라인 완성 | - 보안은 나중이 아니라 처음부터 — JWT 시크릿 하드코딩을 겪으며 설정값 외부화 습관의 중요성 체감<br>- "동작한다" ≠ "안전하다" — 결제 승인 API는 여러 번 호출돼도 같은 결과가 나오도록 처음부터 설계해야 함을 체득<br>- 초기 DB 설계는 완성본이 아니었다 — 개발 중 필드는 물론 테이블까지 새로 추가되며 유연한 스키마 설계의 중요성 체감 |
 
-| 🤔 아쉬운 점 | 🚀 향후 계획 |
-|---|---|
+| 🤔 아쉬운 점                                                                                                                                                  | 🚀 향후 계획                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | - 코드 컨벤션 미통일 — 팀원별 주석 스타일 차이로 리뷰 시 맥락 파악에 시간 소요<br>- 테스트 자동화 미흡 — 트러블슈팅 재현을 수동 캡처에 의존, 회귀 테스트 부재 | - 로그인/회원가입 — 카카오 하나뿐인 소셜 로그인에 네이버·구글 추가, 휴대폰 본인인증(SMS) 연동으로 이메일 인증만으론 못 막는 허위가입까지 방지<br>- AI견적서 — 2개 견적서 비교만 가능한 걸 3개 이상 동시 비교로 확장, 항목별 시세 데이터와 비교해서 "이 항목이 평균보다 비쌉니다" 같은 인사이트 제공<br>- AI운영관제 — 이상 감지 시 텔레그램/슬랙으로 실시간 알림 발송, 주간 브리핑에 전주 대비 추이그래프 추가 |
 
 <br>
