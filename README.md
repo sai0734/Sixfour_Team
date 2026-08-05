@@ -17,6 +17,7 @@
 - [핵심 ERD](#핵심-erd)
 - [유스케이스 다이어그램](#유스케이스-다이어그램)
 - [성능 최적화](#성능-최적화)
+- [배포](#배포)
 - [트러블슈팅](#트러블슈팅)
 - [주요 기능](#주요-기능)
 - [AI 운영관제 (OpenClaw)](#ai-운영관제-openclaw)
@@ -81,6 +82,7 @@
 ### Data & Infra
 ![MariaDB](https://img.shields.io/badge/MariaDB-003545?style=for-the-badge&logo=mariadb&logoColor=white)
 ![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
+![AWS](https://img.shields.io/badge/AWS_EC2_%7C_RDS_%7C_EB-232F3E?style=for-the-badge&logo=amazonaws&logoColor=white)
 
 ### External API
 ![OpenAI](https://img.shields.io/badge/OpenAI_API-412991?style=for-the-badge&logo=openai&logoColor=white)
@@ -92,6 +94,7 @@
 | Frontend | React 18.3(Vite) · Redux Toolkit · React Router v7 · Axios · Tailwind CSS · STOMP/SockJS · Recharts |
 | Backend | Spring Boot 3.5 · Java 21 · Spring Security · Spring Data JPA · JJWT · WebSocket · Spring Mail/Validation · ModelMapper |
 | Data | MariaDB(영속) · Redis(Refresh 토큰/블랙리스트 등 단기 상태) |
+| Infra | AWS EC2 · Elastic Beanstalk · RDS · IAM |
 | AI / External | OpenAI API(gpt-4o-mini, gpt-image-2) · Google Vision OCR · CatVTON(이미지 합성) · Kakao Login · Toss Payments · Daum 우편번호 API |
 
 <br>
@@ -193,6 +196,37 @@
 | Before | After |
 |---|---|
 | ![Before](docs/images/opt3-before.png) | ![After](docs/images/opt3-after.png) |
+
+### ④ 반응형 웹 구현
+`CSS Flexbox/Grid` `Media Query`
+
+- PC·태블릿·모바일 등 다양한 디바이스 환경에 맞춰 레이아웃이 자동으로 변경되도록 구현하여 어떤 화면에서도 최적의 UI를 제공
+- 화면 크기에 따라 컴포넌트의 크기와 배치, 여백을 유동적으로 조정해 가독성과 사용성을 높이고 직관적인 사용자 경험을 제공
+- 다양한 해상도와 브라우저 환경에서도 일관된 UI/UX를 유지할 수 있도록 반응형 웹을 적용하여 접근성과 호환성을 향상
+
+**적용 화면 (답례품 상세 — PC / 모바일)**
+
+| Before (PC) | After (모바일) |
+|---|---|
+| ![반응형 Before](docs/images/responsive-before.png) | ![반응형 After](docs/images/responsive-after.png) |
+
+<br>
+
+## 배포
+
+### AWS 배포
+`EC2` `Elastic Beanstalk` `RDS` `IAM`
+
+![AWS 배포 아키텍처](docs/images/aws-deploy-architecture.png)
+
+- **EC2 + Elastic Beanstalk** — 애플리케이션을 배포하고, 일관된 서버 환경에서 안정적으로 서비스를 운영
+- **RDS 연동** — 애플리케이션과 데이터베이스를 분리해, 데이터의 안정적인 저장 및 관리 환경을 구축 (port 3306, 보안그룹으로 EC2만 접근 허용)
+- **IAM** — 사용자 및 권한을 관리하여 보안을 강화하고, AWS 리소스에 대한 접근 권한을 안전하게 제어
+- 사용자는 SSH(22)를 통해서만 EC2에 접근 가능하도록 보안그룹을 제한
+
+**배포된 서비스 화면**
+
+![AWS 배포 데모](docs/images/aws-deploy-demo.png)
 
 <br>
 
@@ -415,7 +449,7 @@
 
 | 🏆 주요 성과 | 💡 배운 점 |
 |---|---|
-| - AI 4종 통합 — 웨딩플랜·챗봇·드레스·견적서를 하나의 플랫폼에서 유기적으로 연결<br>- 실시간 커뮤니케이션 구축 — WebSocket(STOMP) 기반 업체-회원 실시간 문의 채팅 완성<br>- 성능 최적화 3종 적용 — N+1 방지, 서버 사이드 페이징, 코드 스플리팅으로 체감 속도 개선 | - 보안은 나중이 아니라 처음부터 — JWT 시크릿 하드코딩을 겪으며 설정값 외부화 습관의 중요성 체감<br>- "동작한다" ≠ "안전하다" — 결제 승인 API는 여러 번 호출돼도 같은 결과가 나오도록 처음부터 설계해야 함을 체득<br>- 초기 DB 설계는 완성본이 아니었다 — 개발 중 필드는 물론 테이블까지 새로 추가되며 유연한 스키마 설계의 중요성 체감 |
+| - AI 4종 통합 — 웨딩플랜·챗봇·드레스·견적서를 하나의 플랫폼에서 유기적으로 연결<br>- 실시간 커뮤니케이션 구축 — WebSocket(STOMP) 기반 업체-회원 실시간 문의 채팅 완성<br>- 성능 최적화 4종 적용 — N+1 방지, 서버 사이드 페이징, 코드 스플리팅, 반응형 웹으로 체감 속도와 사용성 개선<br>- AWS 인프라 구축 — EC2·Elastic Beanstalk·RDS·IAM 기반 배포 파이프라인 완성 | - 보안은 나중이 아니라 처음부터 — JWT 시크릿 하드코딩을 겪으며 설정값 외부화 습관의 중요성 체감<br>- "동작한다" ≠ "안전하다" — 결제 승인 API는 여러 번 호출돼도 같은 결과가 나오도록 처음부터 설계해야 함을 체득<br>- 초기 DB 설계는 완성본이 아니었다 — 개발 중 필드는 물론 테이블까지 새로 추가되며 유연한 스키마 설계의 중요성 체감 |
 
 | 🤔 아쉬운 점 | 🚀 향후 계획 |
 |---|---|
