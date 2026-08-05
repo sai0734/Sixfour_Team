@@ -5,6 +5,8 @@
 
 **Notion**: [노션 페이지](https://app.notion.com/p/38367e72aa2780c3a5aadf157d27bd96)
 **YouTube**: [시연 영상](https://www.youtube.com/watch?v=Itr_3dvikuc)
+**Fullstack-PDF**: [웨딩올인원(풀스텍).pdf](https://github.com/user-attachments/files/30733565/default.pdf)
+**AI-PDF**: [웨딩올인원(AI).pdf](https://github.com/user-attachments/files/30733574/AI.pdf)
 
 <br>
 
